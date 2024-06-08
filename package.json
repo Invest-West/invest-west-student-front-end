@@ -1,0 +1,96 @@
+{
+  "name": "invest-west-student",
+  "version": "2.0.0",
+  "private": true,
+  "dependencies": {
+    "@date-io/date-fns": "^1.3.13",
+    "@hcaptcha/react-hcaptcha": "^1.4.4",
+    "@material-ui/core": "^4.11.3",
+    "@material-ui/icons": "^4.11.2",
+    "@material-ui/lab": "^4.0.0-alpha.57",
+    "@material-ui/pickers": "^3.3.10",
+    "@types/color-string": "^1.5.0",
+    "@types/react": "^17.0.4",
+    "@types/react-dom": "^17.0.3",
+    "@types/react-redux": "^7.1.16",
+    "@types/react-router-dom": "^5.1.7",
+    "aphrodite": "^2.4.0",
+    "axios": "^0.21.4",
+    "bootstrap": "^4.6.0",
+    "color-string": "^1.5.5",
+    "date-fns": "^2.21.1",
+    "env-cmd": "^10.1.0",
+    "firebase": "^8.4.2",
+    "node-sass": "^5.0.0",
+    "query-string": "^7.0.0",
+    "quill-delta-to-html": "^0.12.0",
+    "react": "^17.0.2",
+    "react-avatar-editor": "11.1.0",
+    "react-bootstrap": "^1.5.2",
+    "react-dom": "^17.0.2",
+    "react-files": "^3.0.0-alpha.1",
+    "react-flexview": "^6.0.1",
+    "react-helmet": "^6.1.0",
+    "react-idle-timer": "^4.6.1",
+    "react-json-view": "^1.19.1",
+    "react-player": "^2.9.0",
+    "react-quill": "^1.3.5",
+    "react-redux": "^7.2.1",
+    "react-router-dom": "^5.2.0",
+    "react-scripts": "^4.0.3",
+    "react-sidebar": "^3.0.2",
+    "react-spinners": "^0.10.6",
+    "redux": "^4.1.0",
+    "redux-thunk": "^2.3.0",
+    "typescript": "^4.3.5"
+  },
+  "scripts": {
+    "start": "env-cmd -f .env.development react-scripts start",
+    "build:prod": "env-cmd -f .env.production react-scripts build",
+    "build": "react-scripts build",
+    "build:test": "env-cmd -f .env.test react-scripts build",
+    "build:demo": "env-cmd -f .env.demo react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "deploy:prod": "git push -u production master",
+    "deploy:demo": "git push -u demo master",
+    "deploy:test": "git push -u test master"
+  },
+  "eslintConfig": {
+    "extends": "react-app"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@types/color-string": "^1.5.0",
+    "@types/react": "^17.0.4",
+    "@types/react-dom": "^17.0.3",
+    "@types/react-redux": "^7.1.16",
+    "@types/react-router-dom": "^5.1.7",
+    "react-hcaptcha": "^0.1.1",
+    "typescript": "^4.3.5"
+  },
+  "description": "This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Invest-West/invest-west-student-front-end.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Invest-West/invest-west-student-front-end/issues"
+  },
+  "homepage": "https://github.com/Invest-West/invest-west-student-front-end#readme"
+}
