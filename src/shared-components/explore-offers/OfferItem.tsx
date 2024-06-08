@@ -181,29 +181,6 @@ class OfferItem extends Component<OfferItemProps, any> {
 
                                     {/** Project visibility information */}
                                     <Box className="badges" color={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main} >
-                                        
-                                        <Box>
-                                            {
-                                            offerInstance.projectDetail.Pitch.hasSEIS === "Yes"
-                                                ?
-                                                <Col className="seis">
-                                                    <Typography className="text-badges" variant="body2" align="center"><b> SEIS </b></Typography>
-                                                </Col>
-                                                :
-                                                null
-                                            }
-                                        </Box>
-                                        <Box>
-                                            {
-                                            offerInstance.projectDetail.Pitch.hasEIS === "Yes"
-                                                ?
-                                                <Col className="eis">
-                                                    <Typography className="text-badges" variant="body2" align="center"><b> EIS </b></Typography>
-                                                </Col>                                          
-                                                :
-                                                null
-                                            }
-                                        </Box>
                                         <Box className="public-offer">
                                             <OverlayTrigger
                                                 trigger={["hover", "focus"]}

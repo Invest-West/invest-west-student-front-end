@@ -39,8 +39,6 @@ import InfoOverlay from "../../shared-components/info_overlay/InfoOverlay";
 import {connect} from "react-redux";
 import * as manageGroupFromParamsActions from "../../redux-store/actions/manageGroupFromParamsActions";
 import * as pledgesTableActions from "../../redux-store/actions/pledgesTableActions";
-import * as investorSelfCertificationAgreementsActions
-    from "../../redux-store/actions/investorSelfCertificationAgreementsActions";
 import * as createPledgeDialogActions from "../../redux-store/actions/createPledgeDialogActions";
 import * as selectProjectVisibilityActions from "../../redux-store/actions/selectProjectVisibilityActions";
 import * as feedbackSnackbarActions from "../../redux-store/actions/feedbackSnackbarActions";
@@ -109,13 +107,6 @@ const mapStateToProps = (state) => {
         userBeingLoaded: state.auth.userBeingLoaded,
         groupsUserIsIn: state.auth.groupsUserIsIn,
 
-        // Investor self-certification agreement (for investor only) ----------------------------------------------------
-        investorSelfCertificationAgreement_userID: state.manageInvestorSelfCertificationAgreement.userID,
-        investorSelfCertificationAgreement: state.manageInvestorSelfCertificationAgreement.investorSelfCertificationAgreement,
-        investorSelfCertificationAgreementLoaded: state.manageInvestorSelfCertificationAgreement.investorSelfCertificationAgreementLoaded,
-        investorSelfCertificationAgreementBeingLoaded: state.manageInvestorSelfCertificationAgreement.investorSelfCertificationAgreementBeingLoaded,
-        //--------------------------------------------------------------------------------------------------------------
-
         projectVisibilitySetting: state.manageSelectProjectVisibility.projectVisibilitySetting
     }
 };
@@ -126,10 +117,6 @@ const mapDispatchToProps = (dispatch) => {
         setExpectedAndCurrentPathsForChecking: (expectedPath, currentPath) => dispatch(manageGroupFromParamsActions.setExpectedAndCurrentPathsForChecking(expectedPath, currentPath)),
         loadAngelNetwork: () => dispatch(manageGroupFromParamsActions.loadAngelNetwork()),
 
-        // Investor self-certification agreement functions --------------------------------------------------------------
-        investorSelfCertificationAgreement_setUser: (uid) => dispatch(investorSelfCertificationAgreementsActions.setUser(uid)),
-        loadInvestorSelfCertificationAgreement: () => dispatch(investorSelfCertificationAgreementsActions.loadInvestorSelfCertificationAgreement()),
-        //--------------------------------------------------------------------------------------------------------------
 
         pledgesTable_setProject: (project) => dispatch(pledgesTableActions.setProject(project)),
         pledgesTable_stopListeningForPledgesChanged: () => dispatch(pledgesTableActions.stopListeningForPledgesChanged()),
@@ -232,15 +219,10 @@ class ProjectDetailsMain extends Component {
             userLoaded,
             userBeingLoaded,
 
-            investorSelfCertificationAgreement_userID,
-            investorSelfCertificationAgreementLoaded,
-            investorSelfCertificationAgreementBeingLoaded,
 
             setGroupUserNameFromParams,
             setExpectedAndCurrentPathsForChecking,
             loadAngelNetwork,
-            investorSelfCertificationAgreement_setUser,
-            loadInvestorSelfCertificationAgreement,
         } = this.props;
 
         const {
@@ -273,22 +255,6 @@ class ProjectDetailsMain extends Component {
                     this.loadData();
                 }
 
-                if (user) {
-                    if (!investorSelfCertificationAgreement_userID && user.type === DB_CONST.TYPE_INVESTOR) {
-                        investorSelfCertificationAgreement_setUser(user.id);
-                    }
-                }
-            }
-
-            // if user id for reference in self-certification agreement has been set
-            if (investorSelfCertificationAgreement_userID) {
-                // if self-certification agreement has not been loaded
-                if (!investorSelfCertificationAgreementLoaded
-                    && !investorSelfCertificationAgreementBeingLoaded
-                    && user.type === DB_CONST.TYPE_INVESTOR
-                ) {
-                    loadInvestorSelfCertificationAgreement();
-                }
             }
         }
         console.log('Page loaded. Authentication status:', this.props.AuthenticationState.isAuthenticated ? 'Authenticated' : 'Not Authenticated');
@@ -303,13 +269,6 @@ class ProjectDetailsMain extends Component {
             user,
             userLoaded,
             userBeingLoaded,
-
-            investorSelfCertificationAgreement_userID,
-            investorSelfCertificationAgreementLoaded,
-            investorSelfCertificationAgreementBeingLoaded,
-
-            investorSelfCertificationAgreement_setUser,
-            loadInvestorSelfCertificationAgreement,
 
             loadAngelNetwork
         } = this.props;
@@ -333,22 +292,6 @@ class ProjectDetailsMain extends Component {
                     this.loadData();
                 }
 
-                if (user) {
-                    if (!investorSelfCertificationAgreement_userID && user.type === DB_CONST.TYPE_INVESTOR) {
-                        investorSelfCertificationAgreement_setUser(user.id);
-                    }
-                }
-            }
-
-            // if user id for reference in self-certification agreement has been set
-            if (investorSelfCertificationAgreement_userID) {
-                // if self-certification agreement has not been loaded
-                if (!investorSelfCertificationAgreementLoaded
-                    && !investorSelfCertificationAgreementBeingLoaded
-                    && user.type === DB_CONST.TYPE_INVESTOR
-                ) {
-                    loadInvestorSelfCertificationAgreement();
-                }
             }
 
             // attach project changed listener
@@ -1872,7 +1815,6 @@ class ProjectDetailsMain extends Component {
             userLoaded,
             groupsUserIsIn,
 
-            investorSelfCertificationAgreement,
 
             createPledgeDialog_toggleDialog,
             createPledgeDialog_setProject,
@@ -1965,7 +1907,6 @@ class ProjectDetailsMain extends Component {
                     user={user}
                     userLoaded={userLoaded}
                     groupsUserIsIn={groupsUserIsIn}
-                    investorSelfCertificationAgreement={investorSelfCertificationAgreement}
                     mainBody={mainBody}
                     adminOfferStatesActiveStep={adminOfferStatesActiveStep}
                     comments={comments}
@@ -2207,8 +2148,6 @@ class ProjectDetails extends Component {
             isMobile,
 
             user,
-
-            investorSelfCertificationAgreement,
 
             mainBody,
             adminOfferStatesActiveStep,
@@ -2692,33 +2631,6 @@ class ProjectDetails extends Component {
                                 }
                             </Col>
 
-                            {/** SEIS badge check */}
-                            {
-                                project.Pitch.hasSEIS === "Yes"
-                                    ?
-                                    <Col xs={12} sm={12} md={{span: 1, offset: 1, order: 5}} lg={{span: 3, offset: 0, order: 5}}>
-                                        <FlexView className={css(styles.border_box)} style={{backgroundColor: colors.kick_starter_background_color}} column hAlignContent="center" vAlignContent="center">
-                                                    <Typography variant="body1"><b>SEIS</b></Typography>
-                                        </FlexView>
-                                    </Col>
-                                    :
-                                    null
-                            }
-
-                            {/** EIS badge check */}
-                            {
-
-                                project.Pitch.hasEIS === "Yes"
-                                    ?
-                                    <Col xs={12} sm={12} md={{span: 1, offset: 1, order: 6}} lg={{span: 3, offset: 0, order: 6}}>
-                                            <FlexView className={css(styles.border_box)} style={{backgroundColor: colors.kick_starter_background_color,}} hAlignContent="center" vAlignContent="center">
-                                                    <Typography variant="body1"><b>EIS</b></Typography>
-                                        </FlexView>
-                                    </Col>
-                                    :
-                                    null
-                            }
-
                             {/** Contact us */}
                             {
                                 isProjectOwner(AuthenticationState.currentUser, project)
@@ -2726,7 +2638,7 @@ class ProjectDetails extends Component {
                                     : <Col xs={12} sm={12} md={{span: 10, offset: 1, order: 5}} lg={{span: 12, offset: 0, order: 7}} style={{marginTop: 15}}>
                                         <FlexView column hAlignContent="left">
                                             <FlexView hAlignContent="center" vAlignContent="center">
-                                                <Button color="primary" variant="contained" className={css(sharedStyles.no_text_transform)} disabled={this.shouldHideInformation() || (user.type === TYPE_INVESTOR && !investorSelfCertificationAgreement)} onClick={() => this.toggleContactPitchOwnerDialog()}>Contact us</Button>
+                                                <Button color="primary" variant="contained" className={css(sharedStyles.no_text_transform)} disabled={this.shouldHideInformation() || (user.type === TYPE_INVESTOR)} onClick={() => this.toggleContactPitchOwnerDialog()}>Contact us</Button>
                                                 {/*<Button*/}
                                                 {/*    size="medium"*/}
                                                 {/*    variant={getInvestorVote(votes, user) && getInvestorVote(votes, user).voted ? "contained" : "outlined"}*/}
@@ -2831,39 +2743,6 @@ class ProjectDetails extends Component {
                                                     </Col>
                                                     :
                                                     <Col xs={12} sm={12} md={{span: 10, offset: 1, order: 6}} lg={{span: 12, offset: 0, order: 6}} style={{marginTop: 30}}>
-
-                                                        {
-                                                            user.type === DB_CONST.TYPE_INVESTOR
-                                                            && !investorSelfCertificationAgreement
-                                                                ?
-                                                                <Button style={{marginBottom: 14}} className={css(sharedStyles.no_text_transform)} fullWidth variant="outlined" color="primary" size="medium"
-                                                                    disabled={
-                                                                        user.type === DB_CONST.TYPE_INVESTOR
-                                                                        && !investorSelfCertificationAgreement
-                                                                    }
-                                                                >
-                                                                    Pledge now
-                                                                </Button>
-                                                                :
-                                                                <NavLink
-                                                                    to={{
-                                                                        pathname: groupUserName
-                                                                            ?
-                                                                            ROUTES.PLEDGE.replace(":groupUserName", groupUserName)
-                                                                            :
-                                                                            ROUTES.PLEDGE_INVEST_WEST_SUPER
-                                                                        ,
-                                                                        search: `?project=${project.id}`
-                                                                    }}
-                                                                    className={css(sharedStyles.nav_link_hover)}
-                                                                >
-                                                                    <Button style={{marginBottom: 14}} className={css(sharedStyles.no_text_transform)} fullWidth variant="outlined" color="primary" size="medium">Pledge now</Button>
-                                                                </NavLink>
-                                                        }
-
-                                                        {
-                                                            this.renderInvestorSelfCertifyReminder()
-                                                        }
 
                                                         <Typography align="left" variant="body2" style={{marginTop: 15}}>
                                                             <u>Closes on {utils.dateTimeInReadableFormat(project.PrimaryOffer.expiredDate)}.</u></Typography>
@@ -3940,8 +3819,7 @@ class ProjectDetails extends Component {
                                                                             <Button size="small" onClick={this.onPostACommentClick} variant="outlined" color="inherit" fullWidth={false}
                                                                                 disabled={
                                                                                     utils.isProjectLive(project)
-                                                                                    && user.type === DB_CONST.TYPE_INVESTOR
-                                                                                    && !investorSelfCertificationAgreement
+                                                                                    && user.type === DB_CONST.TYPE_INVESTOR                                                                                  
                                                                                 }
                                                                             >Post a comment</Button>
                                                                         </div>
@@ -3975,19 +3853,9 @@ class ProjectDetails extends Component {
                                                                                 disabled={
                                                                                     utils.isProjectLive(project)
                                                                                     && user.type === DB_CONST.TYPE_INVESTOR
-                                                                                    && !investorSelfCertificationAgreement
                                                                                 }
                                                                             >Post a comment</Button>
                                                                         </div>
-                                                                        :
-                                                                        null
-                                                                }
-
-                                                                {/** Check investor's self certification status - right hand side column - displayed only if there is at least one comment */}
-                                                                {
-                                                                    commentsLoaded && comments.length > 0
-                                                                        ?
-                                                                        this.renderInvestorSelfCertifyReminder()
                                                                         :
                                                                         null
                                                                 }
@@ -4102,41 +3970,6 @@ class ProjectDetails extends Component {
                                             </FlexView>
                                     }
 
-                                    {/** Prior investment */}
-                                    <FlexView className={css(styles.border_box)} style={{backgroundColor: colors.kick_starter_background_color}} column marginTop={40} vAlignContent="center">
-                                        <Typography variant="body1" align="left">Prior investment raised:&nbsp;&nbsp;<b>
-                                                {
-                                                    project.Pitch.amountRaised === 0
-                                                        ?
-                                                        "none"
-                                                        :
-                                                        `£${Number(project.Pitch.amountRaised.toFixed(2)).toLocaleString()}`
-                                                }
-                                            </b>
-                                        </Typography>
-
-                                        {/*{*/}
-                                        {/*    project.Pitch.amountRaised === 0*/}
-                                        {/*        ?*/}
-                                        {/*        null*/}
-                                        {/*        :*/}
-                                        {/*        <Typography*/}
-                                        {/*            style={{marginTop: 30}}*/}
-                                        {/*            variant="body1"*/}
-                                        {/*            align="left"*/}
-                                        {/*        >*/}
-                                        {/*            Investors publicly committed:*/}
-                                        {/*            {*/}
-                                        {/*                !project.Pitch.investorsCommitted*/}
-                                        {/*                    ?*/}
-                                        {/*                    <b>&nbsp;&nbsp; Not provided.</b>*/}
-                                        {/*                    :*/}
-                                        {/*                    <b>&nbsp;&nbsp; {project.Pitch.investorsCommitted}</b>*/}
-                                        {/*            }*/}
-                                        {/*        </Typography>*/}
-                                        {/*}*/}
-                                    </FlexView>
-
                                     {/** How fund is being raised */}
                                     {
                                         !project.Pitch.hasOwnProperty('howFundIsBeingRaised')
@@ -4148,40 +3981,6 @@ class ProjectDetails extends Component {
                                             </FlexView>
                                     }
 
-                                   
-                                        
-                                            
-                                    {
-                                        project.Pitch.hasSEIS === "Yes"
-                                            ?
-                                            <FlexView className={css(styles.border_box)} style={{backgroundColor: colors.kick_starter_background_color}} column marginTop={30} vAlignContent="center">
-                                                <Typography variant="body1" align="left">Does this pitch have a SEIS badge: <b> {project.Pitch.hasSEIS}</b></Typography>
-                                            </FlexView>
-                                            :
-                                            <FlexView className={css(styles.border_box)} style={{backgroundColor: colors.kick_starter_background_color}} column marginTop={30} vAlignContent="center">
-                                                <Typography variant="body1" align="left">Does this pitch have a SEIS badge: <b> No </b></Typography>
-                                            </FlexView>
-                                    }
-                                            
-                                    
-
-                                    
-                                    {
-                                        project.Pitch.hasEIS === "Yes"
-                                            ?
-                                            <FlexView className={css(styles.border_box)} style={{backgroundColor: colors.kick_starter_background_color}} column marginTop={30} vAlignContent="center">
-                                                <Typography variant="body1" align="left">Does this pitch have a EIS badge: <b> {project.Pitch.hasEIS}</b></Typography>
-                                            </FlexView>
-                                            :
-                                            <FlexView className={css(styles.border_box)} style={{backgroundColor: colors.kick_starter_background_color}} column marginTop={30} vAlignContent="center">
-                                                <Typography variant="body1" align="left">Does this pitch have a EIS badge: <b> No </b></Typography>
-                                            </FlexView>
-
-                                    }
-                                    
-
-                                    
-                                    
 
                                     {/** Details about earlier fundraising rounds */}
                                     {
@@ -4250,7 +4049,6 @@ class ProjectDetails extends Component {
         const {
             groupUserName,
             user,
-            investorSelfCertificationAgreement,
             project
         } = this.props;
 
@@ -4260,10 +4058,8 @@ class ProjectDetails extends Component {
 
         return (
             utils.isProjectLive(project)
-            && !investorSelfCertificationAgreement
                 ?
                 <FlexView column marginTop={20}>
-                    <Typography align="left" variant="body2" color="textSecondary">You cannot interact with this offer as you have not completed your self certification.</Typography>
                     <NavLink
                         to={
                             groupUserName
@@ -4446,7 +4242,6 @@ class ProjectDetails extends Component {
             project,
             user,
             groupsUserIsIn,
-            investorSelfCertificationAgreement
         } = this.props;
 
         // do not let the owner of the pitch vote for themselves
@@ -4466,13 +4261,6 @@ class ProjectDetails extends Component {
             && groupsUserIsIn.findIndex(group => group.anid === project.anid) === -1
         ) {
             return true;
-        }
-
-        // do not let investors who haven't uploaded self-certification vote
-        if (user.type === DB_CONST.TYPE_INVESTOR) {
-            if (!investorSelfCertificationAgreement) {
-                return true;
-            }
         }
 
         // do not let issuers vote

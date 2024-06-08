@@ -33,15 +33,7 @@ const initState = {
         pitchProjectDescription: '',
         pitchExpiredDate: null,
 
-        pitchAmountRaisedToDate: '',
-        pitchRaiseRequired: '',
-        pitchPostMoneyValuation: '',
         pitchInvestorsCommitted: '',
-
-        hasRaisedMoneyBefore: '',
-
-        hasEIS: '',
-        hasSEIS: '',
 
         // pitch cover (image or video) --- 1 file
         pitchCover: [],
@@ -142,8 +134,6 @@ const createProjectReducer = (state = initState, action) => {
                                         :
                                         ''
                                 ,
-                                hasEIS: project.hasOwnProperty('hasEIS') ? project.hasEIS : false,
-                                hasSEIS: project.hasOwnProperty('hasSEIS') ? project.hasSEIS : false,
                                 pitchExpiredDate:
                                     project.Pitch.hasOwnProperty('expiredDate')
                                         ?
@@ -151,45 +141,10 @@ const createProjectReducer = (state = initState, action) => {
                                         :
                                         null
                                 ,
-                                pitchAmountRaisedToDate:
-                                    project.Pitch.hasOwnProperty('amountRaised')
-                                        ?
-                                        Number(project.Pitch.amountRaised.toFixed(2)).toLocaleString()
-                                        :
-                                        ''
-                                ,
-                                pitchRaiseRequired:
-                                    project.Pitch.hasOwnProperty('fundRequired')
-                                        ?
-                                        Number(project.Pitch.fundRequired.toFixed(2)).toLocaleString()
-                                        :
-                                        ''
-                                ,
-                                pitchPostMoneyValuation:
-                                    project.Pitch.hasOwnProperty('postMoneyValuation')
-                                        ?
-                                        Number(project.Pitch.postMoneyValuation.toFixed(2)).toLocaleString()
-                                        :
-                                        ''
-                                ,
                                 pitchInvestorsCommitted:
                                     project.Pitch.hasOwnProperty('investorsCommitted')
                                         ?
                                         project.Pitch.investorsCommitted
-                                        :
-                                        ''
-                                ,
-
-                                hasRaisedMoneyBefore:
-                                    project.Pitch.hasOwnProperty('amountRaised')
-                                        ?
-                                        (
-                                            project.Pitch.amountRaised > 0
-                                                ?
-                                                "true"
-                                                :
-                                                "false"
-                                        )
                                         :
                                         ''
                                 ,

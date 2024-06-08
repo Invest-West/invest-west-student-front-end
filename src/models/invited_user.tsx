@@ -4,7 +4,6 @@
 import User from "./user";
 import GroupProperties from "./group_properties";
 import Project from "./project";
-import InvestorSelfCertification from "./investor_self_certification";
 import GroupOfMembership from "./group_of_membership";
 import Pledge from "./pledge";
 
@@ -81,7 +80,6 @@ export interface InvitedUserWithProfile extends InvitedUser {
     groupsOfMembership: GroupOfMembership[];
     offersCreated?: Project[]; // for issuers
     pledges?: Pledge[]; // for investors
-    certification?: InvestorSelfCertification | null; // self-certification of investors (undefined: user is an issuer, null: an investor has not certified)
 }
 
 /**

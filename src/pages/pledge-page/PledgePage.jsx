@@ -31,8 +31,6 @@ import queryString from 'query-string';
 
 import {connect} from 'react-redux';
 import * as manageGroupFromParamsActions from '../../redux-store/actions/manageGroupFromParamsActions';
-import * as investorSelfCertificationAgreementsActions
-    from '../../redux-store/actions/investorSelfCertificationAgreementsActions';
 
 import firebase from '../../firebase/firebaseApp';
 import sharedStyles from '../../shared-js-css-styles/SharedStyles';
@@ -62,12 +60,6 @@ const mapStateToProps = state => {
         clubAttributes: state.manageClubAttributes.clubAttributes,
         clubAttributesLoaded: state.manageClubAttributes.clubAttributesLoaded,
 
-        // Investor self-certification agreement (for investor only) ----------------------------------------------------
-        investorSelfCertificationAgreement_userID: state.manageInvestorSelfCertificationAgreement.userID,
-        investorSelfCertificationAgreement: state.manageInvestorSelfCertificationAgreement.investorSelfCertificationAgreement,
-        investorSelfCertificationAgreementLoaded: state.manageInvestorSelfCertificationAgreement.investorSelfCertificationAgreementLoaded,
-        investorSelfCertificationAgreementBeingLoaded: state.manageInvestorSelfCertificationAgreement.investorSelfCertificationAgreementBeingLoaded
-        //--------------------------------------------------------------------------------------------------------------
     }
 };
 
@@ -77,9 +69,6 @@ const mapDispatchToProps = dispatch => {
         setExpectedAndCurrentPathsForChecking: (expectedPath, currentPath) => dispatch(manageGroupFromParamsActions.setExpectedAndCurrentPathsForChecking(expectedPath, currentPath)),
         loadAngelNetwork: () => dispatch(manageGroupFromParamsActions.loadAngelNetwork()),
 
-        // Investor self-certification agreement functions --------------------------------------------------------------
-        investorSelfCertificationAgreement_setUser: (uid) => dispatch(investorSelfCertificationAgreementsActions.setUser(uid)),
-        loadInvestorSelfCertificationAgreement: () => dispatch(investorSelfCertificationAgreementsActions.loadInvestorSelfCertificationAgreement())
         //--------------------------------------------------------------------------------------------------------------
     }
 };
@@ -125,7 +114,6 @@ class PledgePage extends Component {
             setGroupUserNameFromParams,
             setExpectedAndCurrentPathsForChecking,
             loadAngelNetwork,
-            investorSelfCertificationAgreement_setUser
         } = this.props;
 
         const {
@@ -153,7 +141,6 @@ class PledgePage extends Component {
                     return;
                 }
 
-                investorSelfCertificationAgreement_setUser(user.id);
 
                 if (!loadingData && !dataLoaded) {
                     this.loadData();
@@ -170,13 +157,7 @@ class PledgePage extends Component {
             user,
             userLoaded,
 
-            investorSelfCertificationAgreement_userID,
-            investorSelfCertificationAgreementLoaded,
-            investorSelfCertificationAgreementBeingLoaded,
-
             loadAngelNetwork,
-            investorSelfCertificationAgreement_setUser,
-            loadInvestorSelfCertificationAgreement
         } = this.props;
 
         const {
@@ -199,17 +180,6 @@ class PledgePage extends Component {
                     return;
                 }
 
-                investorSelfCertificationAgreement_setUser(user.id);
-                // if user id for reference in self-certification agreement has been set
-                if (investorSelfCertificationAgreement_userID) {
-                    // if self-certification agreement has not been loaded
-                    if (!investorSelfCertificationAgreementLoaded
-                        && !investorSelfCertificationAgreementBeingLoaded
-                        && user.type === DB_CONST.TYPE_INVESTOR
-                    ) {
-                        loadInvestorSelfCertificationAgreement();
-                    }
-                }
                 if (!loadingData && !dataLoaded) {
                     this.loadData();
                 }
@@ -622,9 +592,6 @@ class PledgePage extends Component {
             userLoaded,
             groupsUserIsIn,
 
-            investorSelfCertificationAgreement,
-            investorSelfCertificationAgreementLoaded,
-
             clubAttributes,
             clubAttributesLoaded
         } = this.props;
@@ -665,7 +632,7 @@ class PledgePage extends Component {
             || !pledgesLoaded
             || !currentPledgeLoaded
             || !clubAttributesLoaded
-            || (userLoaded && user && user.type === DB_CONST.TYPE_INVESTOR && !investorSelfCertificationAgreementLoaded)
+            || (userLoaded && user && user.type === DB_CONST.TYPE_INVESTOR)
         ) {
             return (
                 <FlexView width="100%" hAlignContent="center" style={{padding: 30}}>
@@ -732,32 +699,6 @@ class PledgePage extends Component {
                     </Container>
                 );
             }
-        }
-
-        // investor has not self-certified
-        if (!investorSelfCertificationAgreement) {
-            return (
-                <Container fluid style={{padding: 0}}>
-                    <Row noGutters>
-                        <Col xs={12} sm={12} md={{span: 10, offset: 1}} lg={{span: 8, offset: 2}}>
-                            <FlexView column hAlignContent="center" marginTop={40}>
-                                <Typography variant="h5" align="center" paragraph>You cannot pledge as you have not completed your self certification.</Typography>
-                                <NavLink
-                                    to={
-                                        groupUserName
-                                            ?
-                                            `${ROUTES.DASHBOARD_INVESTOR.replace(":groupUserName", groupUserName)}?tab=Profile`
-                                            :
-                                            `${ROUTES.DASHBOARD_INVESTOR_INVEST_WEST_SUPER}?tab=Profile`
-                                    }
-                                >
-                                    <Typography variant="h6" align="center"><u>Self certify</u></Typography>
-                                </NavLink>
-                            </FlexView>
-                        </Col>
-                    </Row>
-                </Container>
-            );
         }
 
         // offer is no longer available to pledge

@@ -6,8 +6,6 @@ import Error from "../../models/error";
 import firebase from "../../firebase/firebaseApp";
 import GroupOfMembership from "../../models/group_of_membership";
 import {AppState} from "../reducers";
-import InvestorSelfCertification from "../../models/investor_self_certification";
-import InvestorSelfCertificationRepository from "../../api/repositories/InvestorSelfCertificationRepository";
 import Routes from "../../router/routes";
 import Firebase from "firebase";
 import UserRepository from "../../api/repositories/UserRepository";
@@ -29,7 +27,6 @@ export interface UpdateUserChangesAction extends Action {
 export interface CompleteAuthenticationAction extends AuthenticationAction {
     status: AuthenticationStatus;
     currentUser: User | Admin | null;
-    selfCertification?: InvestorSelfCertification;
     groupsOfMembership: GroupOfMembership[];
     error?: Error;
 }
@@ -128,10 +125,6 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
 
                 authenticationCompleteAction.currentUser = currentUser;
 
-                if (isInvestor(currentUser)) {
-                    const selfCertificationResponse = await new InvestorSelfCertificationRepository().getInvestorSelfCertification(currentUser.id);
-                    authenticationCompleteAction.selfCertification = selfCertificationResponse.data;
-                }
 
                 // get groups of membership for the current user
                 const listGroupsOfMembershipResponse = await new UserRepository().listGroupsOfMembership(uid);

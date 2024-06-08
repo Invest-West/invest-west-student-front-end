@@ -48,9 +48,6 @@ import * as editImageActions from '../../redux-store/actions/editImageActions';
 import * as editVideoActions from '../../redux-store/actions/editVideoActions';
 import * as uploadFilesActions from '../../redux-store/actions/uploadFilesActions';
 import * as legalDocumentsActions from '../../redux-store/actions/legalDocumentsActions';
-import * as investorSelfCertificationAgreementsActions
-    from '../../redux-store/actions/investorSelfCertificationAgreementsActions';
-    import { isCertificationExpired } from '../../redux-store/actions/investorSelfCertificationAgreementsActions';
 
 import {
     UPLOAD_LOGO_FIRST_TIME_MODE,
@@ -85,15 +82,6 @@ const mapStateToProps = state => {
         allowEditing: state.editUser.allowEditing,
         //--------------------------------------------------------------------------------------------------------------
 
-        // Investor self-certification agreement (for investor only) ----------------------------------------------------
-        investorSelfCertificationAgreement_userID: state.manageInvestorSelfCertificationAgreement.userID,
-        investorSelfCertificationAgreement: state.manageInvestorSelfCertificationAgreement.investorSelfCertificationAgreement,
-        investorSelfCertificationAgreementLoaded: state.manageInvestorSelfCertificationAgreement.investorSelfCertificationAgreementLoaded,
-        investorSelfCertificationAgreementBeingLoaded: state.manageInvestorSelfCertificationAgreement.investorSelfCertificationAgreementBeingLoaded,
-        investorSelfCertificationAgreementCheckBox1Checked: state.manageInvestorSelfCertificationAgreement.checkBox1Ticked,
-        investorSelfCertificationAgreementCheckBox2Checked: state.manageInvestorSelfCertificationAgreement.checkBox2Ticked,
-        investorSelfCertificationAgreementCheckBox3Checked: state.manageInvestorSelfCertificationAgreement.checkBox3Ticked,
-        investorSelfCertificationAgreementStatementType: state.manageInvestorSelfCertificationAgreement.statementType,
         //--------------------------------------------------------------------------------------------------------------
 
         // User's legal documents (for issuer only) --------------------------------------------------------------------
@@ -139,12 +127,6 @@ const mapDispatchToProps = dispatch => {
         commitUserProfileChanges: (type) => dispatch(editUserActions.commitUserProfileChanges(type)),
         //--------------------------------------------------------------------------------------------------------------
 
-        // Investor self-certification agreement functions --------------------------------------------------------------
-        investorSelfCertificationAgreement_setUser: (uid) => dispatch(investorSelfCertificationAgreementsActions.setUser(uid)),
-        loadInvestorSelfCertificationAgreement: () => dispatch(investorSelfCertificationAgreementsActions.loadInvestorSelfCertificationAgreement()),
-        setInvestorSelfCertificationAgreement: () => dispatch(investorSelfCertificationAgreementsActions.setInvestorSelfCertificationAgreement()),
-        investorSelfCertificationAgreement_handleCheckBoxChanged: (event) => dispatch(investorSelfCertificationAgreementsActions.handleTickBoxChanged(event)),
-        investorSelfCertificationAgreement_handleStatementTypeChanged: (event) => dispatch(investorSelfCertificationAgreementsActions.handleStatementTypeChanged(event)),
         //--------------------------------------------------------------------------------------------------------------
 
         // User's legal documents functions ----------------------------------------------------------------------------
@@ -202,14 +184,6 @@ class Profile extends Component {
         stopListeningForLegalDocumentsChanged();
     }
 
-    renderSelfCertificationForm() {
-        return (
-          <div>
-            {/* Your self-certification form JSX elements here */}
-          </div>
-        );
-      }
-
     /**
      * Load data
      *
@@ -223,14 +197,9 @@ class Profile extends Component {
             userLegalDocumentsLoaded,
             userLegalDocumentsBeingLoaded,
 
-            investorSelfCertificationAgreement_userID,
-            investorSelfCertificationAgreementLoaded,
-            investorSelfCertificationAgreementBeingLoaded,
 
             legalDocuments_setUserID,
             getUserLegalDocuments,
-            investorSelfCertificationAgreement_setUser,
-            loadInvestorSelfCertificationAgreement
         } = this.props;
 
         // if user has been set
@@ -241,9 +210,6 @@ class Profile extends Component {
             }
 
             // if user id for reference in investor self-certification agreement has not been set
-            if (!investorSelfCertificationAgreement_userID && originalUser.type === DB_CONST.TYPE_INVESTOR) {
-                investorSelfCertificationAgreement_setUser(originalUser.id);
-            }
         }
 
         // if user id for reference in legal documents has been set
@@ -254,13 +220,6 @@ class Profile extends Component {
             }
         }
 
-        // if user id for reference in investor self-certification agreement has been set
-        if (investorSelfCertificationAgreement_userID) {
-            // if the investor self-certification agreement has not been loaded
-            if (!investorSelfCertificationAgreementLoaded && !investorSelfCertificationAgreementBeingLoaded && originalUser.type === DB_CONST.TYPE_INVESTOR) {
-                loadInvestorSelfCertificationAgreement();
-            }
-        }
     };
 
     /**
@@ -378,7 +337,7 @@ class Profile extends Component {
                                         {
                                             currentUser.type === DB_CONST.TYPE_ADMIN
                                                 ?
-                                                "See how this user looks to other members. Since you are a group admin, you can see more information about this user than the other ordinary members."
+                                                "See how this student looks to other members. Since you are a group admin, you can see more information about this student than the other ordinary members."
                                                 :
                                                 "See how you look to other members."
                                         }
@@ -576,7 +535,7 @@ class Profile extends Component {
                                         && !currentUser.superAdmin
                                         && !allowEditing
                                             ?
-                                            <Typography variant="body1" color="error" align="right" style={{ marginTop: 25 }} >This user is not a home member of your group. So, you cannot edit their profile.</Typography>
+                                            <Typography variant="body1" color="error" align="right" style={{ marginTop: 25 }} >This student is not a home member of your course. So, you cannot edit their profile.</Typography>
                                             :
                                             null
                                     }
@@ -604,26 +563,6 @@ class Profile extends Component {
                         <Divider/>
                     </Col>
                 </Row>
-
-                {/** Investor self-certification agreement */}
-                {
-                    originalUser.type !== DB_CONST.TYPE_INVESTOR
-                        ?
-                        null
-                        :
-                        <Row noGutters style={{ backgroundColor: colors.white }} >
-                            <Col xs={12} sm={12} md={12} lg={12} style={{ paddingLeft: 24, paddingRight: 24, paddingTop: 24, paddingBottom: 35 }} >
-                                {
-                                    this.renderSelfCertificationAgreement()
-                                }
-                            </Col>
-
-                            {/** Divider */}
-                            <Col xs={12} md={12} lg={12} >
-                                <Divider/>
-                            </Col>
-                        </Row>
-                }
 
                 {/** Fundraising summary - only available for super user who is viewing the profile of an issuer or an investor */}
                 {
@@ -660,98 +599,6 @@ class Profile extends Component {
                         </Row>
                 }
 
-
-                {/*/!** Block/Remove user - only available for admins *!/*/}
-                {/*{*/}
-                {/*    currentUser.type !== DB_CONST.TYPE_ADMIN*/}
-                {/*        ?*/}
-                {/*        null*/}
-                {/*        :*/}
-                {/*        <Row*/}
-                {/*            noGutters*/}
-                {/*            style={{*/}
-                {/*                backgroundColor: colors.white*/}
-                {/*            }}*/}
-                {/*        >*/}
-                {/*            <Col*/}
-                {/*                xs={12}*/}
-                {/*                md={12}*/}
-                {/*                lg={12}*/}
-                {/*                style={{*/}
-                {/*                    padding: 24*/}
-                {/*                }}*/}
-                {/*            >*/}
-                {/*                <FlexView*/}
-                {/*                    column*/}
-                {/*                >*/}
-                {/*                    <Typography*/}
-                {/*                        variant="h6"*/}
-                {/*                        color="primary"*/}
-                {/*                    >*/}
-                {/*                        Advanced*/}
-                {/*                    </Typography>*/}
-
-                {/*                    <Paper*/}
-                {/*                        style={{*/}
-                {/*                            overflowX: "auto",*/}
-                {/*                            marginTop: 30,*/}
-                {/*                            padding: 20,*/}
-                {/*                            backgroundColor: colors.kick_starter_background_color_1*/}
-                {/*                        }}*/}
-                {/*                    >*/}
-                {/*                        <Typography*/}
-                {/*                            color="error"*/}
-                {/*                            variant="h6"*/}
-                {/*                            paragraph*/}
-                {/*                        >*/}
-                {/*                            Block user*/}
-                {/*                        </Typography>*/}
-                {/*                        <Typography*/}
-                {/*                            variant="subtitle1"*/}
-                {/*                            paragraph*/}
-                {/*                        >*/}
-                {/*                            Block the user will prevent them from*/}
-                {/*                            participating in all Invest West activities.*/}
-                {/*                        </Typography>*/}
-                {/*                        <Button*/}
-                {/*                            color="secondary"*/}
-                {/*                            variant="contained"*/}
-                {/*                            disabled*/}
-                {/*                        >*/}
-                {/*                            Block user*/}
-                {/*                        </Button>*/}
-                {/*                        <Typography*/}
-                {/*                            variant="body2"*/}
-                {/*                            color="error"*/}
-                {/*                            style={{*/}
-                {/*                                marginTop: 6*/}
-                {/*                            }}*/}
-                {/*                        >*/}
-                {/*                            This function is not available in this version.*/}
-                {/*                        </Typography>*/}
-                {/*                    </Paper>*/}
-                {/*                </FlexView>*/}
-                {/*            </Col>*/}
-
-                {/*            {*/}
-                {/*                currentUser.type !== DB_CONST.TYPE_ADMIN*/}
-                {/*                    ?*/}
-                {/*                    null*/}
-                {/*                    :*/}
-                {/*                    <Col*/}
-                {/*                        xs={12}*/}
-                {/*                        md={12}*/}
-                {/*                        lg={12}*/}
-                {/*                        style={{*/}
-                {/*                            marginTop: 20*/}
-                {/*                        }}*/}
-                {/*                    >*/}
-                {/*                        <Divider/>*/}
-                {/*                    </Col>*/}
-                {/*            }*/}
-                {/*        </Row>*/}
-                {/*}*/}
-
                 {/** User's activities - only available for admins */}
                 {
                     currentUser.type !== DB_CONST.TYPE_ADMIN
@@ -761,7 +608,7 @@ class Profile extends Component {
                         <Row noGutters style={{ backgroundColor: colors.kick_starter_background_color_1 }} >
                             <Col xs={12} md={12} lg={12} style={{ padding: 24 }} >
                                 <FlexView column >
-                                    <Typography variant="h6" color="primary" >Activities</Typography>
+                                    <Typography variant="h6" color="primary" >Student activities</Typography>
                                 </FlexView>
 
                                 <FlexView column marginTop={20} >
@@ -779,559 +626,6 @@ class Profile extends Component {
             </Container>
         );
     }
-
-    /**
-     * Render self-certification agreement for investor
-     */
-    renderSelfCertificationAgreement = () => {
-        const {
-            groupProperties,
-
-            currentUser,
-
-            originalUser,
-            investorSelfCertificationAgreement,
-            investorSelfCertificationAgreementLoaded,
-            investorSelfCertificationAgreementCheckBox1Checked,
-            investorSelfCertificationAgreementCheckBox2Checked,
-            investorSelfCertificationAgreementCheckBox3Checked,
-            investorSelfCertificationAgreementStatementType,
-
-            investorSelfCertificationAgreement_handleCheckBoxChanged,
-            investorSelfCertificationAgreement_handleStatementTypeChanged,
-            setInvestorSelfCertificationAgreement
-        } = this.props;
-
-        const renderFormElements = () => {
-            <Select
-            name="statementType"
-            value={investorSelfCertificationAgreementStatementType}
-            variant="outlined"
-            margin="dense"
-            input={<OutlinedInput/>}
-            onChange={investorSelfCertificationAgreement_handleStatementTypeChanged}
-        >
-                <MenuItem value={DB_CONST.SELF_CERTIFIED_SOPHISTICATED_INVESTOR_AGREEMENT} >Self-certified sophisticated investor statement</MenuItem>
-                <MenuItem value={DB_CONST.HIGH_NET_WORTH_INVESTOR_AGREEMENT} >High net worth investor statement</MenuItem>
-            </Select>
-
-            
-                investorSelfCertificationAgreementStatementType === DB_CONST.HIGH_NET_WORTH_INVESTOR_AGREEMENT
-                    ?
-                    <Typography variant="body1" align="left" component="span" >
-                        I declare that I am a certified high net worth individual for the purposes of the
-                        Financial Services and Markets Act 2000 (Financial Promotion) Order 2005.
-                        <br/><br/>
-                        I understand that this means:
-                        <ol type="a" >
-                            <li>I can receive financial promotions that may not have been approved by a person authorised by the Financial Conduct Authority;</li>
-                            <li>the content of such financial promotions may not conform to rules issued by the Financial Conduct Authority;</li>
-                            <li>by signing this statement I may lose significant rights;</li>
-                            <li>
-                                I may have no right to complain to either of the following:-
-                                <br/>
-                                <ol type="i" >
-                                    <li>the Financial Conduct Authority; or</li>
-                                    <li>the Financial Ombudsman Scheme</li>
-                                </ol>
-                            </li>
-                            <li>I may have no right to seek compensation from the Financial Services Compensation Scheme.</li>
-                        </ol>
-
-                        I am a certified high net worth individual because <b><u>at least one of the following
-                        applies:</u></b>
-
-                        <ol type="a" >
-                            <li>I had, during the financial year immediately preceding today's date, an annual income to the value of £100,000 or more;</li>
-                            <li>
-                                I held, throughout the financial year immediately preceding today's date, net
-                                assets to the value of £250,000 or more. Net assets for these purposes do not
-                                include:-
-                                <ol type="i">
-                                    <li>the property which is my primary residence or any loan secured on that residence;</li>
-                                    <li>any rights of mine under a qualifying contract of insurance within the meaning of the Financial Services and Markets Act 2000 (Regulated Activities) Order 2001; or</li>
-                                    <li>any benefits (in the form of pensions or otherwise) which are payable on the termination of my service or on my death or retirement and to which I am (or my dependants are), or may be, entitled.</li>
-                                </ol>
-                            </li>
-                        </ol>
-                    </Typography>
-                    :
-                    <Typography variant="body1" align="left" component="span" >
-                        I declare that I am a self-certified sophisticated investor for the purposes of the
-                        Financial Services and Markets Act (Financial Promotion) Order 2005.
-                        <br/><br/>
-                        I understand that this means:
-                        <ol type="a" >
-                            <li>I can receive financial promotions that may not have been approved by a person authorised by the Financial Conduct Authority;</li>
-                            <li>the content of such financial promotions may not conform to rules issued by the Financial Conduct Authority;</li>
-                            <li>by signing this statement I may lose significant rights;</li>
-                            <li>
-                                I may have no right to complain to either of the following:
-                                <ol type="i" >
-                                    <li>the Financial Conduct Authority; or</li>
-                                    <li>the Financial Ombudsman Scheme;</li>
-                                </ol>
-                            </li>
-                            <li>I may have no right to seek compensation from the Financial Services Compensation Scheme.</li>
-                        </ol>
-
-                        I am a self-certified sophisticated investor because <b><u>at least one of the following
-                        applies:</u></b>
-
-                        <ol type="a" >
-                            <li>I am a member of a network or syndicate of business angels and have been so for at least the last six months prior to today's date;</li>
-                            <li>I have made more than one investment in an unlisted company in the two years prior to today's date;</li>
-                            <li>I am working, or have worked in the two years prior to today's date, in a professional capacity in the private equity sector, or in the provision of finance for small and medium enterprises;</li>
-                            <li>I am currently, or have been in the two years prior to today's date, a director of a company with an annual turnover of at least £1 million.</li>
-                        </ol>
-                    </Typography>
-            
-        };
-
-        if (originalUser.type === DB_CONST.TYPE_ISSUER) {
-            return null;
-        }
-
-        if (!investorSelfCertificationAgreementLoaded) {
-            return (
-                <FlexView column >
-                    <Typography variant="h6" >Self-certification agreement</Typography>
-
-                    <FlexView hAlignContent="center" marginTop={20} marginBottom={25} >
-                        <HashLoader
-                            color={
-                                !groupProperties
-                                    ?
-                                    colors.primaryColor
-                                    :
-                                    groupProperties.settings.primaryColor
-                            }
-                        />
-                    </FlexView>
-                </FlexView>
-            );
-        }
-
-        // investor has agreed to the terms of self-certification
-        if (investorSelfCertificationAgreement) {
-            const isExpired = isCertificationExpired(investorSelfCertificationAgreement.agreedDate);
-            if (isExpired) {
-                const currentDate = new Date();
-                const agreedDate = new Date(investorSelfCertificationAgreement.agreedDate); // No need to multiply by 1000
-                const expiredDays = Math.ceil((currentDate.getTime() - (agreedDate.getTime() + 365 * 24 * 60 * 60 * 1000)) / (24 * 60 * 60 * 1000));
-                console.log(`The user's agreement has been expired for ${expiredDays} day(s).`);
-
-  // The rest of the code inside the isExpired condition
-                return (
-                    <FlexView column >
-                <Typography variant="h6" color="error" align="left" paragraph >Self-certification agreement</Typography>
-
-                <Typography variant="body1" align="left" paragraph >
-                    {
-                        currentUser.type === DB_CONST.TYPE_ADMIN
-                            ?
-                            "To access the functionality of this site, this user must be a self-certified investor."
-                            :
-                            "To access the functionality of this site, you must be a self-certified investor. Please select the appropriate statement below and read carefully."
-                    }
-                </Typography>
-
-                <Select
-                    name="statementType"
-                    value={investorSelfCertificationAgreementStatementType}
-                    variant="outlined"
-                    margin="dense"
-                    input={<OutlinedInput/>}
-                    onChange={investorSelfCertificationAgreement_handleStatementTypeChanged}
-                >
-                    <MenuItem value={DB_CONST.SELF_CERTIFIED_SOPHISTICATED_INVESTOR_AGREEMENT} >Self-certified sophisticated investor statement</MenuItem>
-                    <MenuItem value={DB_CONST.HIGH_NET_WORTH_INVESTOR_AGREEMENT} >High net worth investor statement</MenuItem>
-                </Select>
-
-                <FlexView column marginTop={35} style={{ maxHeight: 500, overflowY: "auto", border: `1px solid ${colors.gray_300}`, padding: 18 }} >
-                    {/** T&Cs title */}
-                    <Typography variant="h6" align="left" paragraph >
-                        <b>
-                            {
-                                investorSelfCertificationAgreementStatementType === DB_CONST.HIGH_NET_WORTH_INVESTOR_AGREEMENT
-                                    ?
-                                    "Statement for self-certified high net worth individual"
-                                    :
-                                    "Statement for a self-certified sophisticated investor"
-                            }
-                        </b>
-                    </Typography>
-
-                    {/** T&Cs text */}
-                    {
-                        investorSelfCertificationAgreementStatementType === DB_CONST.HIGH_NET_WORTH_INVESTOR_AGREEMENT
-                            ?
-                            <Typography variant="body1" align="left" component="span" >
-                                I declare that I am a certified high net worth individual for the purposes of the
-                                Financial Services and Markets Act 2000 (Financial Promotion) Order 2005.
-                                <br/><br/>
-                                I understand that this means:
-                                <ol type="a" >
-                                    <li>I can receive financial promotions that may not have been approved by a person authorised by the Financial Conduct Authority;</li>
-                                    <li>the content of such financial promotions may not conform to rules issued by the Financial Conduct Authority;</li>
-                                    <li>by signing this statement I may lose significant rights;</li>
-                                    <li>
-                                        I may have no right to complain to either of the following:-
-                                        <br/>
-                                        <ol type="i" >
-                                            <li>the Financial Conduct Authority; or</li>
-                                            <li>the Financial Ombudsman Scheme</li>
-                                        </ol>
-                                    </li>
-                                    <li>I may have no right to seek compensation from the Financial Services Compensation Scheme.</li>
-                                </ol>
-
-                                I am a certified high net worth individual because <b><u>at least one of the following
-                                applies:</u></b>
-
-                                <ol type="a" >
-                                    <li>I had, during the financial year immediately preceding today's date, an annual income to the value of £100,000 or more;</li>
-                                    <li>
-                                        I held, throughout the financial year immediately preceding today's date, net
-                                        assets to the value of £250,000 or more. Net assets for these purposes do not
-                                        include:-
-                                        <ol type="i">
-                                            <li>the property which is my primary residence or any loan secured on that residence;</li>
-                                            <li>any rights of mine under a qualifying contract of insurance within the meaning of the Financial Services and Markets Act 2000 (Regulated Activities) Order 2001; or</li>
-                                            <li>any benefits (in the form of pensions or otherwise) which are payable on the termination of my service or on my death or retirement and to which I am (or my dependants are), or may be, entitled.</li>
-                                        </ol>
-                                    </li>
-                                </ol>
-                            </Typography>
-                            :
-                            <Typography variant="body1" align="left" component="span" >
-                                I declare that I am a self-certified sophisticated investor for the purposes of the
-                                Financial Services and Markets Act (Financial Promotion) Order 2005.
-                                <br/><br/>
-                                I understand that this means:
-                                <ol type="a" >
-                                    <li>I can receive financial promotions that may not have been approved by a person authorised by the Financial Conduct Authority;</li>
-                                    <li>the content of such financial promotions may not conform to rules issued by the Financial Conduct Authority;</li>
-                                    <li>by signing this statement I may lose significant rights;</li>
-                                    <li>
-                                        I may have no right to complain to either of the following:
-                                        <ol type="i" >
-                                            <li>the Financial Conduct Authority; or</li>
-                                            <li>the Financial Ombudsman Scheme;</li>
-                                        </ol>
-                                    </li>
-                                    <li>I may have no right to seek compensation from the Financial Services Compensation Scheme.</li>
-                                </ol>
-
-                                I am a self-certified sophisticated investor because <b><u>at least one of the following
-                                applies:</u></b>
-
-                                <ol type="a" >
-                                    <li>I am a member of a network or syndicate of business angels and have been so for at least the last six months prior to today's date;</li>
-                                    <li>I have made more than one investment in an unlisted company in the two years prior to today's date;</li>
-                                    <li>I am working, or have worked in the two years prior to today's date, in a professional capacity in the private equity sector, or in the provision of finance for small and medium enterprises;</li>
-                                    <li>I am currently, or have been in the two years prior to today's date, a director of a company with an annual turnover of at least £1 million.</li>
-                                </ol>
-                            </Typography>
-                    }
-                    {/** Divider */}
-                    <Divider style={{ marginTop: 30, marginBottom: 18 }} />
-
-                    <FormControl component="fieldset" fullWidth >
-                        <FormGroup row={true} >
-                            {/** Checkbox 1 */}
-                            <FormControlLabel
-                                style={{ width: "100%" }}
-                                control={
-                                    <Checkbox name="checkBox1Ticked" color="primary" value={investorSelfCertificationAgreementCheckBox1Checked} checked={investorSelfCertificationAgreementCheckBox1Checked} onChange={investorSelfCertificationAgreement_handleCheckBoxChanged} />
-                                }
-                                label={
-                                    <Typography variant="body1" align="left"><b>I accept that I can lose my property and other assets from making investment decisions based on financial promotions.</b></Typography>
-                                }
-                                labelPlacement="end"
-                            />
-
-                            {/** Checkbox 2 */}
-                            <FormControlLabel
-                                style={{ width: "100%" }}
-                                control={
-                                    <Checkbox
-                                        name="checkBox2Ticked"
-                                        color="primary"
-                                        value={investorSelfCertificationAgreementCheckBox2Checked}
-                                        checked={investorSelfCertificationAgreementCheckBox2Checked}
-                                        onChange={investorSelfCertificationAgreement_handleCheckBoxChanged}
-                                    />
-                                }
-                                label={
-                                    <Typography variant="body1" align="left" >I am aware that it is open to me to seek advice from someone who specialises in advising on investments.</Typography>
-                                }
-                                labelPlacement="end"
-                            />
-
-                            {/** Checkbox 3 */}
-                            <FormControlLabel
-                                style={{ width: "100%" }}
-                                control={
-                                    <Checkbox name="checkBox3Ticked" color="primary" value={investorSelfCertificationAgreementCheckBox3Checked} checked={investorSelfCertificationAgreementCheckBox3Checked} onChange={investorSelfCertificationAgreement_handleCheckBoxChanged} />
-                                }
-                                label={
-                                    <Typography variant="body1" align="left" >
-                                        <b>
-                                            I have read and agree to the&nbsp;
-                                            <CustomLink url={Routes.constructPublicRoute("termsOfUse")} target="_blank" color="none" activeColor="none" activeUnderline={true} component="nav-link" childComponent="Terms of Use" />
-                                            &nbsp;and&nbsp;
-                                            <CustomLink url={Routes.constructPublicRoute("privacyPolicy")} target="_blank" color="none" activeColor="none" activeUnderline={true} component="nav-link" childComponent="Privacy Policy" />
-                                            .
-                                        </b>
-                                    </Typography>
-                                }
-                                labelPlacement="end"
-                            />
-                        </FormGroup>
-                    </FormControl>
-                </FlexView>
-
-                <FlexView column grow={1} hAlignContent="right" marginTop={40} marginBottom={20} >
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={setInvestorSelfCertificationAgreement}
-                        disabled={
-                            !investorSelfCertificationAgreementCheckBox1Checked
-                            || !investorSelfCertificationAgreementCheckBox2Checked
-                            || !investorSelfCertificationAgreementCheckBox3Checked
-                            || currentUser.type === DB_CONST.TYPE_ADMIN
-                        }
-                    >
-                        Submit
-                    </Button>
-                    {
-                        currentUser.type === DB_CONST.TYPE_ADMIN
-                            ?
-                            <Typography variant="body1" color="error" align="right" style={{ marginTop: 25 }}>You cannot do this on behalf of the investor.</Typography>
-                            :
-                            null
-                    }
-                </FlexView>
-            </FlexView>
-                );
-            } else {
-                const daysLeft = Math.max(0, Math.ceil((new Date(investorSelfCertificationAgreement.agreedDate).getTime() + 365 * 24 * 60 * 60 * 1000 - new Date().getTime()) / (24 * 60 * 60 * 1000)));
-        
-                return (
-                    <FlexView column>
-                        <Typography variant="h6" color="primary" align="left">
-                            Self-certification agreement
-                        </Typography>
-                        <Typography variant="subtitle1" align="left" style={{ marginTop: 25, marginBottom: 35 }}>
-                            {currentUser.type === DB_CONST.TYPE_ADMIN ? "This investor has" : "You have"} agreed to
-                            the statement
-                            of <b>{investorSelfCertificationAgreement.type === DB_CONST.HIGH_NET_WORTH_INVESTOR_AGREEMENT ? "High net worth investor " : "Self-certified sophisticated investor "}</b>
-                            on {utils.dateInReadableFormat(investorSelfCertificationAgreement.agreedDate)}.
-                            You have {daysLeft} day(s) left until you need to re-certify.
-                        </Typography>
-                    </FlexView>
-                );
-            }
-        }
-        
-
-        return (
-            <FlexView column >
-                <Typography variant="h6" color="error" align="left" paragraph >Self-certification agreement</Typography>
-
-                <Typography variant="body1" align="left" paragraph >
-                    {
-                        currentUser.type === DB_CONST.TYPE_ADMIN
-                            ?
-                            "To access the functionality of this site, this user must be a self-certified investor."
-                            :
-                            "To access the functionality of this site, you must be a self-certified investor. Please select the appropriate statement below and read carefully."
-                    }
-                </Typography>
-
-                <Select
-                    name="statementType"
-                    value={investorSelfCertificationAgreementStatementType}
-                    variant="outlined"
-                    margin="dense"
-                    input={<OutlinedInput/>}
-                    onChange={investorSelfCertificationAgreement_handleStatementTypeChanged}
-                >
-                    <MenuItem value={DB_CONST.SELF_CERTIFIED_SOPHISTICATED_INVESTOR_AGREEMENT} >Self-certified sophisticated investor statement</MenuItem>
-                    <MenuItem value={DB_CONST.HIGH_NET_WORTH_INVESTOR_AGREEMENT} >High net worth investor statement</MenuItem>
-                </Select>
-
-                <FlexView column marginTop={35} style={{ maxHeight: 500, overflowY: "auto", border: `1px solid ${colors.gray_300}`, padding: 18 }} >
-                    {/** T&Cs title */}
-                    <Typography variant="h6" align="left" paragraph >
-                        <b>
-                            {
-                                investorSelfCertificationAgreementStatementType === DB_CONST.HIGH_NET_WORTH_INVESTOR_AGREEMENT
-                                    ?
-                                    "Statement for self-certified high net worth individual"
-                                    :
-                                    "Statement for a self-certified sophisticated investor"
-                            }
-                        </b>
-                    </Typography>
-
-                    {/** T&Cs text */}
-                    {
-                        investorSelfCertificationAgreementStatementType === DB_CONST.HIGH_NET_WORTH_INVESTOR_AGREEMENT
-                            ?
-                            <Typography variant="body1" align="left" component="span" >
-                                I declare that I am a certified high net worth individual for the purposes of the
-                                Financial Services and Markets Act 2000 (Financial Promotion) Order 2005.
-                                <br/><br/>
-                                I understand that this means:
-                                <ol type="a" >
-                                    <li>I can receive financial promotions that may not have been approved by a person authorised by the Financial Conduct Authority;</li>
-                                    <li>the content of such financial promotions may not conform to rules issued by the Financial Conduct Authority;</li>
-                                    <li>by signing this statement I may lose significant rights;</li>
-                                    <li>
-                                        I may have no right to complain to either of the following:-
-                                        <br/>
-                                        <ol type="i" >
-                                            <li>the Financial Conduct Authority; or</li>
-                                            <li>the Financial Ombudsman Scheme</li>
-                                        </ol>
-                                    </li>
-                                    <li>I may have no right to seek compensation from the Financial Services Compensation Scheme.</li>
-                                </ol>
-
-                                I am a certified high net worth individual because <b><u>at least one of the following
-                                applies:</u></b>
-
-                                <ol type="a" >
-                                    <li>I had, during the financial year immediately preceding today's date, an annual income to the value of £100,000 or more;</li>
-                                    <li>
-                                        I held, throughout the financial year immediately preceding today's date, net
-                                        assets to the value of £250,000 or more. Net assets for these purposes do not
-                                        include:-
-                                        <ol type="i">
-                                            <li>the property which is my primary residence or any loan secured on that residence;</li>
-                                            <li>any rights of mine under a qualifying contract of insurance within the meaning of the Financial Services and Markets Act 2000 (Regulated Activities) Order 2001; or</li>
-                                            <li>any benefits (in the form of pensions or otherwise) which are payable on the termination of my service or on my death or retirement and to which I am (or my dependants are), or may be, entitled.</li>
-                                        </ol>
-                                    </li>
-                                </ol>
-                            </Typography>
-                            :
-                            <Typography variant="body1" align="left" component="span" >
-                                I declare that I am a self-certified sophisticated investor for the purposes of the
-                                Financial Services and Markets Act (Financial Promotion) Order 2005.
-                                <br/><br/>
-                                I understand that this means:
-                                <ol type="a" >
-                                    <li>I can receive financial promotions that may not have been approved by a person authorised by the Financial Conduct Authority;</li>
-                                    <li>the content of such financial promotions may not conform to rules issued by the Financial Conduct Authority;</li>
-                                    <li>by signing this statement I may lose significant rights;</li>
-                                    <li>
-                                        I may have no right to complain to either of the following:
-                                        <ol type="i" >
-                                            <li>the Financial Conduct Authority; or</li>
-                                            <li>the Financial Ombudsman Scheme;</li>
-                                        </ol>
-                                    </li>
-                                    <li>I may have no right to seek compensation from the Financial Services Compensation Scheme.</li>
-                                </ol>
-
-                                I am a self-certified sophisticated investor because <b><u>at least one of the following
-                                applies:</u></b>
-
-                                <ol type="a" >
-                                    <li>I am a member of a network or syndicate of business angels and have been so for at least the last six months prior to today's date;</li>
-                                    <li>I have made more than one investment in an unlisted company in the two years prior to today's date;</li>
-                                    <li>I am working, or have worked in the two years prior to today's date, in a professional capacity in the private equity sector, or in the provision of finance for small and medium enterprises;</li>
-                                    <li>I am currently, or have been in the two years prior to today's date, a director of a company with an annual turnover of at least £1 million.</li>
-                                </ol>
-                            </Typography>
-                    }
-                    {/** Divider */}
-                    <Divider style={{ marginTop: 30, marginBottom: 18 }} />
-
-                    <FormControl component="fieldset" fullWidth >
-                        <FormGroup row={true} >
-                            {/** Checkbox 1 */}
-                            <FormControlLabel
-                                style={{ width: "100%" }}
-                                control={
-                                    <Checkbox name="checkBox1Ticked" color="primary" value={investorSelfCertificationAgreementCheckBox1Checked} checked={investorSelfCertificationAgreementCheckBox1Checked} onChange={investorSelfCertificationAgreement_handleCheckBoxChanged} />
-                                }
-                                label={
-                                    <Typography variant="body1" align="left"><b>I accept that I can lose my property and other assets from making investment decisions based on financial promotions.</b></Typography>
-                                }
-                                labelPlacement="end"
-                            />
-
-                            {/** Checkbox 2 */}
-                            <FormControlLabel
-                                style={{ width: "100%" }}
-                                control={
-                                    <Checkbox
-                                        name="checkBox2Ticked"
-                                        color="primary"
-                                        value={investorSelfCertificationAgreementCheckBox2Checked}
-                                        checked={investorSelfCertificationAgreementCheckBox2Checked}
-                                        onChange={investorSelfCertificationAgreement_handleCheckBoxChanged}
-                                    />
-                                }
-                                label={
-                                    <Typography variant="body1" align="left" >I am aware that it is open to me to seek advice from someone who specialises in advising on investments.</Typography>
-                                }
-                                labelPlacement="end"
-                            />
-
-                            {/** Checkbox 3 */}
-                            <FormControlLabel
-                                style={{ width: "100%" }}
-                                control={
-                                    <Checkbox name="checkBox3Ticked" color="primary" value={investorSelfCertificationAgreementCheckBox3Checked} checked={investorSelfCertificationAgreementCheckBox3Checked} onChange={investorSelfCertificationAgreement_handleCheckBoxChanged} />
-                                }
-                                label={
-                                    <Typography variant="body1" align="left" >
-                                        <b>
-                                            I have read and agree to the&nbsp;
-                                            <CustomLink url={Routes.constructPublicRoute("termsOfUse")} target="_blank" color="none" activeColor="none" activeUnderline={true} component="nav-link" childComponent="Terms of Use" />
-                                            &nbsp;and&nbsp;
-                                            <CustomLink url={Routes.constructPublicRoute("privacyPolicy")} target="_blank" color="none" activeColor="none" activeUnderline={true} component="nav-link" childComponent="Privacy Policy" />
-                                            .
-                                        </b>
-                                    </Typography>
-                                }
-                                labelPlacement="end"
-                            />
-                        </FormGroup>
-                    </FormControl>
-                </FlexView>
-
-                <FlexView column grow={1} hAlignContent="right" marginTop={40} marginBottom={20} >
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={setInvestorSelfCertificationAgreement}
-                        disabled={
-                            !investorSelfCertificationAgreementCheckBox1Checked
-                            || !investorSelfCertificationAgreementCheckBox2Checked
-                            || !investorSelfCertificationAgreementCheckBox3Checked
-                            || currentUser.type === DB_CONST.TYPE_ADMIN
-                        }
-                    >
-                        Submit
-                    </Button>
-                    {
-                        currentUser.type === DB_CONST.TYPE_ADMIN
-                            ?
-                            <Typography variant="body1" color="error" align="right" style={{ marginTop: 25 }}>You cannot do this on behalf of the investor.</Typography>
-                            :
-                            null
-                    }
-                </FlexView>
-            </FlexView>
-        );
-    };
 
     /**
      * Render business profile section

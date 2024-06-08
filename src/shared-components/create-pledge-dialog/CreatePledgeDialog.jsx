@@ -124,16 +124,6 @@ class CreatePledgeDialog extends Component {
                                     variant="outlined"
                                 />
 
-                                {/** Get the raised amount from the pitch and put here */}
-                                <TextField
-                                    disabled
-                                    label="Fund already raised to date (£)"
-                                    value={!project ? "" : project.Pitch.amountRaised}
-                                    fullWidth
-                                    margin="normal"
-                                    variant="outlined"
-                                />
-
                                 {/** Get the raise required from the pitch and put here */}
                                 <TextField
                                     disabled

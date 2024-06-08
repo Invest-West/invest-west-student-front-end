@@ -156,15 +156,11 @@ const initState = {
         pitchProjectDescription: '',
         pitchExpiryDate: null,
 
-        pitchAmountRaisedToDate: '',
-        pitchRaiseRequired: '',
         howFundIsBeingRaised: '',
         financialRound: '',
         pitchPostMoneyValuation: '',
         detailsAboutEarlierFundraisingRounds: '',
         pitchInvestorsCommitted: '',
-
-        hasRaisedMoneyBefore: '',
 
         // pitch cover (image or video) --- 1 file
         pitchCover: [],
@@ -484,20 +480,6 @@ class CreatePitchPageMain extends Component {
                                     :
                                     null
                             ,
-                            pitchAmountRaisedToDate:
-                                project.Pitch.hasOwnProperty('amountRaised')
-                                    ?
-                                    Number(project.Pitch.amountRaised.toFixed(2)).toLocaleString()
-                                    :
-                                    ''
-                            ,
-                            pitchRaiseRequired:
-                                project.Pitch.hasOwnProperty('fundRequired')
-                                    ?
-                                    Number(project.Pitch.fundRequired.toFixed(2)).toLocaleString()
-                                    :
-                                    ''
-                            ,
                             howFundIsBeingRaised:
                                 project.Pitch.hasOwnProperty('howFundIsBeingRaised')
                                     ?
@@ -530,19 +512,6 @@ class CreatePitchPageMain extends Component {
                                 project.Pitch.hasOwnProperty('investorsCommitted')
                                     ?
                                     project.Pitch.investorsCommitted
-                                    :
-                                    ''
-                            ,
-                            hasRaisedMoneyBefore:
-                                project.Pitch.hasOwnProperty('amountRaised')
-                                    ?
-                                    (
-                                        project.Pitch.amountRaised > 0
-                                            ?
-                                            "true"
-                                            :
-                                            "false"
-                                    )
                                     :
                                     ''
                             ,
@@ -621,8 +590,6 @@ class CreatePitchPageMain extends Component {
             pitchProjectDescription,
             pitchExpiryDate,
 
-            pitchAmountRaisedToDate,
-            pitchRaiseRequired,
             howFundIsBeingRaised,
             financialRound,
             pitchPostMoneyValuation,
@@ -633,7 +600,6 @@ class CreatePitchPageMain extends Component {
             pitchPresentationDocument,
             pitchPresentationText,
 
-            hasRaisedMoneyBefore,
 
             // this field is only available for QIB
             qibSpecialNews
@@ -653,11 +619,8 @@ class CreatePitchPageMain extends Component {
                     || pitchProjectName.trim().length === 0
                     || pitchProjectDescription.trim().length === 0
                     || pitchExpiryDate === null
-                    || pitchRaiseRequired.trim().length === 0
                     || howFundIsBeingRaised.trim().length === 0
                     || financialRound.trim().length === 0
-                    || hasRaisedMoneyBefore.trim().length === 0
-                    || (hasRaisedMoneyBefore === "true" && pitchAmountRaisedToDate.trim().length === 0)
                     || (groupUserName === "qib" && qibSpecialNews.trim().length === 0)
                 ) {
 
@@ -684,23 +647,6 @@ class CreatePitchPageMain extends Component {
                             pitchPublishErrorMessageShowed: true
                         }
                     });
-                    return;
-                }
-
-                // if the user enters invalid value for the money, warn them
-                if ((hasRaisedMoneyBefore === "true" && !utils.getNumberFromInputString(pitchAmountRaisedToDate))
-                    || !utils.getNumberFromInputString(pitchRaiseRequired)
-                    || (pitchPostMoneyValuation.trim().length > 0 && !utils.getNumberFromInputString(pitchPostMoneyValuation))
-                ) {
-
-                    this.setState({
-                        createProject: {
-                            ...this.state.createProject,
-                            pitchPublishCheck: PITCH_PUBLISH_FALSE_INVALID_FUND,
-                            pitchPublishErrorMessageShowed: true
-                        }
-                    });
-
                     return;
                 }
                 this.setState({
@@ -1146,14 +1092,11 @@ class CreatePitchPageMain extends Component {
             pitchProjectDescription,
             pitchExpiryDate,
 
-            pitchAmountRaisedToDate,
-            pitchRaiseRequired,
             howFundIsBeingRaised,
             financialRound,
             pitchPostMoneyValuation,
             detailsAboutEarlierFundraisingRounds,
             pitchInvestorsCommitted,
-            hasRaisedMoneyBefore,
 
             pitchCover,
             pitchCoverVideoURL,
@@ -1319,71 +1262,6 @@ class CreatePitchPageMain extends Component {
                                                 null
                                         ,
                                         Pitch: {
-                                            totalRaise:
-                                                saveProgress
-                                                    ?
-                                                    (
-                                                        hasRaisedMoneyBefore.trim().length === 0
-                                                            ?
-                                                            null
-                                                            :
-                                                            hasRaisedMoneyBefore === "true"
-                                                                ?
-                                                                (
-                                                                    pitchRaiseRequired.trim().length === 0
-                                                                        ?
-                                                                        null
-                                                                        :
-                                                                        utils.getNumberFromInputString(pitchAmountRaisedToDate) + utils.getNumberFromInputString(pitchRaiseRequired)
-                                                                )
-                                                                :
-                                                                (
-                                                                    pitchRaiseRequired.trim().length === 0
-                                                                        ?
-                                                                        null
-                                                                        :
-                                                                        utils.getNumberFromInputString(pitchRaiseRequired)
-                                                                )
-                                                    )
-                                                    :
-                                                    hasRaisedMoneyBefore === "true"
-                                                        ?
-                                                        utils.getNumberFromInputString(pitchAmountRaisedToDate) + utils.getNumberFromInputString(pitchRaiseRequired)
-                                                        :
-                                                        utils.getNumberFromInputString(pitchRaiseRequired)
-                                            ,
-                                            amountRaised:
-                                                saveProgress
-                                                    ?
-                                                    (
-                                                        hasRaisedMoneyBefore.trim().length === 0
-                                                            ?
-                                                            null
-                                                            :
-                                                            hasRaisedMoneyBefore === "true"
-                                                                ?
-                                                                utils.getNumberFromInputString(pitchAmountRaisedToDate)
-                                                                :
-                                                                0
-                                                    )
-                                                    :
-                                                    hasRaisedMoneyBefore === "true"
-                                                        ?
-                                                        utils.getNumberFromInputString(pitchAmountRaisedToDate)
-                                                        :
-                                                        0
-                                            ,
-                                            fundRequired:
-                                                saveProgress
-                                                    ?
-                                                    pitchRaiseRequired.trim().length === 0
-                                                        ?
-                                                        null
-                                                        :
-                                                        utils.getNumberFromInputString(pitchRaiseRequired)
-                                                    :
-                                                    utils.getNumberFromInputString(pitchRaiseRequired)
-                                            ,
                                             howFundIsBeingRaised:
                                                 saveProgress
                                                     ?
@@ -1819,71 +1697,6 @@ class CreatePitchPageMain extends Component {
                                                     DB_CONST.PROJECT_STATUS_BEING_CHECKED
                                         ,
                                         Pitch: {
-                                            totalRaise:
-                                                saveProgress
-                                                    ?
-                                                    (
-                                                        hasRaisedMoneyBefore.trim().length === 0
-                                                            ?
-                                                            null
-                                                            :
-                                                            hasRaisedMoneyBefore === "true"
-                                                                ?
-                                                                (
-                                                                    pitchRaiseRequired.trim().length === 0
-                                                                        ?
-                                                                        null
-                                                                        :
-                                                                        utils.getNumberFromInputString(pitchAmountRaisedToDate) + utils.getNumberFromInputString(pitchRaiseRequired)
-                                                                )
-                                                                :
-                                                                (
-                                                                    pitchRaiseRequired.trim().length === 0
-                                                                        ?
-                                                                        null
-                                                                        :
-                                                                        utils.getNumberFromInputString(pitchRaiseRequired)
-                                                                )
-                                                    )
-                                                    :
-                                                    hasRaisedMoneyBefore === "true"
-                                                        ?
-                                                        utils.getNumberFromInputString(pitchAmountRaisedToDate) + utils.getNumberFromInputString(pitchRaiseRequired)
-                                                        :
-                                                        utils.getNumberFromInputString(pitchRaiseRequired)
-                                            ,
-                                            amountRaised:
-                                                saveProgress
-                                                    ?
-                                                    (
-                                                        hasRaisedMoneyBefore.trim().length === 0
-                                                            ?
-                                                            null
-                                                            :
-                                                            hasRaisedMoneyBefore === "true"
-                                                                ?
-                                                                utils.getNumberFromInputString(pitchAmountRaisedToDate)
-                                                                :
-                                                                0
-                                                    )
-                                                    :
-                                                    hasRaisedMoneyBefore === "true"
-                                                        ?
-                                                        utils.getNumberFromInputString(pitchAmountRaisedToDate)
-                                                        :
-                                                        0
-                                            ,
-                                            fundRequired:
-                                                saveProgress
-                                                    ?
-                                                    pitchRaiseRequired.trim().length === 0
-                                                        ?
-                                                        null
-                                                        :
-                                                        utils.getNumberFromInputString(pitchRaiseRequired)
-                                                    :
-                                                    utils.getNumberFromInputString(pitchRaiseRequired)
-                                            ,
                                             howFundIsBeingRaised:
                                                 saveProgress
                                                     ?
@@ -2405,12 +2218,9 @@ class CreatePitchPageMain extends Component {
             pitchProjectDescription,
             pitchExpiryDate,
 
-            pitchAmountRaisedToDate,
-            pitchRaiseRequired,
             howFundIsBeingRaised,
             financialRound,
             pitchPostMoneyValuation,
-            hasRaisedMoneyBefore,
 
             qibSpecialNews
         } = this.state.createProject;
@@ -2421,11 +2231,9 @@ class CreatePitchPageMain extends Component {
                 && pitchProjectName.trim().length === 0
                 && pitchProjectDescription.trim().length === 0
                 && pitchExpiryDate === null
-                && pitchRaiseRequired.trim().length === 0
                 && howFundIsBeingRaised.trim().length === 0
                 && financialRound.trim().length === 0
                 && pitchPostMoneyValuation.trim().length === 0
-                && hasRaisedMoneyBefore.trim().length === 0
                 && (groupUserName === "qib" && qibSpecialNews.trim().length === 0)
             ) {
                 setFeedbackSnackbarContent(
@@ -2449,39 +2257,7 @@ class CreatePitchPageMain extends Component {
                 return;
             }
 
-            // check if amount raised specified if the user chose Yes for prior investment
-            if (hasRaisedMoneyBefore.trim().length > 0) {
-                if (hasRaisedMoneyBefore === "true"
-                    && pitchAmountRaisedToDate.trim().length === 0
-                ) {
-                    setFeedbackSnackbarContent(
-                        'Please specify the fund you have raised.',
-                        "error",
-                        "bottom"
-                    );
-                    return;
-                }
-            }
-
             // check if entered funds are valid
-            if ((hasRaisedMoneyBefore === "true"
-                    && pitchAmountRaisedToDate.trim().length > 0
-                    && !utils.getNumberFromInputString(pitchAmountRaisedToDate)
-                )
-                || (pitchRaiseRequired.trim().length > 0
-                    && !utils.getNumberFromInputString(pitchRaiseRequired)
-                )
-                || (pitchPostMoneyValuation.trim().length > 0
-                    && !utils.getNumberFromInputString(pitchPostMoneyValuation)
-                )
-            ) {
-                setFeedbackSnackbarContent(
-                    'Please check your entered funds again.',
-                    "error",
-                    "bottom"
-                );
-                return;
-            }
         }
 
         this.setState({
@@ -3268,128 +3044,8 @@ class CreateProject extends Component {
 
                                     {
                                         /**
-                                         * Amount of money that needs raising
-                                         */
-                                    }
-                                    <FlexView marginTop={50}>
-                                        <FormControl required fullWidth>
-                                            <FormLabel>How much do you want to raise?</FormLabel>
-                                            <TextField
-                                                name="pitchRaiseRequired"
-                                                value={createProjectState.pitchRaiseRequired}
-                                                fullWidth
-                                                variant="outlined"
-                                                onChange={this.onInputChanged}
-                                                error={
-                                                    (createProjectState.pitchPublishCheck === PITCH_PUBLISH_FALSE_MISSING_FIELDS_IN_GENERAL_INFORMATION
-                                                        && createProjectState.pitchRaiseRequired.trim().length === 0)
-                                                    ||
-                                                    (createProjectState.pitchPublishCheck === PITCH_PUBLISH_FALSE_INVALID_FUND
-                                                        && !utils.getNumberFromInputString(createProjectState.pitchRaiseRequired)
-                                                    )
-                                                }
-                                                InputProps={{
-                                                    startAdornment:
-                                                        <InputAdornment position="start">£</InputAdornment>
-                                                }}
-                                            />
-                                            <FormHelperText>Please use commas as thousands-separators and do not use decimal
-                                                numbers.</FormHelperText>
-                                        </FormControl>
-                                    </FlexView>
-
-                                    {
-                                        /**
-                                         * Raised money before?
-                                         */
-                                    }
-                                    <FlexView marginTop={60}>
-                                        <FormControl component="fieldset" required fullWidth
-                                            error={
-                                                createProjectState.pitchPublishCheck === PITCH_PUBLISH_FALSE_MISSING_FIELDS_IN_GENERAL_INFORMATION
-                                                && createProjectState.hasRaisedMoneyBefore.trim().length === 0
-                                            }
-                                        >
-                                            <FormLabel>Have you already raised money?</FormLabel>
-                                            <RadioGroup row name="hasRaisedMoneyBefore" value={createProjectState.hasRaisedMoneyBefore} onChange={this.onInputChanged}>
-                                                <FormControlLabel value={true.toString()} control={<Radio color="primary"/>} label="Yes" labelPlacement="start"/>
-                                                <FormControlLabel value={false.toString()} control={<Radio color="secondary"/>} label="No" labelPlacement="start"/></RadioGroup>
-                                        </FormControl>
-                                    </FlexView>
-
-                                    {
-                                        /**
                                          * If raised money before, ask how much has been raised?
                                          */
-                                    }
-                                    {
-                                        createProjectState.hasRaisedMoneyBefore !== "true"
-                                            ?
-                                            null
-                                            :
-                                            <FlexView column marginTop={30}>
-                                                <FlexView>
-                                                    <FormControl fullWidth required>
-                                                        <FormLabel>How much have you already raised?
-                                                        </FormLabel>
-                                                        <TextField
-                                                            name="pitchAmountRaisedToDate"
-                                                            value={createProjectState.pitchAmountRaisedToDate}
-                                                            fullWidth
-                                                            variant="outlined"
-                                                            required
-                                                            onChange={this.onInputChanged}
-                                                            error={
-                                                                (createProjectState.pitchPublishCheck === PITCH_PUBLISH_FALSE_MISSING_FIELDS_IN_GENERAL_INFORMATION
-                                                                    && createProjectState.hasRaisedMoneyBefore === "true"
-                                                                    && createProjectState.pitchAmountRaisedToDate.trim().length === 0)
-                                                                ||
-                                                                (createProjectState.pitchPublishCheck === PITCH_PUBLISH_FALSE_INVALID_FUND
-                                                                    && !utils.getNumberFromInputString(createProjectState.pitchAmountRaisedToDate)
-                                                                )
-                                                            }
-                                                            InputProps={{
-                                                                startAdornment: <InputAdornment
-                                                                    position="start">£</InputAdornment>
-                                                            }}
-                                                        />
-                                                        <FormHelperText>Please use commas as thousands-separators and do not use decimal numbers.
-                                                        </FormHelperText>
-                                                    </FormControl>
-                                                </FlexView>
-
-                                                <FlexView marginTop={30}>
-                                                    <FormControl fullWidth>
-                                                        <FormLabel>Earlier fundraising rounds details</FormLabel>
-                                                        <TextField multiline name="detailsAboutEarlierFundraisingRounds" value={createProjectState.detailsAboutEarlierFundraisingRounds} fullWidth variant="outlined" onChange={this.onInputChanged}/>
-                                                        <FormHelperText>Please provide any further details on your earlier fundraising rounds?</FormHelperText>
-                                                    </FormControl>
-                                                </FlexView>
-
-                                                {/*<FlexView*/}
-                                                {/*    marginTop={30}*/}
-                                                {/*>*/}
-                                                {/*    <FormControl*/}
-                                                {/*        fullWidth*/}
-                                                {/*    >*/}
-                                                {/*        <FormLabel>*/}
-                                                {/*            List investors committed*/}
-                                                {/*        </FormLabel>*/}
-                                                {/*        <TextField*/}
-                                                {/*            multiline*/}
-                                                {/*            name="pitchInvestorsCommitted"*/}
-                                                {/*            value={createProjectState.pitchInvestorsCommitted}*/}
-                                                {/*            fullWidth*/}
-                                                {/*            variant="outlined"*/}
-                                                {/*            onChange={this.onInputChanged}*/}
-                                                {/*        />*/}
-                                                {/*        <FormHelperText>*/}
-                                                {/*            If your investors are willing to be named publicly, it can*/}
-                                                {/*            help encourage others to participate.*/}
-                                                {/*        </FormHelperText>*/}
-                                                {/*    </FormControl>*/}
-                                                {/*</FlexView>*/}
-                                            </FlexView>
                                     }
 
                                     {

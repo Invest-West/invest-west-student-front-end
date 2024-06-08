@@ -786,25 +786,6 @@ class HelpPage extends Component {
                                     <Typography variant="body1" align="left" component="legend">Once viewing an offer (see viewing offers in section 2.1), the information about the offer can be found down the page. You can see the campaign, attached documents, comments and see any extra information. To see the campaign, scroll down to the bottom of the page and click on “campaign” tab, this will contain the campaign information in the form of text or a document; click on the document to download it.</Typography>
                                     <img alt="investor_help_viewing_offers" src={require("../../img/investor_help_viewing_offers_campaign.png").default} className={css(styles.image_style)}/>
                                 </FlexView>
-
-                                {/** Commenting on an offer */}
-                                <FlexView column>
-                                    <Typography variant="subtitle1" align="left" paragraph>
-                                        <b>2.3. Commenting on an offer</b>
-                                    </Typography>
-                                    <Typography variant="body1" align="left" component="legend">Once viewing an offer (see viewing offers in section 2.1) you can comment on that offer. Comments are public and all users can view them. To make a comment navigate to the comments section at the bottom of the offer page and click on the “investor comments” button.</Typography>
-                                    <img alt="investor_help_viewing_offers" src={require("../../img/investor_help_pitch_phase_02.png").default} className={css(styles.image_style)}/>
-                                    <Typography><b>Note: You cannot interact with an offer until you have completed your self-certification form. See 5.3.</b></Typography>
-                                </FlexView>
-
-                                <FlexView column>
-                                    <Typography variant="subtitle1" align="left" paragraph>
-                                        <b>2.4. Contacting the fundraiser</b>
-                                    </Typography>
-                                    <Typography variant="body1" align="left" component="legend">Once viewing an offer (see viewing offers in section 2.1) you can contact the fundraiser by clicking the “Contact us” button on the right hand side of the page.</Typography>
-                                    <img alt="investor_help_viewing_offers" src={require("../../img/investor_contacting_fundraiser.png").default} className={css(styles.image_style)}/>
-                                    <Typography><b>Note: You cannot interact with an offer until you have completed your self-certification form. See 5.3.</b></Typography>
-                                </FlexView>
                             </FlexView>
                         </ExpansionPanelDetails>
                     </ExpansionPanel>
@@ -858,8 +839,6 @@ class HelpPage extends Component {
                             <FlexView column>
                                 {/** Editing your profile */}
                                 <FlexView column>
-                                    <Typography variant="body1" align="left" paragraph>Your profile page is used to view or edit information about yourself, add or update your business profile and complete your self-certification form. To access your profile page, click on the “Profile” button in the navigation bar. You need to complete your self-certification form to interact with any offer.</Typography>
-                                    <img alt="investor_help_profile" src={require("../../img/investor_help_profile.png").default} className={css(styles.image_style)}/>
 
                                     <Typography variant="subtitle1" align="left" paragraph>
                                         <b>5.1. Editing your profile</b>
@@ -875,15 +854,6 @@ class HelpPage extends Component {
                                     </Typography>
                                     <Typography variant="body1" align="left">Setting up a business profile is optional, to do this you need to click on the “I want to upload my business profile” button.</Typography>
                                     <img alt="investor_help_setting_up_business_profile" src={require("../../img/investor_help_setting_up_business_profile.png").default} className={css(styles.image_style)}/>
-                                </FlexView>
-
-                                {/** Self-certification */}
-                                <FlexView column>
-                                    <Typography variant="subtitle1" align="left" paragraph>
-                                        <b>5.3. Self-certification</b>
-                                    </Typography>
-                                    <Typography variant="body1" align="left">All Invest West users must complete a self-certification form. You can do this in the bottom of the “Profile” page. Select the appropriate statement for your circumstances from the drop-down box and read the full statement carefully. You will be prompted to recertify every 12 months.</Typography>
-                                    <img alt="investor_help_self_certification" src={require("../../img/investor_help_self_certification.png").default} className={css(styles.image_style)}/>
                                 </FlexView>
                             </FlexView>
                         </ExpansionPanelDetails>

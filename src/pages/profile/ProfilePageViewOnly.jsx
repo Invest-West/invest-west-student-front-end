@@ -19,8 +19,6 @@ import * as utils from '../../utils/utils';
 
 import {connect} from 'react-redux';
 import * as manageGroupFromParamsActions from '../../redux-store/actions/manageGroupFromParamsActions';
-import * as investorSelfCertificationAgreementsActions
-    from '../../redux-store/actions/investorSelfCertificationAgreementsActions';
 
 const mapStateToProps = state => {
     return {
@@ -33,12 +31,6 @@ const mapStateToProps = state => {
         currentUser: state.auth.user,
         currentUserLoaded: state.auth.userLoaded,
 
-        // Investor self-certification agreement (for investors only) ----------------------------------------------------
-        investorSelfCertificationAgreement_userID: state.manageInvestorSelfCertificationAgreement.userID,
-        investorSelfCertificationAgreement: state.manageInvestorSelfCertificationAgreement.investorSelfCertificationAgreement,
-        investorSelfCertificationAgreementLoaded: state.manageInvestorSelfCertificationAgreement.investorSelfCertificationAgreementLoaded,
-        investorSelfCertificationAgreementBeingLoaded: state.manageInvestorSelfCertificationAgreement.investorSelfCertificationAgreementBeingLoaded
-        //--------------------------------------------------------------------------------------------------------------
     }
 };
 
@@ -48,10 +40,6 @@ const mapDispatchToProps = dispatch => {
         setExpectedAndCurrentPathsForChecking: (expectedPath, currentPath) => dispatch(manageGroupFromParamsActions.setExpectedAndCurrentPathsForChecking(expectedPath, currentPath)),
         loadAngelNetwork: () => dispatch(manageGroupFromParamsActions.loadAngelNetwork()),
 
-        // Investor self-certification agreement functions --------------------------------------------------------------
-        investorSelfCertificationAgreement_setUser: (uid) => dispatch(investorSelfCertificationAgreementsActions.setUser(uid)),
-        loadInvestorSelfCertificationAgreement: () => dispatch(investorSelfCertificationAgreementsActions.loadInvestorSelfCertificationAgreement())
-        //--------------------------------------------------------------------------------------------------------------
     }
 };
 
@@ -116,14 +104,8 @@ class ProfilePageViewOnly extends Component {
     loadData = () => {
         const {
             currentUser,
-            currentUserLoaded,
+            currentUserLoaded
 
-            investorSelfCertificationAgreement_userID,
-            investorSelfCertificationAgreementLoaded,
-            investorSelfCertificationAgreementBeingLoaded,
-
-            investorSelfCertificationAgreement_setUser,
-            loadInvestorSelfCertificationAgreement
         } = this.props;
 
         const {
@@ -150,23 +132,6 @@ class ProfilePageViewOnly extends Component {
 
         this.loadUserToBeViewedProfile();
 
-        // if user has been set
-        if (userToBeViewed) {
-            if (userToBeViewed.type === DB_CONST.TYPE_INVESTOR) {
-                investorSelfCertificationAgreement_setUser(userToBeViewed.id);
-            }
-        }
-
-        // if user id for reference in self-certification agreement has been set
-        if (investorSelfCertificationAgreement_userID) {
-            // if self-certification agreement has not been loaded
-            if (!investorSelfCertificationAgreementLoaded
-                && !investorSelfCertificationAgreementBeingLoaded
-                && userToBeViewed.type === DB_CONST.TYPE_INVESTOR
-            ) {
-                loadInvestorSelfCertificationAgreement();
-            }
-        }
     };
 
     /**
@@ -259,8 +224,6 @@ class ProfilePageViewOnly extends Component {
             groupProperties,
             groupPropertiesLoaded,
             shouldLoadOtherData,
-
-            investorSelfCertificationAgreement,
 
             authStatus,
             authenticating,
@@ -379,41 +342,25 @@ class ProfilePageViewOnly extends Component {
                                 !userToBeViewed.BusinessProfile
                                     ?
                                     <FlexView column>
-                                        <Typography variant="h6" color="primary">Business profile</Typography>
+                                        <Typography variant="h6" color="primary">Uni profile</Typography>
                                         <FlexView column marginTop={15} marginLeft={15} marginRight={15} hAlignContent="center" vAlignContent="center">
-                                            <Typography align="center" variant="body1">Business profile has not been uploaded.</Typography>
+                                            <Typography align="center" variant="body1">Uni profile has not been uploaded.</Typography>
                                         </FlexView>
                                     </FlexView>
                                     :
                                     <FlexView column>
-                                        <Typography variant="h6" color="primary">Business profile</Typography>
+                                        <Typography variant="h6" color="primary">Uni profile</Typography>
                                         <FlexView column marginTop={15} marginLeft={15} marginRight={15}>
                                             <Typography variant="subtitle1" align="left"> Company name:&nbsp;&nbsp;
                                                 <b>{userToBeViewed.BusinessProfile.companyName}</b>
                                             </Typography>
                                             <Divider className={css(styles.divider_style)}/>
-                                            <Typography variant="subtitle1" align="left">Registration number:&nbsp;&nbsp;
-                                                <b>{userToBeViewed.BusinessProfile.registrationNo}</b>
-                                            </Typography>
                                             <Divider className={css(styles.divider_style)}/>
-                                            <Typography variant="subtitle1" align="left">Directors:&nbsp;&nbsp;
-                                                <ul
-                                                    style={{marginTop: 8}}>
-                                                    {
-                                                        userToBeViewed.BusinessProfile.directors.map((director, index) => (
-                                                            <li key={index}>
-                                                                {director}
-                                                            </li>
-                                                        ))
-                                                    }
-                                                </ul>
-                                            </Typography>
-                                            <Divider className={css(styles.divider_style)}/>
-                                            <Typography variant="subtitle1" align="left">Business sector:&nbsp;&nbsp;
+                                            <Typography variant="subtitle1" align="left">Course sector:&nbsp;&nbsp;
                                                 <b>{userToBeViewed.BusinessProfile.sector}</b>
                                             </Typography>
                                             <Divider className={css(styles.divider_style)}/>
-                                            <Typography variant="subtitle1" align="left">Registered office:&nbsp;&nbsp;
+                                            <Typography variant="subtitle1" align="left">Course Registered office:&nbsp;&nbsp;
                                                 <br/>
                                                 <br/>
                                                 {userToBeViewed.BusinessProfile.registeredOffice.address1.toUpperCase()}
@@ -442,36 +389,8 @@ class ProfilePageViewOnly extends Component {
                                                 <br/>
                                             </Typography>
                                             <Divider className={css(styles.divider_style)}/>
-                                            <Typography variant="subtitle1" align="left">Trading address:&nbsp;&nbsp;
-                                                <br/>
-                                                <br/>
-                                                {userToBeViewed.BusinessProfile.tradingAddress.address1.toUpperCase()}
-                                                <br/>
-                                                {
-                                                    userToBeViewed.BusinessProfile.tradingAddress.address2 === ""
-                                                        ?
-                                                        null
-                                                        :
-                                                        <div>
-                                                            {userToBeViewed.BusinessProfile.tradingAddress.address2.toUpperCase()}
-                                                            <br/>
-                                                        </div>
-                                                }
-                                                {
-                                                    userToBeViewed.BusinessProfile.tradingAddress.address3 === ""
-                                                        ?
-                                                        null
-                                                        :
-                                                        <div>
-                                                            {userToBeViewed.BusinessProfile.tradingAddress.address3.toUpperCase()}
-                                                            <br/>
-                                                        </div>
-                                                }
-                                                {userToBeViewed.BusinessProfile.tradingAddress.townCity.toUpperCase()}, {userToBeViewed.BusinessProfile.tradingAddress.postcode.toUpperCase()}
-                                                <br/>
-                                            </Typography>
                                             <Divider className={css(styles.divider_style)}/>
-                                            <Typography variant="subtitle1" align="left">Company Website:&nbsp;&nbsp;
+                                            <Typography variant="subtitle1" align="left">Course Website:&nbsp;&nbsp;
                                                 <a href={userToBeViewed.BusinessProfile.companyWebsite} rel="noopener noreferrer" target="_blank">
                                                     <b>{userToBeViewed.BusinessProfile.companyWebsite}</b>
                                                 </a>
@@ -508,27 +427,6 @@ class ProfilePageViewOnly extends Component {
                             }
                         </Paper>
 
-                        {
-                            currentUser.type === DB_CONST.TYPE_ADMIN
-                            && userToBeViewed.type === DB_CONST.TYPE_INVESTOR
-                                ?
-                                <Paper elevation={1} style={{padding: 20, marginTop: 15}}>
-                                    <FlexView column>
-                                        <Typography variant="h6" color="primary">Self-certification agreement</Typography>
-                                        <FlexView column marginTop={25} marginLeft={15} marginRight={15} hAlignContent="center" vAlignContent="center">
-                                            {
-                                                !investorSelfCertificationAgreement
-                                                    ?
-                                                    <Typography align="center" variant="body1">This investor has not completed their self certification.</Typography>
-                                                    :
-                                                    <Typography align="center" variant="body1"> This investor has agreed to the statement of <b>{investorSelfCertificationAgreement.type === DB_CONST.HIGH_NET_WORTH_INVESTOR_AGREEMENT ? "High net worth investor " : "Self-certified sophisticated investor "}</b> on {utils.dateInReadableFormat(investorSelfCertificationAgreement.agreedDate)}.</Typography>
-                                            }
-                                        </FlexView>
-                                    </FlexView>
-                                </Paper>
-                                :
-                                null
-                        }
                     </Col>
                 </Row>
             </Container>

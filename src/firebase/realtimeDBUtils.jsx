@@ -207,7 +207,6 @@ export const ACTIVITY_SUMMARY_TEMPLATE_MADE_A_VOTE_FOR_PROJECT = "Made a vote fo
 export const ACTIVITY_SUMMARY_TEMPLATE_EDITED_VOTE_FOR_PROJECT = "Edited vote for %project% offer.";
 export const ACTIVITY_SUMMARY_TEMPLATE_COMMENTED_IN_PROJECT = "Commented in %project% offer.";
 export const ACTIVITY_SUMMARY_TEMPLATE_EDITED_COMMENT_IN_PROJECT = "Edited comment in %project% offer.";
-export const ACTIVITY_SUMMARY_TEMPLATE_COMPLETED_SELF_CERTIFICATION = "Completed self certification.";
 export const ACTIVITY_SUMMARY_TEMPLATE_UPLOADED_BUSINESS_PROFILE = "Uploaded business profile.";
 export const ACTIVITY_SUMMARY_TEMPLATE_UPDATED_BUSINESS_PROFILE = "Updated business profile.";
 export const ACTIVITY_SUMMARY_TEMPLATE_UPDATED_PERSONAL_DETAILS = "Updated personal details.";

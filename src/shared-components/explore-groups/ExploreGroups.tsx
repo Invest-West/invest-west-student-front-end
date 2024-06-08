@@ -121,7 +121,7 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
                                     fullWidth
                                     name="nameFilter"
                                     value={ExploreGroupsLocalState.nameFilter}
-                                    placeholder="Search group by name"
+                                    placeholder="Search course by name"
                                     onChange={filterChanged}
                                     disabled={!successfullyFetchedGroups(ExploreGroupsLocalState)}
                                     startAdornment={
@@ -168,7 +168,7 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
                                     disabled={!successfullyFetchedGroups(ExploreGroupsLocalState)}
                                 >
                                     <MenuItem key="all" value="all">All groups</MenuItem>
-                                    <MenuItem key="groupsOfMembership" value="groupsOfMembership">My groups</MenuItem>
+                                    <MenuItem key="groupsOfMembership" value="groupsOfMembership">My courses</MenuItem>
                                     <MenuItem key="groupsOfPendingRequest" value="groupsOfPendingRequest">Pending requests</MenuItem>
                                 </Select>
 
@@ -201,7 +201,7 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
                     ? null
                     : !hasGroupsForCurrentFilters(ExploreGroupsLocalState)
                     ? <Box marginY="80px" >
-                        <Typography align="center" variant="h5" > There are no groups available using your current filter criteria </Typography>
+                        <Typography align="center" variant="h5" > There are no courses available using your current filter criteria </Typography>
                     </Box>
                     : <Box marginTop="30px" >
                         <Row noGutters >

@@ -187,17 +187,12 @@ export const handleMoveToNextStep = (params) => {
             pitchProjectDescription,
             pitchExpiredDate,
 
-            pitchAmountRaisedToDate,
-            pitchRaiseRequired,
-            pitchPostMoneyValuation,
-
             pitchCover,
             pitchCoverVideoURL,
             pitchCoverTypeSelected,
             pitchPresentationDocument,
             pitchPresentationText,
 
-            hasRaisedMoneyBefore
         } = getState().manageCreateProject.createNewPitch;
 
         // progress is being saved,
@@ -213,10 +208,7 @@ export const handleMoveToNextStep = (params) => {
                 if (pitchSector === "-"
                     || pitchProjectName.trim().length === 0
                     || pitchProjectDescription.trim().length === 0
-                    || pitchExpiredDate === null
-                    || pitchRaiseRequired.trim().length === 0
-                    || hasRaisedMoneyBefore.trim().length === 0
-                    || (hasRaisedMoneyBefore === "true" && pitchAmountRaisedToDate.trim().length === 0)) {
+                    || pitchExpiredDate === null) {
 
                     this.setState({
                         createNewPitch: {
@@ -241,23 +233,6 @@ export const handleMoveToNextStep = (params) => {
                             pitchPublishErrorMessageShowed: true
                         }
                     });
-                    return;
-                }
-
-                // if the user enters invalid value for the money, warn them
-                if ((hasRaisedMoneyBefore === "true" && !myUtils.getNumberFromInputString(pitchAmountRaisedToDate))
-                    || !myUtils.getNumberFromInputString(pitchRaiseRequired)
-                    || (pitchPostMoneyValuation.trim().length > 0 && !myUtils.getNumberFromInputString(pitchPostMoneyValuation))
-                ) {
-
-                    this.setState({
-                        createNewPitch: {
-                            ...this.state.createNewPitch,
-                            pitchPublishCheck: PITCH_PUBLISH_FALSE_INVALID_FUND,
-                            pitchPublishErrorMessageShowed: true
-                        }
-                    });
-
                     return;
                 }
                 this.setState({

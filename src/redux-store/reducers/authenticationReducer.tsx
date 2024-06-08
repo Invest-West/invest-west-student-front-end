@@ -8,7 +8,6 @@ import {
 } from "../actions/authenticationActions";
 import Error from "../../models/error";
 import GroupOfMembership from "../../models/group_of_membership";
-import InvestorSelfCertification from "../../models/investor_self_certification";
 
 export enum AuthenticationStatus {
     NotInitialized,
@@ -21,7 +20,6 @@ export interface AuthenticationState {
     status: AuthenticationStatus;
     currentUser: User | Admin | null;
     groupsOfMembership: GroupOfMembership[];
-    selfCertification?: InvestorSelfCertification; // only available for investor
     error?: Error
 }
 
@@ -64,9 +62,6 @@ const authenticationReducer = (state = initialState, action: AuthenticationActio
                 status: completeAuthenticationAction.status,
                 currentUser: completeAuthenticationAction.currentUser
                     ? JSON.parse(JSON.stringify(completeAuthenticationAction.currentUser)) : state.currentUser,
-                selfCertification: completeAuthenticationAction.selfCertification
-                    ? JSON.parse(JSON.stringify(completeAuthenticationAction.selfCertification))
-                    : state.selfCertification,
                 groupsOfMembership: JSON.parse(JSON.stringify(completeAuthenticationAction.groupsOfMembership)),
                 error: completeAuthenticationAction.error
             }

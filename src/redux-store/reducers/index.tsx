@@ -19,7 +19,6 @@ import invitedUsersReducer from './invitedUsersReducer';
 import invitationDialogReducer from './invitationDialogReducer';
 import addAngelNetworkDialogReducer from './addAngelNetworkDialogReducer';
 import manageGroupFromParamsReducer from './manageGroupFromParamsReducer';
-import investorSelfCertificationAgreementsReducer from './investorSelfCertificationAgreementsReducer';
 import angelNetworksReducer from './angelNetworksReducer';
 import manageJoinRequestsReducer from './manageJoinRequestsReducer';
 import pledgesTableReducer from './pledgesTableReducer';
@@ -123,7 +122,6 @@ const rootReducer = combineReducers<AppState>({
     manageInvitationDialog: invitationDialogReducer,
     manageAddAngelNetworkDialog: addAngelNetworkDialogReducer,
     manageGroupFromParams: manageGroupFromParamsReducer,
-    manageInvestorSelfCertificationAgreement: investorSelfCertificationAgreementsReducer,
     manageAngelNetworks: angelNetworksReducer,
     manageJoinRequests: manageJoinRequestsReducer,
     managePledgesTable: pledgesTableReducer,

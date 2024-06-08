@@ -26,9 +26,6 @@ export const PROJECTS_CHILD = "Projects";
 // Activities log node
 export const ACTIVITIES_LOG_CHILD = "ActivitiesLog";
 
-// Investor Self-certification agreements node
-export const INVESTOR_SELF_CERTIFICATION_AGREEMENTS_CHILD = "InvestorSelfCertificationAgreements";
-
 // Access requests to a group node
 export const REQUESTS_TO_JOIN_CHILD = "RequestsToJoin";
 
