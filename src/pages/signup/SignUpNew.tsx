@@ -277,10 +277,16 @@ class SignUpNew extends Component<SignUpProps & Readonly<RouteComponentProps<Rou
                                         Please select
                                     </MenuItem>
                                     <MenuItem
+                                        key={TYPE_INVESTOR}
+                                        value={TYPE_INVESTOR}
+                                    >
+                                        Invest
+                                    </MenuItem>
+                                    <MenuItem
                                         key={TYPE_ISSUER}
                                         value={TYPE_ISSUER}
                                     >
-                                        Upload student project
+                                        Raise funds
                                     </MenuItem>
                                 </Select>
                             </FormControl>
@@ -599,7 +605,7 @@ class SignUpNew extends Component<SignUpProps & Readonly<RouteComponentProps<Rou
                                     variant="body2"
                                     align="center"
                                 >
-                                    Already have an student account?&nbsp;
+                                    Already have an Invest West account?&nbsp;
                                     <CustomLink
                                         url={Routes.constructSignInRoute(this.props.match.params)}
                                         color={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main}
