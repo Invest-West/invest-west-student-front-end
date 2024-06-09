@@ -16,11 +16,11 @@ export default class Routes {
     static nonGroupFront: string = "/";
     static groupFront: string = `${Routes.baseGroup}`;
 
-    static nonGroupSignIn: string = "/groups/student-default/signin";
+    static nonGroupSignIn: string = "/groups/invest-west/signin";
     static groupSignIn: string = `${Routes.baseGroup}/signin`;
     static superAdminSignIn: string = "/signin/super-admin";
 
-    static nonGroupSignUp:string = "/groups/student-default/signup";
+    static nonGroupSignUp:string = "/groups/invest-west/signup";
     static groupSignUp: string = `${Routes.baseGroup}/signup/:id?`;
 
     static nonGroupAdminDashboard: string = "/admin";
