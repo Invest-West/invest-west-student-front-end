@@ -277,16 +277,10 @@ class SignUpNew extends Component<SignUpProps & Readonly<RouteComponentProps<Rou
                                         Please select
                                     </MenuItem>
                                     <MenuItem
-                                        key={TYPE_INVESTOR}
-                                        value={TYPE_INVESTOR}
-                                    >
-                                        Invest
-                                    </MenuItem>
-                                    <MenuItem
                                         key={TYPE_ISSUER}
                                         value={TYPE_ISSUER}
                                     >
-                                        Raise funds
+                                        Add student project
                                     </MenuItem>
                                 </Select>
                             </FormControl>
