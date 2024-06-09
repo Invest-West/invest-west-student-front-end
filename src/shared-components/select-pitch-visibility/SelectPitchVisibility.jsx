@@ -83,7 +83,7 @@ class SelectPitchVisibility extends Component {
                                     :
                                     ""
                         }
-                        The full pitch will be visible to all Invest West users)`}
+                        The full pitch will be visible to all students)`}
                     </MenuItem>
                     <MenuItem
                         value={DB_CONST.PROJECT_VISIBILITY_RESTRICTED}

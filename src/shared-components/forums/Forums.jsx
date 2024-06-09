@@ -243,7 +243,7 @@ class Forums extends Component {
                             particular subject.
                             Create forums to organise discussions.
                             <br/>
-                            <u>Note that all forums are visible across the Invest West network.</u>
+                            <u>Note that all forums are visible across the Student Invest West network.</u>
                         </Typography>
                         <FlexView marginTop={35} marginBottom={35} >
                             <Button
@@ -628,7 +628,7 @@ class ForumRow extends Component {
                                 forum.author.superAdmin
                                     ?
                                     // super admins
-                                    "Invest West Super Admin"
+                                    "Teacher Super Admin"
                                     :
                                     // group admins
                                     `${forum.author.groupDetails.displayName} Admin`

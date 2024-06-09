@@ -112,7 +112,7 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
                             color="white"
                             paddingY="28px"
                         >
-                            <Typography variant="h6" align="center">Groups on Invest West network</Typography>
+                            <Typography variant="h6" align="center">Courses on Student network</Typography>
 
                             <Box height="28px" />
 

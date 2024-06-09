@@ -93,7 +93,7 @@ export default  class AboutUs extends Component {
                             About Us
                         </Typography>
                         <Typography paragraph variant="h6" align="center" style={{ marginTop: 35}}>
-                            Invest West brings together investors and founders to help grow the business community in the South West of England. Invest West requires a fully managed end to end technology platform that will facilitate the efficient and effective, low cost registration of participants, administration of offers, and communication of club members.
+                            Invest West brings together students and founders to help grow the business community in the South West of England. Invest West requires a fully managed end to end technology platform that will facilitate the efficient and effective, low cost registration of participants, administration of offers, and communication of club members.
                         </Typography>
                     </Col>
                     <Col xs={12} md={12} lg={12}style={{marginTop: 65}}>
@@ -102,7 +102,7 @@ export default  class AboutUs extends Component {
                                 <FlexView column hAlignContent="center">
                                     <Image src={require('../../img/investors.jpg').default} width="215" height="215"/>
                                     <Typography variant="h6"style={{marginTop: 10, marginBottom: 10}}>
-                                        <i>Investors</i>
+                                        <i>Students</i>
                                     </Typography>
                                     <Divider style={{width: 80, marginBottom: 10, backgroundColor: colors.gray_300}}/>
                                     <Typography paragraph variant="body1" align="center" color="textSecondary">

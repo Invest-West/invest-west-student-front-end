@@ -81,7 +81,7 @@ class Footer extends Component<FooterProps, any> {
                     style={{ width: "auto", height: 34, objectFit: "contain" }}
                 />
                 <Box width="20px" />
-                <Typography align="left" variant="body1">Powered by Invest West. <br/> Copyright © 2021 Invest West Ltd - All Rights Reserved.</Typography>
+                <Typography align="left" variant="body1">Powered by Student Invest West. <br/> Copyright © 2021 Student Invest West Ltd - All Rights Reserved.</Typography>
             </Box>
         </Box>;
     }

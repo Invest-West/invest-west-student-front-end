@@ -446,10 +446,10 @@ class ProfilePageViewOnly extends Component {
 
         if (invitedUser.status) {
             if (invitedUser.type === DB_CONST.TYPE_ISSUER) {
-                statusMessage.msg = "Official Issuer of Invest West";
+                statusMessage.msg = "Teacher of Student";
                 statusMessage.color = "primary";
             } else {
-                statusMessage.msg = "Official Investor of Invest West";
+                statusMessage.msg = "Student";
                 statusMessage.color = "primary";
             }
         } else {

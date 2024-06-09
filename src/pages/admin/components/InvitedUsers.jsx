@@ -249,7 +249,7 @@ class InvitedUsers extends Component {
                                         <InfoOverlay
                                             placement="right"
                                             message={
-                                                "Home members are the users that registered through this group. Platform members are existing users of Invest West who requested access to this group."
+                                                "Home members are the students that registered through this course. Platform members are existing users of Student Invest West who requested access to this course."
                                             }
                                         />
                                     </FlexView>
@@ -271,7 +271,7 @@ class InvitedUsers extends Component {
                                             {
                                                 !groupsLoaded
                                                     ?
-                                                    "Loading groups ..."
+                                                    "Loading courses ..."
                                                     :
                                                     "All"
                                             }
@@ -389,7 +389,7 @@ class InvitedUsers extends Component {
                                         ?
                                         "Export all the users in the system to a .csv file."
                                         :
-                                        "Export all the members in your group to a .csv file."
+                                        "Export all the members in your course to a .csv file."
                                 }
                             />
                         </FlexView>
