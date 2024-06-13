@@ -167,7 +167,7 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
                                     onChange={filterChanged}
                                     disabled={!successfullyFetchedGroups(ExploreGroupsLocalState)}
                                 >
-                                    <MenuItem key="all" value="all">All groups</MenuItem>
+                                    <MenuItem key="all" value="all">All courses</MenuItem>
                                     <MenuItem key="groupsOfMembership" value="groupsOfMembership">My courses</MenuItem>
                                     <MenuItem key="groupsOfPendingRequest" value="groupsOfPendingRequest">Pending requests</MenuItem>
                                 </Select>

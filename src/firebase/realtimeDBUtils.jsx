@@ -1955,7 +1955,7 @@ export const makeProjectGoLiveDecision = async (admin, project, decisionObj) => 
                             ?
                             `Congratulations! Your offer has been published.`
                             :
-                            `Unfortunately your offer has been rejected. Contact your group's administrator for further information.`
+                            `Unfortunately your offer has been rejected. Contact your course's administrator for further information.`
                     ,
                     userID: project.issuerID,
                     action: ROUTES.PROJECT_DETAILS_INVEST_WEST_SUPER.replace(":projectID", project.id)
@@ -2033,9 +2033,9 @@ export const makeProjectGoToPledgePhaseDecision = async (admin, project, decisio
                     message:
                         decision
                             ?
-                            `Congratulations! Your investment opportunity has moved to the pledge phase. You can now create your pledge page. Your pledge page will be checked by the group admin before publication.`
+                            `Congratulations! Your investment opportunity has moved to the pledge phase. You can now create your pledge page. Your pledge page will be checked by the course admin before publication.`
                             :
-                            `Unfortunately your investment opportunity has been rejected. Contact your group's administrator for further information.`
+                            `Unfortunately your investment opportunity has been rejected. Contact your course's administrator for further information.`
                     ,
                     userID: project.issuerID,
                     action: ROUTES.PROJECT_DETAILS_INVEST_WEST_SUPER.replace(":projectID", project.id)
@@ -2121,7 +2121,7 @@ export const makeProjectPledgeGoLiveDecision = async (admin, project, decisionOb
                             ?
                             `Congratulations! Your investment opportunity has been published. Investors can now pledge.`
                             :
-                            `Unfortunately your investment opportunity has been rejected. Contact your group's admin for further information.`
+                            `Unfortunately your investment opportunity has been rejected. Contact your course's admin for further information.`
                     ,
                     userID: project.issuerID,
                     action: ROUTES.PROJECT_DETAILS_INVEST_WEST_SUPER.replace(":projectID", project.id)

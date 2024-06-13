@@ -97,7 +97,7 @@ class IndividualThread extends Component {
                                                     <Image roundedCircle thumbnail src={require('../../img/admin_logo.png').default} style={{ width: "100%", maxHeight: AVATAR_MAX_HEIGHT, objectFit: "contain" }} />
                                                 </FlexView>
                                                 :
-                                                // group admins
+                                                // course admins
                                                 <FlexView width={AVATAR_MAX_HEIGHT} height={AVATAR_MAX_HEIGHT} >
                                                     <Image
                                                         roundedCircle
@@ -153,7 +153,7 @@ class IndividualThread extends Component {
                                                         // super admins
                                                         "Teacher Super Admin"
                                                         :
-                                                        // group admins
+                                                        // course admins
                                                         `${reply.author.groupDetails.displayName} Admin`
                                             }
                                         </b>
@@ -282,7 +282,7 @@ class IndividualThread extends Component {
                                             />
                                         </FlexView>
                                         :
-                                        // group admins
+                                        // course admins
                                         <FlexView
                                             width={AVATAR_MAX_HEIGHT}
                                             height={AVATAR_MAX_HEIGHT}
@@ -337,7 +337,7 @@ class IndividualThread extends Component {
                                                     // super admins
                                                     "Teacher Super Admin"
                                                     :
-                                                    // group admins
+                                                    // course admins
                                                     `${forumThreadSelected.author.groupDetails.displayName} Admin`
                                         }
                                     </b>

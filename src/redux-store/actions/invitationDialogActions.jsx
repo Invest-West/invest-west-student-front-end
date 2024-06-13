@@ -58,10 +58,10 @@ export const sendInvitation = () => {
             result: SEND_INVITATION_PROCESSING
         });
 
-        //TODO: If the invitation has been sent to this user, check if this user belongs to this group
-        // If yes, display a message saying this user is already an investor/issuer in this group
-        // Otherwise, display a message saying this user is an investor/issuer in ABC group.
-        // Then, ask if the admin wants to invite this user to his group?
+        //TODO: If the invitation has been sent to this user, check if this user belongs to this course
+        // If yes, display a message saying this user is already an investor/issuer in this course
+        // Otherwise, display a message saying this user is an investor/issuer in ABC course.
+        // Then, ask if the admin wants to invite this user to his course?
         // Yes --> Send a notification to the user
         // No --> Dismiss
 
@@ -89,7 +89,7 @@ export const sendInvitation = () => {
                         break;
                     }
 
-                    // user is an issuer of another group
+                    // user is an issuer of another course
                     if (angelNetworkInvitedUser.Invitee.type === DB_CONST.TYPE_ISSUER && angelNetworkInvitedUser.Invitor.anid !== groupProperties.anid) {
                         userIsAnIssuerOfAnotherGroup = true;
                         dispatch({
@@ -109,7 +109,7 @@ export const sendInvitation = () => {
                     return;
                 }
 
-                // the user has not been invited before by this group
+                // the user has not been invited before by this course
                 if (!invitedBefore) {
                     // check if user is an admin
                     realtimeDBUtils

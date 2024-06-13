@@ -1,17 +1,17 @@
 {
   "files": {
     "main.css": "https://invest-west-student-frontend-8mhzu.ondigitalocean.app/static/css/main.b2ce001b.chunk.css",
-    "main.js": "https://invest-west-student-frontend-8mhzu.ondigitalocean.app/static/js/main.fd47d0ce.chunk.js",
-    "main.js.map": "https://invest-west-student-frontend-8mhzu.ondigitalocean.app/static/js/main.fd47d0ce.chunk.js.map",
+    "main.js": "https://invest-west-student-frontend-8mhzu.ondigitalocean.app/static/js/main.6ecf48be.chunk.js",
+    "main.js.map": "https://invest-west-student-frontend-8mhzu.ondigitalocean.app/static/js/main.6ecf48be.chunk.js.map",
     "runtime-main.js": "https://invest-west-student-frontend-8mhzu.ondigitalocean.app/static/js/runtime-main.5238523a.js",
     "runtime-main.js.map": "https://invest-west-student-frontend-8mhzu.ondigitalocean.app/static/js/runtime-main.5238523a.js.map",
     "static/css/2.dca312d0.chunk.css": "https://invest-west-student-frontend-8mhzu.ondigitalocean.app/static/css/2.dca312d0.chunk.css",
-    "static/js/2.f9e32f88.chunk.js": "https://invest-west-student-frontend-8mhzu.ondigitalocean.app/static/js/2.f9e32f88.chunk.js",
-    "static/js/2.f9e32f88.chunk.js.map": "https://invest-west-student-frontend-8mhzu.ondigitalocean.app/static/js/2.f9e32f88.chunk.js.map",
+    "static/js/2.fcf08bf1.chunk.js": "https://invest-west-student-frontend-8mhzu.ondigitalocean.app/static/js/2.fcf08bf1.chunk.js",
+    "static/js/2.fcf08bf1.chunk.js.map": "https://invest-west-student-frontend-8mhzu.ondigitalocean.app/static/js/2.fcf08bf1.chunk.js.map",
     "index.html": "https://invest-west-student-frontend-8mhzu.ondigitalocean.app/index.html",
     "static/css/2.dca312d0.chunk.css.map": "https://invest-west-student-frontend-8mhzu.ondigitalocean.app/static/css/2.dca312d0.chunk.css.map",
     "static/css/main.b2ce001b.chunk.css.map": "https://invest-west-student-frontend-8mhzu.ondigitalocean.app/static/css/main.b2ce001b.chunk.css.map",
-    "static/js/2.f9e32f88.chunk.js.LICENSE.txt": "https://invest-west-student-frontend-8mhzu.ondigitalocean.app/static/js/2.f9e32f88.chunk.js.LICENSE.txt",
+    "static/js/2.fcf08bf1.chunk.js.LICENSE.txt": "https://invest-west-student-frontend-8mhzu.ondigitalocean.app/static/js/2.fcf08bf1.chunk.js.LICENSE.txt",
     "static/media/admin_logo.png": "https://invest-west-student-frontend-8mhzu.ondigitalocean.app/static/media/admin_logo.ba46fba4.png",
     "static/media/front_page_cover_image.png": "https://invest-west-student-frontend-8mhzu.ondigitalocean.app/static/media/front_page_cover_image.2b9aa708.png",
     "static/media/group_admin_help_accept_reject_2_offer.png": "https://invest-west-student-frontend-8mhzu.ondigitalocean.app/static/media/group_admin_help_accept_reject_2_offer.ef822bde.png",
@@ -80,8 +80,8 @@
   "entrypoints": [
     "static/js/runtime-main.5238523a.js",
     "static/css/2.dca312d0.chunk.css",
-    "static/js/2.f9e32f88.chunk.js",
+    "static/js/2.fcf08bf1.chunk.js",
     "static/css/main.b2ce001b.chunk.css",
-    "static/js/main.fd47d0ce.chunk.js"
+    "static/js/main.6ecf48be.chunk.js"
   ]
 }

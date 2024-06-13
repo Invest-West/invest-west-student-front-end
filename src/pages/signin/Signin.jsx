@@ -365,16 +365,16 @@ class Signin extends Component {
                     case AUTH_SUCCESS:
                         return null;
                     case INVALID_AUTH_USER_NOT_EXIST:
-                        errorMsg = "Email or password is invalid, or you are not a member of this group.";
+                        errorMsg = "Email or password is invalid, or you are not a member of this course.";
                         break;
                     case INVALID_AUTH_USER_DECLINED_TO_REGISTER:
-                        errorMsg = "You decided not to join this group.";
+                        errorMsg = "You decided not to join this course.";
                         break;
                     case INVALID_AUTH_USER_LEFT:
-                        errorMsg = "You have left this group.";
+                        errorMsg = "You have left this course.";
                         break;
                     case INVALID_AUTH_USER_KICKED_OUT:
-                        errorMsg = "Unfortunately, you are no longer a member of this group.";
+                        errorMsg = "Unfortunately, you are no longer a member of this course.";
                         break;
                     default:
                         return null;

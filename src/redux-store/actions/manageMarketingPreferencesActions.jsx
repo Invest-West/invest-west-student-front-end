@@ -10,7 +10,7 @@ export const loadMarketingPreferences = () => {
         const currentUser = getState().auth.user;
 
         if (currentUser.type === DB_CONST.TYPE_ADMIN) {
-            // do not allow group admins to load marketing preferences
+            // do not allow course admins to load marketing preferences
             if (!currentUser.superAdmin) {
                 return;
             }

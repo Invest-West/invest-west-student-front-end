@@ -122,7 +122,7 @@ class GroupAdminSettings extends Component {
                     {/** Manage group details */}
                     <Col xs={12} sm={12} md={12} lg={12}>
                         <Typography variant="h6" color="primary">
-                            Manage group details
+                            Manage course details
                         </Typography>
 
                         <FlexView marginTop={16} marginBottom={32}>
@@ -138,14 +138,14 @@ class GroupAdminSettings extends Component {
                             >
                                 <Button className={css(sharedStyles.no_text_transform)} variant="outlined" color="primary">
                                     <PublicIcon style={{marginRight: 8}}/>
-                                    View group's public page
+                                    View course's public page
                                 </Button>
                             </NavLink>
                         </FlexView>
 
                         {/** Edit group description */}
                         <FlexView column marginTop={20}>
-                            <TextField name="description" value={groupDescription} variant="outlined" label="Group description" multiline rowsMax={5} rows={5} onChange={handleInputChanged}/>
+                            <TextField name="description" value={groupDescription} variant="outlined" label="Course description" multiline rowsMax={5} rows={5} onChange={handleInputChanged}/>
 
                             <FlexView width="100%" hAlignContent="right" marginTop={15}>
                                 <Button variant="outlined" className={css(sharedStyles.no_text_transform)} onClick={() => cancelEditingGroupDetails('description')} style={{ marginRight: 6}}>
@@ -195,7 +195,7 @@ class GroupAdminSettings extends Component {
                         {/** Sign up link */}
                         <FlexView marginTop={35} column>
                             <FormControl fullWidth>
-                                <TextField label="Public registration link" fullWidth margin="dense" variant="outlined" helperText="This link can be shared to unregistered issuers/investors so that they can sign up and become members of your group without sending invitation emails manually." value={ process.env.REACT_APP_PUBLIC_URL + Routes.constructSignUpRoute(groupUserName)}/>
+                                <TextField label="Public registration link" fullWidth margin="dense" variant="outlined" helperText="This link can be shared to unregistered issuers/investors so that they can sign up and become members of your course without sending invitation emails manually." value={ process.env.REACT_APP_PUBLIC_URL + Routes.constructSignUpRoute(groupUserName)}/>
                             </FormControl>
                         </FlexView>
 
@@ -288,7 +288,7 @@ class GroupAdminSettings extends Component {
                     <Col xs={12} sm={12} md={12} lg={12}>
                         <FlexView column>
                             <Typography variant="h6" color="primary">
-                                Manage group attributes
+                                Manage course attributes
                             </Typography>
 
                             {
@@ -364,7 +364,7 @@ class GroupAdminSettings extends Component {
                             <FlexView marginTop={20}>
                                 <FormControl>
                                     <Typography variant="body1" align="left" paragraph>
-                                        Choose default visibility value for all newly created investment opportunities
+                                        Choose default visibility value for all newly created student projects
                                     </Typography>
                                     <RadioGroup name="projectVisibility" value={groupAttributesEdited.projectVisibility.toString()} onChange={handleInputChanged}>
                                         <FormControlLabel value={DB_CONST.PROJECT_VISIBILITY_PRIVATE.toString()} control={<Radio/>} label="Private"/>

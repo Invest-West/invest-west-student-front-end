@@ -183,17 +183,17 @@ class ProjectDetailsMain extends Component {
             // -------------------------------------------
 
             // this state is used to capture the change in date when an admin wants to bring
-            // an expired pitch back to live
+            // an expired project back to live
             changedPitchExpiryDate: null,
 
-            // when an admin wants to send the pitch back to the issuer with some feedback rather than publish it
+            // when an admin wants to send the project back to the issuer with some feedback rather than publish it
             addingRejectFeedback: false,
             rejectFeedback: "",
             sendingProjectBack: false,
 
-            // pitch's details
+            // project's details
             projectDetail: {
-                // the pitch object
+                // the project object
                 project: null,
                 projectLoaded: false,
 
@@ -308,7 +308,7 @@ class ProjectDetailsMain extends Component {
             pledgesTable_stopListeningForPledgesChanged
         } = this.props;
 
-        // detach pitch changed listener
+        // detach project changed listener
         this.detachProjectChangedListener();
 
         // detach listener for votes
@@ -589,7 +589,7 @@ class ProjectDetailsMain extends Component {
 
         // attach votes changed listener
         if (votes && votesLoaded && project && projectLoaded) {
-            // votes can only happen if the project is in Pitch phase
+            // votes can only happen if the project is in Project phase
             if (project.status === DB_CONST.PROJECT_STATUS_PITCH_PHASE) {
                 if (!this.votesListener) {
                     this.votesListener = this.database
@@ -985,7 +985,7 @@ class ProjectDetailsMain extends Component {
     };
 
     /**
-     * Vot for pitch function
+     * Vot for project function
      *
      * @param voteVal
      */
@@ -1092,8 +1092,8 @@ class ProjectDetailsMain extends Component {
                     // send a notification to notify the issuer
                     realtimeDBUtils
                         .sendNotification({
-                            title: "Someone liked your pitch",
-                            message: "Congratulations. A new investor has showed interest in your pitch.",
+                            title: "Someone liked your project",
+                            message: "Congratulations. A new investor has showed interest in your project.",
                             userID: project.issuerID,
                             action: ROUTES
                                 .PROJECT_DETAILS_INVEST_WEST_SUPER
@@ -1110,8 +1110,8 @@ class ProjectDetailsMain extends Component {
     };
 
     /**
-     * Attach listener for any changes that happen on this pitch
-     * Attach listener for any changes that happen on this pitch
+     * Attach listener for any changes that happen on this project
+     * Attach listener for any changes that happen on this project
      */
     attachProjectChangedListener = () => {
 
@@ -1380,8 +1380,8 @@ class ProjectDetailsMain extends Component {
                 // send a notification to notify the issuer
                 realtimeDBUtils
                     .sendNotification({
-                        title: "Someone commented on your pitch",
-                        message: "An investor has commented on your pitch. Go and see what they said.",
+                        title: "Someone commented on your project",
+                        message: "An investor has commented on your project. Go and see what they said.",
                         userID: project.issuerID,
                         action: ROUTES.PROJECT_DETAILS_INVEST_WEST_SUPER.replace(":projectID", project.id)
                     })
@@ -1690,7 +1690,7 @@ class ProjectDetailsMain extends Component {
     };
 
     /**
-     * Bring pitch back to live again
+     * Bring project back to live again
      *
      * @returns {Promise<void>}
      */
@@ -1720,14 +1720,14 @@ class ProjectDetailsMain extends Component {
                 });
 
             setFeedbackSnackbarContent(
-                "Pitch is now live again.",
+                "Project is now live again.",
                 "primary",
                 "bottom"
             );
         } catch (error) {
             // handle error
             setFeedbackSnackbarContent(
-                "Error happened. Couldn't update pitch.",
+                "Error happened. Couldn't update project.",
                 "error",
                 "bottom"
             );
@@ -1785,7 +1785,7 @@ class ProjectDetailsMain extends Component {
             });
 
             setFeedbackSnackbarContent(
-                "Pitch has been sent back.",
+                "Project has been sent back.",
                 "primary",
                 "bottom"
             );
@@ -2765,7 +2765,7 @@ class ProjectDetails extends Component {
                             <Tabs value={mainBody} onChange={this.onTabChanged} indicatorColor="primary" textColor="primary" variant="scrollable" scrollButtons="on">
                                 {
                                     // user is a super admin
-                                    // or a group admin that owns the project
+                                    // or a course admin that owns the project
                                     (user.type === DB_CONST.TYPE_ADMIN
                                         && (user.superAdmin || (!user.superAdmin && user.anid === project.anid))
                                     )
@@ -2842,7 +2842,7 @@ class ProjectDetails extends Component {
                                                 {/** Publish pitch step */}
                                                 <Step key={ADMIN_OFFER_STATES_PUBLISH_PITCH} completed={!utils.isProjectWaitingToGoLive(project)}>
                                                     <StepButton onClick={() => this.onAdminOfferStatesStepClick(ADMIN_OFFER_STATES_PUBLISH_PITCH)}>
-                                                        <StepLabel>Publish pitch</StepLabel>
+                                                        <StepLabel>Publish project</StepLabel>
                                                     </StepButton>
                                                     <StepContent>
                                                         {
@@ -2861,7 +2861,7 @@ class ProjectDetails extends Component {
 
                                                                     <Divider style={{marginTop: 25, marginBottom: 20}}/>
 
-                                                                    {/** Select project visibility before publishing pitch */}
+                                                                    {/** Select project visibility before publishing project */}
                                                                     <SelectPitchVisibility/>
 
                                                                     <Divider style={{marginTop: 35, marginBottom: 25}}/>
@@ -2913,11 +2913,11 @@ class ProjectDetails extends Component {
                                                                             :
                                                                             isProjectCreatedByGroupAdmin(project)
                                                                                 ?
-                                                                                <Button fullWidth color="primary" variant="contained" className={css(sharedStyles.no_text_transform)} disabled={user.superAdmin} onClick={() => this.onMakeProjectGoLiveDecision({decision: true, projectVisibilitySetting})}>Publish pitch</Button>
+                                                                                <Button fullWidth color="primary" variant="contained" className={css(sharedStyles.no_text_transform)} disabled={user.superAdmin} onClick={() => this.onMakeProjectGoLiveDecision({decision: true, projectVisibilitySetting})}>Publish project</Button>
                                                                                 :
                                                                                 <FlexView>
                                                                                     <FlexView grow marginRight={10}>
-                                                                                        <Button fullWidth color="primary" variant="contained" className={css(sharedStyles.no_text_transform)} disabled={user.superAdmin} onClick={() => this.onMakeProjectGoLiveDecision({decision: true, projectVisibilitySetting})}>Publish pitch</Button>
+                                                                                        <Button fullWidth color="primary" variant="contained" className={css(sharedStyles.no_text_transform)} disabled={user.superAdmin} onClick={() => this.onMakeProjectGoLiveDecision({decision: true, projectVisibilitySetting})}>Publish project</Button>
                                                                                     </FlexView>
                                                                                     <FlexView grow marginLeft={10}>
                                                                                         <Button fullWidth color="secondary" variant="outlined" className={css(sharedStyles.no_text_transform)} disabled={user.superAdmin} onClick={() => this.toggleRejectFeedback()}>Send back to issuer</Button>
@@ -2930,7 +2930,7 @@ class ProjectDetails extends Component {
                                                                             ?
                                                                             null
                                                                             :
-                                                                            <Typography variant="body1" color="error" align="left" style={{marginTop: 20}}>Only group admin can do this.</Typography>
+                                                                            <Typography variant="body1" color="error" align="left" style={{marginTop: 20}}>Only course admin can do this.</Typography>
                                                                     }
                                                                 </FlexView>
                                                                 :
@@ -2985,7 +2985,7 @@ class ProjectDetails extends Component {
                                                         {/*>*/}
                                                         {/*    Move pitch to pledge phase*/}
                                                         {/*</StepLabel>*/}
-                                                        <StepLabel error={utils.isProjectRejectedToGoLive(project)}>Make decision for expired pitch</StepLabel>
+                                                        <StepLabel error={utils.isProjectRejectedToGoLive(project)}>Make decision for expired project</StepLabel>
                                                     </StepButton>
                                                     <StepContent>
                                                         {
@@ -3003,7 +3003,7 @@ class ProjectDetails extends Component {
                                                                             null
                                                                             :
                                                                             <FlexView column width="100%" marginTop={20} marginBottom={20} className={css(styles.admin_state_control_box)}>
-                                                                                <Typography align="left" variant="body1" style={{marginBottom: 35}}>This pitch has expired. You can bring it back to live by updating the expiry date or close it.</Typography>
+                                                                                <Typography align="left" variant="body1" style={{marginBottom: 35}}>This project has expired. You can bring it back to live by updating the expiry date or close it.</Typography>
 
                                                                                 <KeyboardDatePicker
                                                                                     autoOk
@@ -3024,7 +3024,7 @@ class ProjectDetails extends Component {
                                                                                         || isNaN(changedPitchExpiryDate)
                                                                                         || changedPitchExpiryDate < utils.getDateWithDaysFurtherThanToday(0)
                                                                                     }
-                                                                                    style={{marginTop: 25}} onClick={this.bringPitchBackToLive}>Make pitch live again</Button>
+                                                                                    style={{marginTop: 25}} onClick={this.bringPitchBackToLive}>Make project live again</Button>
 
                                                                                 <FlexView column marginTop={100}>
                                                                                     <Button fullWidth color="secondary" className={css(sharedStyles.no_text_transform)} variant="contained" disabled={user.superAdmin} onClick={() => this.onMakeProjectGoToPledgePhaseDecision(false)}>Close pitch</Button>
@@ -3441,7 +3441,7 @@ class ProjectDetails extends Component {
                                             null
                                             :
                                             <FlexView column marginTop={30}>
-                                                <Typography variant="h5">Pitch deck</Typography>
+                                                <Typography variant="h5">Project deck</Typography>
                                                 <DocumentsDownload documents={project.Pitch.presentationDocument} shouldShowRiskWarningOnDownload={true}/>
                                                 <Divider style={{marginTop: 10}}/>
                                             </FlexView>
@@ -3749,9 +3749,9 @@ class ProjectDetails extends Component {
                                                                                                                         user.type === DB_CONST.TYPE_ADMIN
                                                                                                                         && user.superAdmin
                                                                                                                             ?
-                                                                                                                            `by group admin - ${reply.author.email}`
+                                                                                                                            `by course admin - ${reply.author.email}`
                                                                                                                             :
-                                                                                                                            "by group admin"
+                                                                                                                            "by course admin"
                                                                                                                         :
                                                                                                                         `by ${reply.author.firstName} ${reply.author.lastName}`
                                                                                                                 }
@@ -3970,17 +3970,6 @@ class ProjectDetails extends Component {
                                             </FlexView>
                                     }
 
-                                    {/** How fund is being raised */}
-                                    {
-                                        !project.Pitch.hasOwnProperty('howFundIsBeingRaised')
-                                            ?
-                                            null
-                                            :
-                                            <FlexView className={css(styles.border_box)} style={{backgroundColor: colors.kick_starter_background_color}} column marginTop={30} vAlignContent="center">
-                                                <Typography variant="body1" align="left">How does the company plan to raise funds:  {project.Pitch.howFundIsBeingRaised}</Typography>
-                                            </FlexView>
-                                    }
-
 
                                     {/** Details about earlier fundraising rounds */}
                                     {
@@ -4107,12 +4096,12 @@ class ProjectDetails extends Component {
                 return false;
             }
 
-            // user is a group admin and is the group that owns the project
+            // user is a course admin and is the course that owns the project
             if (user.anid === project.anid) {
                 return false;
             }
 
-            // other group admins must go through the checks of project's visibility
+            // other course admins must go through the checks of project's visibility
             switch (project.visibility) {
                 case DB_CONST.PROJECT_VISIBILITY_PUBLIC:
                     return false;
@@ -4203,7 +4192,7 @@ class ProjectDetails extends Component {
                 case DB_CONST.PITCH_STATUS_ON_GOING:
                     return (
                         <FlexView column marginTop={30} marginBottom={30}>
-                            <Typography variant="body2" color="primary" align="left">Offer is in pitch phase
+                            <Typography variant="body2" color="primary" align="left">Offer is in project phase
                             </Typography>
                             <Typography variant="h5" color="textPrimary" align="left">{utils.dateDiff(project.Pitch.expiredDate)}</Typography>
                             <Typography variant="body2" color="textSecondary" align="left"
@@ -4219,7 +4208,7 @@ class ProjectDetails extends Component {
                     stt.color = "error";
                     break;
                 case DB_CONST.PITCH_STATUS_WAITING_FOR_ADMIN:
-                    stt.text = "Pitch expired. Awaiting Group Admin review.";
+                    stt.text = "Pitch expired. Awaiting Course Admin review.";
                     stt.color = "textSecondary";
                     break;
                 default:

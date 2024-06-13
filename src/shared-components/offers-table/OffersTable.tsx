@@ -212,10 +212,10 @@ class OffersTable extends Component<OffersTableProps, any> {
                                         url={
                                             isIssuer(currentUser) || (currentAdmin && tableAdmin && currentAdmin.id === tableAdmin.id)
                                                 // issuer creates offer for themselves
-                                                // group admin creates offer for their own group
+                                                // course admin creates offer for their own course
                                                 ? Routes.constructCreateProjectRoute(ManageGroupUrlState.groupNameFromUrl ?? null)
                                                 : (currentAdmin && isIssuer(tableUser))
-                                                // group admin creates offer for an issuer in their group
+                                                // course admin creates offer for an issuer in their course
                                                 ? Routes.constructCreateProjectRoute(ManageGroupUrlState.groupNameFromUrl ?? null, {
                                                     admin: currentAdmin.id,
                                                     issuer: tableUser.id
@@ -329,10 +329,10 @@ class OffersTable extends Component<OffersTableProps, any> {
                                     </Box>
                                 </Col>
 
-                                {/** Group filter */}
+                                {/** Course filter */}
                                 <Col xs={12} sm={12} md={6} lg={4} >
                                     <Box paddingY="4px" >
-                                        <Typography variant="body2" >Group:</Typography>
+                                        <Typography variant="body2" >Course:</Typography>
                                         <Box height="8px" />
                                         <Select
                                             fullWidth
@@ -570,13 +570,13 @@ class OffersTable extends Component<OffersTableProps, any> {
                                                             isDraftProject(offerInstance.projectDetail)
                                                                 ? "Draft"
                                                                 : isProjectWaitingToGoLive(offerInstance.projectDetail)
-                                                                ? "Submitted. Awaiting group admin review"
+                                                                ? "Submitted. Awaiting course admin review"
                                                                 : isProjectInLivePitchPhase(offerInstance.projectDetail)
                                                                     ? isProjectTemporarilyClosed(offerInstance.projectDetail)
                                                                         ? "Temporarily closed"
                                                                         : "Live"
                                                                     : isProjectPitchExpiredWaitingForAdminToCheck(offerInstance.projectDetail)
-                                                                        ? "Expired. Awaiting group admin review"
+                                                                        ? "Expired. Awaiting course admin review"
                                                                         : "Closed"
                                                         }
                                                     </Typography>

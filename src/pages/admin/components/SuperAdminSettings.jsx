@@ -327,8 +327,8 @@ class SuperAdminSettings extends Component {
                                     Risk warning footer is used in the footer of the Explore Offers page and
                                     the Pledge page.
                                     <br/><br/>
-                                    As the group's name will be populated dynamically, therefore, anywhere in the text
-                                    that needs to use group's name, please replace it with <b><u>%groupName%</u></b>.
+                                    As the course's name will be populated dynamically, therefore, anywhere in the text
+                                    that needs to use course's name, please replace it with <b><u>%groupName%</u></b>.
                                     <br/><br/>
                                     Also, this risk warning footer will need to have a URL that leads to the
                                     risk warning page where the information will be further explained. Therefore, please

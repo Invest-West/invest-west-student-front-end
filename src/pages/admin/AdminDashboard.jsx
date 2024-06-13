@@ -245,7 +245,7 @@ class AdminDashboard extends Component {
         if (params.tab === HOME_TAB) {
             return (
                 <Row noGutters style={{marginBottom: 30}}>
-                    {/* Manage groups */}
+                    {/* Manage courses */}
                     {
                         !currentUser.superAdmin
                             ?
@@ -255,8 +255,8 @@ class AdminDashboard extends Component {
                                 <Accordion className={css(styles.card_style)}>
                                     <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                                         <FlexView column>
-                                            <Typography paragraph variant="h6" color="primary" align="left">Manage groups</Typography>
-                                            <Typography paragraph variant="body1" align="left">Manage groups that have joined the system.</Typography>
+                                            <Typography paragraph variant="h6" color="primary" align="left">Manage courses</Typography>
+                                            <Typography paragraph variant="body1" align="left">Manage courses that have joined the system.</Typography>
                                         </FlexView>
                                     </AccordionSummary>
                                     <AccordionDetails>
@@ -268,7 +268,7 @@ class AdminDashboard extends Component {
                             </Col>
                     }
 
-                    {/* Manage group members (group admins) / system users (super admins) */}
+                    {/* Manage course members (course admins) / system users (super admins) */}
                     <Col xs={12} md={12} lg={12}>
                         <Accordion className={css(styles.card_style)}>
                             <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
@@ -279,16 +279,16 @@ class AdminDashboard extends Component {
                                                 ?
                                                 "Manage system users"
                                                 :
-                                                "Manage group members"
+                                                "Manage course members"
                                         }
                                     </Typography>
                                     <Typography paragraph variant="body1" align="left">
                                         {
                                             currentUser.superAdmin
                                                 ?
-                                                "Manage all the system users (investors and issuers) including those who have been invited but not yet registered."
+                                                "Manage all the system students including those who have been invited but not yet registered."
                                                 :
-                                                "Manage all the group members (investors and issuers) including those who have been invited but not yet registered and those who joined this group from another group."
+                                                "Manage all the course students including those who have been invited but not yet registered and those who joined this course from another course."
                                         }
                                     </Typography>
                                 </FlexView>
@@ -331,9 +331,9 @@ class AdminDashboard extends Component {
                                                 </FlexView>
                                             </FlexView>
                                             <Typography paragraph variant="body1" align="left">
-                                                Manage access requests from other groups' investors who would like
+                                                Manage access requests from other courses' investors who would like
                                                 to
-                                                join this group.
+                                                join this course.
                                             </Typography>
                                         </FlexView>
                                     </AccordionSummary>
@@ -360,7 +360,7 @@ class AdminDashboard extends Component {
                                                         {
                                                             currentUser.superAdmin
                                                                 ?
-                                                                `${projectsAwaitingDecision} offers are awaiting group admins' review. Select "Awaiting review" from the "Phase" dropdown to see details.`
+                                                                `${projectsAwaitingDecision} offers are awaiting course admins' review. Select "Awaiting review" from the "Phase" dropdown to see details.`
                                                                 :
                                                                 `${projectsAwaitingDecision} offers are awaiting your review. Select "Awaiting review" from the "Phase" dropdown to see details.`
                                                         }
@@ -375,9 +375,9 @@ class AdminDashboard extends Component {
                                         {
                                             currentUser.superAdmin
                                                 ?
-                                                "Manage all the offers created by all the issuers and group admins in the system."
+                                                "Manage all the offers created by all the issuers and course admins in the system."
                                                 :
-                                                "Manage all the offers created by the issuers and group admins of this group."
+                                                "Manage all the offers created by the issuers and course admins of this course."
                                         }
                                     </Typography>
                                 </FlexView>
@@ -401,8 +401,8 @@ class AdminDashboard extends Component {
                                 <Accordion className={css(styles.card_style)}>
                                     <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                                         <FlexView column>
-                                            <Typography paragraph variant="h6" color="primary" align="left">Manage group admins</Typography>
-                                            <Typography paragraph variant="body1" align="left">Manage group admins. Only super group admin can add a new group
+                                            <Typography paragraph variant="h6" color="primary" align="left">Manage course admins</Typography>
+                                            <Typography paragraph variant="body1" align="left">Manage course admins. Only super course admin can add a new course
                                                 admin.</Typography>
                                         </FlexView>
                                     </AccordionSummary>
@@ -620,9 +620,9 @@ class AdminDashboard extends Component {
                                     :
                                     currentUser.superGroupAdmin
                                         ?
-                                        "Super group admin"
+                                        "Super course admin"
                                         :
-                                        "Group admin"
+                                        "Course admin"
                             }
                             : <b>{currentUser.email}</b>
                         </Typography>

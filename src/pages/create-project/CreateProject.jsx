@@ -147,7 +147,6 @@ const initState = {
         pitchProjectDescription: '',
         pitchExpiryDate: null,
 
-        howFundIsBeingRaised: '',
         financialRound: '',
         pitchPostMoneyValuation: '',
         detailsAboutEarlierFundraisingRounds: '',
@@ -461,13 +460,6 @@ class CreatePitchPageMain extends Component {
                                     :
                                     null
                             ,
-                            howFundIsBeingRaised:
-                                project.Pitch.hasOwnProperty('howFundIsBeingRaised')
-                                    ?
-                                    project.Pitch.howFundIsBeingRaised
-                                    :
-                                    ''
-                            ,
                             financialRound:
                                 project.Pitch.hasOwnProperty('financialRound')
                                     ?
@@ -586,7 +578,6 @@ class CreatePitchPageMain extends Component {
             pitchProjectDescription,
             pitchExpiryDate,
 
-            howFundIsBeingRaised,
             financialRound,
             pitchPostMoneyValuation,
 
@@ -614,7 +605,6 @@ class CreatePitchPageMain extends Component {
                     || pitchProjectName.trim().length === 0
                     || pitchProjectDescription.trim().length === 0
                     || pitchExpiryDate === null
-                    || howFundIsBeingRaised.trim().length === 0
                     || financialRound.trim().length === 0
                     || (ManageGroupUrlState.groupNameFromUrl === "qib" && qibSpecialNews.trim().length === 0)
                     || (isIssuer(AuthenticationState.currentUser) && !(params.edit && projectEdited) && groupIssuerCreateOfferFor === "undefined")
@@ -1140,7 +1130,6 @@ class CreatePitchPageMain extends Component {
             pitchProjectDescription,
             pitchExpiryDate,
 
-            howFundIsBeingRaised,
             financialRound,
             pitchPostMoneyValuation,
             detailsAboutEarlierFundraisingRounds,
@@ -1316,17 +1305,6 @@ class CreatePitchPageMain extends Component {
                                                 null
                                         ,
                                         Pitch: {
-                                            howFundIsBeingRaised:
-                                                saveProgress
-                                                    ?
-                                                    howFundIsBeingRaised.trim().length === 0
-                                                        ?
-                                                        null
-                                                        :
-                                                        howFundIsBeingRaised
-                                                    :
-                                                    howFundIsBeingRaised
-                                            ,
                                             financialRound:
                                                 saveProgress
                                                     ?
@@ -1775,17 +1753,6 @@ class CreatePitchPageMain extends Component {
                                                         detailsAboutEarlierFundraisingRounds
                                                     :
                                                     detailsAboutEarlierFundraisingRounds
-                                            ,
-                                            howFundIsBeingRaised:
-                                                saveProgress
-                                                    ?
-                                                    howFundIsBeingRaised.trim().length === 0
-                                                        ?
-                                                        null
-                                                        :
-                                                        howFundIsBeingRaised
-                                                    :
-                                                    howFundIsBeingRaised
                                             ,
                                             financialRound:
                                                 saveProgress
@@ -2297,7 +2264,6 @@ class CreatePitchPageMain extends Component {
             pitchProjectDescription,
             pitchExpiryDate,
 
-            howFundIsBeingRaised,
             financialRound,
             pitchPostMoneyValuation,
 
@@ -2310,7 +2276,6 @@ class CreatePitchPageMain extends Component {
                 && pitchProjectName.trim().length === 0
                 && pitchProjectDescription.trim().length === 0
                 && pitchExpiryDate === null
-                && howFundIsBeingRaised.trim().length === 0
                 && financialRound.trim().length === 0
                 && pitchPostMoneyValuation.trim().length === 0
                 && (ManageGroupUrlState.groupNameFromUrl === "qib" && qibSpecialNews.trim().length === 0)
@@ -3075,12 +3040,12 @@ class CreateProject extends Component {
 
                                     {
                                         /**
-                                         * Company name (or project name)
+                                         * Student project name (or project name)
                                          */
                                     }
                                     <FlexView marginTop={20}>
                                         <TextField
-                                            label="Company name"
+                                            label="Student project name"
                                             name="pitchProjectName"
                                             value={createProjectState.pitchProjectName}
                                             fullWidth
@@ -3103,7 +3068,7 @@ class CreateProject extends Component {
                                     <FlexView marginTop={10}>
                                         <FormControl required fullWidth>
                                             <TextField
-                                                label="Please provide a brief summary of what you do (max 300 characters)"
+                                                label="Please provide a brief summary of what your project is (max 300 characters)"
                                                 name="pitchProjectDescription"
                                                 value={createProjectState.pitchProjectDescription}
                                                 margin="normal"
@@ -3120,23 +3085,6 @@ class CreateProject extends Component {
                                             <FormHelperText>
                                                 This will be circulated to investors in and outside region.
                                             </FormHelperText>
-                                        </FormControl>
-                                    </FlexView>
-
-                                    {
-                                        /**
-                                         * How fund is being raised?
-                                         */
-                                    }
-                                    <FlexView marginTop={45}>
-                                        <FormControl required fullWidth>
-                                            <FormLabel>How are you raising? e.g. Do you have a crowdfunding page (please add a link)?</FormLabel>
-                                            <TextField name="howFundIsBeingRaised" value={createProjectState.howFundIsBeingRaised} fullWidth variant="outlined" onChange={this.onInputChanged} multiline rowsMax={3}
-                                                error={
-                                                    createProjectState.pitchPublishCheck === PITCH_PUBLISH_FALSE_MISSING_FIELDS_IN_GENERAL_INFORMATION
-                                                    && createProjectState.howFundIsBeingRaised.trim().length === 0
-                                                }
-                                            />
                                         </FormControl>
                                     </FlexView>
 

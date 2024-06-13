@@ -200,8 +200,6 @@ export const commitUserProfileChanges = type => {
         } else if (type === COMMIT_BUSINESS_PROFILE_CHANGES) {
 
             let businessProfile = JSON.parse(JSON.stringify(userEdited.BusinessProfile));
-            businessProfile.registeredOffice.postcode = businessProfile.registeredOffice.postcode.toUpperCase();
-            businessProfile.tradingAddress.postcode = businessProfile.tradingAddress.postcode.toUpperCase();
 
             userRef
                 .update({

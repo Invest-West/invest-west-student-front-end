@@ -25,74 +25,6 @@ export const handleTextChanged = (fieldType, event) => {
     }
 };
 
-export const SEARCHING_REGISTERED_OFFICE_ADDRESSES = 'SEARCHING_REGISTERED_OFFICE_ADDRESSES';
-export const DONE_SEARCHING_REGISTERED_OFFICE_ADDRESSES = 'DONE_SEARCHING_REGISTERED_OFFICE_ADDRESSES';
-export const SEARCHING_TRADING_ADDRESSES = 'SEARCHING_TRADING_ADDRESSES';
-export const DONE_SEARCHING_TRADING_ADDRESSES = 'DONE_SEARCHING_TRADING_ADDRESSES';
-export const searchAddresses = mode => {
-    return (dispatch, getState) => {
-        if (mode === SEARCHING_REGISTERED_OFFICE_ADDRESSES) {
-            const postcode = getState().createBusinessProfile.registeredOfficeSearchPostcode;
-            if (postcode.trim().length === 0) {
-                return;
-            }
-            myUtils
-                .findAddress(postcode)
-                .then(results => {
-                    dispatch({
-                        type: DONE_SEARCHING_REGISTERED_OFFICE_ADDRESSES,
-                        results
-                    });
-                })
-                .catch(error => {
-                    dispatch({
-                        type: DONE_SEARCHING_REGISTERED_OFFICE_ADDRESSES,
-                        results: null
-                    });
-                });
-
-        } else if (mode === SEARCHING_TRADING_ADDRESSES) {
-            const postcode = getState().createBusinessProfile.tradingAddressSearchPostcode;
-            if (postcode.trim().length === 0) {
-                return;
-            }
-            myUtils.findAddress(postcode)
-                .then(results => {
-                    dispatch({
-                        type: DONE_SEARCHING_TRADING_ADDRESSES,
-                        results
-                    });
-                })
-                .catch(error => {
-                    dispatch({
-                        type: DONE_SEARCHING_TRADING_ADDRESSES,
-                        results: null
-                    });
-                });
-        }
-    }
-};
-
-export const SELECT_REGISTERED_OFFICE_RECOMMENDED_ADDRESS = 'SELECT_REGISTERED_OFFICE_RECOMMENDED_ADDRESS';
-export const SELECT_TRADING_ADDRESS_RECOMMENDED_ADDRESS = 'SELECT_TRADING_ADDRESS_RECOMMENDED_ADDRESS';
-export const handleRecommendedAddressSelected = (field, index) => {
-    return (dispatch, getState) => {
-        if (field === SELECT_REGISTERED_OFFICE_RECOMMENDED_ADDRESS) {
-            const selectedAddress = getState().createBusinessProfile.registeredOfficeRecommendedAddresses.apiAddresses[index];
-            dispatch({
-                type: SELECT_REGISTERED_OFFICE_RECOMMENDED_ADDRESS,
-                selectedAddress
-            });
-        } else if (field === SELECT_TRADING_ADDRESS_RECOMMENDED_ADDRESS) {
-            const selectedAddress = getState().createBusinessProfile.tradingAddressRecommendedAddresses.apiAddresses[index];
-            dispatch({
-                type: SELECT_TRADING_ADDRESS_RECOMMENDED_ADDRESS,
-                selectedAddress
-            });
-        }
-    }
-};
-
 export const TOGGLE_REGISTERED_OFFICE_ENTER_ADDRESS_MANUALLY = 'TOGGLE_REGISTERED_OFFICE_ENTER_ADDRESS_MANUALLY';
 export const TOGGLE_TRADING_ADDRESS_ENTER_ADDRESS_MANUALLY = 'TOGGLE_TRADING_ADDRESS_ENTER_ADDRESS_MANUALLY';
 export const toggleEnterAddressManually = field => {
@@ -107,13 +39,6 @@ export const toggleEnterAddressManually = field => {
     }
 };
 
-export const TOGGLE_TRADING_ADDRESS_SAME_AS_REGISTERED_OFFICE = 'TOGGLE_TRADING_ADDRESS_SAME_AS_REGISTERED_OFFICE';
-export const toggleTradingAddressSameAsRegisteredOffice = checked => {
-    return {
-        type: TOGGLE_TRADING_ADDRESS_SAME_AS_REGISTERED_OFFICE,
-        checked
-    }
-};
 
 export const CLEAR_FILLED_BUSINESS_PROFILE_INFORMATION = 'CLEAR_FILLED_BUSINESS_PROFILE_INFORMATION';
 export const clearAllFields = () => {
@@ -135,12 +60,6 @@ export const uploadBusinessProfile = () => {
         const logoToBeUploaded = getState().createBusinessProfile.logoToBeUploaded;
         const videoToBeUploaded = getState().createBusinessProfile.videoToBeUploaded;
         let businessProfile = Object.assign({}, getState().createBusinessProfile.BusinessProfile);
-
-        // trading address is the same as registered office
-        if (getState().createBusinessProfile.tradingAddressSameAsRegisteredOffice) {
-            // set trading address to registered office
-            businessProfile.tradingAddress = businessProfile.registeredOffice;
-        }
 
         editImageActions
             .uploadImage(dispatch, user, getState().editImage, logoToBeUploaded)
@@ -184,9 +103,6 @@ const putBusinessProfileToFirebaseDB = (dispatch, user, businessProfile) => {
             mode: UPLOAD_BUSINESS_PROFILE_GENERAL_INFORMATION,
             progress: 0
         });
-
-        businessProfile.registeredOffice.postcode = businessProfile.registeredOffice.postcode.toUpperCase();
-        businessProfile.tradingAddress.postcode = businessProfile.tradingAddress.postcode.toUpperCase();
 
         firebase
             .database()

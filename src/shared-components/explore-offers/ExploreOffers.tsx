@@ -133,7 +133,7 @@ interface ExploreOffersComponentState {
                 {/** Group filter for Explore offers */}
                 <Col xs={12} sm={12} md={6} lg={4}>
                     <Box paddingY="6px">
-                    <Typography variant="body1">Group:</Typography>
+                    <Typography variant="body1">Course:</Typography>
                     <Box height="8px" />
                     <Paper>
                         <Select
@@ -232,7 +232,7 @@ interface ExploreOffersComponentState {
                                 fullWidth
                                 name="searchFilter"
                                 value={ExploreOffersLocalState.searchFilter}
-                                placeholder="Search name, group or issuer"
+                                placeholder="Search name, course or issuer"
                                 onChange={filterChanged}
                                 disabled={!successfullyFetchedOffers(ExploreOffersLocalState)}
                                 startAdornment={
@@ -320,7 +320,7 @@ interface ExploreOffersComponentState {
                                                             <Button size="medium" variant="contained" color="primary" className={css(sharedStyles.no_text_transform)} >
                                                                 <Box marginRight="8px" >
                                                                     <CreateIcon fontSize="small" />
-                                                                </Box>Create new offer
+                                                                </Box>Create new project
                                                             </Button>
                                                         }
                                                     />
