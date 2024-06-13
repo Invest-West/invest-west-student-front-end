@@ -157,7 +157,6 @@ const initState = {
         pitchExpiryDate: null,
 
         financialRound: '',
-        pitchPostMoneyValuation: '',
         detailsAboutEarlierFundraisingRounds: '',
         pitchInvestorsCommitted: '',
 
@@ -486,13 +485,6 @@ class CreatePitchPageMain extends Component {
                                     :
                                     ''
                             ,
-                            pitchPostMoneyValuation:
-                                project.Pitch.hasOwnProperty('postMoneyValuation')
-                                    ?
-                                    Number(project.Pitch.postMoneyValuation.toFixed(2)).toLocaleString()
-                                    :
-                                    ''
-                            ,
                             detailsAboutEarlierFundraisingRounds:
                                 project.Pitch.hasOwnProperty('detailsAboutEarlierFundraisingRounds')
                                     ?
@@ -583,7 +575,6 @@ class CreatePitchPageMain extends Component {
             pitchExpiryDate,
 
             financialRound,
-            pitchPostMoneyValuation,
 
             pitchCover,
             pitchCoverVideoURL,
@@ -1083,7 +1074,6 @@ class CreatePitchPageMain extends Component {
             pitchExpiryDate,
 
             financialRound,
-            pitchPostMoneyValuation,
             detailsAboutEarlierFundraisingRounds,
             pitchInvestorsCommitted,
 
@@ -1261,13 +1251,6 @@ class CreatePitchPageMain extends Component {
                                                         financialRound
                                                     :
                                                     financialRound
-                                            ,
-                                            postMoneyValuation:
-                                                pitchPostMoneyValuation.trim().length === 0
-                                                    ?
-                                                    null
-                                                    :
-                                                    utils.getNumberFromInputString(pitchPostMoneyValuation)
                                             ,
                                             detailsAboutEarlierFundraisingRounds:
                                                 detailsAboutEarlierFundraisingRounds.trim().length === 0
@@ -1685,13 +1668,6 @@ class CreatePitchPageMain extends Component {
                                                         financialRound
                                                     :
                                                     financialRound
-                                            ,
-                                            postMoneyValuation:
-                                                pitchPostMoneyValuation.trim().length === 0
-                                                    ?
-                                                    null
-                                                    :
-                                                    utils.getNumberFromInputString(pitchPostMoneyValuation)
                                             ,
                                             investorsCommitted:
                                                 pitchInvestorsCommitted.trim().length === 0
@@ -2186,7 +2162,6 @@ class CreatePitchPageMain extends Component {
             pitchExpiryDate,
 
             financialRound,
-            pitchPostMoneyValuation,
 
             qibSpecialNews
         } = this.state.createProject;
@@ -2198,7 +2173,6 @@ class CreatePitchPageMain extends Component {
                 && pitchProjectDescription.trim().length === 0
                 && pitchExpiryDate === null
                 && financialRound.trim().length === 0
-                && pitchPostMoneyValuation.trim().length === 0
                 && (groupUserName === "qib" && qibSpecialNews.trim().length === 0)
             ) {
                 setFeedbackSnackbarContent(
@@ -2240,7 +2214,7 @@ class CreatePitchPageMain extends Component {
             projectEdited
         } = this.state;
 
-        this.setState({
+        this.setState({ 
             draftBeingDeleted: true
         });
 
@@ -2993,7 +2967,7 @@ class CreateProject extends Component {
                                     }
                                     <FlexView marginTop={10}>
                                         <FormControl required fullWidth>
-                                            <TextField label="Please provide a brief summary of what you do" name="pitchProjectDescription" value={createProjectState.pitchProjectDescription} margin="normal" variant="outlined"
+                                            <TextField label="Please provide a brief summary of what your project is about" name="pitchProjectDescription" value={createProjectState.pitchProjectDescription} margin="normal" variant="outlined"
                                                 error={
                                                     createProjectState.pitchPublishCheck === PITCH_PUBLISH_FALSE_MISSING_FIELDS_IN_GENERAL_INFORMATION
                                                     && createProjectState.pitchProjectDescription.trim().length === 0
@@ -3003,7 +2977,7 @@ class CreateProject extends Component {
                                                 rows={5}
                                                 onChange={this.onInputChanged}
                                             />
-                                            <FormHelperText>This will be circulated to investors in and outside region.</FormHelperText>
+                                            <FormHelperText>This will be circulated to studentss in and outside course.</FormHelperText>
                                         </FormControl>
                                     </FlexView>
 
@@ -3073,33 +3047,6 @@ class CreateProject extends Component {
                                             :
                                             null
                                     }
-
-                                    {
-                                        /**
-                                         * Post money valuation
-                                         */
-                                    }
-                                    <FlexView marginTop={45}>
-                                        <FormControl fullWidth>
-                                            <FormLabel>Enter post money valuation</FormLabel>
-                                            <TextField
-                                                name="pitchPostMoneyValuation"
-                                                value={createProjectState.pitchPostMoneyValuation}
-                                                fullWidth
-                                                variant="outlined"
-                                                onChange={this.onInputChanged}
-                                                error={
-                                                    createProjectState.pitchPublishCheck === PITCH_PUBLISH_FALSE_INVALID_FUND
-                                                    && createProjectState.pitchPostMoneyValuation.trim().length > 0
-                                                    && !utils.getNumberFromInputString(createProjectState.pitchPostMoneyValuation)
-                                                }
-                                                InputProps={{
-                                                    startAdornment:
-                                                        <InputAdornment position="start">£</InputAdornment>
-                                                }}/>
-                                            <FormHelperText>Please use commas as thousands-separators and do not use decimal numbers.</FormHelperText>
-                                        </FormControl>
-                                    </FlexView>
                                 </FlexView>
 
                                 <Divider style={{marginTop: 60}}/>

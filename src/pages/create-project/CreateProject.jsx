@@ -76,8 +76,8 @@ const PITCH_COVER_FILES_CHANGED = 1;
 const PITCH_SUPPORTING_DOCUMENTS_FILES_CHANGED = 2;
 const PITCH_PRESENTATION_FILES_CHANGED = 3;
 
-export const PITCH_COVER_FILE_TYPE_SELECTED = 1; // users select to upload an image or a video for their pitch cover
-export const PITCH_COVER_VIDEO_URL_TYPE_SELECTED = 2; // users select to upload a video URL for their pitch cover
+export const PITCH_COVER_FILE_TYPE_SELECTED = 1; // users select to upload an image or a video for their project cover
+export const PITCH_COVER_VIDEO_URL_TYPE_SELECTED = 2; // users select to upload a video URL for their project cover
 
 // pitch create non-check
 export const PITCH_PUBLISH_CHECK_NONE = 0;
@@ -148,13 +148,12 @@ const initState = {
         pitchExpiryDate: null,
 
         financialRound: '',
-        pitchPostMoneyValuation: '',
         detailsAboutEarlierFundraisingRounds: '',
         pitchInvestorsCommitted: '',
 
-        // pitch cover (image or video) --- 1 file
+        // project cover (image or video) --- 1 file
         pitchCover: [],
-        // pitch cover - video URL
+        // project cover - video URL
         pitchCoverVideoURL: '',
         // select between uploading an image or a video ULR -----
         pitchCoverTypeSelected: null,
@@ -467,13 +466,6 @@ class CreatePitchPageMain extends Component {
                                     :
                                     ''
                             ,
-                            pitchPostMoneyValuation:
-                                project.Pitch.hasOwnProperty('postMoneyValuation')
-                                    ?
-                                    Number(project.Pitch.postMoneyValuation.toFixed(2)).toLocaleString()
-                                    :
-                                    ''
-                            ,
                             detailsAboutEarlierFundraisingRounds:
                                 project.Pitch.hasOwnProperty('detailsAboutEarlierFundraisingRounds')
                                     ?
@@ -579,7 +571,6 @@ class CreatePitchPageMain extends Component {
             pitchExpiryDate,
 
             financialRound,
-            pitchPostMoneyValuation,
 
             pitchCover,
             pitchCoverVideoURL,
@@ -644,7 +635,7 @@ class CreatePitchPageMain extends Component {
                     }
                 });
                 break;
-            // Pitch cover
+            // project cover
             case STEP_PITCH_COVER:
                 // in edit mode
                 if (params.edit && projectEdited) {
@@ -671,7 +662,7 @@ class CreatePitchPageMain extends Component {
                         return;
                     }
                 } else {
-                    // if the user has not uploaded pitch cover, ask them to upload
+                    // if the user has not uploaded project cover, ask them to upload
                     if (!pitchCoverTypeSelected
                         || (pitchCoverTypeSelected === PITCH_COVER_FILE_TYPE_SELECTED && pitchCover.length === 0)
                         || (pitchCoverTypeSelected === PITCH_COVER_VIDEO_URL_TYPE_SELECTED && pitchCoverVideoURL.trim().length === 0)
@@ -695,9 +686,9 @@ class CreatePitchPageMain extends Component {
                     }
                 });
                 break;
-            // Pitch deck
+            // project summary
             case STEP_PITCH_DECK:
-                // for QIB, pitch deck is considered as one-pager
+                // for QIB, project summary is considered as one-pager
                 // there will be no presentation text, so don't need to check
                 if (ManageGroupUrlState.groupNameFromUrl === "qib") {
                     // in edit mode
@@ -735,7 +726,7 @@ class CreatePitchPageMain extends Component {
                         }
                     }
                 }
-                    // for other groups, we need to ensure the user is uploading a pitch deck file or filling
+                    // for other groups, we need to ensure the user is uploading a project summary file or filling
                 // in the text editor or both
                 else {
                     // in edit mode
@@ -850,7 +841,7 @@ class CreatePitchPageMain extends Component {
     };
 
     /**
-     * Handle between selecting to upload an image or a video or adding a video URL for the pitch cover.
+     * Handle between selecting to upload an image or a video or adding a video URL for the project cover.
      *
      * @param type
      */
@@ -910,7 +901,7 @@ class CreatePitchPageMain extends Component {
             };
 
             switch (mode) {
-                // there can only be 1 file uploaded for the pitch cover
+                // there can only be 1 file uploaded for the project cover
                 case PITCH_COVER_FILES_CHANGED:
                     this.setState({
                         createProject: {
@@ -921,7 +912,7 @@ class CreatePitchPageMain extends Component {
                     break;
                 // there can be more than 1 pitch supporting files
                 case PITCH_SUPPORTING_DOCUMENTS_FILES_CHANGED:
-                    // for QIB, supporting document will be considered as pitch deck
+                    // for QIB, supporting document will be considered as project summary
                     // so, the user can only upload one file
                     if (ManageGroupUrlState.groupNameFromUrl === "qib") {
                         this.setState(prevState => ({
@@ -1131,7 +1122,6 @@ class CreatePitchPageMain extends Component {
             pitchExpiryDate,
 
             financialRound,
-            pitchPostMoneyValuation,
             detailsAboutEarlierFundraisingRounds,
             pitchInvestorsCommitted,
 
@@ -1191,7 +1181,7 @@ class CreatePitchPageMain extends Component {
                 .child(DB_CONST.PROJECTS_CHILD)
                 .child(projectEdited.id);
 
-            // upload pitch cover
+            // upload project cover
             this.uploadMultipleFiles(UPLOAD_PITCH_COVER_MODE, projectStorageRef)
                 .then(successful => {
 
@@ -1213,7 +1203,7 @@ class CreatePitchPageMain extends Component {
                                 }
                             });
 
-                            // upload pitch presentation or pitch deck
+                            // upload pitch presentation or project summary
                             this.uploadMultipleFiles(UPLOAD_PITCH_PRESENTATION_DOCUMENT_MODE, projectStorageRef)
                                 .then(successful => {
 
@@ -1315,13 +1305,6 @@ class CreatePitchPageMain extends Component {
                                                         financialRound
                                                     :
                                                     financialRound
-                                            ,
-                                            postMoneyValuation:
-                                                pitchPostMoneyValuation.trim().length === 0
-                                                    ?
-                                                    null
-                                                    :
-                                                    utils.getNumberFromInputString(pitchPostMoneyValuation)
                                             ,
                                             detailsAboutEarlierFundraisingRounds:
                                                 detailsAboutEarlierFundraisingRounds.trim().length === 0
@@ -1649,7 +1632,7 @@ class CreatePitchPageMain extends Component {
                 .child(DB_CONST.PROJECTS_CHILD)
                 .child(projectID);
 
-            // upload pitch cover
+            // upload project cover
             this.uploadMultipleFiles(UPLOAD_PITCH_COVER_MODE, projectStorageRef)
                 .then(successful => {
 
@@ -1671,7 +1654,7 @@ class CreatePitchPageMain extends Component {
                                 }
                             });
 
-                            // upload pitch presentation or pitch deck
+                            // upload pitch presentation or project summary
                             this.uploadMultipleFiles(UPLOAD_PITCH_PRESENTATION_DOCUMENT_MODE, projectStorageRef)
                                 .then(successful => {
 
@@ -1764,13 +1747,6 @@ class CreatePitchPageMain extends Component {
                                                         financialRound
                                                     :
                                                     financialRound
-                                            ,
-                                            postMoneyValuation:
-                                                pitchPostMoneyValuation.trim().length === 0
-                                                    ?
-                                                    null
-                                                    :
-                                                    utils.getNumberFromInputString(pitchPostMoneyValuation)
                                             ,
                                             investorsCommitted:
                                                 pitchInvestorsCommitted.trim().length === 0
@@ -1952,11 +1928,11 @@ class CreatePitchPageMain extends Component {
 
         switch (mode) {
             case UPLOAD_PITCH_COVER_MODE:
-                // no pitch cover selected
+                // no project cover selected
                 if (!pitchCoverTypeSelected) {
                     return null;
                 }
-                // pitch cover as a video URL
+                // project cover as a video URL
                 if (pitchCoverTypeSelected === PITCH_COVER_VIDEO_URL_TYPE_SELECTED) {
                     const formattedCover = {
                         url: pitchCoverVideoURL,
@@ -2051,7 +2027,7 @@ class CreatePitchPageMain extends Component {
 
                     switch (mode) {
                         case UPLOAD_PITCH_COVER_MODE:
-                            // capture the downloadable URL of the pitch cover and store in this variable for uploading to Realtime DB
+                            // capture the downloadable URL of the project cover and store in this variable for uploading to Realtime DB
                             const formattedCover = {
                                 url: fileDownloadURL,
                                 fileType: document.file.type === "video/mp4" ? DB_CONST.FILE_TYPE_VIDEO : DB_CONST.FILE_TYPE_IMAGE,
@@ -2265,7 +2241,6 @@ class CreatePitchPageMain extends Component {
             pitchExpiryDate,
 
             financialRound,
-            pitchPostMoneyValuation,
 
             qibSpecialNews
         } = this.state.createProject;
@@ -2277,7 +2252,6 @@ class CreatePitchPageMain extends Component {
                 && pitchProjectDescription.trim().length === 0
                 && pitchExpiryDate === null
                 && financialRound.trim().length === 0
-                && pitchPostMoneyValuation.trim().length === 0
                 && (ManageGroupUrlState.groupNameFromUrl === "qib" && qibSpecialNews.trim().length === 0)
             ) {
                 setFeedbackSnackbarContent(
@@ -2321,10 +2295,10 @@ class CreatePitchPageMain extends Component {
             draftBeingDeleted: true
         });
 
-        // delete pitch cover
+        // delete project cover
         this.deleteMultiplesOnStorage(UPLOAD_PITCH_COVER_MODE)
             .then(() => {
-                // delete pitch deck
+                // delete project summary
                 this.deleteMultiplesOnStorage(UPLOAD_PITCH_PRESENTATION_DOCUMENT_MODE)
                     .then(() => {
                         // delete pitch supporting documents
@@ -2714,14 +2688,14 @@ class CreateProject extends Component {
                 msg = "Please check your entered funds again.";
                 break;
             case PITCH_PUBLISH_FALSE_MISSING_PITCH_COVER:
-                msg = "Please upload an image or a video for your pitch cover.";
+                msg = "Please upload an image or a video for your project cover.";
                 break;
             case PITCH_PUBLISH_FALSE_MISSING_PITCH_PRESENTATION:
-                // for QIB, pitch deck is a one-pager
+                // for QIB, project summary is a one-pager
                 if (groupUserName === "qib") {
                     msg = "Please upload your one-pager.";
                 }
-                // for other groups, pitch deck is still pitch deck
+                // for other groups, project summary is still project summary
                 else {
                     msg = "Please upload a file or use our provided text editor to make your pitch presentation.";
                 }
@@ -2766,7 +2740,7 @@ class CreateProject extends Component {
                                     <StepLabel>General information</StepLabel>
                                 </Step>
                                 <Step key={1}>
-                                    <StepLabel>Pitch cover</StepLabel>
+                                    <StepLabel>Project cover</StepLabel>
                                 </Step>
                                 <Step key={2}>
                                     {
@@ -2774,14 +2748,14 @@ class CreateProject extends Component {
                                             ?
                                             <StepLabel>One-pager</StepLabel>
                                             :
-                                            <StepLabel>Pitch deck</StepLabel>
+                                            <StepLabel>Project deck</StepLabel>
                                     }
                                 </Step>
                                 <Step key={3}>
                                     {
                                         groupUserName === "qib"
                                             ?
-                                            <StepLabel>Pitch deck</StepLabel>
+                                            <StepLabel>Project deck</StepLabel>
                                             :
                                             <StepLabel>Supporting documents</StepLabel>
                                     }
@@ -2849,7 +2823,7 @@ class CreateProject extends Component {
                                                     ? null
                                                     : <FlexView marginTop={30}>
                                                         <FormControl fullWidth required>
-                                                            <FormLabel>Select group</FormLabel>
+                                                            <FormLabel>Select course</FormLabel>
                                                             <Select name="groupIssuerCreateOfferFor" value={createProjectState.groupIssuerCreateOfferFor} margin="dense" input={<OutlinedInput/>} onChange={this.onInputChanged}>
                                                                 {
                                                                     AuthenticationState.groupsOfMembership.map(
@@ -2909,7 +2883,7 @@ class CreateProject extends Component {
                                                 <Row noGutters style={{width: "100%"}}>
                                                     <Col xs={12} sm={12} md={12} lg={12}>
                                                         <Typography align="left" variant="body2" color="textSecondary">
-                                                            Pitch expiry
+                                                            Project expiry
                                                             date: {utils.dateInReadableFormat(groupProperties.settings.defaultPitchExpiryDate)} (set
                                                             by QIB admins)
                                                         </Typography>
@@ -2982,7 +2956,7 @@ class CreateProject extends Component {
                                                                                             :
                                                                                             projectEdited.Pitch
                                                                                                 ?
-                                                                                                `Pitch phase will be active in ${utils.dateDiff(projectEdited.Pitch.expiredDate)} days. Please contact us if you need to change the expiry date.`
+                                                                                                `Project phase will be active in ${utils.dateDiff(projectEdited.Pitch.expiredDate)} days. Please contact us if you need to change the expiry date.`
                                                                                                 :
                                                                                                 null
                                                                                 }
@@ -2996,7 +2970,7 @@ class CreateProject extends Component {
                                                                                         projectEdited.status === DB_CONST.PROJECT_STATUS_PITCH_PHASE_EXPIRED_WAITING_TO_BE_CHECKED
                                                                                             ?
                                                                                             <Typography variant="body1" align="left" color="primary">
-                                                                                                Pitch phase has ended.
+                                                                                                Project phase has ended.
                                                                                                 Waiting
                                                                                                 for the issuer to create
                                                                                                 pledge.
@@ -3012,7 +2986,7 @@ class CreateProject extends Component {
                                                                                                         ?
                                                                                                         "Choose expiry date for pledge phase"
                                                                                                         :
-                                                                                                        "Choose expiry date for pitch phase"
+                                                                                                        "Choose expiry date for project phase"
                                                                                                 }
                                                                                                 format="dd/MM/yyyy"
                                                                                                 minDate={utils.getDateWithDaysFurtherThanToday(1)}
@@ -3068,7 +3042,7 @@ class CreateProject extends Component {
                                     <FlexView marginTop={10}>
                                         <FormControl required fullWidth>
                                             <TextField
-                                                label="Please provide a brief summary of what your project is (max 300 characters)"
+                                                label="Please provide a brief summary of what your project is about (max 300 characters)"
                                                 name="pitchProjectDescription"
                                                 value={createProjectState.pitchProjectDescription}
                                                 margin="normal"
@@ -3083,7 +3057,7 @@ class CreateProject extends Component {
                                                 onChange={this.onInputChanged}
                                             />
                                             <FormHelperText>
-                                                This will be circulated to investors in and outside region.
+                                                This will be circulated to students in and outside course.
                                             </FormHelperText>
                                         </FormControl>
                                     </FlexView>
@@ -3100,7 +3074,7 @@ class CreateProject extends Component {
                                                 && createProjectState.financialRound.trim().length === 0
                                             }
                                         >
-                                            <FormLabel style={{marginBottom: 16}}>What financial round are you looking for?</FormLabel>
+                                            <FormLabel style={{marginBottom: 16}}>Do you want to seek investment??</FormLabel>
                                             <RadioGroup name="financialRound" value={createProjectState.financialRound} onChange={this.onInputChanged}>
                                                 {
                                                     DB_CONST.FINANCIAL_ROUNDS.map(round =>
@@ -3140,29 +3114,6 @@ class CreateProject extends Component {
                                             :
                                             null
                                     }
-
-                                    {
-                                        /**
-                                         * Post money valuation
-                                         */
-                                    }
-                                    <FlexView marginTop={45}>
-                                        <FormControl fullWidth>
-                                            <FormLabel>Enter post money valuation</FormLabel>
-                                            <TextField name="pitchPostMoneyValuation" value={createProjectState.pitchPostMoneyValuation} fullWidth variant="outlined" onChange={this.onInputChanged}
-                                                error={
-                                                    createProjectState.pitchPublishCheck === PITCH_PUBLISH_FALSE_INVALID_FUND
-                                                    && createProjectState.pitchPostMoneyValuation.trim().length > 0
-                                                    && !utils.getNumberFromInputString(createProjectState.pitchPostMoneyValuation)
-                                                }
-                                                InputProps={{
-                                                    startAdornment:
-                                                        <InputAdornment position="start">£</InputAdornment>
-                                                }}/>
-                                            <FormHelperText>Please use commas as thousands-separators and do not use decimal numbers.
-                                            </FormHelperText>
-                                        </FormControl>
-                                    </FlexView>
                                 </FlexView>
 
                                 
@@ -3173,12 +3124,12 @@ class CreateProject extends Component {
                             (
                                 createProjectState.activeStep === STEP_PITCH_COVER
                                     ?
-                                    // Pitch cover
+                                    // project cover
                                     <Col xs={12} sm={12} md={{span: 10, offset: 1}} lg={{span: 6, offset: 3}} style={{marginTop: 30}}>
                                         <FlexView column width="100%">
                                             <FlexView vAlignContent="center">
-                                                <Typography color="primary" variant="h6" align="left" style={{marginRight: 15}}>Step 2: Upload pitch cover</Typography>
-                                                <InfoOverlay message="Pitch cover is an image or video that will appear on your pitch summary tile." placement="right"/>
+                                                <Typography color="primary" variant="h6" align="left" style={{marginRight: 15}}>Step 2: Upload project cover</Typography>
+                                                <InfoOverlay message="project cover is an image or video that will appear on your pitch summary tile." placement="right"/>
                                             </FlexView>
 
                                             {
@@ -3191,7 +3142,7 @@ class CreateProject extends Component {
                                                         null
                                                         :
                                                         <FlexView column width="100%" marginTop={25} marginBottom={25}>
-                                                            <Typography variant="body1" color="textSecondary" align="left" style={{marginBottom: 20}}>Your current pitch cover</Typography>
+                                                            <Typography variant="body1" color="textSecondary" align="left" style={{marginBottom: 20}}>Your current project cover</Typography>
 
                                                             {
                                                                 projectEdited.Pitch.cover.map((coverItem, index) => (
@@ -3220,7 +3171,7 @@ class CreateProject extends Component {
                                                             ?
                                                             "You need to upload an image or a video for the cover of your pitch."
                                                             :
-                                                            "Upload an image or a video to change your pitch cover. We will use the new cover for your pitch instead of the old one."
+                                                            "Upload an image or a video to change your project cover. We will use the new cover for your pitch instead of the old one."
                                                 }
                                             </Typography>
 
@@ -3326,7 +3277,7 @@ class CreateProject extends Component {
                                                                             }
                                                                         </Typography>
                                                                     </Files>
-                                                                    <Typography variant="body2" color="textSecondary" align="left" style={{marginTop: 11}}><u>Note:</u> Pitch cover must not exceed {DB_CONST.MAX_VIDEO_OR_IMAGE_SIZE_IN_MB}MB.</Typography>
+                                                                    <Typography variant="body2" color="textSecondary" align="left" style={{marginTop: 11}}><u>Note:</u> project cover must not exceed {DB_CONST.MAX_VIDEO_OR_IMAGE_SIZE_IN_MB}MB.</Typography>
                                                                 </FlexView>
                                                                 :
                                                                 <FlexView column>
@@ -3334,7 +3285,7 @@ class CreateProject extends Component {
                                                                 </FlexView>
                                                     }
 
-                                                    {/** Pitch cover file type preview */}
+                                                    {/** project cover file type preview */}
                                                     {
                                                         createProjectState.pitchCoverTypeSelected === PITCH_COVER_FILE_TYPE_SELECTED
                                                         && createProjectState.pitchCover.length > 0
@@ -3363,7 +3314,7 @@ class CreateProject extends Component {
                                                             null
                                                     }
 
-                                                    {/** Pitch cover video URL preview */}
+                                                    {/** project cover video URL preview */}
                                                     {
                                                         createProjectState.pitchCoverTypeSelected === PITCH_COVER_VIDEO_URL_TYPE_SELECTED
                                                         && createProjectState.pitchCoverVideoURL.trim().length > 0
@@ -3382,13 +3333,13 @@ class CreateProject extends Component {
                                     (
                                         createProjectState.activeStep === STEP_PITCH_DECK
                                             ?
-                                            // Pitch deck (other groups)
+                                            // project summary (other groups)
                                             // One-pager (for QIB only)
                                             <Col xs={12} sm={12} md={{span: 10, offset: 1}} lg={{span: 6, offset: 3}} style={{marginTop: 30}}>
                                                 {
                                                     groupUserName === "qib"
                                                         ?
-                                                        // QIB pitch deck which is also known as one-pager
+                                                        // QIB project summary which is also known as one-pager
                                                         <FlexView column>
                                                             <Typography color="primary" variant="h6" align="left">Step 3: Submit your one-pager</Typography>
 
@@ -3468,11 +3419,11 @@ class CreateProject extends Component {
                                                             </FlexView>
                                                         </FlexView>
                                                         :
-                                                        // other groups pitch deck
+                                                        // other groups project summary
                                                         <FlexView column>
-                                                            <Typography color="primary" variant="h6" align="left">Step 3: Upload pitch deck</Typography>
+                                                            <Typography color="primary" variant="h6" align="left">Step 3: Upload project outline</Typography>
 
-                                                            {/** Display the current pitch deck if there is one */}
+                                                            {/** Display the current project summary if there is one */}
                                                             {
                                                                 !params.edit || !projectEdited
                                                                     ?
@@ -3499,9 +3450,9 @@ class CreateProject extends Component {
                                                                                         && projectEdited.Pitch.presentationDocument
                                                                                             .filter(document => !document.hasOwnProperty('removed')).length > 0
                                                                                             ?
-                                                                                            "Your current pitch deck"
+                                                                                            "Your current project summary"
                                                                                             :
-                                                                                            "You have no pitch deck."
+                                                                                            "You have no project summary."
                                                                                     }
                                                                                 </Typography>
                                                                                 <DocumentsDownload documents={projectEdited.Pitch.presentationDocument}/>
@@ -3516,7 +3467,7 @@ class CreateProject extends Component {
                                                                 {
                                                                     !params.edit || !projectEdited
                                                                         ?
-                                                                        "You need to either upload your pitch deck (PDF, Word, or Power Point file) or use our provided text editor to create your own presentation."
+                                                                        "You need to either upload your project summary (PDF, Word, or Power Point file) or use our provided text editor to create your own presentation."
                                                                         :
                                                                         projectEdited.status === DB_CONST.PROJECT_STATUS_DRAFT
                                                                         &&
@@ -3529,15 +3480,15 @@ class CreateProject extends Component {
                                                                             )
                                                                         )
                                                                             ?
-                                                                            "You need to either upload your pitch deck (PDF, Word, or Power Point file) or use our provided text editor to create your own presentation."
+                                                                            "You need to either upload your project summary (PDF, Word, or Power Point file) or use our provided text editor to create your own presentation."
                                                                             :
-                                                                            "Upload a PDF, Word, or Power Point file to change your pitch deck. We will use the new document for your pitch deck instead of the old one."
+                                                                            "Upload a PDF, Word, or Power Point file to change your project summary. We will use the new document for your project summary instead of the old one."
                                                                 }
                                                             </Typography>
 
                                                             {/** File upload area */}
                                                             <FlexView column marginTop={30} marginBottom={60}>
-                                                                <Typography variant="body1" paragraph align="left">Upload pitch deck</Typography>
+                                                                <Typography variant="body1" paragraph align="left">Upload project summary</Typography>
                                                                 <Files
                                                                     className={css(styles.file_drop_zone)}
                                                                     onChange={this.onFilesChanged(PITCH_PRESENTATION_FILES_CHANGED)}
@@ -3552,7 +3503,7 @@ class CreateProject extends Component {
                                                                 </Files>
 
                                                                 <Typography variant="body2" color="textSecondary" align="left" style={{marginTop: 11}}>
-                                                                    <u>Note:</u> Pitch deck must not
+                                                                    <u>Note:</u> Project summary must not
                                                                     exceed {DB_CONST.MAX_VIDEO_OR_IMAGE_SIZE_IN_MB}MB.
                                                                     Files in
                                                                     formats .pdf, .doc, .docx, .ppt, and .pptx are
@@ -3596,16 +3547,16 @@ class CreateProject extends Component {
                                                 createProjectState.activeStep === STEP_PITCH_SUPPORTING_DOCUMENTS
                                                     ?
                                                     // Supporting documents (other groups)
-                                                    // Pitch deck (for QIB only)
+                                                    // project summary (for QIB only)
                                                     <Col xs={12} sm={12} md={{span: 10, offset: 1}} lg={{span: 6, offset: 3}} style={{marginTop: 30}}>
                                                         {
                                                             groupUserName === "qib"
                                                                 ?
-                                                                // QIB supporting document which is also known as pitch deck
+                                                                // QIB supporting document which is also known as project summary
                                                                 <FlexView column>
-                                                                    <Typography color="primary" variant="h6" align="left">Step 4: Upload pitch deck (optional)</Typography>
+                                                                    <Typography color="primary" variant="h6" align="left">Step 4: Upload project summary (optional)</Typography>
 
-                                                                    {/** Display current pitch deck if there is */}
+                                                                    {/** Display current project summary if there is */}
                                                                     {
                                                                         !params.edit || !projectEdited
                                                                             ?
@@ -3632,11 +3583,11 @@ class CreateProject extends Component {
                                                                                             .filter(document => !document.hasOwnProperty('removed')).length > 0
                                                                                             ?
                                                                                             <FlexView column>
-                                                                                                <Typography variant="body1" color="textSecondary" align="left">Your current pitch deck</Typography>
+                                                                                                <Typography variant="body1" color="textSecondary" align="left">Your current project summary</Typography>
                                                                                                 <DocumentsDownload documents={projectEdited.Pitch.supportingDocuments} deleteEnable onDeleteDocument={this.onDownloadDocumentDeleteClick}/>
                                                                                             </FlexView>
                                                                                             :
-                                                                                            <Typography variant="body1" color="textSecondary" align="left">You have no pitch deck.</Typography>
+                                                                                            <Typography variant="body1" color="textSecondary" align="left">You have no project summary.</Typography>
                                                                                     }
 
                                                                                     <Divider style={{marginTop: 20}}/></FlexView>
@@ -4164,7 +4115,7 @@ class UploadingDialog extends Component {
         switch (uploadFileMode) {
             case UPLOAD_PITCH_COVER_MODE:
                 return (
-                    <Typography variant="body2" color="textSecondary" align="left">Uploading pitch cover</Typography>
+                    <Typography variant="body2" color="textSecondary" align="left">Uploading project cover</Typography>
                 );
             case UPLOAD_PITCH_SUPPORTING_DOCUMENTS_MODE:
                 return (

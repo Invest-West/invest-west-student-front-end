@@ -3962,7 +3962,7 @@ class ProjectDetails extends Component {
                                             null
                                             :
                                             <FlexView className={css(styles.border_box)} style={{backgroundColor: colors.kick_starter_background_color}} column marginTop={30} vAlignContent="center">
-                                                <Typography variant="body1" align="left">Financial round the company is looking for:&nbsp;&nbsp;
+                                                <Typography variant="body1" align="left">Will the project seek investment in the future?:&nbsp;&nbsp;
                                                     <b>
                                                         {project.Pitch.financialRound}
                                                     </b>

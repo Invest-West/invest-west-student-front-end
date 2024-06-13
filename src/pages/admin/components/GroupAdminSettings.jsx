@@ -195,7 +195,7 @@ class GroupAdminSettings extends Component {
                         {/** Sign up link */}
                         <FlexView marginTop={35} column>
                             <FormControl fullWidth>
-                                <TextField label="Public registration link" fullWidth margin="dense" variant="outlined" helperText="This link can be shared to unregistered issuers/investors so that they can sign up and become members of your course without sending invitation emails manually." value={ process.env.REACT_APP_PUBLIC_URL + Routes.constructSignUpRoute(groupUserName)}/>
+                                <TextField label="Public registration link" fullWidth margin="dense" variant="outlined" helperText="This link can be shared to unregistered issuers/students so that they can sign up and become members of your course without sending invitation emails manually." value={ process.env.REACT_APP_PUBLIC_URL + Routes.constructSignUpRoute(groupUserName)}/>
                             </FormControl>
                         </FlexView>
 

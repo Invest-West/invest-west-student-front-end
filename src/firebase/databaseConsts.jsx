@@ -284,7 +284,7 @@ export const HEAR_ABOUT = ["Please select", "Google", "Newsletter", "Linkedin", 
  *
  * @type {string[]}
  */
-export const FINANCIAL_ROUNDS = ["Pre-seed", "Seed", "Series A", "Series B", "Series C"];
+export const FINANCIAL_ROUNDS = ["Yes", "No"];
 
 export const EIS_BADGE = ["Yes", "No"];
 

@@ -331,7 +331,7 @@ class AdminDashboard extends Component {
                                                 </FlexView>
                                             </FlexView>
                                             <Typography paragraph variant="body1" align="left">
-                                                Manage access requests from other courses' investors who would like
+                                                Manage access requests from other courses' students who would like
                                                 to
                                                 join this course.
                                             </Typography>

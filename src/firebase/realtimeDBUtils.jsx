@@ -1794,7 +1794,7 @@ export const toggleProjectLivelinessTemporarily = async (admin, project) => {
                                 ?
                                 "This investment opportunity has been closed temporarily by your group admin. We will notify you when it is opened again."
                                 :
-                                "This investment opportunity has been opened again. The investors can now interact with it."
+                                "This investment opportunity has been opened again. The students can now interact with it."
                         ,
                         userID: project.issuerID,
                         action: ROUTES.PROJECT_DETAILS_INVEST_WEST_SUPER.replace(":projectID", project.id)
@@ -2119,9 +2119,9 @@ export const makeProjectPledgeGoLiveDecision = async (admin, project, decisionOb
                     message:
                         decisionObj.decision
                             ?
-                            `Congratulations! Your investment opportunity has been published. Investors can now pledge.`
+                            `Congratulations! Your project has been published.`
                             :
-                            `Unfortunately your investment opportunity has been rejected. Contact your course's admin for further information.`
+                            `Unfortunately your project has been rejected. Contact your course's admin for further information.`
                     ,
                     userID: project.issuerID,
                     action: ROUTES.PROJECT_DETAILS_INVEST_WEST_SUPER.replace(":projectID", project.id)
