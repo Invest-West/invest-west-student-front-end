@@ -135,7 +135,7 @@ class BusinessProfile extends Component<BusinessProfileProps, any> {
 
             {/** Sector */}
             <FormControl required >
-                <FormLabel> <b>Business sector</b> </FormLabel>
+                <FormLabel> <b>Course sector</b> </FormLabel>
                 <Select
                     name="sector"
                     // value={
@@ -148,7 +148,7 @@ class BusinessProfile extends Component<BusinessProfileProps, any> {
                     // @ts-ignore
                     onChange={this.onInputFieldChanged(InputCategories.BusinessProfile)}
                 >
-                    <MenuItem key={-1} value={"none"}>Choose business sector</MenuItem>
+                    <MenuItem key={-1} value={"none"}>Choose course sector</MenuItem>
                     {
                         !ManageSystemAttributesState.systemAttributes
                             ? null

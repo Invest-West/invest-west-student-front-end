@@ -1,17 +1,17 @@
 {
   "files": {
     "main.css": "https://student.investwest.online/static/css/main.b2ce001b.chunk.css",
-    "main.js": "https://student.investwest.online/static/js/main.50de826c.chunk.js",
-    "main.js.map": "https://student.investwest.online/static/js/main.50de826c.chunk.js.map",
+    "main.js": "https://student.investwest.online/static/js/main.25dbe0b2.chunk.js",
+    "main.js.map": "https://student.investwest.online/static/js/main.25dbe0b2.chunk.js.map",
     "runtime-main.js": "https://student.investwest.online/static/js/runtime-main.46b8abca.js",
     "runtime-main.js.map": "https://student.investwest.online/static/js/runtime-main.46b8abca.js.map",
     "static/css/2.dca312d0.chunk.css": "https://student.investwest.online/static/css/2.dca312d0.chunk.css",
-    "static/js/2.b0c7f6f3.chunk.js": "https://student.investwest.online/static/js/2.b0c7f6f3.chunk.js",
-    "static/js/2.b0c7f6f3.chunk.js.map": "https://student.investwest.online/static/js/2.b0c7f6f3.chunk.js.map",
+    "static/js/2.6202065a.chunk.js": "https://student.investwest.online/static/js/2.6202065a.chunk.js",
+    "static/js/2.6202065a.chunk.js.map": "https://student.investwest.online/static/js/2.6202065a.chunk.js.map",
     "index.html": "https://student.investwest.online/index.html",
     "static/css/2.dca312d0.chunk.css.map": "https://student.investwest.online/static/css/2.dca312d0.chunk.css.map",
     "static/css/main.b2ce001b.chunk.css.map": "https://student.investwest.online/static/css/main.b2ce001b.chunk.css.map",
-    "static/js/2.b0c7f6f3.chunk.js.LICENSE.txt": "https://student.investwest.online/static/js/2.b0c7f6f3.chunk.js.LICENSE.txt",
+    "static/js/2.6202065a.chunk.js.LICENSE.txt": "https://student.investwest.online/static/js/2.6202065a.chunk.js.LICENSE.txt",
     "static/media/admin_logo.png": "https://student.investwest.online/static/media/admin_logo.ba46fba4.png",
     "static/media/front_page_cover_image.png": "https://student.investwest.online/static/media/front_page_cover_image.2b9aa708.png",
     "static/media/group_admin_help_accept_reject_2_offer.png": "https://student.investwest.online/static/media/group_admin_help_accept_reject_2_offer.ef822bde.png",
@@ -80,8 +80,8 @@
   "entrypoints": [
     "static/js/runtime-main.46b8abca.js",
     "static/css/2.dca312d0.chunk.css",
-    "static/js/2.b0c7f6f3.chunk.js",
+    "static/js/2.6202065a.chunk.js",
     "static/css/main.b2ce001b.chunk.css",
-    "static/js/main.50de826c.chunk.js"
+    "static/js/main.25dbe0b2.chunk.js"
   ]
 }

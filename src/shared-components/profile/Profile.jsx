@@ -972,29 +972,11 @@ class Profile extends Component {
 
                                     <Divider style={{ marginTop: 20, marginBottom: 20 }} />
 
-                                    {/** Trading address */}
-                                    <FlexView column >
-                                        <FormControl required >
-                                            <Container fluid style={{ padding: 0 }} >
-                                                <Row noGutters >
-                                                    <Col xs={12} sm={12} md={6} lg={4} >
-                                                        <FormLabel>
-                                                            <b>Trading address</b>
-                                                        </FormLabel>
-                                                    </Col>
-                                                </Row>
-
-                                            </Container>
-                                        </FormControl>
-                                    </FlexView>
-
-                                    <Divider style={{ marginTop: 20, marginBottom: 20 }} />
-
-                                    {/** Business sector */}
+                                    {/** Course sector */}
                                     <FlexView column >
                                         <FormControl required >
                                             <FormLabel>
-                                                <b>Business sector</b>
+                                                <b>Course sector</b>
                                             </FormLabel>
                                             <Select
                                                 name="sector"
@@ -1003,7 +985,7 @@ class Profile extends Component {
                                                 margin="dense"
                                                 onChange={ this.handleCreateBusinessProfileTextChanged(createBusinessProfileActions.ORDINARY_BUSINESS_PROFILE_FIELDS_CHANGED) }
                                             >
-                                                <MenuItem key={-1} value={'None'} >Choose business sector</MenuItem>
+                                                <MenuItem key={-1} value={'None'} >Choose course sector</MenuItem>
                                                 {
                                                     clubAttributes
                                                         ?
@@ -1023,7 +1005,7 @@ class Profile extends Component {
                                     <FlexView column >
                                         <FormControl required >
                                             <FormLabel>
-                                                <b>Company website</b>
+                                                <b>Project website</b>
                                             </FormLabel>
                                             <TextField
                                                 placeholder="Enter company website"
@@ -1056,7 +1038,7 @@ class Profile extends Component {
                                             <Col xs={12} sm={12} md={6} lg={6} style={{ padding: 15 }} >
                                                 <FlexView column width="100%" hAlignContent="center" >
                                                     <FlexView className={css(styles.upload_files_area_style)} onClick={() => this.props.toggleEditImageDialog(UPLOAD_LOGO_FIRST_TIME_MODE)} >
-                                                        <Typography variant="body2" align="center" >Upload company logo (optional)</Typography>
+                                                        <Typography variant="body2" align="center" >Upload course logo (optional)</Typography>
                                                     </FlexView>
                                                     {
                                                         !createBusinessProfile.logoToBeUploaded

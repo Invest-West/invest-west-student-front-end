@@ -362,14 +362,6 @@ interface ExploreOffersComponentState {
                     </Row>
             }
 
-            {/** Risk warning */}
-            <Row noGutters >
-                <Col xs={12} sm={12} md={12} lg={12} >
-                    <Box marginTop="100px" >
-                        <RiskWarning/>
-                    </Box>
-                </Col>
-            </Row>
         </Box>;
     }
 }

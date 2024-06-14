@@ -3074,7 +3074,7 @@ class CreateProject extends Component {
                                                 && createProjectState.financialRound.trim().length === 0
                                             }
                                         >
-                                            <FormLabel style={{marginBottom: 16}}>Do you want to seek investment??</FormLabel>
+                                            <FormLabel style={{marginBottom: 16}}>Do you want to seek investment?</FormLabel>
                                             <RadioGroup name="financialRound" value={createProjectState.financialRound} onChange={this.onInputChanged}>
                                                 {
                                                     DB_CONST.FINANCIAL_ROUNDS.map(round =>
@@ -3180,7 +3180,7 @@ class CreateProject extends Component {
                                                     ?
                                                     null
                                                     :
-                                                    <Typography variant="subtitle1" color="textSecondary" align="left" style={{marginTop: 8}}>Please upload your company logo here.</Typography>
+                                                    <Typography variant="subtitle1" color="textSecondary" align="left" style={{marginTop: 8}}>Please upload your project logo here.</Typography>
                                             }
 
                                             <FlexView column marginTop={32}>

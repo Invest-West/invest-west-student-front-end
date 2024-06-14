@@ -3435,7 +3435,7 @@ class ProjectDetails extends Component {
                                 <Col xs={12} sm={12} md={12} lg={{span: 6, offset: 3}}>
 
                                     {
-                                        // pitch deck
+                                        // Project deck
                                         !project.Pitch.presentationDocument
                                             ?
                                             null
