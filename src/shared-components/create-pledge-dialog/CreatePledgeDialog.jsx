@@ -104,7 +104,7 @@ class CreatePledgeDialog extends Component {
                         <Row noGutters >
                             <Col xs={12} sm={12} md={{span: 8, offset: 2}} lg={{span: 6, offset: 3}} >
 
-                                {/** Get the project name from the pitch and put here */}
+                                {/** Get the project name from the project and put here */}
                                 <TextField
                                     disabled
                                     label="Project name"
@@ -114,7 +114,7 @@ class CreatePledgeDialog extends Component {
                                     variant="outlined"
                                 />
 
-                                {/** Get the Total raise from the pitch and put here */}
+                                {/** Get the Total raise from the project and put here */}
                                 <TextField
                                     disabled
                                     label="Total fund needs raising (£)"
@@ -124,7 +124,7 @@ class CreatePledgeDialog extends Component {
                                     variant="outlined"
                                 />
 
-                                {/** Get the raise required from the pitch and put here */}
+                                {/** Get the raise required from the project and put here */}
                                 <TextField
                                     disabled
                                     label="Fund required (£)"
@@ -134,7 +134,7 @@ class CreatePledgeDialog extends Component {
                                     variant="outlined"
                                 />
 
-                                {/** Get the investors committed from the pitch and put here */}
+                                {/** Get the investors committed from the project and put here */}
                                 <TextField
                                     disabled
                                     label="Investors committed"
@@ -144,7 +144,7 @@ class CreatePledgeDialog extends Component {
                                     variant="outlined"
                                 />
 
-                                {/** Get the post money valuation from the pitch and put here */}
+                                {/** Get the post money valuation from the project and put here */}
                                 <TextField
                                     label="Post money valuation (£)"
                                     name="postMoneyValuation"

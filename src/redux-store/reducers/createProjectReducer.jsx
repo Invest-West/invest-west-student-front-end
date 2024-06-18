@@ -26,27 +26,27 @@ const initState = {
 
         activeStep: STEP_PITCH_GENERAL_INFORMATION,
 
-        // pitch sector
+        // project sector
         pitchSector: '-',
-        // pitch project name
+        // project project name
         pitchProjectName: '',
         pitchProjectDescription: '',
         pitchExpiredDate: null,
 
         pitchInvestorsCommitted: '',
 
-        // pitch cover (image or video) --- 1 file
+        // project cover (image or video) --- 1 file
         pitchCover: [],
-        // pitch cover - video URL
+        // project cover - video URL
         pitchCoverVideoURL: '',
         // select between uploading an image or a video ULR -----
         pitchCoverTypeSelected: null,
         // ------------------------------------------------------
-        // pitch supporting documents --- max 10 files
+        // project supporting documents --- max 10 files
         pitchSupportingDocuments: [],
-        // pitch presentation file (user uploads a file for pitch presentation) --- 1 file
+        // project presentation file (user uploads a file for project presentation) --- 1 file
         pitchPresentationDocument: [],
-        // pitch presentation text (user uses the provided text editor to make pitch presentation)
+        // project presentation text (user uses the provided text editor to make project presentation)
         pitchPresentationText: {ops: []},
 
         // check for missing fields (or invalid inputs) when the user hits the Next button
@@ -111,7 +111,7 @@ const createProjectReducer = (state = initState, action) => {
 
                             createNewPitch: {
                                 ...state.createNewPitch,
-                                // pitch sector
+                                // project sector
                                 pitchSector:
                                     project.hasOwnProperty('sector')
                                         ?
@@ -119,7 +119,7 @@ const createProjectReducer = (state = initState, action) => {
                                         :
                                         ''
                                 ,
-                                // pitch project name
+                                // project project name
                                 pitchProjectName:
                                     project.hasOwnProperty('projectName')
                                         ?

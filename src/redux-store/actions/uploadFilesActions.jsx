@@ -255,7 +255,7 @@ export const uploadFiles = (mode, user = null, project = null) => {
  * @param file: a single file to be uploaded
  * @param totalFiles: length of the files array --> calculate percent done
  * @param user: set when uploading legal documents
- * @param project: set when uploading pitch cover, pitch deck, or pitch supporting documents
+ * @param project: set when uploading project cover, project deck, or project supporting documents
  */
 const uploadIndividualFile = async (dispatch, mode, file, totalFiles, user = null, project = null) => {
 

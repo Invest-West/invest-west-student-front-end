@@ -1157,7 +1157,7 @@ class ProjectDetailsMain extends Component {
     };
 
     /**
-     * Detach changes listener for this pitch
+     * Detach changes listener for this project
      */
     detachProjectChangedListener = () => {
         if (this.projectListener) {
@@ -2106,7 +2106,7 @@ class ProjectDetails extends Component {
     };
 
     /**
-     * Bring pitch back to live
+     * Bring project back to live
      */
     bringPitchBackToLive = () => {
         this.props.bringPitchBackToLive();
@@ -2127,7 +2127,7 @@ class ProjectDetails extends Component {
     }
 
     /**
-     * Toggle contact pitch owner dialog
+     * Toggle contact project owner dialog
      */
     toggleContactPitchOwnerDialog = () => {
         this.props.toggleContactPitchOwnerDialog();
@@ -2434,7 +2434,7 @@ class ProjectDetails extends Component {
                                         {/*                        ?*/}
                                         {/*                        "Pages cannot be edited."*/}
                                         {/*                        :*/}
-                                        {/*                        `Pages can only be edited before the pitch phase expires. You can edit until ${utils.dateInReadableFormat(project.Pitch.expiredDate)}.`*/}
+                                        {/*                        `Pages can only be edited before the project phase expires. You can edit until ${utils.dateInReadableFormat(project.Pitch.expiredDate)}.`*/}
                                         {/*        }*/}
                                         {/*        placement="right"*/}
                                         {/*    />*/}
@@ -2806,7 +2806,7 @@ class ProjectDetails extends Component {
                                     <Row>
                                         <Col xs={{span: 12, order: 1}} sm={{span: 12, order: 1}} md={{span: 8, order: 0}} lg={{span: 8, order: 0}}>
                                             <Stepper nonLinear orientation="vertical" activeStep={adminOfferStatesActiveStep} style={{marginTop: 15}}>
-                                                {/** Publish pitch step */}
+                                                {/** Publish project step */}
                                                 <Step key={ADMIN_OFFER_STATES_PUBLISH_PITCH} completed={!utils.isProjectWaitingToGoLive(project)}>
                                                     <StepButton onClick={() => this.onAdminOfferStatesStepClick(ADMIN_OFFER_STATES_PUBLISH_PITCH)}>
                                                         <StepLabel>Publish project</StepLabel>
@@ -2931,7 +2931,7 @@ class ProjectDetails extends Component {
                                                     </StepContent>
                                                 </Step>
 
-                                                {/** Move Pitch to Pledge step */}
+                                                {/** Move project to Pledge step */}
                                                 <Step
                                                     key={ADMIN_OFFER_STATES_MOVE_TO_PLEDGE}
                                                     disabled={
@@ -2950,7 +2950,7 @@ class ProjectDetails extends Component {
                                                         {/*<StepLabel*/}
                                                         {/*    error={utils.isProjectRejectedToGoLive(project)}*/}
                                                         {/*>*/}
-                                                        {/*    Move pitch to pledge phase*/}
+                                                        {/*    Move project to pledge phase*/}
                                                         {/*</StepLabel>*/}
                                                         <StepLabel error={utils.isProjectRejectedToGoLive(project)}>Make decision for expired project</StepLabel>
                                                     </StepButton>
@@ -2977,7 +2977,7 @@ class ProjectDetails extends Component {
                                                                                     fullWidth
                                                                                     variant="dialog"
                                                                                     inputVariant="outlined"
-                                                                                    label="Update expiry date for this pitch"
+                                                                                    label="Update expiry date for this project"
                                                                                     format="dd/MM/yyyy"
                                                                                     minDate={utils.getDateWithDaysFurtherThanToday(1)}
                                                                                     value={changedPitchExpiryDate}
@@ -2994,7 +2994,7 @@ class ProjectDetails extends Component {
                                                                                     style={{marginTop: 25}} onClick={this.bringPitchBackToLive}>Make project live again</Button>
 
                                                                                 <FlexView column marginTop={100}>
-                                                                                    <Button fullWidth color="secondary" className={css(sharedStyles.no_text_transform)} variant="contained" disabled={user.superAdmin} onClick={() => this.onMakeProjectGoToPledgePhaseDecision(false)}>Close pitch</Button>
+                                                                                    <Button fullWidth color="secondary" className={css(sharedStyles.no_text_transform)} variant="contained" disabled={user.superAdmin} onClick={() => this.onMakeProjectGoToPledgePhaseDecision(false)}>Close project</Button>
 
                                                                                     <Typography align="center" variant="body2" style={{marginTop: 12}}>
                                                                                         <b>
@@ -3022,7 +3022,7 @@ class ProjectDetails extends Component {
                                                                     {/*        paragraph*/}
                                                                     {/*    >*/}
                                                                     {/*        This offer is currently in the*/}
-                                                                    {/*        pitch*/}
+                                                                    {/*        project*/}
                                                                     {/*        phase. You can now move it to the pledge*/}
                                                                     {/*        phase.*/}
                                                                     {/*        The*/}
@@ -3080,7 +3080,7 @@ class ProjectDetails extends Component {
                                                                     {/*                disabled={user.superAdmin}*/}
                                                                     {/*                onClick={() => this.onMakeProjectGoToPledgePhaseDecision(false)}*/}
                                                                     {/*            >*/}
-                                                                    {/*                Close pitch*/}
+                                                                    {/*                Close project*/}
                                                                     {/*            </Button>*/}
                                                                     {/*        </FlexView>*/}
                                                                     {/*    </FlexView>*/}
@@ -3415,7 +3415,7 @@ class ProjectDetails extends Component {
                                     }
 
                                     {
-                                        // pitch presentation text
+                                        // project presentation text
                                         !project.Pitch.presentationText
                                             ?
                                             null
@@ -4165,11 +4165,11 @@ class ProjectDetails extends Component {
                     stt.color = "textSecondary";
                     break;
                 case DB_CONST.PITCH_STATUS_REJECTED:
-                    stt.text = "Offer failed as its pitch was rejected.";
+                    stt.text = "Offer failed as its project was rejected.";
                     stt.color = "error";
                     break;
                 case DB_CONST.PITCH_STATUS_WAITING_FOR_ADMIN:
-                    stt.text = "Pitch expired. Awaiting Course Admin review.";
+                    stt.text = "project expired. Awaiting Course Admin review.";
                     stt.color = "textSecondary";
                     break;
                 default:
@@ -4194,8 +4194,8 @@ class ProjectDetails extends Component {
             groupsUserIsIn,
         } = this.props;
 
-        // do not let the owner of the pitch vote for themselves
-        // also, do not let the admin vote the pitch
+        // do not let the owner of the project vote for themselves
+        // also, do not let the admin vote the project
         if (project.issuerID === firebase.auth().currentUser.uid
             || user.type === DB_CONST.TYPE_ADMIN
         ) {
@@ -4218,7 +4218,7 @@ class ProjectDetails extends Component {
             return true;
         }
 
-        // do not allow investors to vote when the Pitch has expired
+        // do not allow investors to vote when the project has expired
         if (project.Pitch.status !== DB_CONST.PITCH_STATUS_ON_GOING) {
             return true;
         }

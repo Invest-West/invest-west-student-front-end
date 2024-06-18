@@ -320,7 +320,7 @@ export const handleMoveToNextStep = (params) => {
                         return;
                     }
                 } else {
-                    // if the user has not created their pitch presentation, ask them to do so by uploading a presentation file or use the text editor provided
+                    // if the user has not created their project presentation, ask them to do so by uploading a presentation file or use the text editor provided
                     if (pitchPresentationDocument.length === 0 && pitchPresentationText.ops.length === 0) {
                         this.setState({
                             createNewPitch: {
@@ -365,7 +365,7 @@ export const handleMoveToNextStep = (params) => {
                         this.projectEditedSaveModeRefListener.off('child_changed');
                     }
 
-                    // upload the pitch
+                    // upload the project
                     this.uploadProject();
                     this.navigateToTheSamePageWithActiveStepSaved(0, projectEdited.id);
                     return;
