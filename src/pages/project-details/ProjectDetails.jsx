@@ -2574,7 +2574,7 @@ class ProjectDetails extends Component {
                                 />
                             </Col>
 
-                            {/** Funding goal / Pledged */}
+                            {/** Funding goal / Pledged 
                             <Col xs={12} sm={12} md={{span: 5, offset: 1, order: 2}} lg={{span: 12, offset: 0, order: 2}}>
                                 <FlexView column marginTop={18}>
                                     {
@@ -2585,43 +2585,10 @@ class ProjectDetails extends Component {
                                         || utils.isProjectPitchExpiredWaitingForAdminToCheck(project)
                                         || utils.isProjectWaitingForPledgeToBeCreated(project)
                                         || utils.isProjectWaitingForPledgeToBeChecked(project)
-                                            ?
-                                            <FlexView vAlignContent="center">
-                                                <FlexView column marginRight={20}>
-                                                    <Typography variant="h5" color="secondary" align="left">{'£' + Number(project.Pitch.fundRequired.toFixed(2)).toLocaleString()}</Typography>
-                                                    <Typography variant="body2" color="textSecondary" align="left">Funding goal</Typography>
-                                                </FlexView>
-                                                <InfoOverlay message="Funding amount sought via Invest West." placement="top"/>
-                                            </FlexView>
-                                            :
-                                            <FlexView vAlignContent="center">
-                                                <FlexView column marginRight={20}>
-                                                    <Typography variant="h5" color="primary" align="left">{`£${Number(utils.calculatePledgesAmount(pledges).toFixed(2)).toLocaleString()}`}</Typography>
-                                                    <Typography variant="body2" color="textSecondary" align="left">{`pledged of £${Number(project.Pitch.fundRequired.toFixed(2)).toLocaleString()} goal`}</Typography>
-                                                </FlexView>
-                                                <InfoOverlay message="Total amount pledged via Invest West." placement="top"/>
-                                            </FlexView>
                                     }
                                 </FlexView>
                             </Col>
-
-                            {/** Post money valuation */}
-                            {
-                                !project.Pitch.hasOwnProperty('postMoneyValuation')
-                                    ?
-                                    null
-                                    :
-                                    <Col xs={12} sm={12} md={{span: 5, offset: 1, order: 3}} lg={{span: 12, offset: 0, order: 3}}>
-                                        <FlexView marginTop={20} vAlignContent="center">
-                                            <FlexView column marginRight={20}>
-                                                <Typography variant="h5" color="inherit" align="left">{'£' + Number(project.Pitch.postMoneyValuation.toFixed(2)).toLocaleString()}</Typography>
-                                                <Typography variant="body2" color="textSecondary" align="left">Post money valuation</Typography>
-                                            </FlexView>
-                                            <InfoOverlay message="This is the company post money valuation." placement="top"/>
-                                        </FlexView>
-                                    </Col>
-                            }
-
+                            */}
                             
 
                             {/** Project status */}
@@ -2811,9 +2778,9 @@ class ProjectDetails extends Component {
                                 {/*        :*/}
                                 {/*        null*/}
                                 {/*}*/}
-                                <Tab value={MAIN_BODY_CAMPAIGN} className={css(sharedStyles.tab_title)} fullWidth label="Campaign"/>
+                                <Tab value={MAIN_BODY_CAMPAIGN} className={css(sharedStyles.tab_title)} fullWidth label="Project"/>
                                 <Tab value={MAIN_BODY_DOCUMENTS} className={css(sharedStyles.tab_title)} fullWidth label="Documents"/>
-                                <Tab value={MAIN_BODY_COMMENTS} className={css(sharedStyles.tab_title)} fullWidth label="Investor comments"/>
+                                <Tab value={MAIN_BODY_COMMENTS} className={css(sharedStyles.tab_title)} fullWidth label="Student comments"/>
                                 <Tab value={MAIN_BODY_NOTES} className={css(sharedStyles.tab_title)} fullWidth label="Extra information"/>
                             </Tabs>
                         </FlexView>
@@ -3531,7 +3498,7 @@ class ProjectDetails extends Component {
                                                     ?
                                                     null
                                                     :
-                                                    <Typography align="center" style={{padding: 15, backgroundColor: colors.kick_starter_background_color_1, marginBottom: 30}} variant="body2" color="inherit">Only investors can post comments.</Typography>
+                                                    <Typography align="center" style={{padding: 15, backgroundColor: colors.kick_starter_background_color_1, marginBottom: 30}} variant="body2" color="inherit">Only students can post comments.</Typography>
                                             }
 
                                             {
@@ -3861,10 +3828,10 @@ class ProjectDetails extends Component {
                                                                 }
                                                             </FlexView>
                                                             :
-                                                            <Typography variant="subtitle1" align="left">You have already commented on this investment opportunity. You can only edit your comment.</Typography>
+                                                            <Typography variant="subtitle1" align="left">You have already commented on this project opportunity. You can only edit your comment.</Typography>
                                                     )
                                                     :
-                                                    <Typography variant="subtitle1" align="left">All the comments from investors are displayed anonymously here.</Typography>
+                                                    <Typography variant="subtitle1" align="left">All the comments from students are displayed anonymously here.</Typography>
                                             }
 
                                         </Col>
@@ -4019,12 +3986,6 @@ class ProjectDetails extends Component {
                     }
                 </Row>
 
-                {/** Risk warning footer */}
-                <Row noGutters>
-                    <Col xs={12} sm={12} md={12} lg={{span: 6, offset: 3}}>
-                        <RiskWarning/>
-                    </Col>
-                </Row>
             </Container>
         );
     };
@@ -4192,7 +4153,7 @@ class ProjectDetails extends Component {
                 case DB_CONST.PITCH_STATUS_ON_GOING:
                     return (
                         <FlexView column marginTop={30} marginBottom={30}>
-                            <Typography variant="body2" color="primary" align="left">Offer is in project phase
+                            <Typography variant="body2" color="primary" align="left">Project is live
                             </Typography>
                             <Typography variant="h5" color="textPrimary" align="left">{utils.dateDiff(project.Pitch.expiredDate)}</Typography>
                             <Typography variant="body2" color="textSecondary" align="left"

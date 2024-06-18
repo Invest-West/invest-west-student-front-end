@@ -79,11 +79,11 @@ const PITCH_PRESENTATION_FILES_CHANGED = 3;
 export const PITCH_COVER_FILE_TYPE_SELECTED = 1; // users select to upload an image or a video for their project cover
 export const PITCH_COVER_VIDEO_URL_TYPE_SELECTED = 2; // users select to upload a video URL for their project cover
 
-// pitch create non-check
+// project create non-check
 export const PITCH_PUBLISH_CHECK_NONE = 0;
-// pitch cannot be created due to missing fields
+// project cannot be created due to missing fields
 export const PITCH_PUBLISH_FALSE_MISSING_FIELDS_IN_GENERAL_INFORMATION = 1;
-// pitch cannot be created due to 0 or negative value of fund or equity
+// project cannot be created due to 0 or negative value of fund or equity
 export const PITCH_PUBLISH_FALSE_INVALID_DATE = 2;
 export const PITCH_PUBLISH_FALSE_INVALID_FUND = 3;
 export const PITCH_PUBLISH_FALSE_MISSING_PITCH_COVER = 4;
@@ -140,9 +140,9 @@ const initState = {
 
         groupIssuerCreateOfferFor: "undefined",
 
-        // pitch sector
+        // project sector
         pitchSector: '-',
-        // pitch project name
+        // project project name
         pitchProjectName: '',
         pitchProjectDescription: '',
         pitchExpiryDate: null,
@@ -158,11 +158,11 @@ const initState = {
         // select between uploading an image or a video ULR -----
         pitchCoverTypeSelected: null,
         // ------------------------------------------------------
-        // pitch supporting documents --- max 10 files
+        // project supporting documents --- max 10 files
         pitchSupportingDocuments: [],
-        // pitch presentation file (user uploads a file for pitch presentation) --- 1 file
+        // project presentation file (user uploads a file for project presentation) --- 1 file
         pitchPresentationDocument: [],
-        // pitch presentation text (user uses the provided text editor to make pitch presentation)
+        // project presentation text (user uses the provided text editor to make project presentation)
         pitchPresentationText: {ops: []},
         // plain text obtained from quill editor
         pitchPresentationPlainText: null,
@@ -429,7 +429,7 @@ class CreatePitchPageMain extends Component {
                                     : project.hasOwnProperty('anid')
                                     ? project.anid
                                     : "undefined",
-                            // pitch sector
+                            // project sector
                             pitchSector:
                                 project.hasOwnProperty('sector')
                                     ?
@@ -437,7 +437,7 @@ class CreatePitchPageMain extends Component {
                                     :
                                     '-'
                             ,
-                            // pitch project name
+                            // project project name
                             pitchProjectName:
                                 project.hasOwnProperty('projectName')
                                     ?
@@ -528,7 +528,7 @@ class CreatePitchPageMain extends Component {
                         ManageGroupUrlState.group.groupUserName === "qib"
                             ?
                             // if the group is QIB,
-                            // set the pitch expiry date to the one specified by the QIB' admins
+                            // set the project expiry date to the one specified by the QIB' admins
                             // Note: must ensure the defaultPitchExpiryDate field is valid
                             ManageGroupUrlState.group.settings.defaultPitchExpiryDate
                             :
@@ -713,7 +713,7 @@ class CreatePitchPageMain extends Component {
                             return;
                         }
                     } else {
-                        // if the user has not created their pitch presentation, ask them to do so by uploading a presentation file or use the text editor provided
+                        // if the user has not created their project presentation, ask them to do so by uploading a presentation file or use the text editor provided
                         if (pitchPresentationDocument.length === 0) {
                             this.setState({
                                 createProject: {
@@ -752,7 +752,7 @@ class CreatePitchPageMain extends Component {
                             return;
                         }
                     } else {
-                        // if the user has not created their pitch presentation, ask them to do so by uploading a presentation file or use the text editor provided
+                        // if the user has not created their project presentation, ask them to do so by uploading a presentation file or use the text editor provided
                         if (pitchPresentationDocument.length === 0 && pitchPresentationText.ops.length === 0) {
                             this.setState({
                                 createProject: {
@@ -798,7 +798,7 @@ class CreatePitchPageMain extends Component {
                         this.projectEditedSaveModeRefListener.off('child_changed');
                     }
 
-                    // upload the pitch
+                    // upload the project
                     this.uploadProject();
                     this.navigateToTheSamePageWithActiveStepSaved(0, projectEdited.id);
                     return;
@@ -910,7 +910,7 @@ class CreatePitchPageMain extends Component {
                         }
                     });
                     break;
-                // there can be more than 1 pitch supporting files
+                // there can be more than 1 project supporting files
                 case PITCH_SUPPORTING_DOCUMENTS_FILES_CHANGED:
                     // for QIB, supporting document will be considered as project summary
                     // so, the user can only upload one file
@@ -964,7 +964,7 @@ class CreatePitchPageMain extends Component {
                         }));
                     }
                     break;
-                // there can only be 1 file for pitch presentation
+                // there can only be 1 file for project presentation
                 case PITCH_PRESENTATION_FILES_CHANGED:
                     this.setState({
                         createProject: {
@@ -999,7 +999,7 @@ class CreatePitchPageMain extends Component {
     };
 
     /**
-     * This function gets called when the texts in the Create Pitch Dialog changed.
+     * This function gets called when the texts in the Create project Dialog changed.
      */
     handleCreatePitchInputChanged = event => {
         const name = event.target.name;
@@ -1070,7 +1070,7 @@ class CreatePitchPageMain extends Component {
     handlePitchEditorChanged = (content, delta, source, editor) => {
 
         // check if the editor is empty (or does not have any text)
-        // we must ensure that a pitch body contains text
+        // we must ensure that a project body contains text
         if (editor.getText().trim().length === 0) {
             this.setState({
                 createProject: {
@@ -1090,7 +1090,7 @@ class CreatePitchPageMain extends Component {
     };
 
     /**
-     * This function gets called to create a new pitch.
+     * This function gets called to create a new project.
      */
     uploadProject = () => {
 
@@ -1158,7 +1158,7 @@ class CreatePitchPageMain extends Component {
                 }
             }
 
-            // new pitch presentation document has been chosen
+            // new project presentation document has been chosen
             if (pitchPresentationDocument.length > 0) {
                 if (projectEdited.Pitch.hasOwnProperty('presentationDocument')) {
                     // mark the existing presentation document with the 'removed' tag
@@ -1170,11 +1170,11 @@ class CreatePitchPageMain extends Component {
                 }
             }
 
-            // pitch reference in Realtime DB
+            // project reference in Realtime DB
             const projectRef = this.firebaseDB
                 .ref(DB_CONST.PROJECTS_CHILD);
 
-            // pitch storage reference
+            // project storage reference
             const projectStorageRef = this.firebaseStorage
                 .ref(DB_CONST.USERS_CHILD)
                 .child(projectEdited.issuerID)
@@ -1192,7 +1192,7 @@ class CreatePitchPageMain extends Component {
                         }
                     });
 
-                    // upload pitch supporting documents
+                    // upload project supporting documents
                     this.uploadMultipleFiles(UPLOAD_PITCH_SUPPORTING_DOCUMENTS_MODE, projectStorageRef)
                         .then(successful => {
 
@@ -1203,7 +1203,7 @@ class CreatePitchPageMain extends Component {
                                 }
                             });
 
-                            // upload pitch presentation or project summary
+                            // upload project presentation or project summary
                             this.uploadMultipleFiles(UPLOAD_PITCH_PRESENTATION_DOCUMENT_MODE, projectStorageRef)
                                 .then(successful => {
 
@@ -1415,7 +1415,7 @@ class CreatePitchPageMain extends Component {
                                         }
                                     };
 
-                                    // set the updated pitch in firebase
+                                    // set the updated project in firebase
                                     projectRef
                                         .child(projectEdited.id)
                                         .update(updatedProject)
@@ -1520,7 +1520,7 @@ class CreatePitchPageMain extends Component {
                                                         agreedToShareRaisePublicly
                                                     };
 
-                                                    // push to Create Pitch T&Cs
+                                                    // push to Create project T&Cs
                                                     this.firebaseDB
                                                         .ref(DB_CONST.ACCEPTED_CREATE_PITCH_TERM_AND_CONDITIONS_CHILD)
                                                         .push(acceptedTCsObj)
@@ -1619,13 +1619,13 @@ class CreatePitchPageMain extends Component {
             // calculate posted date (current time)
             const postedDate = utils.getCurrentDate();
 
-            // pitch reference in Realtime DB
+            // project reference in Realtime DB
             const projectRef = this.firebaseDB
                 .ref(DB_CONST.PROJECTS_CHILD);
-            // get pitch's publishing id
+            // get project's publishing id
             const projectID = projectRef.push().key;
 
-            // pitch storage reference
+            // project storage reference
             const projectStorageRef = this.firebaseStorage
                 .ref(DB_CONST.USERS_CHILD)
                 .child(AuthenticationState.currentUser.id)
@@ -1643,7 +1643,7 @@ class CreatePitchPageMain extends Component {
                         }
                     });
 
-                    // upload pitch supporting documents
+                    // upload project supporting documents
                     this.uploadMultipleFiles(UPLOAD_PITCH_SUPPORTING_DOCUMENTS_MODE, projectStorageRef)
                         .then(successful => {
 
@@ -1654,7 +1654,7 @@ class CreatePitchPageMain extends Component {
                                 }
                             });
 
-                            // upload pitch presentation or project summary
+                            // upload project presentation or project summary
                             this.uploadMultipleFiles(UPLOAD_PITCH_PRESENTATION_DOCUMENT_MODE, projectStorageRef)
                                 .then(successful => {
 
@@ -2301,7 +2301,7 @@ class CreatePitchPageMain extends Component {
                 // delete project summary
                 this.deleteMultiplesOnStorage(UPLOAD_PITCH_PRESENTATION_DOCUMENT_MODE)
                     .then(() => {
-                        // delete pitch supporting documents
+                        // delete project supporting documents
                         this.deleteMultiplesOnStorage(UPLOAD_PITCH_SUPPORTING_DOCUMENTS_MODE)
                             .then(() => {
                                 this.firebaseDB
@@ -2697,7 +2697,7 @@ class CreateProject extends Component {
                 }
                 // for other groups, project summary is still project summary
                 else {
-                    msg = "Please upload a file or use our provided text editor to make your pitch presentation.";
+                    msg = "Please upload a file or use our provided text editor to make your project presentation.";
                 }
                 break;
             default:
@@ -2902,7 +2902,7 @@ class CreateProject extends Component {
                                                                     fullWidth
                                                                     variant="dialog"
                                                                     inputVariant="outlined"
-                                                                    label="Choose expiry date for this pitch"
+                                                                    label="Choose expiry date for this project"
                                                                     format="dd/MM/yyyy"
                                                                     minDate={utils.getDateWithDaysFurtherThanToday(1)}
                                                                     value={createProjectState.pitchExpiryDate}
@@ -2927,7 +2927,7 @@ class CreateProject extends Component {
                                                                             fullWidth
                                                                             variant="dialog"
                                                                             inputVariant="outlined"
-                                                                            label="Choose expiry date for this pitch"
+                                                                            label="Choose expiry date for this project"
                                                                             format="dd/MM/yyyy"
                                                                             minDate={utils.getDateWithDaysFurtherThanToday(1)}
                                                                             value={createProjectState.pitchExpiryDate}
@@ -3129,7 +3129,7 @@ class CreateProject extends Component {
                                         <FlexView column width="100%">
                                             <FlexView vAlignContent="center">
                                                 <Typography color="primary" variant="h6" align="left" style={{marginRight: 15}}>Step 2: Upload project cover</Typography>
-                                                <InfoOverlay message="project cover is an image or video that will appear on your pitch summary tile." placement="right"/>
+                                                <InfoOverlay message="project cover is an image or video that will appear on your project summary tile." placement="right"/>
                                             </FlexView>
 
                                             {
@@ -3165,13 +3165,13 @@ class CreateProject extends Component {
                                                 {
                                                     !params.edit || !projectEdited
                                                         ?
-                                                        "You need to upload an image or a video for the cover of your pitch."
+                                                        "You need to upload an image or a video for the cover of your project."
                                                         :
                                                         projectEdited.status === DB_CONST.PROJECT_STATUS_DRAFT && !projectEdited.Pitch.hasOwnProperty('cover')
                                                             ?
-                                                            "You need to upload an image or a video for the cover of your pitch."
+                                                            "You need to upload an image or a video for the cover of your project."
                                                             :
-                                                            "Upload an image or a video to change your project cover. We will use the new cover for your pitch instead of the old one."
+                                                            "Upload an image or a video to change your project cover. We will use the new cover for your project instead of the old one."
                                                 }
                                             </Typography>
 
@@ -3525,11 +3525,11 @@ class CreateProject extends Component {
                                                                     placeholder={
                                                                         !params.edit || !projectEdited
                                                                             ?
-                                                                            "Write your pitch presentation here. Add images for visual effects."
+                                                                            "Write your project presentation here. Add images for visual effects."
                                                                             :
                                                                             projectEdited.status === DB_CONST.PROJECT_STATUS_DRAFT && !projectEdited.Pitch.hasOwnProperty('presentationText')
                                                                                 ?
-                                                                                "Write your pitch presentation here. Add images for visual effects."
+                                                                                "Write your project presentation here. Add images for visual effects."
                                                                                 :
                                                                                 "You haven't had text presentation" +
                                                                                 " for this offer."
@@ -3669,12 +3669,12 @@ class CreateProject extends Component {
                                                                         {
                                                                             !params.edit || !projectEdited
                                                                                 ?
-                                                                                `You can upload supporting documents to help strengthen your pitch. You can upload up to ${DB_CONST.MAX_FILES_FOR_PITCH_SUPPORTING_DOCUMENTS} files.`
+                                                                                `You can upload supporting documents to help strengthen your project. You can upload up to ${DB_CONST.MAX_FILES_FOR_PITCH_SUPPORTING_DOCUMENTS} files.`
                                                                                 :
                                                                                 (
                                                                                     !projectEdited.Pitch.supportingDocuments
                                                                                         ?
-                                                                                        `You can upload supporting documents to help strengthen your pitch. You can upload up to ${DB_CONST.MAX_FILES_FOR_PITCH_SUPPORTING_DOCUMENTS} files.`
+                                                                                        `You can upload supporting documents to help strengthen your project. You can upload up to ${DB_CONST.MAX_FILES_FOR_PITCH_SUPPORTING_DOCUMENTS} files.`
                                                                                         :
                                                                                         `Upload new supporting documents. 
                                                                         You can still upload ${DB_CONST.MAX_FILES_FOR_PITCH_SUPPORTING_DOCUMENTS - projectEdited.Pitch.supportingDocuments.filter(document => !document.hasOwnProperty('removed')).length} 
@@ -3764,7 +3764,7 @@ class CreateProject extends Component {
                                                             <FormControl component="fieldset">
                                                                 <Typography variant="body1" align="left">Please tick the box below to confirm that you agree
                                                                     to comply with the terms and conditions of creating
-                                                                    a pitch in our platform.</Typography>
+                                                                    a project in our platform.</Typography>
                                                                 <FormControlLabel style={{marginTop: 10}}
                                                                     control={
                                                                         <Checkbox color="primary" name="acceptedTermsAndConditions" value={createProjectState.acceptedTermsAndConditions} checked={createProjectState.acceptedTermsAndConditions} onChange={this.onCheckboxChanged}/>
@@ -4019,7 +4019,7 @@ class UploadingDialog extends Component {
                             {
                                 uploadFileMode !== UPLOAD_DONE_MODE
                                     ?
-                                    "Please stay tuned while we are publishing your pitch"
+                                    "Please stay tuned while we are publishing your project"
                                     :
                                     null
                             }
@@ -4119,12 +4119,12 @@ class UploadingDialog extends Component {
                 );
             case UPLOAD_PITCH_SUPPORTING_DOCUMENTS_MODE:
                 return (
-                    <Typography variant="body2" color="textSecondary" align="left">Uploading pitch supporting documents</Typography>
+                    <Typography variant="body2" color="textSecondary" align="left">Uploading project supporting documents</Typography>
                 );
             case UPLOAD_PITCH_PRESENTATION_DOCUMENT_MODE:
                 return (
                     <Typography variant="body2" color="textSecondary"  align="left"
-                    >Uploading pitch presentation document</Typography>
+                    >Uploading project presentation document</Typography>
                 );
             case UPLOAD_REALTIME_DB:
                 return (
@@ -4152,7 +4152,7 @@ class UploadingDialog extends Component {
                                 }
                             </Typography>
                             <br/>
-                            <Typography variant="body1" color="textSecondary" align="left">Invite investors to register and view your pitch with the following link:</Typography>
+                            <Typography variant="body1" color="textSecondary" align="left">Invite others to upload their projects using following link:</Typography>
                             <br/>
                             <Box border={1} bgcolor={colors.gray_100} padding="6px">
                                 <CustomLink url={Routes.constructSignUpRoute(groupUserName)} target="_blank" color="none" activeColor="none" activeUnderline={true} component="a"

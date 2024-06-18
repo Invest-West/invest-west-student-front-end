@@ -133,7 +133,7 @@ class SuperAdminSettings extends Component {
                                     labelPlacement="end"
                                 />
                                 <FormHelperText>
-                                    Allow videos (Introduction video in Profile page and Pitch cover video) to be
+                                    Allow videos (Introduction video in Profile page and Project cover video) to be
                                     uploaded to the database.
                                     When turned off, the users cannot upload videos from their machines, instead they
                                     can only upload a video URL.
@@ -369,13 +369,13 @@ class SuperAdminSettings extends Component {
                         <Divider style={{ marginTop: 40, marginBottom: 40, height: 3, backgroundColor: colors.primaryColor}}/>
                     </Col>
 
-                    {/** Edit create pitch terms and conditions */}
+                    {/** Edit create project terms and conditions */}
                     <Col xs={12} sm={12} md={12} lg={12}>
                         <FlexView column>
-                            <Typography variant="h6" color="primary">Edit create pitch terms and conditions</Typography>
+                            <Typography variant="h6" color="primary">Edit create project terms and conditions</Typography>
 
                             <NavLink to={ROUTES.CREATE_PITCH_TERMS_AND_CONDITIONS} target="_blank" className={css(sharedStyles.nav_link_hover_without_changing_text_color)} style={{marginTop: 30}}>
-                                <Button variant="outlined" color="primary" className={css(sharedStyles.no_text_transform)}>View create pitch terms and conditions page</Button>
+                                <Button variant="outlined" color="primary" className={css(sharedStyles.no_text_transform)}>View create project terms and conditions page</Button>
                             </NavLink>
 
                             <ReactQuill theme="snow" onChange={this.handleQuillEditorChanged('createPitchTermsAndConditions')} modules={modules} value={clubAttributesEdited.hasOwnProperty('createPitchTermsAndConditions') ? clubAttributesEdited.createPitchTermsAndConditions : {ops: []}} style={{marginTop: 20}}/>

@@ -307,7 +307,7 @@ class GroupAdminSettings extends Component {
                                             fullWidth
                                             variant="dialog"
                                             inputVariant="outlined"
-                                            label="Choose expired date for this pitch"
+                                            label="Choose expired date for this project"
                                             format="dd/MM/yyyy"
                                             minDate={utils.getDateWithDaysFurtherThanToday(1)}
                                             value={

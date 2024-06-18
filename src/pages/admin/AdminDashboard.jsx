@@ -277,9 +277,9 @@ class AdminDashboard extends Component {
                                         {
                                             currentUser.superAdmin
                                                 ?
-                                                "Manage system users"
+                                                "Manage system students"
                                                 :
-                                                "Manage course members"
+                                                "Manage course students"
                                         }
                                     </Typography>
                                     <Typography paragraph variant="body1" align="left">
@@ -350,7 +350,7 @@ class AdminDashboard extends Component {
                             <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                                 <FlexView column>
                                     <FlexView width="100%">
-                                        <Typography paragraph variant="h6" color="primary" align="left">Manage offers</Typography>
+                                        <Typography paragraph variant="h6" color="primary" align="left">Manage projects</Typography>
                                         <FlexView marginLeft={28} marginTop={8}>
                                             <OverlayTrigger trigger={['hover', 'focus']} placement="top-start" flip
                                                 overlay={
@@ -360,9 +360,9 @@ class AdminDashboard extends Component {
                                                         {
                                                             currentUser.superAdmin
                                                                 ?
-                                                                `${projectsAwaitingDecision} offers are awaiting course admins' review. Select "Awaiting review" from the "Phase" dropdown to see details.`
+                                                                `${projectsAwaitingDecision} projects are awaiting course admins' review. Select "Awaiting review" from the "Phase" dropdown to see details.`
                                                                 :
-                                                                `${projectsAwaitingDecision} offers are awaiting your review. Select "Awaiting review" from the "Phase" dropdown to see details.`
+                                                                `${projectsAwaitingDecision} projects are awaiting your review. Select "Awaiting review" from the "Phase" dropdown to see details.`
                                                         }
                                                     </Tooltip>
                                                 }>
@@ -375,9 +375,9 @@ class AdminDashboard extends Component {
                                         {
                                             currentUser.superAdmin
                                                 ?
-                                                "Manage all the offers created by all the issuers and course admins in the system."
+                                                "Manage all the projects created by all the students and course teachers in the system."
                                                 :
-                                                "Manage all the offers created by the issuers and course admins of this course."
+                                                "Manage all the projects created by the students and course teachers of this course."
                                         }
                                     </Typography>
                                 </FlexView>
