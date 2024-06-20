@@ -283,7 +283,7 @@ interface ExploreOffersComponentState {
                             {
                                 !hasOffersForCurrentFilters(ExploreOffersLocalState)
                                     ? <Box marginY="80px" >
-                                        <Typography align="center" variant="h5" >There are no offers available using your current filter criteria</Typography>
+                                        <Typography align="center" variant="h5" >There are no projects available using your current filter criteria</Typography>
                                     </Box>
                                     : <Box>
                                         {/** Explore n offers + refresh button */}
@@ -295,7 +295,7 @@ interface ExploreOffersComponentState {
                                             marginBottom="25px"
                                         >
                                             <Typography variant="h6">Explore</Typography>
-                                            <Typography variant="h6" color="primary">&nbsp;<b>{ExploreOffersLocalState.offerInstances.length} offers</b></Typography>
+                                            <Typography variant="h6" color="primary">&nbsp;<b>{ExploreOffersLocalState.offerInstances.length} projects</b></Typography>
                                             <Box marginLeft="8px" >
                                                 <IconButton onClick={() => fetchOffers(FetchProjectsOrderByOptions.Phase)} >
                                                     <RefreshIcon/>

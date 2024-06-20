@@ -190,11 +190,11 @@ class OfferItem extends Component<OfferItemProps, any> {
                                                     <Tooltip id="tooltip-bottom" >
                                                         {
                                                             isProjectPublic(offerInstance.projectDetail)
-                                                                ? "This is a public offer."
+                                                                ? "This is a public project."
                                                                 : isProjectRestricted(offerInstance.projectDetail)
-                                                                ? "This is a restricted offer."
+                                                                ? "This is a restricted project."
                                                                 : isProjectPrivate(offerInstance.projectDetail)
-                                                                    ? "This is a private offer."
+                                                                    ? "This is a private project."
                                                                     : null
                                                         }
                                                     </Tooltip>

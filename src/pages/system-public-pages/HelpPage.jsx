@@ -567,7 +567,7 @@ class HelpPage extends Component {
                                     <Typography variant="subtitle1" align="left" paragraph>
                                         <b>10.1. Visibility level</b>
                                     </Typography>
-                                    <Typography variant="body1" align="left" paragraph>As the course admin you can set the visibility level for offers created by your course. With Invest west having multiple courses the level of visibility is used to define which of the course’s student projects are visible to other users.</Typography>
+                                    <Typography variant="body1" align="left" paragraph>As the course admin you can set the visibility level for projects created by your course. With Invest west having multiple courses the level of visibility is used to define which of the course’s student projects are visible to other users.</Typography>
 
                                     {/** Public */}
                                     <FlexView column>

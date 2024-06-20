@@ -2545,7 +2545,7 @@ class CreatePitchPageMain extends Component {
             ) {
                 return <FlexView marginTop={50} hAlignContent="center">
                     <Typography variant="h4" align="center">
-                        {`You can only edit offers from ${getHomeGroup(AuthenticationState.groupsOfMembership).group.displayName}.`}
+                        {`You can only edit projects from ${getHomeGroup(AuthenticationState.groupsOfMembership).group.displayName}.`}
                     </Typography>
                 </FlexView>;
             }

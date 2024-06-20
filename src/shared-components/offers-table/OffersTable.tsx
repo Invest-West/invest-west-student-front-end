@@ -436,7 +436,7 @@ class OffersTable extends Component<OffersTableProps, any> {
                                     ? <TableRow>
                                         <TableCell colSpan={5} >
                                             <Box display="flex" justifyContent="center" alignItems="center" height="120px" >
-                                                <Typography variant="h6" align="center" >There are no offers available using your current filter criteria.</Typography>
+                                                <Typography variant="h6" align="center" >There are no projects available using your current filter criteria.</Typography>
                                             </Box>
                                         </TableCell>
                                     </TableRow>

@@ -282,6 +282,12 @@ class SignUpNew extends Component<SignUpProps & Readonly<RouteComponentProps<Rou
                                     >
                                         Add student project
                                     </MenuItem>
+                                    <MenuItem
+                                        key={TYPE_INVESTOR}
+                                        value={TYPE_INVESTOR}
+                                    >
+                                        View student projects
+                                    </MenuItem>
                                 </Select>
                             </FormControl>
 

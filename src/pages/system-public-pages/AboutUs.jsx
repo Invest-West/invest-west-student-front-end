@@ -93,7 +93,7 @@ export default  class AboutUs extends Component {
                             About Us
                         </Typography>
                         <Typography paragraph variant="h6" align="center" style={{ marginTop: 35}}>
-                            Invest West brings together students and founders to help grow the business community in the South West of England. Invest West requires a fully managed end to end technology platform that will facilitate the efficient and effective, low cost registration of participants, administration of offers, and communication of club members.
+                            Invest West brings together students and founders to help grow the business community in the South West of England. Invest West requires a fully managed end to end technology platform that will facilitate the efficient and effective, low cost registration of participants, administration of projects, and communication of club members.
                         </Typography>
                     </Col>
                     <Col xs={12} md={12} lg={12}style={{marginTop: 65}}>

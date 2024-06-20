@@ -2267,7 +2267,7 @@ class ProjectDetails extends Component {
                 <Row noGutters style={{marginLeft: 10, marginRight: 10}}>
                     <Col xs={12} md={{span: 10, offset: 1}} lg={{span: 8, offset: 2}}>
                         <FlexView marginTop={40} hAlignContent="center">
-                            <Typography variant="h5" align="center"> You can only edit offers from your group.</Typography>
+                            <Typography variant="h5" align="center"> You can only edit projectss from your course.</Typography>
                         </FlexView>
                     </Col>
                 </Row>

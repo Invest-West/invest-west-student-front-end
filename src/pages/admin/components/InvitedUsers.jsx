@@ -216,8 +216,8 @@ class InvitedUsers extends Component {
                                 value={filterUserType}
                                 onChange={handleInputChanged}>
                                 <MenuItem value={0}>All</MenuItem>
-                                <MenuItem value={DB_CONST.TYPE_INVESTOR}>Investor</MenuItem>
-                                <MenuItem value={DB_CONST.TYPE_ISSUER}>Issuer</MenuItem>
+                                <MenuItem value={DB_CONST.TYPE_INVESTOR}>Project viewer</MenuItem>
+                                <MenuItem value={DB_CONST.TYPE_ISSUER}>Student</MenuItem>
                             </Select>
                         </FormControl>
                     </Col>
@@ -705,9 +705,9 @@ class InvitedUsers extends Component {
                                     {
                                         invitedUser.type === DB_CONST.TYPE_ISSUER
                                             ?
-                                            "Issuer"
+                                            "Student"
                                             :
-                                            "Investor"
+                                            "Project viewer"
                                     }
                                 </Typography>
                             </TableCell>
@@ -776,7 +776,7 @@ class InvitedUsers extends Component {
                 msgObj.color = 'error';
                 break;
             case DB_CONST.INVITED_USER_STATUS_ACTIVE:
-                msgObj.msg = `Current ${invitedUser.type === DB_CONST.TYPE_INVESTOR ? "investor" : "issuer"}`;
+                msgObj.msg = `Current ${invitedUser.type === DB_CONST.TYPE_INVESTOR ? "project viewer" : "student"}`;
                 msgObj.color = 'primary';
                 break;
             case DB_CONST.INVITED_USER_DECLINED_TO_REGISTER:
