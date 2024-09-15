@@ -30,6 +30,7 @@ const initState = {
         pitchSector: '-',
         // project project name
         pitchProjectName: '',
+        projectInvestor: '',
         pitchProjectDescription: '',
         pitchExpiredDate: null,
 
@@ -124,6 +125,13 @@ const createProjectReducer = (state = initState, action) => {
                                     project.hasOwnProperty('projectName')
                                         ?
                                         project.projectName
+                                        :
+                                        ''
+                                ,
+                                projectInvestor:
+                                    project.hasOwnProperty('projectInvestor')
+                                        ?
+                                        project.investor
                                         :
                                         ''
                                 ,

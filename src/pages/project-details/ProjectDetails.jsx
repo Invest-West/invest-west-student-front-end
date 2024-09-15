@@ -214,52 +214,167 @@ class ProjectDetailsMain extends Component {
         const {
             groupPropertiesLoaded,
             shouldLoadOtherData,
-
             user,
             userLoaded,
             userBeingLoaded,
-
-
             setGroupUserNameFromParams,
             setExpectedAndCurrentPathsForChecking,
             loadAngelNetwork,
         } = this.props;
-
+    
         const {
             dataLoaded,
             dataBeingLoaded
         } = this.state;
-
+    
         const match = this.props.match;
-
+    
         setGroupUserNameFromParams(match.params.hasOwnProperty("groupUserName")
-            ?
-            match.params.groupUserName
-            :
-            null
+            ? match.params.groupUserName
+            : null
         );
         setExpectedAndCurrentPathsForChecking(
             match.params.hasOwnProperty("groupUserName")
-                ?
-                ROUTES.PROJECT_DETAILS
-                :
-                ROUTES.PROJECT_DETAILS_INVEST_WEST_SUPER, match.path
+                ? ROUTES.PROJECT_DETAILS
+                : ROUTES.PROJECT_DETAILS_INVEST_WEST_SUPER, match.path
         );
-
+    
         loadAngelNetwork();
-
-        if (groupPropertiesLoaded && shouldLoadOtherData) {
-            if (!userBeingLoaded && userLoaded) {
-                if (!dataBeingLoaded && !dataLoaded) {
-                    // load data if not loaded
-                    this.loadData();
-                }
-
-            }
-        }
+    
+        // Check if the project is public
+        this.checkProjectVisibilityAndLoadData();
+        
         console.log('Page loaded. Authentication status:', this.props.AuthenticationState.isAuthenticated ? 'Authenticated' : 'Not Authenticated');
         console.log('Current user on page load:', this.props.AuthenticationState.currentUser);
     }
+
+    checkProjectVisibilityAndLoadData = () => {
+        const projectID = this.props.match.params.projectID;
+    
+        // Assume a method 'getProjectVisibility' that returns the visibility of the project
+        realtimeDBUtils
+            .getProjectVisibility(projectID)
+            .then(visibility => {
+                if (visibility === DB_CONST.PROJECT_VISIBILITY_PUBLIC) {
+                    // If the project is public, load data without user authentication
+                    this.loadData();
+                } else {
+                    // If the project is not public, use the existing logic to load user data
+                    this.loadDataWithAuth();
+                }
+            })
+            .catch(error => {
+                console.error('Error checking project visibility:', error);
+            });
+    }
+
+    loadDataWithAuth = () => {
+        const {
+            user,
+            userLoaded,
+            selectProjectVisibility_setProject
+        } = this.props;
+    
+        const {
+            dataLoaded,
+            dataBeingLoaded
+        } = this.state;
+    
+        if (!userLoaded) {
+            return;
+        }
+    
+        if (!user) {
+            if (!dataLoaded) {
+                this.setState({
+                    dataLoaded: true,
+                    dataBeingLoaded: false,
+                    investorPledgeLoaded: true,
+                    projectDetail: {
+                        ...this.state.projectDetail,
+                        projectLoaded: true, // project is null
+                        projectIssuerLoaded: true, // project issuer is null
+                        votesLoaded: true,
+                        pledgesLoaded: true
+                    }
+                });
+                return;
+            }
+        }
+    
+        // If data is already being loaded, exit to avoid redundant loading
+        if (dataBeingLoaded) {
+            return;
+        }
+    
+        this.setState({
+            dataLoaded: false,
+            dataBeingLoaded: true
+        });
+    
+        // Load the requested project
+        const projectID = this.props.match.params.projectID;
+        realtimeDBUtils
+            .loadAParticularProject(projectID)
+            .then(project => {
+                // Track activity for investors only
+                if (user.type === DB_CONST.TYPE_INVESTOR) {
+                    realtimeDBUtils
+                        .trackActivity({
+                            userID: user.id,
+                            activityType: DB_CONST.ACTIVITY_TYPE_VIEW,
+                            interactedObjectLocation: DB_CONST.PROJECTS_CHILD,
+                            interactedObjectID: project.id,
+                            activitySummary: realtimeDBUtils.ACTIVITY_SUMMARY_TEMPLATE_VIEWED_PROJECT_DETAILS.replace("%project%", project.projectName),
+                            action: ROUTES.PROJECT_DETAILS_INVEST_WEST_SUPER.replace(":projectID", project.id)
+                        });
+                }
+    
+                // Set project for the Select component used to choose the project visibility
+                selectProjectVisibility_setProject(project);
+    
+                this.setState({
+                    projectDetail: {
+                        ...this.state.projectDetail,
+                        project: project,
+                        projectLoaded: true
+                    },
+                    mainBody:
+                        user.type === DB_CONST.TYPE_ADMIN
+                            ? user.anid === project.anid
+                                ? MAIN_BODY_ADMIN_OFFER_STATES
+                                : MAIN_BODY_CAMPAIGN
+                            : MAIN_BODY_CAMPAIGN,
+                    adminOfferStatesActiveStep:
+                        project.status === DB_CONST.PROJECT_STATUS_BEING_CHECKED
+                            ? ADMIN_OFFER_STATES_PUBLISH_PITCH
+                            : (project.status === DB_CONST.PROJECT_STATUS_PITCH_PHASE || project.status === DB_CONST.PROJECT_STATUS_PITCH_PHASE_EXPIRED_WAITING_TO_BE_CHECKED)
+                                ? ADMIN_OFFER_STATES_MOVE_TO_PLEDGE
+                                : (project.status === DB_CONST.PROJECT_STATUS_PRIMARY_OFFER_CREATED_WAITING_TO_BE_CHECKED || project.status === DB_CONST.PROJECT_STATUS_PRIMARY_OFFER_PHASE)
+                                    ? ADMIN_OFFER_STATES_PUBLISH_PLEDGE
+                                    : ADMIN_OFFER_STATES_PUBLISH_PITCH
+                });
+    
+                // Load votes and pledges, and set issuer details here
+                this.loadVotesAndPledges(project);
+    
+            })
+            .catch(error => {
+                console.error('Error loading project:', error);
+                this.setState({
+                    dataLoaded: true,
+                    dataBeingLoaded: false,
+                    investorPledgeLoaded: true,
+                    projectDetail: {
+                        ...this.state.projectDetail,
+                        projectLoaded: true, // project is null
+                        projectIssuerLoaded: true, // project issuer is null
+                        votesLoaded: true,
+                        pledgesLoaded: true
+                    }
+                });
+            });
+    };
 
     componentDidUpdate(prevProps, prevState, snapshot) {
         const {
@@ -983,6 +1098,8 @@ class ProjectDetailsMain extends Component {
             }
         }
     };
+
+
 
     /**
      * Vot for project function
@@ -3932,6 +4049,21 @@ class ProjectDetails extends Component {
                                                 <Typography variant="body1" align="left">Will the project seek investment in the future?:&nbsp;&nbsp;
                                                     <b>
                                                         {project.Pitch.financialRound}
+                                                    </b>
+                                                </Typography>
+                                            </FlexView>
+                                    }
+
+                                    {/** Financial round */}
+                                    {
+                                        !project.Pitch.hasOwnProperty('projectInvestor')
+                                            ?
+                                            null
+                                            :
+                                            <FlexView className={css(styles.border_box)} style={{backgroundColor: colors.kick_starter_background_color}} column marginTop={30} vAlignContent="center">
+                                                <Typography variant="body1" align="left">Who backs this project?:&nbsp;&nbsp;
+                                                    <b>
+                                                        {project.Pitch.projectInvestor}
                                                     </b>
                                                 </Typography>
                                             </FlexView>

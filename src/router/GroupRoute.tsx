@@ -43,6 +43,8 @@ interface GroupRouteProps extends GroupRouteLocalProps {
     validateGroupUrl: (path: string, groupUserName: string | null) => any;
     signIn: () => any;
     signOut: () => any;
+
+    requireAuth?: boolean;
 }
 
 interface GroupRouteLocalProps {
@@ -96,10 +98,20 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
     }
 
     componentDidMount() {
-        this.validateRouteAndAuthentication();
+        // Check if the route requires authentication
+        if (!this.props.requireAuth) {
+            // If not required, skip validation and set the state to indicate it's ready for rendering
+            this.setState({ navigatingToSignIn: false, navigatingToError: false });
+        } else {
+            this.validateRouteAndAuthentication();
+        }
     }
 
     componentDidUpdate(prevProps: Readonly<GroupRouteProps & Readonly<RouteComponentProps<RouteParams>>>, prevState: Readonly<GroupRouteState>, snapshot?: any) {
+        if (!this.props.requireAuth) {
+            // If the route doesn't require authentication, skip further checks
+            return;
+        }
         this.validateRouteAndAuthentication();
 
         // system attributes are being loaded
@@ -233,6 +245,43 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
         } = this.props;
 
         this.updateRouteAndParams();
+
+        if (!this.props.requireAuth) {
+            return (
+                <Container
+                    fluid
+                    style={{
+                        padding: 0,
+                        height: backgroundColor !== undefined ? "100%" : "none",
+                        minHeight: backgroundColor !== undefined ? "100vh" : "none",
+                        backgroundColor: backgroundColor ?? "none"
+                    }}
+                >
+                    {
+                        !showHeader
+                            ? null
+                            : <Row noGutters>
+                                <Col xs={12} sm={12} md={12} lg={12}>
+                                    <Header
+                                        routePath={this.routePath}
+                                        homUrl={Routes.constructHomeRoute(this.routeParams, ManageGroupUrlState, AuthenticationState)}
+                                        dashboardUrl={Routes.constructDashboardRoute(this.routeParams, ManageGroupUrlState, AuthenticationState)}
+                                        signInUrl={Routes.constructSignInRoute(this.routeParams)}
+                                    />
+                                </Col>
+                            </Row>
+                    }
+
+                    <Row noGutters>
+                        <Box width="100%" height="100%">
+                            {
+                                this.props.component
+                            }
+                        </Box>
+                    </Row>
+                </Container>
+            );
+        }
 
         if (isLoadingSystemAttributes(ManageSystemAttributesState)
             || isValidatingGroupUrl(ManageGroupUrlState)

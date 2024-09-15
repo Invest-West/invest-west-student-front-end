@@ -26,6 +26,7 @@ export default interface Project {
     description?: string; // optional for draft projects only
     sector?: string; // optional for draft projects only
     edited?: number;
+    projectInvestor?: string;
     temporarilyClosed?: boolean;
 
     /**
@@ -73,6 +74,7 @@ export interface ProjectCsv {
     coverURL: string | undefined; // = active pitch cover
     mainDocument: string | undefined; // = active pitch presentationDocument
     mainText: string | undefined; // = pitch presentationPlainText
+    mainInvestor: string | undefined; // = pitch projectInvestor
     supportingDocuments: string | undefined; // = active pitch supportingDocuments
 
     pitchExpiryDate: string | undefined; // = pitch expiredDate
@@ -99,6 +101,7 @@ export interface ProjectPitch {
     detailsAboutEarlierFundraisingRounds?: string;
     investorsCommitted?: string;
     financialRound?: string;
+    projectInvestor?: string;
     presentationDocument?: PitchDocument[];
     supportingDocuments?: PitchDocument[];
     presentationText?: any;

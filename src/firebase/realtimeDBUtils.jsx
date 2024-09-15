@@ -1670,6 +1670,38 @@ export const fetchProjectsBy = async (
  */
 
 /**
+ * Get the visibility of a specific project by its ID.
+ *
+ * @param projectID
+ * @returns {Promise<string>}
+ */
+export const getProjectVisibility = (projectID) => {
+    return new Promise((resolve, reject) => {
+        const db = firebase.database();
+        const projectRef = db.ref(`${DB_CONST.PROJECTS_CHILD}/${projectID}`);
+
+        projectRef
+            .once('value')
+            .then(snapshot => {
+                if (snapshot.exists()) {
+                    const project = snapshot.val();
+                    // Assuming 'visibility' is a field in the project node
+                    if (project && project.visibility) {
+                        resolve(project.visibility);
+                    } else {
+                        reject(new Error('Project visibility not found.'));
+                    }
+                } else {
+                    reject(new Error('Project not found.'));
+                }
+            })
+            .catch(error => {
+                reject(error);
+            });
+    });
+};
+
+/**
  * This function is used to load a particular project from its id
  *
  * @param projectID

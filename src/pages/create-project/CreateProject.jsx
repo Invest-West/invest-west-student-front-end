@@ -144,6 +144,7 @@ const initState = {
         pitchSector: '-',
         // project project name
         pitchProjectName: '',
+        projectInvestor: '',
         pitchProjectDescription: '',
         pitchExpiryDate: null,
 
@@ -487,6 +488,14 @@ class CreatePitchPageMain extends Component {
                                     :
                                     project.Pitch.presentationText
                             ,
+                            // project project name
+                            projectInvestor:
+                                project.hasOwnProperty('projectInvestor')
+                                    ?
+                                    project.projectInvestor
+                                    :
+                                    ''
+                            ,
                             // this field is only available for QIB
                             qibSpecialNews:
                                 project.Pitch.hasOwnProperty('qibSpecialNews')
@@ -567,6 +576,7 @@ class CreatePitchPageMain extends Component {
 
             pitchSector,
             pitchProjectName,
+            projectInvestor,
             pitchProjectDescription,
             pitchExpiryDate,
 
@@ -1118,6 +1128,7 @@ class CreatePitchPageMain extends Component {
 
             pitchSector,
             pitchProjectName,
+            projectInvestor,
             pitchProjectDescription,
             pitchExpiryDate,
 
@@ -1399,6 +1410,17 @@ class CreatePitchPageMain extends Component {
                                                         DB_CONST.PITCH_STATUS_ON_GOING
                                                         :
                                                         projectEdited.Pitch.status
+                                            ,
+                                            projectInvestor:
+                                                saveProgress
+                                                    ?
+                                                projectInvestor.trim().length === 0
+                                                    ?
+                                                    null
+                                                    :
+                                                    projectInvestor
+                                                :
+                                                projectInvestor
                                             ,
                                             // this field is only available for QIB
                                             qibSpecialNews:
@@ -1790,6 +1812,17 @@ class CreatePitchPageMain extends Component {
                                                     DB_CONST.PROJECT_STATUS_DRAFT
                                                     :
                                                     DB_CONST.PITCH_STATUS_ON_GOING
+                                            ,
+                                            projectInvestor:
+                                                saveProgress
+                                                ?
+                                                projectInvestor.trim().length === 0
+                                                ?
+                                                null
+                                                :
+                                                projectInvestor
+                                                :
+                                                projectInvestor
                                             ,
                                             // this field is only available for QIB
                                             qibSpecialNews:
@@ -3083,6 +3116,23 @@ class CreateProject extends Component {
                                                 }
                                             </RadioGroup>
                                         </FormControl>
+                                    </FlexView>
+
+                                    <FlexView marginTop={20}>
+                                        <TextField
+                                            label="If you are working with a company, please provide the company name or website"
+                                            name="projectInvestor"
+                                            value={createProjectState.projectInvestor}
+                                            fullWidth
+                                            margin="normal"
+                                            variant="outlined"
+                                            required
+                                            error={
+                                                createProjectState.pitchPublishCheck === PITCH_PUBLISH_FALSE_MISSING_FIELDS_IN_GENERAL_INFORMATION
+                                                && createProjectState.projectInvestor.trim().length === 0
+                                            }
+                                            onChange={this.onInputChanged}
+                                        />
                                     </FlexView>
 
                                     {

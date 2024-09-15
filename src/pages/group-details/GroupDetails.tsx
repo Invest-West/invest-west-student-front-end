@@ -60,7 +60,12 @@ const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
 class GroupDetails extends Component<GroupDetailsProps & Readonly<RouteComponentProps<RouteParams>>, any> {
 
     componentDidMount() {
-        this.props.loadData(this.props.match.params.viewedGroupUserName);
+        const { viewedGroupUserName } = this.props.match.params;
+        if (viewedGroupUserName) {
+            this.props.loadData(viewedGroupUserName);
+        } else {
+            console.error("viewedGroupUserName is undefined.");
+        }
     }
 
     render() {

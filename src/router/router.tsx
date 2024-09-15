@@ -31,9 +31,10 @@ import {colors} from "@material-ui/core";
  * Parameters in the url
  */
 export interface RouteParams {
-    groupUserName: string;
-
-    [params: string]: string;
+    groupUserName?: string;
+    projectID?: string;
+    viewedGroupUserName?: string;
+    [param: string]: string | undefined; // Add back the index signature
 }
 
 const AppRouter = () => (
@@ -94,10 +95,18 @@ const AppRouter = () => (
                    render={props => <GroupRoute {...props} showHeader={false}
                                                 component={<InvestorDashboard {...props}/>}/>}/>
 
-            <Route path={Routes.nonGroupViewOffer} exact
-                // @ts-ignore
-                   render={props => <GroupRoute {...props} showHeader={true}
-                                                component={<ProjectDetails {...props}/>}/>}/>
+            <Route
+                path={Routes.nonGroupViewOffer}
+                exact
+                render={props => (
+                    <GroupRoute
+                        {...props}
+                        showHeader={true}
+                        component={<ProjectDetails {...props} />}
+                        requireAuth={false}
+                    />
+                )}
+            />
             <Route path={Routes.groupViewOffer} exact
                 // @ts-ignore
                    render={props => <GroupRoute {...props} showHeader={true}
