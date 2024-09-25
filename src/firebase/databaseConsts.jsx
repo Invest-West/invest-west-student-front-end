@@ -275,7 +275,7 @@ export const EDIT_A_PLEDGE = 2;
  *
  * @type {string[]}
  */
-export const USER_TITLES = ["Please select", "Ms.", "Mrs.", "Miss", "Mr.", "Dr.", "Prof."];
+export const USER_TITLES = ["Please select", "Ms.", "Mrs.", "Miss", "Mr.", "Mx", "Dr.", "Prof."];
 
 export const HEAR_ABOUT = ["Please select", "Google", "Newsletter", "Linkedin", "Event"];
 
@@ -284,7 +284,7 @@ export const HEAR_ABOUT = ["Please select", "Google", "Newsletter", "Linkedin", 
  *
  * @type {string[]}
  */
-export const FINANCIAL_ROUNDS = ["Pre-seed", "Seed", "Series A", "Series B", "Series C"];
+export const FINANCIAL_ROUNDS = ["Yes", "No"];
 
 export const EIS_BADGE = ["Yes", "No"];
 

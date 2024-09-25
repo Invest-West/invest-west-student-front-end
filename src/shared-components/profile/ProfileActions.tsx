@@ -34,9 +34,7 @@ export enum InputCategories {
     // includes text fields in the Business profile section
     BusinessProfile = "InputCategories.BusinessProfile",
     // includes text fields in the Registered office section (subsection of Business profile)
-    RegisteredOffice = "InputCategories.RegisteredOffice",
     // includes text fields in the Trading address section (subsection of Business profile)
-    TradingAddress = "InputCategories.TradingAddress",
     // includes text fields in the Director section (subsection of Business profile)
     Director = "InputCategories.Director",
     // includes all checkboxes in Business profile section

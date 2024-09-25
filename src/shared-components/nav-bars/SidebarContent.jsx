@@ -31,15 +31,15 @@ import {School} from "@material-ui/icons";
 export const HOME_TAB = "Home";
 export const PROFILE_TAB = "Profile";
 export const FORUMS_TAB = "Forums";
-export const MY_OFFERS_TAB = "My offers";
+export const MY_OFFERS_TAB = "My projectss";
 // export const MY_PLEDGES_TAB = "My pledges";
 export const SETTINGS_TAB = "Settings";
 export const CHANGE_PASSWORD_TAB = "Change password";
 export const CONTACT_US_TAB = "Contact us";
 export const GUIDELINE_TAB = "Help";
 export const RESOURCES_TAB = "Resources";
-export const EXPLORE_GROUPS_TAB = "Explore groups";
-export const EXPLORE_OFFERS_TAB = "Explore offers";
+export const EXPLORE_GROUPS_TAB = "Explore courses";
+export const EXPLORE_OFFERS_TAB = "Explore student projects";
 export const MY_ACTIVITIES_TAB = "My activities";
 export const GROUP_ACTIVITIES_TAB = "Audit Log";
 
@@ -218,7 +218,7 @@ class SidebarContent extends Component {
                                 </NavLink>
                         }
 
-                        {/** Explore groups tab */}
+                        {/** Explore courses tab */}
                         <NavLink
                             to={{
                                 pathname: dashboardProps.match.pathname,
@@ -234,7 +234,7 @@ class SidebarContent extends Component {
                             </ListItem>
                         </NavLink>
 
-                        {/** Resources */}
+                        {/** Resources 
                         <NavLink
                             to={{
                                 pathname: dashboardProps.match.pathname,
@@ -249,7 +249,10 @@ class SidebarContent extends Component {
                                 <ListItemText className={css(sharedStyles.black_text)}>{RESOURCES_TAB}</ListItemText>
                             </ListItem>
                         </NavLink>
+                        */
+                    }
                     </List>
+                
                 </FlexView>
 
                 {/** Footer navigation */}
@@ -294,7 +297,7 @@ class SidebarContent extends Component {
                                     </NavLink>
                         }
 
-                        {/** My/Group activities tab */}
+                        {/** My/Course activities tab */}
                         {
                             user.type !== DB_CONST.TYPE_ADMIN
                                 ?

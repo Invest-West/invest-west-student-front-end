@@ -130,7 +130,7 @@ export const acceptJoinRequest = (request) => {
                         realtimeDBUtils
                             .sendNotification({
                                 title: `${request.group.displayName} has accepted your join request`,
-                                message: `Congratulations. You are now a member of ${request.group.displayName}. You can see and interact with all offers from ${request.group.displayName}.`,
+                                message: `Congratulations. You are now a member of ${request.group.displayName}. You can see and interact with all projects from ${request.group.displayName}.`,
                                 userID: request.userID,
                                 action: `${ROUTES.DASHBOARD_INVESTOR_INVEST_WEST_SUPER}?tab=Explore groups`
                             })
@@ -157,7 +157,7 @@ export const rejectJoinRequest = (request) => {
                 realtimeDBUtils
                     .sendNotification({
                         title: `${request.group.displayName} has rejected your join request`,
-                        message: `We are so sorry that ${request.group.displayName} has rejected your join request. However, there are other groups that you can take part in.`,
+                        message: `We are so sorry that ${request.group.displayName} has rejected your join request. However, there are other courses that you can take part in.`,
                         userID: request.userID,
                         action: `${ROUTES.DASHBOARD_INVESTOR_INVEST_WEST_SUPER}?tab=Explore groups`
                     })

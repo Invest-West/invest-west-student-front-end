@@ -109,11 +109,8 @@ const mapDispatchToProps = dispatch => {
     return {
         // Create new business profile functions ------------------------------------------------------------------------
         handleCreateBusinessProfileTextChanged: (fieldType, event) => dispatch(createBusinessProfileActions.handleTextChanged(fieldType, event)),
-        searchAddress: (mode) => dispatch(createBusinessProfileActions.searchAddresses(mode)),
         toggleEnterAddressManually: (field) => dispatch(createBusinessProfileActions.toggleEnterAddressManually(field)),
-        toggleTradingAddressSameAsRegisteredOffice: (checked) => dispatch(createBusinessProfileActions.toggleTradingAddressSameAsRegisteredOffice(checked)),
         resetCreatingBusinessProfile: () => dispatch(createBusinessProfileActions.clearAllFields()),
-        handleRecommendedAddressSelected: (field, index) => dispatch(createBusinessProfileActions.handleRecommendedAddressSelected(field, index)),
         toggleExpandBusinessProfileFillingForInvestor: () => dispatch(createBusinessProfileActions.toggleExpandBusinessProfileFillingForInvestor()),
         uploadBusinessProfile: () => dispatch(createBusinessProfileActions.uploadBusinessProfile()),
         //--------------------------------------------------------------------------------------------------------------
@@ -237,13 +234,6 @@ class Profile extends Component {
     };
 
     /**
-     * Handle toggling if trading address is the same of registered office
-     */
-    toggleTradingAddressSameAsRegisteredOffice = event => {
-        this.props.toggleTradingAddressSameAsRegisteredOffice(event.target.checked);
-    };
-
-    /**
      * Handle files changed when uploading legal documents
      */
     handleFilesChanged = (mode, user) => files => {
@@ -337,7 +327,7 @@ class Profile extends Component {
                                         {
                                             currentUser.type === DB_CONST.TYPE_ADMIN
                                                 ?
-                                                "See how this student looks to other members. Since you are a group admin, you can see more information about this student than the other ordinary members."
+                                                "See how this student looks to other members. Since you are a course admin, you can see more information about this student than the other ordinary members."
                                                 :
                                                 "See how you look to other members."
                                         }
@@ -649,7 +639,6 @@ class Profile extends Component {
             searchAddress,
             toggleEnterAddressManually,
             resetCreatingBusinessProfile,
-            handleRecommendedAddressSelected,
             toggleExpandBusinessProfileFillingForInvestor,
             uploadBusinessProfile
         } = this.props;
@@ -770,13 +759,13 @@ class Profile extends Component {
                             </FlexView>
                         </Col>
                         <Col xs={12} sm={12} md={6} lg={8} >
-                            {/** Company name */}
+                            {/** Student project name */}
                             <FlexView column>
                                 <FormControl>
-                                    <FormLabel><b>Company name</b></FormLabel>
+                                    <FormLabel><b>Student project name</b></FormLabel>
                                     <TextField
                                         name="companyName"
-                                        placeholder="Enter company name"
+                                        placeholder="Enter Student project name"
                                         value={userEdited.BusinessProfile.hasOwnProperty('companyName') ? userEdited.BusinessProfile.companyName : ''}
                                         margin="dense"
                                         variant="outlined"
@@ -784,237 +773,6 @@ class Profile extends Component {
                                         onChange={this.handleEditUser(editUserActions.EDIT_ORDINARY_BUSINESS_PROFILE_INFORMATION)}
                                         error={userEdited.BusinessProfile.hasOwnProperty('companyName') && userEdited.BusinessProfile.companyName.trim().length === 0}
                                     />
-                                </FormControl>
-                            </FlexView>
-
-                            <Divider style={{ marginTop: 20, marginBottom: 20 }} />
-
-                            {/** Registration number */}
-                            <FlexView column >
-                                <FormControl>
-                                    <FormLabel><b>Registration number</b></FormLabel>
-                                    <TextField
-                                        name="registrationNo"
-                                        placeholder="Enter company registration number"
-                                        value={userEdited.BusinessProfile.hasOwnProperty('registrationNo') ? userEdited.BusinessProfile.registrationNo : ''}
-                                        margin="dense"
-                                        variant="outlined"
-                                        disabled={currentUser.type !== DB_CONST.TYPE_ADMIN}
-                                        fullWidth
-                                        onChange={this.handleEditUser(editUserActions.EDIT_ORDINARY_BUSINESS_PROFILE_INFORMATION)}
-                                    />
-                                </FormControl>
-                            </FlexView>
-
-                            <Divider style={{ marginTop: 20, marginBottom: 20 }} />
-
-                            {/** Registered office */}
-                            <FlexView column>
-                                <FormControl>
-                                    <FormLabel><b>Registered office</b></FormLabel>
-                                    <FormGroup>
-                                        <FlexView column>
-                                            <TextField
-                                                name="address1"
-                                                placeholder="Address 1"
-                                                value={
-                                                    userEdited.BusinessProfile.hasOwnProperty('registeredOffice')
-                                                        ?
-                                                        userEdited.BusinessProfile.registeredOffice.address1
-                                                        :
-                                                        ''
-                                                }
-                                                margin="dense"
-                                                variant="outlined"
-                                                fullWidth
-                                                onChange={this.handleEditUser(editUserActions.EDIT_REGISTERED_OFFICE_BUSINESS_PROFILE)}
-                                                error={
-                                                    userEdited.BusinessProfile.hasOwnProperty('registeredOffice')
-                                                    && userEdited.BusinessProfile.registeredOffice.address1.trim().length === 0
-                                                }
-                                            />
-                                            <TextField
-                                                name="address2"
-                                                placeholder="Address 2"
-                                                value={
-                                                    userEdited.BusinessProfile.hasOwnProperty('registeredOffice')
-                                                        ?
-                                                        userEdited.BusinessProfile.registeredOffice.address2
-                                                        :
-                                                        ''
-                                                }
-                                                margin="dense"
-                                                variant="outlined"
-                                                fullWidth
-                                                onChange={this.handleEditUser(editUserActions.EDIT_REGISTERED_OFFICE_BUSINESS_PROFILE)}
-                                            />
-                                            <TextField
-                                                name="address3"
-                                                placeholder="Address 3"
-                                                value={
-                                                    userEdited.BusinessProfile.hasOwnProperty('registeredOffice')
-                                                        ?
-                                                        userEdited.BusinessProfile.registeredOffice.address3
-                                                        :
-                                                        ''
-                                                }
-                                                margin="dense"
-                                                variant="outlined"
-                                                fullWidth
-                                                onChange={this.handleEditUser(editUserActions.EDIT_REGISTERED_OFFICE_BUSINESS_PROFILE)}
-                                            />
-                                            <Row>
-                                                <Col xs={12} sm={12} md={6} lg={6} >
-                                                    <TextField
-                                                        name="townCity"
-                                                        placeholder="Town/City"
-                                                        value={
-                                                            userEdited.BusinessProfile.hasOwnProperty('registeredOffice')
-                                                                ?
-                                                                userEdited.BusinessProfile.registeredOffice.townCity
-                                                                :
-                                                                ''
-                                                        }
-                                                        margin="dense"
-                                                        variant="outlined"
-                                                        fullWidth
-                                                        onChange={this.handleEditUser(editUserActions.EDIT_REGISTERED_OFFICE_BUSINESS_PROFILE)}
-                                                        error={
-                                                            userEdited.BusinessProfile.hasOwnProperty('registeredOffice')
-                                                            && userEdited.BusinessProfile.registeredOffice.townCity.trim().length === 0
-                                                        }
-                                                    />
-                                                </Col>
-                                                <Col xs={12} sm={12} md={6} lg={6} >
-                                                    <TextField
-                                                        name="postcode"
-                                                        placeholder="Postcode"
-                                                        value={
-                                                            userEdited.BusinessProfile.hasOwnProperty('registeredOffice')
-                                                                ?
-                                                                userEdited.BusinessProfile.registeredOffice.postcode.toUpperCase()
-                                                                :
-                                                                ''
-                                                        }
-                                                        margin="dense"
-                                                        variant="outlined"
-                                                        fullWidth
-                                                        onChange={this.handleEditUser(editUserActions.EDIT_REGISTERED_OFFICE_BUSINESS_PROFILE)}
-                                                        error={
-                                                            userEdited.BusinessProfile.hasOwnProperty('registeredOffice')
-                                                            && userEdited.BusinessProfile.registeredOffice.postcode.trim().length === 0
-                                                        }
-                                                    />
-                                                </Col>
-                                            </Row>
-                                        </FlexView>
-                                    </FormGroup>
-                                </FormControl>
-                            </FlexView>
-
-                            <Divider style={{ marginTop: 20, marginBottom: 20 }} />
-
-                            {/** Trading address */}
-                            <FlexView column>
-                                <FormControl>
-                                    <FormLabel><b>Trading address</b></FormLabel>
-                                    <FormGroup>
-                                        <FlexView column>
-                                            <TextField
-                                                name="address1"
-                                                placeholder="Address 1"
-                                                value={
-                                                    userEdited.BusinessProfile.hasOwnProperty('tradingAddress')
-                                                        ?
-                                                        userEdited.BusinessProfile.tradingAddress.address1
-                                                        :
-                                                        ''
-                                                }
-                                                margin="dense"
-                                                variant="outlined"
-                                                fullWidth
-                                                onChange={this.handleEditUser(editUserActions.EDIT_TRADING_ADDRESS_BUSINESS_PROFILE)}
-                                                error={
-                                                    userEdited.BusinessProfile.hasOwnProperty('tradingAddress')
-                                                    && userEdited.BusinessProfile.tradingAddress.address1.trim().length === 0
-                                                }
-                                            />
-                                            <TextField
-                                                name="address2"
-                                                placeholder="Address 2"
-                                                value={
-                                                    userEdited.BusinessProfile.hasOwnProperty('tradingAddress')
-                                                        ?
-                                                        userEdited.BusinessProfile.tradingAddress.address2
-                                                        :
-                                                        ''
-                                                }
-                                                margin="dense"
-                                                variant="outlined"
-                                                fullWidth
-                                                onChange={this.handleEditUser(editUserActions.EDIT_TRADING_ADDRESS_BUSINESS_PROFILE)}
-                                            />
-                                            <TextField
-                                                name="address3"
-                                                placeholder="Address 3"
-                                                value={
-                                                    userEdited.BusinessProfile.hasOwnProperty('tradingAddress')
-                                                        ?
-                                                        userEdited.BusinessProfile.tradingAddress.address3
-                                                        :
-                                                        ''
-                                                }
-                                                margin="dense"
-                                                variant="outlined"
-                                                fullWidth
-                                                onChange={this.handleEditUser(editUserActions.EDIT_TRADING_ADDRESS_BUSINESS_PROFILE)}
-                                            />
-                                            <Row>
-                                                <Col xs={12} sm={12} md={6} lg={6} >
-                                                    <TextField
-                                                        name="townCity"
-                                                        placeholder="Town/City"
-                                                        value={
-                                                            userEdited.BusinessProfile.hasOwnProperty('tradingAddress')
-                                                                ?
-                                                                userEdited.BusinessProfile.tradingAddress.townCity
-                                                                :
-                                                                ''
-                                                        }
-                                                        margin="dense"
-                                                        variant="outlined"
-                                                        fullWidth
-                                                        onChange={this.handleEditUser(editUserActions.EDIT_TRADING_ADDRESS_BUSINESS_PROFILE)}
-                                                        error={
-                                                            userEdited.BusinessProfile.hasOwnProperty('tradingAddress')
-                                                            && userEdited.BusinessProfile.tradingAddress.townCity.trim().length === 0
-                                                        }
-                                                    />
-                                                </Col>
-                                                <Col xs={12} sm={12} md={6} lg={6} >
-                                                    <TextField
-                                                        name="postcode"
-                                                        placeholder="Postcode"
-                                                        value={
-                                                            userEdited.BusinessProfile.hasOwnProperty('tradingAddress')
-                                                                ?
-                                                                userEdited.BusinessProfile.tradingAddress.postcode.toUpperCase()
-                                                                :
-                                                                ''
-                                                        }
-                                                        margin="dense"
-                                                        variant="outlined"
-                                                        fullWidth
-                                                        onChange={this.handleEditUser(editUserActions.EDIT_TRADING_ADDRESS_BUSINESS_PROFILE)}
-                                                        error={
-                                                            userEdited.BusinessProfile.hasOwnProperty('tradingAddress')
-                                                            && userEdited.BusinessProfile.tradingAddress.postcode.trim().length === 0
-                                                        }
-                                                    />
-                                                </Col>
-                                            </Row>
-                                        </FlexView>
-                                    </FormGroup>
                                 </FormControl>
                             </FlexView>
 
@@ -1056,99 +814,6 @@ class Profile extends Component {
 
                             <Divider style={{ marginTop: 20, marginBottom: 20 }} />
 
-                            {/** Directors */}
-                            <FlexView column>
-                                <FormControl
-                                    error={
-                                        userEdited.BusinessProfile.hasOwnProperty('directors')
-                                        && userEdited.BusinessProfile.directors.length === 0
-                                    }
-                                >
-                                    <FormLabel>
-                                        <b>Directors</b>
-                                    </FormLabel>
-
-                                    <Row noGutters>
-                                        <Col xs={12} sm={12} md={6} lg={6} >
-                                            {
-                                                !userEdited.BusinessProfile.hasOwnProperty('directors')
-                                                    ?
-                                                    null
-                                                    :
-                                                    <List>
-                                                        {
-                                                            userEdited.BusinessProfile.directors.map((director, index) => (
-                                                                <ListItem
-                                                                    key={index}
-                                                                >
-                                                                    <ListItemText>
-                                                                        {director}
-                                                                    </ListItemText>
-                                                                    <ListItemSecondaryAction>
-                                                                        <IconButton onClick={() => this.props.deleteDirectorTemporarily(index, true)} >
-                                                                            <CloseIcon/>
-                                                                        </IconButton>
-                                                                    </ListItemSecondaryAction>
-                                                                </ListItem>
-                                                            ))
-                                                        }
-                                                    </List>
-                                            }
-
-                                            {
-                                                !userEdited.BusinessProfile.hasOwnProperty('directors')
-                                                || (userEdited.BusinessProfile.hasOwnProperty('directors') && userEdited.BusinessProfile.directors.length === 0)
-                                                    ?
-                                                    null
-                                                    :
-                                                    <Divider style={{ marginTop: 10, marginBottom: 16 }} />
-                                            }
-                                        </Col>
-
-                                        <Col xs={12} sm={12} md={6} lg={6} >
-                                        </Col>
-
-                                        <Col xs={12} sm={12} md={6} lg={6} >
-                                            {
-                                                !addNewDirector
-                                                    ?
-                                                    <Button variant="outlined" size="small" className={css(sharedStyles.no_text_transform)} onClick={this.props.toggleAddNewDirector} >
-                                                        <AddIcon fontSize="small" style={{ marginRight: 4 }} />
-                                                        Add director
-                                                    </Button>
-                                                    :
-                                                    <FlexView column >
-                                                        <TextField
-                                                            placeholder="Enter director's name"
-                                                            name="newDirectorText"
-                                                            value={newDirectorText}
-                                                            fullWidth
-                                                            variant="outlined"
-                                                            onChange={this.handleEditUser(editUserActions.ADDING_NEW_DIRECTOR)}
-                                                            margin="dense"
-                                                        />
-
-                                                        <FlexView marginTop={8} hAlignContent="right" >
-                                                            <Button variant="outlined" size="small" className={css(sharedStyles.no_text_transform)} onClick={this.props.toggleAddNewDirector} style={{ marginRight: 8 }} >Cancel</Button>
-                                                            <Button
-                                                                variant="contained"
-                                                                size="small"
-                                                                color="primary"
-                                                                className={css(sharedStyles.no_text_transform)}
-                                                                onClick={() => this.props.addNewDirectorTemporarily(true)}
-                                                                disabled={newDirectorText.trim().length === 0}
-                                                            >
-                                                                Add
-                                                            </Button>
-                                                        </FlexView>
-                                                    </FlexView>
-                                            }
-                                        </Col>
-                                    </Row>
-                                </FormControl>
-                            </FlexView>
-
-                            <Divider style={{ marginTop: 20, marginBottom: 20 }} />
                             {/** Website */}
                             <FlexView column>
                                 <FormControl>
@@ -1210,13 +875,6 @@ class Profile extends Component {
                                                 && !allowEditing
                                             )
                                             || (userEdited.BusinessProfile.hasOwnProperty('companyName') && userEdited.BusinessProfile.companyName.trim().length === 0)
-                                            || (userEdited.BusinessProfile.hasOwnProperty('registeredOffice') && userEdited.BusinessProfile.registeredOffice.address1.trim().length === 0)
-                                            || (userEdited.BusinessProfile.hasOwnProperty('registeredOffice') && userEdited.BusinessProfile.registeredOffice.townCity.trim().length === 0)
-                                            || (userEdited.BusinessProfile.hasOwnProperty('registeredOffice') && userEdited.BusinessProfile.registeredOffice.postcode.trim().length === 0)
-                                            || (userEdited.BusinessProfile.hasOwnProperty('tradingAddress') && userEdited.BusinessProfile.tradingAddress.address1.trim().length === 0)
-                                            || (userEdited.BusinessProfile.hasOwnProperty('tradingAddress') && userEdited.BusinessProfile.tradingAddress.townCity.trim().length === 0)
-                                            || (userEdited.BusinessProfile.hasOwnProperty('tradingAddress') && userEdited.BusinessProfile.tradingAddress.postcode.trim().length === 0)
-                                            || (userEdited.BusinessProfile.hasOwnProperty('directors') && userEdited.BusinessProfile.directors.length === 0)
                                             || (userEdited.BusinessProfile.hasOwnProperty('companyWebsite') && userEdited.BusinessProfile.companyWebsite.trim().length === 0)
                                             || (userEdited.BusinessProfile.hasOwnProperty('companyWebsite')
                                                 && userEdited.BusinessProfile.companyWebsite.trim().length > 0
@@ -1235,7 +893,7 @@ class Profile extends Component {
                                 && !currentUser.superAdmin
                                 && !allowEditing
                                     ?
-                                    <Typography variant="body1" color="error" align="right" style={{ marginTop: 25 }}>This user is not a home member of your group. So, you cannot edit their profile.</Typography>
+                                    <Typography variant="body1" color="error" align="right" style={{ marginTop: 25 }}>This user is not a home member of your course. So, you cannot edit their profile.</Typography>
                                     :
                                     null
                             }
@@ -1292,14 +950,14 @@ class Profile extends Component {
                                 ?
                                 // start filling in Business profile
                                 <FlexView column marginTop={20} >
-                                    {/** Company name */}
+                                    {/** Student project name */}
                                     <FlexView column >
                                         <FormControl required >
                                             <FormLabel>
-                                                <b>Company name</b>
+                                                <b>Student project name</b>
                                             </FormLabel>
                                             <TextField
-                                                placeholder="Enter company name"
+                                                placeholder="Enter Student project name"
                                                 name="companyName"
                                                 value={createBusinessProfile.BusinessProfile.companyName}
                                                 fullWidth
@@ -1314,493 +972,11 @@ class Profile extends Component {
 
                                     <Divider style={{ marginTop: 20, marginBottom: 20 }} />
 
-                                    {/** Registration number */}
+                                    {/** Course sector */}
                                     <FlexView column >
                                         <FormControl required >
                                             <FormLabel>
-                                                <b>Registration number</b>
-                                            </FormLabel>
-                                            <TextField
-                                                placeholder="Enter company registration number"
-                                                name="registrationNo"
-                                                value={createBusinessProfile.BusinessProfile.registrationNo}
-                                                fullWidth
-                                                variant="outlined"
-                                                margin="dense"
-                                                onChange={
-                                                    this.handleCreateBusinessProfileTextChanged(createBusinessProfileActions.ORDINARY_BUSINESS_PROFILE_FIELDS_CHANGED)
-                                                }
-                                            />
-                                        </FormControl>
-                                    </FlexView>
-
-                                    <Divider style={{ marginTop: 20, marginBottom: 20 }} />
-
-                                    {/** Registered office */}
-                                    <FlexView column >
-                                        <FormControl required >
-                                            <Container fluid style={{ padding: 0 }} >
-                                                <Row noGutters >
-                                                    <Col xs={12} sm={12} md={6} lg={4} >
-                                                        <FormLabel>
-                                                            <b>Registered office</b>
-                                                        </FormLabel>
-                                                        <FormHelperText>Enter a UK postcode to search for address or click on "Enter address manually" to enter your address manually.</FormHelperText>
-                                                        <FormGroup>
-                                                            {/** Search postcode field */}
-                                                            <FlexView>
-                                                                <TextField
-                                                                    placeholder="Enter UK postcode"
-                                                                    name="registeredOfficeSearchPostcode"
-                                                                    value={createBusinessProfile.registeredOfficeSearchPostcode.toUpperCase()}
-                                                                    fullWidth
-                                                                    variant="outlined"
-                                                                    margin="dense"
-                                                                    onChange={
-                                                                        this.handleCreateBusinessProfileTextChanged(createBusinessProfileActions.BUSINESS_PROFILE_CONTROL_FIELDS_CHANGED)
-                                                                    }
-                                                                    InputProps={{
-                                                                        startAdornment:
-                                                                            <InputAdornment position="start" >
-                                                                                <IconButton
-                                                                                    disableRipple
-                                                                                    style={{ width: 48, height: 48 }}
-                                                                                    onClick={() => searchAddress(createBusinessProfileActions.SEARCHING_REGISTERED_OFFICE_ADDRESSES)}
-                                                                                >
-                                                                                    <SearchIcon/>
-                                                                                </IconButton>
-                                                                            </InputAdornment>
-                                                                    }}
-                                                                />
-                                                            </FlexView>
-
-                                                            {
-                                                                !createBusinessProfile.registeredOfficeEnterAddressManually
-                                                                    ?
-                                                                    null
-                                                                    :
-                                                                    <FlexView column >
-                                                                        <TextField
-                                                                            placeholder="Address 1:*"
-                                                                            name="address1"
-                                                                            value={createBusinessProfile.BusinessProfile.registeredOffice.address1}
-                                                                            fullWidth
-                                                                            variant="outlined"
-                                                                            required
-                                                                            margin="dense"
-                                                                            onChange={
-                                                                                this.handleCreateBusinessProfileTextChanged(createBusinessProfileActions.REGISTERED_OFFICE_BUSINESS_PROFILE_FIELDS_CHANGED)
-                                                                            }
-                                                                        />
-
-                                                                        <TextField
-                                                                            placeholder="Address 2:"
-                                                                            name="address2"
-                                                                            value={createBusinessProfile.BusinessProfile.registeredOffice.address2}
-                                                                            fullWidth
-                                                                            variant="outlined"
-                                                                            margin="dense"
-                                                                            onChange={
-                                                                                this.handleCreateBusinessProfileTextChanged(createBusinessProfileActions.REGISTERED_OFFICE_BUSINESS_PROFILE_FIELDS_CHANGED)
-                                                                            }
-                                                                        />
-
-                                                                        <TextField
-                                                                            placeholder="Address 3:"
-                                                                            name="address3"
-                                                                            value={createBusinessProfile.BusinessProfile.registeredOffice.address3}
-                                                                            fullWidth
-                                                                            variant="outlined"
-                                                                            margin="dense"
-                                                                            onChange={
-                                                                                this.handleCreateBusinessProfileTextChanged(createBusinessProfileActions.REGISTERED_OFFICE_BUSINESS_PROFILE_FIELDS_CHANGED)
-                                                                            }
-                                                                        />
-
-                                                                        <Row
-                                                                        >
-                                                                            <Col xs={12} sm={12} md={6} lg={6} >
-                                                                                <TextField
-                                                                                    placeholder="Town/City:*"
-                                                                                    name="townCity"
-                                                                                    value={createBusinessProfile.BusinessProfile.registeredOffice.townCity}
-                                                                                    fullWidth
-                                                                                    variant="outlined"
-                                                                                    required
-                                                                                    margin="dense"
-                                                                                    onChange={
-                                                                                        this.handleCreateBusinessProfileTextChanged(createBusinessProfileActions.REGISTERED_OFFICE_BUSINESS_PROFILE_FIELDS_CHANGED)
-                                                                                    }
-                                                                                />
-                                                                            </Col>
-                                                                            <Col xs={12} sm={12} md={6} lg={6} >
-                                                                                <TextField
-                                                                                    placeholder="Postcode:*"
-                                                                                    name="postcode"
-                                                                                    value={createBusinessProfile.BusinessProfile.registeredOffice.postcode.toUpperCase()}
-                                                                                    fullWidth
-                                                                                    variant="outlined"
-                                                                                    required
-                                                                                    margin="dense"
-                                                                                    onChange={
-                                                                                        this.handleCreateBusinessProfileTextChanged(createBusinessProfileActions.REGISTERED_OFFICE_BUSINESS_PROFILE_FIELDS_CHANGED)
-                                                                                    }
-                                                                                />
-                                                                            </Col>
-                                                                        </Row>
-                                                                    </FlexView>
-                                                            }
-                                                        </FormGroup>
-                                                    </Col>
-                                                </Row>
-
-                                                <Row
-                                                    noGutters
-                                                >
-                                                    <Col xs={12} sm={12} md={6} lg={4} >
-                                                        {
-                                                            createBusinessProfile.registeredOfficeRecommendedAddresses
-                                                            && createBusinessProfile.registeredOfficeRecommendedAddresses.error
-                                                                ?
-                                                                <Typography variant="body2" color="error" align="left" style={{ marginTop: 4, marginBottom: 4 }} >Sorry, we can't find your address, please check the details entered and search again, alternatively you can enter your address manually below.</Typography>
-                                                                :
-                                                                null
-                                                        }
-
-                                                        {
-                                                            !createBusinessProfile.registeredOfficeRecommendedAddresses
-                                                                ?
-                                                                null
-                                                                :
-                                                                // error happened while finding addresses
-                                                                createBusinessProfile.registeredOfficeRecommendedAddresses.error
-                                                                    ?
-                                                                    null
-                                                                    :
-                                                                    <List
-                                                                        className={css(styles.address_list)}
-                                                                    >
-                                                                        {
-                                                                            createBusinessProfile.registeredOfficeRecommendedAddresses.formattedAddresses.map((address, index) => (
-                                                                                <ListItem
-                                                                                    button
-                                                                                    key={index}
-                                                                                    onClick={() => handleRecommendedAddressSelected(createBusinessProfileActions.SELECT_REGISTERED_OFFICE_RECOMMENDED_ADDRESS, index)}
-                                                                                >
-                                                                                    <ListItemText primary={address} />
-                                                                                </ListItem>
-                                                                            ))
-                                                                        }
-                                                                    </List>
-                                                        }
-
-                                                        {
-                                                            createBusinessProfile.registeredOfficeEnterAddressManually
-                                                                ?
-                                                                null
-                                                                :
-                                                                <Typography
-                                                                    variant="body2"
-                                                                    color="primary"
-                                                                    align="left"
-                                                                    className={css(styles.enter_address_manually)}
-                                                                    onClick={() => toggleEnterAddressManually(createBusinessProfileActions.TOGGLE_REGISTERED_OFFICE_ENTER_ADDRESS_MANUALLY)}
-                                                                >
-                                                                    Enter address manually.
-                                                                </Typography>
-                                                        }
-                                                    </Col>
-                                                </Row>
-                                            </Container>
-                                        </FormControl>
-                                    </FlexView>
-
-                                    <Divider style={{ marginTop: 20, marginBottom: 20 }} />
-
-                                    {/** Trading address */}
-                                    <FlexView column >
-                                        <FormControl required >
-                                            <Container fluid style={{ padding: 0 }} >
-                                                <Row noGutters >
-                                                    <Col xs={12} sm={12} md={6} lg={4} >
-                                                        <FormLabel>
-                                                            <b>Trading address</b>
-                                                        </FormLabel>
-                                                    </Col>
-                                                </Row>
-
-                                                <Row noGutters >
-                                                    <Col xs={12} sm={12} md={6} lg={4} >
-                                                        <FormGroup>
-                                                            <FormControlLabel
-                                                                label="Same as registered office address"
-                                                                labelPlacement="end"
-                                                                control={
-                                                                    <Checkbox checked={createBusinessProfile.tradingAddressSameAsRegisteredOffice} color="primary" onChange={this.toggleTradingAddressSameAsRegisteredOffice} />
-                                                                }
-                                                            />
-                                                        </FormGroup>
-                                                    </Col>
-                                                </Row>
-
-                                                {
-                                                    createBusinessProfile.tradingAddressSameAsRegisteredOffice
-                                                        ?
-                                                        null
-                                                        :
-                                                        <Row noGutters >
-                                                            <Col xs={12} sm={12} md={6} lg={4} >
-                                                                <FormGroup>
-                                                                    <FormHelperText>Enter a UK postcode to search for address or click on "Enter address manually" to enter your address manually.</FormHelperText>
-                                                                    <FlexView>
-                                                                        <TextField
-                                                                            placeholder="Enter UK postcode"
-                                                                            name="tradingAddressSearchPostcode"
-                                                                            value={createBusinessProfile.tradingAddressSearchPostcode.toUpperCase()}
-                                                                            fullWidth
-                                                                            variant="outlined"
-                                                                            margin="dense"
-                                                                            onChange={
-                                                                                this.handleCreateBusinessProfileTextChanged(createBusinessProfileActions.BUSINESS_PROFILE_CONTROL_FIELDS_CHANGED)
-                                                                            }
-                                                                            InputProps={{
-                                                                                startAdornment:
-                                                                                    <InputAdornment position="start" >
-                                                                                        <IconButton disableRipple style={{ width: 48, height: 48 }} onClick={() => searchAddress(createBusinessProfileActions.SEARCHING_TRADING_ADDRESSES)} >
-                                                                                            <SearchIcon/>
-                                                                                        </IconButton>
-                                                                                    </InputAdornment>
-                                                                            }}
-                                                                        />
-                                                                    </FlexView>
-
-                                                                    {
-                                                                        !createBusinessProfile.tradingAddressEnterAddressManually
-                                                                            ?
-                                                                            null
-                                                                            :
-                                                                            <FlexView column >
-                                                                                <TextField
-                                                                                    placeholder="Address 1:*"
-                                                                                    name="address1"
-                                                                                    value={createBusinessProfile.BusinessProfile.tradingAddress.address1}
-                                                                                    fullWidth
-                                                                                    variant="outlined"
-                                                                                    required
-                                                                                    margin="dense"
-                                                                                    onChange={
-                                                                                        this.handleCreateBusinessProfileTextChanged(createBusinessProfileActions.TRADING_ADDRESS_BUSINESS_PROFILE_FIELDS_CHANGED)
-                                                                                    }
-                                                                                />
-
-                                                                                <TextField
-                                                                                    placeholder="Address 2:"
-                                                                                    name="address2"
-                                                                                    value={createBusinessProfile.BusinessProfile.tradingAddress.address2}
-                                                                                    fullWidth
-                                                                                    variant="outlined"
-                                                                                    margin="dense"
-                                                                                    onChange={
-                                                                                        this.handleCreateBusinessProfileTextChanged(createBusinessProfileActions.TRADING_ADDRESS_BUSINESS_PROFILE_FIELDS_CHANGED)
-                                                                                    }
-                                                                                />
-
-                                                                                <TextField
-                                                                                    placeholder="Address 3:"
-                                                                                    name="address3"
-                                                                                    value={createBusinessProfile.BusinessProfile.tradingAddress.address3}
-                                                                                    fullWidth
-                                                                                    variant="outlined"
-                                                                                    margin="dense"
-                                                                                    onChange={
-                                                                                        this.handleCreateBusinessProfileTextChanged(createBusinessProfileActions.TRADING_ADDRESS_BUSINESS_PROFILE_FIELDS_CHANGED)
-                                                                                    }
-                                                                                />
-
-                                                                                <Row
-                                                                                >
-                                                                                    <Col xs={12} sm={12} md={6} lg={6} >
-                                                                                        <TextField
-                                                                                            placeholder="Town/City:*"
-                                                                                            name="townCity"
-                                                                                            value={createBusinessProfile.BusinessProfile.tradingAddress.townCity}
-                                                                                            fullWidth
-                                                                                            variant="outlined"
-                                                                                            required
-                                                                                            margin="dense"
-                                                                                            onChange={
-                                                                                                this.handleCreateBusinessProfileTextChanged(createBusinessProfileActions.TRADING_ADDRESS_BUSINESS_PROFILE_FIELDS_CHANGED)
-                                                                                            }
-                                                                                        />
-                                                                                    </Col>
-                                                                                    <Col xs={12} sm={12} md={6} lg={6} >
-                                                                                        <TextField
-                                                                                            placeholder="Postcode:*"
-                                                                                            name="postcode"
-                                                                                            value={createBusinessProfile.BusinessProfile.tradingAddress.postcode.toUpperCase()}
-                                                                                            fullWidth
-                                                                                            variant="outlined"
-                                                                                            required
-                                                                                            margin="dense"
-                                                                                            onChange={
-                                                                                                this.handleCreateBusinessProfileTextChanged(createBusinessProfileActions.TRADING_ADDRESS_BUSINESS_PROFILE_FIELDS_CHANGED)
-                                                                                            }
-                                                                                        />
-                                                                                    </Col>
-                                                                                </Row>
-                                                                            </FlexView>
-                                                                    }
-                                                                </FormGroup>
-                                                            </Col>
-                                                        </Row>
-                                                }
-
-                                                {
-                                                    createBusinessProfile.tradingAddressSameAsRegisteredOffice
-                                                        ?
-                                                        null
-                                                        :
-                                                        <Row noGutters >
-                                                            <Col xs={12} sm={12} md={6} lg={4} >
-                                                                {
-                                                                    createBusinessProfile.tradingAddressRecommendedAddresses
-                                                                    && createBusinessProfile.tradingAddressRecommendedAddresses.error
-                                                                        ?
-                                                                        <Typography variant="body2" color="error" align="left" style={{ marginTop: 4, marginBottom: 4 }} >Sorry, we can't find your address, please check the details entered and search again, alternatively you can enter your address manually below.</Typography>
-                                                                        :
-                                                                        null
-                                                                }
-
-                                                                {
-                                                                    !createBusinessProfile.tradingAddressRecommendedAddresses
-                                                                        ?
-                                                                        null
-                                                                        :
-                                                                        // error happened while finding addresses
-                                                                        createBusinessProfile.tradingAddressRecommendedAddresses.error
-                                                                            ?
-                                                                            null
-                                                                            :
-                                                                            <List
-                                                                                className={css(styles.address_list)}
-                                                                            >
-                                                                                {
-                                                                                    createBusinessProfile.tradingAddressRecommendedAddresses.formattedAddresses.map((address, index) => (
-                                                                                        <ListItem
-                                                                                            button
-                                                                                            key={index}
-                                                                                            onClick={() => handleRecommendedAddressSelected(createBusinessProfileActions.SELECT_TRADING_ADDRESS_RECOMMENDED_ADDRESS, index)}
-                                                                                        >
-                                                                                            <ListItemText
-                                                                                                primary={address}
-                                                                                            />
-                                                                                        </ListItem>
-                                                                                    ))
-                                                                                }
-                                                                            </List>
-                                                                }
-
-                                                                {
-                                                                    createBusinessProfile.tradingAddressEnterAddressManually
-                                                                        ?
-                                                                        null
-                                                                        :
-                                                                        <Typography variant="body2" color="primary" align="left" className={css(styles.enter_address_manually)} onClick={() => toggleEnterAddressManually(createBusinessProfileActions.TOGGLE_TRADING_ADDRESS_ENTER_ADDRESS_MANUALLY)} >Enter address manually.</Typography>
-                                                                }
-                                                            </Col>
-                                                        </Row>
-                                                }
-                                            </Container>
-                                        </FormControl>
-                                    </FlexView>
-
-                                    <Divider style={{ marginTop: 20, marginBottom: 20 }} />
-
-                                    {/** Directors */}
-                                    <FlexView column >
-                                        <FormControl required >
-                                            <FormLabel>
-                                                <b>Company directors</b>
-                                            </FormLabel>
-
-                                            <Row noGutters >
-                                                <Col xs={12} sm={12} md={6} lg={6} >
-                                                    <List>
-                                                        {
-                                                            createBusinessProfile.BusinessProfile.directors.map((director, index) => (
-                                                                <ListItem key={index} >
-                                                                    <ListItemText> {director} </ListItemText>
-                                                                    <ListItemSecondaryAction>
-                                                                        <IconButton onClick={() => this.props.deleteDirectorTemporarily(index, false)} >
-                                                                            <CloseIcon/>
-                                                                        </IconButton>
-                                                                    </ListItemSecondaryAction>
-                                                                </ListItem>
-                                                            ))
-                                                        }
-                                                    </List>
-
-                                                    {
-                                                        createBusinessProfile.BusinessProfile.directors.length === 0
-                                                            ?
-                                                            null
-                                                            :
-                                                            <Divider style={{ marginTop: 10, marginBottom: 16 }} />
-                                                    }
-                                                </Col>
-
-                                                <Col xs={12} sm={12} md={6} lg={6} >
-                                                </Col>
-
-                                                <Col xs={12} sm={12} md={6} lg={6} >
-                                                    {
-                                                        !addNewDirector
-                                                            ?
-                                                            <Button variant="outlined" size="small" className={css(sharedStyles.no_text_transform)} onClick={this.props.toggleAddNewDirector} >
-                                                                <AddIcon fontSize="small" style={{ marginRight: 4 }} />
-                                                                Add director
-                                                            </Button>
-                                                            :
-                                                            <FlexView column >
-                                                                <TextField
-                                                                    placeholder="Enter director's name"
-                                                                    name="newDirectorText"
-                                                                    value={newDirectorText}
-                                                                    fullWidth
-                                                                    variant="outlined"
-                                                                    onChange={this.handleEditUser(editUserActions.ADDING_NEW_DIRECTOR)}
-                                                                    margin="dense"
-                                                                />
-
-                                                                <FlexView marginTop={8} hAlignContent="right" >
-                                                                    <Button variant="outlined" size="small" className={css(sharedStyles.no_text_transform)} onClick={this.props.toggleAddNewDirector} style={{ marginRight: 8 }} >Cancel</Button>
-                                                                    <Button
-                                                                        variant="contained"
-                                                                        size="small"
-                                                                        color="primary"
-                                                                        className={css(sharedStyles.no_text_transform)}
-                                                                        onClick={() => this.props.addNewDirectorTemporarily(false)}
-                                                                        disabled={newDirectorText.trim().length === 0}
-                                                                    >
-                                                                        Add
-                                                                    </Button>
-                                                                </FlexView>
-                                                            </FlexView>
-                                                    }
-                                                </Col>
-                                            </Row>
-                                        </FormControl>
-                                    </FlexView>
-
-                                    <Divider
-                                        style={{ marginTop: 20, marginBottom: 20 }}
-                                    />
-
-                                    {/** Business sector */}
-                                    <FlexView column >
-                                        <FormControl required >
-                                            <FormLabel>
-                                                <b>Business sector</b>
+                                                <b>Course sector</b>
                                             </FormLabel>
                                             <Select
                                                 name="sector"
@@ -1809,7 +985,7 @@ class Profile extends Component {
                                                 margin="dense"
                                                 onChange={ this.handleCreateBusinessProfileTextChanged(createBusinessProfileActions.ORDINARY_BUSINESS_PROFILE_FIELDS_CHANGED) }
                                             >
-                                                <MenuItem key={-1} value={'None'} >Choose business sector</MenuItem>
+                                                <MenuItem key={-1} value={'None'} >Choose course sector</MenuItem>
                                                 {
                                                     clubAttributes
                                                         ?
@@ -1829,7 +1005,7 @@ class Profile extends Component {
                                     <FlexView column >
                                         <FormControl required >
                                             <FormLabel>
-                                                <b>Company website</b>
+                                                <b>Project website</b>
                                             </FormLabel>
                                             <TextField
                                                 placeholder="Enter company website"
@@ -1862,7 +1038,7 @@ class Profile extends Component {
                                             <Col xs={12} sm={12} md={6} lg={6} style={{ padding: 15 }} >
                                                 <FlexView column width="100%" hAlignContent="center" >
                                                     <FlexView className={css(styles.upload_files_area_style)} onClick={() => this.props.toggleEditImageDialog(UPLOAD_LOGO_FIRST_TIME_MODE)} >
-                                                        <Typography variant="body2" align="center" >Upload company logo (optional)</Typography>
+                                                        <Typography variant="body2" align="center" >Upload course logo (optional)</Typography>
                                                     </FlexView>
                                                     {
                                                         !createBusinessProfile.logoToBeUploaded
@@ -1965,18 +1141,6 @@ class Profile extends Component {
         // user is an issuer
         if (originalUser.type === DB_CONST.TYPE_ISSUER) {
             if (createBusinessProfile.BusinessProfile.companyName.trim().length === 0
-                || createBusinessProfile.BusinessProfile.registrationNo.trim().length === 0
-                || createBusinessProfile.BusinessProfile.registeredOffice.address1.trim().length === 0
-                || createBusinessProfile.BusinessProfile.registeredOffice.townCity.trim().length === 0
-                || createBusinessProfile.BusinessProfile.registeredOffice.postcode.trim().length === 0
-                || (
-                    !createBusinessProfile.tradingAddressSameAsRegisteredOffice
-                    && (
-                        createBusinessProfile.BusinessProfile.tradingAddress.address1.trim().length === 0
-                        || createBusinessProfile.BusinessProfile.tradingAddress.townCity.trim().length === 0
-                        || createBusinessProfile.BusinessProfile.tradingAddress.postcode.trim().length === 0
-                    )
-                )
                 || createBusinessProfile.BusinessProfile.directors.length === 0
                 || createBusinessProfile.BusinessProfile.sector === 'None'
                 || createBusinessProfile.BusinessProfile.companyWebsite.trim().length === 0
@@ -1991,18 +1155,6 @@ class Profile extends Component {
         else if (originalUser.type === DB_CONST.TYPE_INVESTOR) {
             if (createBusinessProfile.expandBusinessProfileFilling) {
                 if (createBusinessProfile.BusinessProfile.companyName.trim().length === 0
-                    || createBusinessProfile.BusinessProfile.registrationNo.trim().length === 0
-                    || createBusinessProfile.BusinessProfile.registeredOffice.address1.trim().length === 0
-                    || createBusinessProfile.BusinessProfile.registeredOffice.townCity.trim().length === 0
-                    || createBusinessProfile.BusinessProfile.registeredOffice.postcode.trim().length === 0
-                    || (
-                        !createBusinessProfile.tradingAddressSameAsRegisteredOffice
-                        && (
-                            createBusinessProfile.BusinessProfile.tradingAddress.address1.trim().length === 0
-                            || createBusinessProfile.BusinessProfile.tradingAddress.townCity.trim().length === 0
-                            || createBusinessProfile.BusinessProfile.tradingAddress.postcode.trim().length === 0
-                        )
-                    )
                     || createBusinessProfile.BusinessProfile.directors.length === 0
                     || createBusinessProfile.BusinessProfile.sector === 'None'
                     || createBusinessProfile.BusinessProfile.companyWebsite.trim().length === 0

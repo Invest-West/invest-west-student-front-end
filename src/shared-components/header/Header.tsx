@@ -141,11 +141,11 @@ class Header extends Component<HeaderProps, {}> {
                                         <Typography variant="body1" noWrap >
                                             {
                                                 Routes.isErrorRoute(routePath) || Routes.isSystemPublicRoute(routePath)
-                                                    ? "Invest West"
+                                                    ? "Default student"
                                                     : isValidatingGroupUrl(ManageGroupUrlState)
                                                     ? ""
                                                     : !routeContainsGroupName(ManageGroupUrlState)
-                                                        ? "Invest West"
+                                                        ? "Default student"
                                                         : ManageGroupUrlState.group?.displayName
                                             }
                                         </Typography>

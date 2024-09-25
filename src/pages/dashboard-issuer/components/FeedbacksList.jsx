@@ -42,7 +42,7 @@ export default class FeedbacksList extends Component {
             return (
                 <List>
                     <ListItem>
-                        <ListItemText primary="No feedbacks for this pitch." />
+                        <ListItemText primary="No feedbacks for this project." />
                     </ListItem>
                 </List>
             );

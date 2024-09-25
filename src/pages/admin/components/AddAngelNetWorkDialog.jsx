@@ -143,8 +143,8 @@ class AddAngelNetworkDialog extends Component {
                 </DialogTitle>
                 <DialogContent style={{marginTop: 10}}>
                     <TextField
-                        label="Group name"
-                        placeholder="Write group's full name here ..."
+                        label="Course name"
+                        placeholder="Write course's full name here ..."
                         name="angelNetworkName"
                         value={angelNetworkName}
                         fullWidth
@@ -156,8 +156,8 @@ class AddAngelNetworkDialog extends Component {
                     />
 
                     <TextField
-                        label="Group username"
-                        placeholder="Write group's username here. E.g. aba, or qtec"
+                        label="Course username"
+                        placeholder="Write course's username here. E.g. aba, or qtec"
                         helperText="Note: Username must be unique. For convention, use lowercase letters and use - to connect words. E.g. future-space"
                         name="angelNetworkUsername"
                         value={angelNetworkUsername}
@@ -173,7 +173,7 @@ class AddAngelNetworkDialog extends Component {
                         <TextField
                             label="Registered email"
                             placeholder="Write email here ..."
-                            helperText="This email will be used to login to group's admin page. Once added, an email with auto-generated password will be sent to this email address."
+                            helperText="This email will be used to login to course's admin page. Once added, an email with auto-generated password will be sent to this email address."
                             name="email"
                             value={email}
                             fullWidth
@@ -188,7 +188,7 @@ class AddAngelNetworkDialog extends Component {
                     <FormControl fullWidth>
                         <TextField
                             label="Website"
-                            placeholder="Group's official website"
+                            placeholder="Course's official website"
                             name="website"
                             value={website}
                             fullWidth

@@ -872,7 +872,7 @@ class SignupForNewUser extends Component {
                                         network, share and learn. Investment opportunities and one pagers added to this
                                         platform will be shared by the event host verbally and circulated via this
                                         password protected website to c. 300+ investors and enablers of investment
-                                        (lawyers, accountants etc.) who have expressed interest in the region and
+                                        (lawyers, accountants etc.) who have expressed interest in the course and
                                         investment opportunities here.
                                     </Typography>
                                     :

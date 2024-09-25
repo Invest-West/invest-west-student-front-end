@@ -14,9 +14,6 @@ import {
 import {
     BusinessProfileCheckBoxChangedAction,
     BusinessProfileEvents,
-    ChangeAddressFindingStateAction,
-    FindingAddressAction,
-    FinishedFindingAddressAction
 } from "./components/business-profile/BusinessProfileActions";
 import Address from "../../models/address";
 
@@ -36,18 +33,11 @@ export interface BusinessProfileState {
     // this state is used to keeping track of the changes in Business profile
     editedBusinessProfile: BusinessProfile;
     // find address by postcode state for Registered office section
-    registeredOfficeState: AddressStates;
     // find address by postcode state for Registered office section
-    tradingAddressState: AddressStates;
     // list of addresses found by postcode from Registered office section
-    foundAddressesForRegisteredOffice?: Address[];
     // list of addresses found by postcode from Trading address section
-    foundAddressesForTradingAddress?: Address[];
     // error finding addresses for Registered office
-    errorFindingAddressesForRegisteredOffice?: Error;
     // error finding addresses for Trading address
-    errorFindingAddressesForTradingAddress?: Error;
-    tradingAddressSameAsRegisteredOffice: boolean;
 }
 
 export enum EditImageDialogModes {
@@ -89,23 +79,7 @@ const initialBusinessProfileState: BusinessProfileState = {
     editedBusinessProfile: {
         companyName: "",
         companyWebsite: "",
-        registrationNo: "",
         sector: "none",
-        directors: [""],
-        registeredOffice: {
-            address1: "none",
-            address2: "",
-            address3: "",
-            postcode: "",
-            townCity: ""
-        },
-        tradingAddress: {
-            address1: "none",
-            address2: "",
-            address3: "",
-            postcode: "",
-            townCity: ""
-        },
         logo: [
             {
                 storageID: -1,
@@ -113,9 +87,6 @@ const initialBusinessProfileState: BusinessProfileState = {
             }
         ]
     },
-    registeredOfficeState: AddressStates.EnterPostcode,
-    tradingAddressState: AddressStates.EnterPostcode,
-    tradingAddressSameAsRegisteredOffice: true
 }
 
 // initial state for Edit Image dialog
@@ -148,14 +119,6 @@ export const isSavingProfilePicture = (state: EditImageDialogState) => {
 
 export const isDeletingProfilePicture = (state: EditImageDialogState) => {
     return state.deletingImage;
-}
-
-export const hasErrorFindingAddressForRegisteredOffice = (state: BusinessProfileState) => {
-    return state.errorFindingAddressesForRegisteredOffice !== undefined;
-}
-
-export const hasErrorFindingAddressForTradingAddress = (state: BusinessProfileState) => {
-    return state.errorFindingAddressesForTradingAddress !== undefined;
 }
 
 const profileReducer = (state = initialState, action: ProfileAction) => {
@@ -247,70 +210,6 @@ const profileReducer = (state = initialState, action: ProfileAction) => {
                 BusinessProfileState: {
                     ...state.BusinessProfileState,
                     [businessProfileCheckBoxChangedAction.name]: businessProfileCheckBoxChangedAction.value
-                }
-            }
-        case BusinessProfileEvents.FindingAddress:
-            const findingAddressAction: FindingAddressAction = action as FindingAddressAction;
-            return {
-                ...state,
-                BusinessProfileState: {
-                    ...state.BusinessProfileState,
-                    registeredOfficeState: findingAddressAction.mode === "registeredOffice"
-                        ? AddressStates.FindingAddresses : state.BusinessProfileState.registeredOfficeState,
-                    tradingAddressState: findingAddressAction.mode === "tradingAddress"
-                        ? AddressStates.FindingAddresses : state.BusinessProfileState.tradingAddressState
-                }
-            }
-        case BusinessProfileEvents.FinishedFindingAddress:
-            const finishedFindingAddressAction: FinishedFindingAddressAction = action as FinishedFindingAddressAction;
-            return {
-                ...state,
-                BusinessProfileState: {
-                    ...state.BusinessProfileState,
-                    foundAddressesForRegisteredOffice: finishedFindingAddressAction.mode === "registeredOffice"
-                        ? finishedFindingAddressAction.foundAddresses : state.BusinessProfileState.foundAddressesForRegisteredOffice,
-                    foundAddressesForTradingAddress: finishedFindingAddressAction.mode === "tradingAddress"
-                        ? finishedFindingAddressAction.foundAddresses : state.BusinessProfileState.foundAddressesForTradingAddress,
-                    errorFindingAddressesForRegisteredOffice: finishedFindingAddressAction.mode === "registeredOffice" && finishedFindingAddressAction.error !== undefined
-                        ? {detail: finishedFindingAddressAction.error} : state.BusinessProfileState.errorFindingAddressesForRegisteredOffice,
-                    errorFindingAddressesForTradingAddress: finishedFindingAddressAction.mode === "tradingAddress" && finishedFindingAddressAction.error !== undefined
-                        ? {detail: finishedFindingAddressAction.error} : state.BusinessProfileState.errorFindingAddressesForTradingAddress
-                }
-            }
-        case BusinessProfileEvents.ChangeAddressState:
-            const changeAddressStateAction: ChangeAddressFindingStateAction = action as ChangeAddressFindingStateAction;
-            return {
-                ...state,
-                BusinessProfileState: {
-                    ...state.BusinessProfileState,
-                    registeredOfficeState: changeAddressStateAction.mode === "registeredOffice"
-                        ? changeAddressStateAction.addressState : state.BusinessProfileState.registeredOfficeState,
-                    tradingAddressState: changeAddressStateAction.mode === "tradingAddress"
-                        ? changeAddressStateAction.addressState : state.BusinessProfileState.tradingAddressState,
-                    // if addressState is set to EnterPostcode, reset other states to initial values
-                    foundAddressesForRegisteredOffice: changeAddressStateAction.mode === "registeredOffice"
-                    && changeAddressStateAction.addressState === AddressStates.EnterPostcode
-                        ? undefined : state.BusinessProfileState.foundAddressesForRegisteredOffice,
-                    foundAddressesForTradingAddress: changeAddressStateAction.mode === "tradingAddress"
-                    && changeAddressStateAction.addressState === AddressStates.EnterPostcode
-                        ? undefined : state.BusinessProfileState.foundAddressesForTradingAddress,
-                    errorFindingAddressesForRegisteredOffice: changeAddressStateAction.mode === "registeredOffice"
-                    && changeAddressStateAction.addressState === AddressStates.EnterPostcode
-                        ? undefined : state.BusinessProfileState.errorFindingAddressesForRegisteredOffice,
-                    errorFindingAddressesForTradingAddress: changeAddressStateAction.mode === "tradingAddress"
-                    && changeAddressStateAction.addressState === AddressStates.EnterPostcode
-                        ? undefined : state.BusinessProfileState.errorFindingAddressesForTradingAddress,
-                    editedBusinessProfile: {
-                        ...state.BusinessProfileState.editedBusinessProfile,
-                        registeredOffice: changeAddressStateAction.mode === "registeredOffice"
-                        && changeAddressStateAction.addressState === AddressStates.EnterPostcode
-                            ? initialBusinessProfileState.editedBusinessProfile.registeredOffice
-                            : state.BusinessProfileState.editedBusinessProfile.registeredOffice,
-                        tradingAddress: changeAddressStateAction.mode === "tradingAddress"
-                        && changeAddressStateAction.addressState === AddressStates.EnterPostcode
-                            ? initialBusinessProfileState.editedBusinessProfile.tradingAddress
-                            : state.BusinessProfileState.editedBusinessProfile.tradingAddress
-                    }
                 }
             }
         default:

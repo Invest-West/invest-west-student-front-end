@@ -20,14 +20,14 @@ export enum FetchProjectsPhaseOptions {
 }
 
 export interface FetchProjectsOptions {
-    search?: string; // filter projects by either name, group name, or issuer company name
+    search?: string; // filter projects by either name, group name, or issuer Student project name
     name?: string; // filter projects by name
     visibility?: number | "all"; // filter projects by their visibility: PRIVATE, RESTRICTED, or PUBLIC
     group?: string | "all"; // filter projects by group id
     groupName?: string; // filter projects by group name
     investor?: string | "all"; // filter projects by investor id
     issuer?: string | "all"; // filter projects by issuer id
-    issuerCompanyName?: string; // filter projects by issuer company name
+    issuerCompanyName?: string; // filter projects by issuer Student project name
     sector?: string | "all"; // filter projects by sector
     phase?: string | number | "all"; // filter projects by status
     orderBy?: FetchProjectsOrderByOptions; // mode to use orderByChild

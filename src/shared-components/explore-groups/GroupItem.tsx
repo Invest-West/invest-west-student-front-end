@@ -156,7 +156,7 @@ class GroupItem extends Component<GroupItemProps, any> {
                                             {
                                                 isSendingAccessRequest(ExploreGroupsLocalState, group.anid)
                                                     ? "Sending request ..."
-                                                    : "Join Group"
+                                                    : "Join Course"
                                             }
                                         </Button>
                                         : <Button

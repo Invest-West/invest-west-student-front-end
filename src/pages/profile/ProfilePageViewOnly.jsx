@@ -351,7 +351,7 @@ class ProfilePageViewOnly extends Component {
                                     <FlexView column>
                                         <Typography variant="h6" color="primary">Uni profile</Typography>
                                         <FlexView column marginTop={15} marginLeft={15} marginRight={15}>
-                                            <Typography variant="subtitle1" align="left"> Company name:&nbsp;&nbsp;
+                                            <Typography variant="subtitle1" align="left"> Student project name:&nbsp;&nbsp;
                                                 <b>{userToBeViewed.BusinessProfile.companyName}</b>
                                             </Typography>
                                             <Divider className={css(styles.divider_style)}/>
@@ -360,34 +360,7 @@ class ProfilePageViewOnly extends Component {
                                                 <b>{userToBeViewed.BusinessProfile.sector}</b>
                                             </Typography>
                                             <Divider className={css(styles.divider_style)}/>
-                                            <Typography variant="subtitle1" align="left">Course Registered office:&nbsp;&nbsp;
-                                                <br/>
-                                                <br/>
-                                                {userToBeViewed.BusinessProfile.registeredOffice.address1.toUpperCase()}
-                                                <br/>
-                                                {
-                                                    userToBeViewed.BusinessProfile.registeredOffice.address2 === ""
-                                                        ?
-                                                        null
-                                                        :
-                                                        <div>
-                                                            {userToBeViewed.BusinessProfile.registeredOffice.address2.toUpperCase()}
-                                                            <br/>
-                                                        </div>
-                                                }
-                                                {
-                                                    userToBeViewed.BusinessProfile.registeredOffice.address3 === ""
-                                                        ?
-                                                        null
-                                                        :
-                                                        <div>
-                                                            {userToBeViewed.BusinessProfile.registeredOffice.address3.toUpperCase()}
-                                                            <br/>
-                                                        </div>
-                                                }
-                                                {userToBeViewed.BusinessProfile.registeredOffice.townCity.toUpperCase()}, {userToBeViewed.BusinessProfile.registeredOffice.postcode.toUpperCase()}
-                                                <br/>
-                                            </Typography>
+
                                             <Divider className={css(styles.divider_style)}/>
                                             <Divider className={css(styles.divider_style)}/>
                                             <Typography variant="subtitle1" align="left">Course Website:&nbsp;&nbsp;
@@ -446,10 +419,10 @@ class ProfilePageViewOnly extends Component {
 
         if (invitedUser.status) {
             if (invitedUser.type === DB_CONST.TYPE_ISSUER) {
-                statusMessage.msg = "Official Issuer of Invest West";
+                statusMessage.msg = "Teacher of Student";
                 statusMessage.color = "primary";
             } else {
-                statusMessage.msg = "Official Investor of Invest West";
+                statusMessage.msg = "Student";
                 statusMessage.color = "primary";
             }
         } else {

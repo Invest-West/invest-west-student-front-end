@@ -215,7 +215,7 @@ class ContactUs extends Component {
                 realtimeDBUtils
                     .logContactUsEnquiry({
                         userID: user ? user.id : null,
-                        anid: !groupProperties ? "Invest West super admin" : groupProperties.anid,
+                        anid: !groupProperties ? "Teacher super admin" : groupProperties.anid,
                         email: email.toLowerCase(),
                         name,
                         phone,

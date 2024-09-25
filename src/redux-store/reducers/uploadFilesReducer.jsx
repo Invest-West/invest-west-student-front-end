@@ -8,7 +8,7 @@ import {
 import * as authActions from '../actions/authActions';
 
 const initState = {
-    mode: null, // file upload mode (e.g. Legal documents, Pitch cover, Pitch deck, and Pitch supporting documents)
+    mode: null, // file upload mode (e.g. Legal documents, Project cover, Project deck, and Project supporting documents)
     filesToBeUploaded: {
         legalDocuments: [],
         pitchCover: [],

@@ -119,7 +119,7 @@ class HeaderWithoutDesc extends Component {
                                                 {
                                                     !groupProperties
                                                         ?
-                                                        "Invest West"
+                                                        "Default student"
                                                         :
                                                         groupProperties.displayName
                                                 }
@@ -153,7 +153,7 @@ class HeaderWithoutDesc extends Component {
                                                 {
                                                     !groupProperties
                                                         ?
-                                                        "Invest West"
+                                                        "Default student"
                                                         :
                                                         groupProperties.displayName
                                                 }

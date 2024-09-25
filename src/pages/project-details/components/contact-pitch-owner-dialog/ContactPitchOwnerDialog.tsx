@@ -42,7 +42,7 @@ class ContactPitchOwnerDialog extends Component<ContactPitchOwnerDialogProps, an
         >
             <DialogContent>
                 <Box display="flex" flexDirection="column">
-                    <Typography variant="body1" align="left">{`We will let the pitch owner know that you would like to find out more.`}</Typography>
+                    <Typography variant="body1" align="left">{`We will let the project owner know that you would like to find out more.`}</Typography>
                     <Box height="20px"/>
                     <Typography variant="body1" align="left">{`Are you happy for us to share your email address?`}</Typography>
                 </Box>

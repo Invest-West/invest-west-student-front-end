@@ -504,7 +504,7 @@ export const isProjectRejectedToGoLive = project => {
 };
 
 /**
- * Check if a project is in live pitch phase
+ * Check if a project is in live project phase
  *
  * @param project
  * @returns {boolean}
@@ -515,7 +515,7 @@ export const isProjectInLivePitchPhase = project => {
 };
 
 /**
- * Check if the pitch has expired and waiting for admin to make decision
+ * Check if the project has expired and waiting for admin to make decision
  *
  * @param project
  * @returns {boolean}

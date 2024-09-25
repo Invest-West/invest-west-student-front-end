@@ -195,7 +195,7 @@ class SignInNew extends Component<SignInProps & Readonly<RouteComponentProps<Rou
                                     {/** Sign up */}
                                     <Box display="flex" marginTop="25px" justifyContent="center" >
                                         <Typography variant="body1" >
-                                            Don't have an Invest West account? &nbsp;
+                                            Don't have an Student account? &nbsp;
                                             <CustomLink url={Routes.constructSignUpRoute(ManageGroupUrlState.groupNameFromUrl ?? "")} color={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main} activeColor="none" activeUnderline component="nav-link" childComponent={ "Sign up" } />
                                         </Typography>
                                     </Box>
@@ -259,7 +259,7 @@ class ResetPasswordDialog extends Component<SignInProps, {}> {
             <DialogContent style={{ padding: 0 }}>
                 <Box display="flex" flexDirection="column" justifyContent="center" marginTop="15px" paddingX="24px">
                     <Box display="flex" flexDirection="column">
-                        <Typography variant="body1" align="left">Please provide the email address you used when you signed up for your Invest West account.</Typography>
+                        <Typography variant="body1" align="left">Please provide the email address you used when you signed up for your Student account.</Typography>
                         <Box height="25px"/>
                         <Typography variant="body1" align="left">We will send you an email with a link to reset your password. <b>Please note that this link will only be valid for up to 3 hours.</b></Typography>
                     </Box>

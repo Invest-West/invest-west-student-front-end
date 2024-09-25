@@ -112,7 +112,7 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
                             color="white"
                             paddingY="28px"
                         >
-                            <Typography variant="h6" align="center">Groups on Invest West network</Typography>
+                            <Typography variant="h6" align="center">Courses on Student network</Typography>
 
                             <Box height="28px" />
 
@@ -167,7 +167,7 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
                                     onChange={filterChanged}
                                     disabled={!successfullyFetchedGroups(ExploreGroupsLocalState)}
                                 >
-                                    <MenuItem key="all" value="all">All groups</MenuItem>
+                                    <MenuItem key="all" value="all">All courses</MenuItem>
                                     <MenuItem key="groupsOfMembership" value="groupsOfMembership">My courses</MenuItem>
                                     <MenuItem key="groupsOfPendingRequest" value="groupsOfPendingRequest">Pending requests</MenuItem>
                                 </Select>

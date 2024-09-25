@@ -67,7 +67,7 @@ class CreatePitchTermsAndConditionsPage extends Component {
                                 <Row noGutters style={{backgroundColor: colors.gray_100}}>
                                     <Col xs={12} sm={12} md={12} lg={{span: 8, offset: 2}} style={{paddingTop: 30, paddingBottom: 30, paddingLeft: 12, paddingRight: 12}}>
                                         <Typography variant="h5" align="left">
-                                            <b>{"Create pitch terms and conditions".toUpperCase()}</b>
+                                            <b>{"Create project terms and conditions".toUpperCase()}</b>
                                         </Typography>
                                     </Col>
                                 </Row>

@@ -145,7 +145,7 @@ class Front extends Component<FrontProps & Readonly<RouteComponentProps<RoutePar
                                 routeContainsGroupName(ManageGroupUrlState)
                                     ? null
                                     : <Box color={colors.blueGrey["500"]} marginTop="20px">
-                                        <Typography variant="h4" align="center">Connecting businesses and investors</Typography>
+                                        <Typography variant="h4" align="center">Connecting universities and students</Typography>
                                     </Box>
                             }
                         </Box>

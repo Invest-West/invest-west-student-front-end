@@ -216,8 +216,8 @@ class InvitedUsers extends Component {
                                 value={filterUserType}
                                 onChange={handleInputChanged}>
                                 <MenuItem value={0}>All</MenuItem>
-                                <MenuItem value={DB_CONST.TYPE_INVESTOR}>Investor</MenuItem>
-                                <MenuItem value={DB_CONST.TYPE_ISSUER}>Issuer</MenuItem>
+                                <MenuItem value={DB_CONST.TYPE_INVESTOR}>Project viewer</MenuItem>
+                                <MenuItem value={DB_CONST.TYPE_ISSUER}>Student</MenuItem>
                             </Select>
                         </FormControl>
                     </Col>
@@ -249,7 +249,7 @@ class InvitedUsers extends Component {
                                         <InfoOverlay
                                             placement="right"
                                             message={
-                                                "Home members are the users that registered through this group. Platform members are existing users of Invest West who requested access to this group."
+                                                "Home members are the students that registered through this course. Platform members are existing users of Student Invest West who requested access to this course."
                                             }
                                         />
                                     </FlexView>
@@ -271,7 +271,7 @@ class InvitedUsers extends Component {
                                             {
                                                 !groupsLoaded
                                                     ?
-                                                    "Loading groups ..."
+                                                    "Loading courses ..."
                                                     :
                                                     "All"
                                             }
@@ -389,7 +389,7 @@ class InvitedUsers extends Component {
                                         ?
                                         "Export all the users in the system to a .csv file."
                                         :
-                                        "Export all the members in your group to a .csv file."
+                                        "Export all the members in your course to a .csv file."
                                 }
                             />
                         </FlexView>
@@ -705,9 +705,9 @@ class InvitedUsers extends Component {
                                     {
                                         invitedUser.type === DB_CONST.TYPE_ISSUER
                                             ?
-                                            "Issuer"
+                                            "Student"
                                             :
-                                            "Investor"
+                                            "Project viewer"
                                     }
                                 </Typography>
                             </TableCell>
@@ -776,7 +776,7 @@ class InvitedUsers extends Component {
                 msgObj.color = 'error';
                 break;
             case DB_CONST.INVITED_USER_STATUS_ACTIVE:
-                msgObj.msg = `Current ${invitedUser.type === DB_CONST.TYPE_INVESTOR ? "investor" : "issuer"}`;
+                msgObj.msg = `Current ${invitedUser.type === DB_CONST.TYPE_INVESTOR ? "project viewer" : "student"}`;
                 msgObj.color = 'primary';
                 break;
             case DB_CONST.INVITED_USER_DECLINED_TO_REGISTER:

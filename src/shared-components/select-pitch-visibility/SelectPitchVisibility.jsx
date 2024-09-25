@@ -42,7 +42,7 @@ class SelectPitchVisibility extends Component {
 
         return (
             <FormControl fullWidth >
-                <FormHelperText className={css(sharedStyles.black_text)} style={{ marginBottom: 6 }}>Select pitch visibility</FormHelperText>
+                <FormHelperText className={css(sharedStyles.black_text)} style={{ marginBottom: 6 }}>Select project visibility</FormHelperText>
                 <Select
                     value={
                         projectVisibilitySetting === -1
@@ -83,7 +83,7 @@ class SelectPitchVisibility extends Component {
                                     :
                                     ""
                         }
-                        The full pitch will be visible to all Invest West users)`}
+                        The full project will be visible to all students)`}
                     </MenuItem>
                     <MenuItem
                         value={DB_CONST.PROJECT_VISIBILITY_RESTRICTED}
@@ -104,7 +104,7 @@ class SelectPitchVisibility extends Component {
                                     :
                                     ""
                         }
-                        Restricted information from this pitch will be visible to all Invest West users. Only members of your group will see the full pitch)`}
+                        Restricted information from this project will be visible to all Invest West users. Only members of your course will see the full project)`}
                     </MenuItem>
                     <MenuItem
                         value={DB_CONST.PROJECT_VISIBILITY_PRIVATE}
@@ -125,7 +125,7 @@ class SelectPitchVisibility extends Component {
                                     :
                                     ""
                         }
-                        Only members of this group will see this pitch)`}
+                        Only members of this course will see this project)`}
                     </MenuItem>
                 </Select>
             </FormControl>

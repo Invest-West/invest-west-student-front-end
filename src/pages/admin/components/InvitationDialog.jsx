@@ -148,8 +148,8 @@ class InvitationDialog extends Component {
                         <FormControl required error={sendButtonClick && userType.length === 0}>
                             <FormLabel>User type</FormLabel>
                             <RadioGroup row name="userType" value={userType} onChange={handleInputChanged}>
-                                <FormControlLabel value={DB_CONST.TYPE_ISSUER.toString()} control={<Radio color='primary'/>} label="Issuer"/>
-                                <FormControlLabel value={DB_CONST.TYPE_INVESTOR.toString()} control={<Radio color='primary'/>} label="Investor"/>
+                                <FormControlLabel value={DB_CONST.TYPE_ISSUER.toString()} control={<Radio color='primary'/>} label="Student"/>
+                                <FormControlLabel value={DB_CONST.TYPE_INVESTOR.toString()} control={<Radio color='primary'/>} label="Project viewer"/>
                             </RadioGroup>
                         </FormControl>
                     </FlexView>

@@ -27,14 +27,14 @@ export default class HeadSummary extends Component {
             },
 
             {
-                "title": "Total pitches",
+                "title": "Total projects",
                 "value": this.props.totalPitches,
                 "faIcon": "far fa-lightbulb",
                 "color": colors.dark_green_50
             },
 
             {
-                "title": "Successful pitches",
+                "title": "Successful projects",
                 "value": this.props.successfulPitches,
                 "faIcon": "far fa-gem",
                 "color": colors.primaryColor

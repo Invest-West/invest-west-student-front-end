@@ -7,7 +7,7 @@ import {TYPE_INVESTOR, TYPE_ISSUER} from "../firebase/databaseConsts";
 import Admin from "./admin";
 import Address from "./address";
 
-export const UserTitles = ["Ms.", "Mrs.", "Miss", "Mr.", "Dr.", "Prof."];
+export const UserTitles = ["Ms.", "Mrs.", "Miss", "Mr.", "Mx", "Dr.", "Prof."];
 export const HearAbout = ["Google", "Newsletter", "Linkedin", "Event"];
 
 export default interface User {
@@ -26,11 +26,7 @@ export default interface User {
 export interface BusinessProfile {
     companyName: string;
     companyWebsite: string;
-    registrationNo: string;
     sector: string;
-    directors: string[];
-    registeredOffice: Address;
-    tradingAddress: Address;
     logo: ProfileImage[];
     video?: ProfileVideo[];
 }
@@ -58,12 +54,6 @@ export const isInvestor = (user: User | Admin) => {
 
 export const hasBusinessProfile = (user: User) => {
     return user.BusinessProfile !== undefined;
-}
-
-export const isTradingAddressSameAsRegisteredOffice = (user: User) => {
-    return user.BusinessProfile?.registeredOffice.postcode === user.BusinessProfile?.tradingAddress.postcode
-        && user.BusinessProfile?.registeredOffice.address1 === user.BusinessProfile?.tradingAddress.address1
-        && user.BusinessProfile?.registeredOffice.townCity === user.BusinessProfile?.tradingAddress.townCity
 }
 
 export const getProfilePicture = (user: User): string | null => {

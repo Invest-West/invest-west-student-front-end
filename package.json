@@ -45,8 +45,8 @@
     "typescript": "^4.3.5"
   },
   "scripts": {
-    "start": "env-cmd -f .env.development react-scripts start",
-    "build:prod": "env-cmd -f .env.production react-scripts build",
+    "start": "env-cmd -f .env react-scripts start",
+    "build:prod": "env-cmd -f .env react-scripts build",
     "build": "react-scripts build",
     "build:test": "env-cmd -f .env.test react-scripts build",
     "build:demo": "env-cmd -f .env.demo react-scripts build",

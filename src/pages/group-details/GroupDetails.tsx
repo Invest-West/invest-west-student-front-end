@@ -144,7 +144,7 @@ class GroupDetails extends Component<GroupDetailsProps & Readonly<RouteComponent
                                                                     {
                                                                         isSendingAccessRequest(GroupDetailsLocalState)
                                                                             ? "Sending request ..."
-                                                                            : "Join Group"
+                                                                            : "Join Course"
                                                                     }
                                                                 </Button>
                                                                 : <Button variant="outlined" className={css(sharedStyles.no_text_transform)} onClick={() => removeAccessRequest()} disabled={isRemovingAccessRequest(GroupDetailsLocalState)}>
@@ -233,7 +233,7 @@ class GroupDetails extends Component<GroupDetailsProps & Readonly<RouteComponent
                                             <Box padding="18px">
                                                 <Typography variant="h4" align="left">{GroupDetailsLocalState.members?.length}</Typography>
                                                     <Box height="2px"/>
-                                                <Typography variant="body1" align="left">Members</Typography>
+                                                <Typography variant="body1" align="left">Students</Typography>
                                             </Box>
                                         </Col>
 
@@ -248,7 +248,7 @@ class GroupDetails extends Component<GroupDetailsProps & Readonly<RouteComponent
 
                                                     <Box height="2px"/>
 
-                                                    <Typography variant="body1" align="left">Investment opportunities</Typography>
+                                                    <Typography variant="body1" align="left">Student projects</Typography>
                                                 </Box>
                                             </Box>
                                         </Col>

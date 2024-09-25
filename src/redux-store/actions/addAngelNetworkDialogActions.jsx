@@ -156,7 +156,7 @@ export const addNewAngelNetwork = () => {
                 }
             );
 
-            // send a notification to the newly created super group admin
+            // send a notification to the newly created super course admin
             await realtimeDBUtils
                 .sendNotification({
                     title: "Change your password",

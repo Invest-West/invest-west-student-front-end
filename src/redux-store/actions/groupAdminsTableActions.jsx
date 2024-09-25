@@ -193,7 +193,7 @@ export const handleAddNewGroupAdmin = () => {
 
                 dispatch({
                     type: feedbackSnackbarActions.SET_FEEDBACK_SNACKBAR_CONTENT,
-                    message: "Group admin added successfully.",
+                    message: "Course admin added successfully.",
                     color: "primary",
                     position: "bottom"
                 });
@@ -205,7 +205,7 @@ export const handleAddNewGroupAdmin = () => {
         } catch (error) {
             dispatch({
                 type: feedbackSnackbarActions.SET_FEEDBACK_SNACKBAR_CONTENT,
-                message: "Error happened. Couldn't add this group admin.",
+                message: "Error happened. Couldn't add this course admin.",
                 color: "error",
                 position: "bottom"
             });
