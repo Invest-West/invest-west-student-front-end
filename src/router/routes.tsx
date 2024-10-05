@@ -95,7 +95,11 @@ export default class Routes {
     
         // Check if the route matches any of the public routes
         const isProtected = !publicRoutes.some(publicRoute => {
-            const match = matchPath(route, { path: publicRoute });
+            const match = matchPath(route, {
+                path: publicRoute,
+                exact: false,
+                strict: false,
+            });
             return match !== null;
         });
     
