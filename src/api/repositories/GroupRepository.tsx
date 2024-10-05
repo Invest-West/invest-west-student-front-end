@@ -13,11 +13,13 @@ export default class GroupRepository {
      * @param groupUserName
      */
     public async getGroup(groupUserName: string) {
-        return await new Api()
-            .request(
-                "get",
-                ApiRoutes.retrieveGroup.replace(":groupUserName", groupUserName)
-            );
+        return await new Api().request(
+            "get",
+            ApiRoutes.retrieveGroup.replace(":groupUserName", groupUserName),
+            null,    // No optional parameters
+            false,   // Not a form data request
+            false    // requireAuth is false
+        );
     }
 
     /**

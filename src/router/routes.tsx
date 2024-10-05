@@ -2,6 +2,7 @@ import Admin, {isAdmin} from "../models/admin";
 import GroupOfMembership, {getHomeGroup} from "../models/group_of_membership";
 import {AuthenticationState} from "../redux-store/reducers/authenticationReducer";
 import {ManageGroupUrlState} from "../redux-store/reducers/manageGroupUrlReducer";
+import { matchPath } from 'react-router-dom';
 import User, {isInvestor} from "../models/user";
 
 export interface CreateProjectRouteParams {
@@ -72,21 +73,33 @@ export default class Routes {
      * @param route
      */
     public static isProtectedRoute = (route: string) => {
-        return route !== Routes.nonGroupFront
-            && route !== Routes.groupFront
-            && route !== Routes.nonGroupSignIn
-            && route !== Routes.groupSignIn
-            && route !== Routes.nonGroupSignUp
-            && route !== Routes.groupSignUp
-            && route !== Routes.nonGroupContactUs
-            && route !== Routes.groupContactUs
-            && route !== Routes.nonGroupPrivacyPolicy
-            && route !== Routes.nonGroupTermsOfUse
-            && route !== Routes.nonGroupRiskWarning
-            && route !== Routes.nonGroupCreatePitchTermsAndConditions
-            && route !== Routes.nonGroupMarketingPreferences
-            && route !== Routes.nonGroupAuthAction
-            && route !== Routes.error404;
+        const publicRoutes = [
+            Routes.nonGroupFront,
+            Routes.groupFront,
+            Routes.nonGroupSignIn,
+            Routes.groupSignIn,
+            Routes.nonGroupSignUp,
+            Routes.groupSignUp,
+            Routes.nonGroupContactUs,
+            Routes.groupContactUs,
+            Routes.nonGroupPrivacyPolicy,
+            Routes.nonGroupTermsOfUse,
+            Routes.nonGroupRiskWarning,
+            Routes.nonGroupCreatePitchTermsAndConditions,
+            Routes.nonGroupMarketingPreferences,
+            Routes.nonGroupAuthAction,
+            Routes.error404,
+            Routes.nonGroupViewOffer,
+            Routes.groupViewOffer,
+        ];
+    
+        // Check if the route matches any of the public routes
+        const isProtected = !publicRoutes.some(publicRoute => {
+            const match = matchPath(route, { path: publicRoute, exact: true });
+            return match !== null;
+        });
+    
+        return isProtected;
     }
 
     /**

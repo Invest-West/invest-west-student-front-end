@@ -99,44 +99,52 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
         this.validateRouteAndAuthentication();
     }
 
-    componentDidUpdate(prevProps: Readonly<GroupRouteProps & Readonly<RouteComponentProps<RouteParams>>>, prevState: Readonly<GroupRouteState>, snapshot?: any) {
+    componentDidUpdate(prevProps: Readonly<GroupRouteProps & Readonly<RouteComponentProps<RouteParams>>>, prevState: Readonly<GroupRouteState>) {
+        console.log('componentDidUpdate called');
         this.validateRouteAndAuthentication();
 
-        // system attributes are being loaded
+        // System attributes are being loaded
         if (isLoadingSystemAttributes(this.props.ManageSystemAttributesState)) {
+            console.log('System attributes are loading');
             return;
         }
 
-        // group url is being validated
-        if (isValidatingGroupUrl(this.props.ManageGroupUrlState)) {
+        // Group URL is being validated
+        if (this.props.ManageGroupUrlState.loadingGroup) {
+            console.log('Group URL is being validated');
             return;
         }
 
-        // invalid group url --> redirect to 404 page
-        if (!successfullyValidatedGroupUrl(this.props.ManageGroupUrlState) && !this.state.navigatingToError) {
-            this.setState({
-                navigatingToError: true
-            });
+        // Invalid group URL --> redirect to 404 page
+        if (
+            !this.props.ManageGroupUrlState.loadingGroup &&
+            !this.props.ManageGroupUrlState.validGroupUrl &&
+            !this.state.navigatingToError
+        ) {
+            console.log('Invalid group URL, redirecting to 404');
+            this.setState({ navigatingToError: true });
             this.props.history.push(Routes.error404);
             return;
         }
 
         // redirect an unauthenticated user to the sign in route if they try to access protected routes
-        if (Routes.isProtectedRoute(this.routePath)
-            && !authIsNotInitialized(this.props.AuthenticationState)
-            && !isAuthenticating(this.props.AuthenticationState)
-            && !successfullyAuthenticated(this.props.AuthenticationState)
-            && !this.state.navigatingToSignIn
+        if (
+            Routes.isProtectedRoute(this.routePath) &&
+            !authIsNotInitialized(this.props.AuthenticationState) &&
+            !isAuthenticating(this.props.AuthenticationState) &&
+            !successfullyAuthenticated(this.props.AuthenticationState) &&
+            !this.state.navigatingToSignIn
         ) {
+            console.log('Route is protected, user is not authenticated, redirecting to sign-in');
             const { location } = this.props;
 
             safeSetItem('redirectToAfterAuth', `${location.pathname}${location?.search}`);
 
-            this.setState({
-                navigatingToSignIn: true
-            });
+            this.setState({ navigatingToSignIn: true });
             this.props.history.push(Routes.constructSignInRoute(this.routeParams));
+            return;
         }
+
 
         // redirect the user to their dashboard if they are on the sign in/up route and are successfully authenticated
         if ((Routes.isSignInRoute(this.routePath) || Routes.isSignUpRoute(this.routePath))

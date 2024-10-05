@@ -140,10 +140,12 @@ export default class Api {
      * @param optionalParams
      * @param formDataRequest
      */
-    public async request(requestType: Method,
-                         endPoint: string,
-                         optionalParams?: RequestOptionalParams | null,
-                         formDataRequest?: boolean
+    public async request(
+        requestType: Method,
+        endPoint: string,
+        optionalParams?: RequestOptionalParams | null,
+        formDataRequest?: boolean,
+        requireAuth: boolean = true
     ): Promise<AxiosResponse> {
         if (endPoint === null || endPoint.length === 0) {
             throw new Error("Empty url");
@@ -151,54 +153,43 @@ export default class Api {
 
         const url: string = this.buildUrl(
             endPoint,
-            optionalParams !== undefined && optionalParams !== null && optionalParams.queryParameters !== null
-                ? optionalParams.queryParameters
-                : null
+            optionalParams?.queryParameters ?? null
         );
 
-        let currentUser: firebase.default.User | null = await firebase.auth().currentUser;
+        let idToken: string | null = null;
 
-        try {
-            let idToken: string | null = null;
+        if (requireAuth) {
+            let currentUser: firebase.default.User | null = await firebase.auth().currentUser;
 
             if (currentUser) {
                 idToken = await currentUser.getIdToken();
+            } else {
+                throw new Error("User is not authenticated.");
             }
+        }
 
-            let bodyData: any;
-
-            if (formDataRequest !== undefined && formDataRequest) {
-                bodyData = optionalParams !== undefined && optionalParams !== null
-                && optionalParams.requestBody !== null
+        try {
+            let bodyData: any = formDataRequest
+                ? optionalParams?.requestBody
                     ? Api.buildFormData(optionalParams.requestBody)
-                    : null;
-            }
-            else {
-                bodyData = optionalParams !== undefined && optionalParams !== null
-                && optionalParams.requestBody !== null
-                    ? optionalParams.requestBody
-                    : null;
-            }
+                    : null
+                : optionalParams?.requestBody ?? null;
 
             const config: AxiosRequestConfig = {
                 method: requestType,
                 url: url,
                 data: bodyData,
-                timeout: 20000 // timeout in 20 seconds
+                timeout: 20000,
+                headers: {},
             };
 
             if (idToken) {
-                config.headers = {
-                    "Authorization": idToken
-                }
+                config.headers["Authorization"] = idToken;
+            }
 
-                if (formDataRequest !== undefined && formDataRequest) {
-                    config.headers = {
-                        ...config.headers,
-                        // @ts-ignore
-                        "Content-Type": `multipart/form-data; boundary=${bodyData._boundary}`
-                    }
-                }
+            if (formDataRequest) {
+                // @ts-ignore
+                config.headers["Content-Type"] = `multipart/form-data; boundary=${bodyData._boundary}`;
             }
 
             let response: AxiosResponse = await axios.request(config);

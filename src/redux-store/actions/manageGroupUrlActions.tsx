@@ -46,32 +46,21 @@ export const validateGroupUrl: ActionCreator<any> = (path: string, groupUserName
             type: ManageGroupUrlEvents.SetGroupUrl,
             path,
             groupUserName
-        }
+        };
 
         let shouldValidateGroupUrl = false;
 
-        // routePath or groupNameFromUrl or both of them have not been defined
-        if (routePath === undefined || groupNameFromUrl === undefined) {
+        // Determine if validation is needed
+        if (routePath !== path || groupNameFromUrl !== groupUserName) {
             shouldValidateGroupUrl = true;
         }
-        // routePath and groupNameFromUrl have been defined
-        else {
-            if (groupNameFromUrl !== groupUserName) {
-                shouldValidateGroupUrl = true;
-            }
-        }
 
-        // group has not been loaded
-        // or group has been loaded but a new group name is set in the url
-        // --> continue validating group url
-        if ((!group && !loadingGroup && !groupLoaded)
-            || (!(!group && !loadingGroup && !groupLoaded) && shouldValidateGroupUrl)
-        ) {
+        if (shouldValidateGroupUrl) {
             dispatch(setGroupUrlAction);
 
             const validatingGroupUrlAction: ValidatingGroupUrlAction = {
                 type: ManageGroupUrlEvents.ValidatingGroupUrl
-            }
+            };
 
             dispatch(validatingGroupUrlAction);
 
@@ -79,9 +68,9 @@ export const validateGroupUrl: ActionCreator<any> = (path: string, groupUserName
                 type: ManageGroupUrlEvents.FinishedValidatingGroupUrl,
                 group: null,
                 validGroupUrl: false
-            }
+            };
 
-            // group name is not specified in the url
+            // Group name is not specified in the URL
             if (!groupUserName) {
                 finishedLoadingGroupUrlAction.validGroupUrl = true;
                 return dispatch(finishedLoadingGroupUrlAction);
@@ -90,15 +79,23 @@ export const validateGroupUrl: ActionCreator<any> = (path: string, groupUserName
             try {
                 const response = await new GroupRepository().getGroup(groupUserName);
                 const retrievedGroup: GroupProperties | null = response.data;
-                finishedLoadingGroupUrlAction.group = retrievedGroup;
-                finishedLoadingGroupUrlAction.validGroupUrl = retrievedGroup !== null;
-                return dispatch(finishedLoadingGroupUrlAction);
+                dispatch({
+                    type: ManageGroupUrlEvents.FinishedValidatingGroupUrl,
+                    group: retrievedGroup,
+                    validGroupUrl: retrievedGroup !== null,
+                });
             } catch (error) {
-                finishedLoadingGroupUrlAction.error = {
-                    detail: error.toString()
-                }
-                return dispatch(finishedLoadingGroupUrlAction);
+                console.error('Error in validateGroupUrl:', error);
+    
+                dispatch({
+                    type: ManageGroupUrlEvents.FinishedValidatingGroupUrl,
+                    group: null,
+                    validGroupUrl: false,
+                    error: {
+                        detail: error.message,
+                    },
+                });
             }
-        }
-    }
-}
+        };
+    };
+};

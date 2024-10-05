@@ -38,18 +38,13 @@ const initialState: ManageGroupUrlState = {
     validGroupUrl: false
 };
 
-export const isValidatingGroupUrl = (state: ManageGroupUrlState) => {
-    return (!state.group && !state.groupLoaded && state.loadingGroup)
-        || (!state.group && !state.groupLoaded && !state.loadingGroup);
-}
+export const isValidatingGroupUrl = (state: ManageGroupUrlState) => state.loadingGroup;
 
 export const routeContainsGroupName = (state: ManageGroupUrlState) => {
     return state.groupNameFromUrl !== null;
 }
 
-export const successfullyValidatedGroupUrl = (state: ManageGroupUrlState) => {
-    return state.validGroupUrl && state.error === undefined;
-}
+export const successfullyValidatedGroupUrl = (state: ManageGroupUrlState) => state.validGroupUrl;
 
 export const hasGroupValidationError = (state: ManageGroupUrlState) => {
     return state.error !== undefined;
