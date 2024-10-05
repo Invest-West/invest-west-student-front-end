@@ -86,7 +86,8 @@ export default class Routes {
             && route !== Routes.nonGroupCreatePitchTermsAndConditions
             && route !== Routes.nonGroupMarketingPreferences
             && route !== Routes.nonGroupAuthAction
-            && route !== Routes.error404;
+            && route !== Routes.error404
+            && route !== Routes.groupViewOffer;
     }
 
     /**
@@ -177,7 +178,8 @@ export default class Routes {
             || route === Routes.nonGroupRiskWarning
             || route === Routes.nonGroupTermsOfUse
             || route === Routes.nonGroupCreatePitchTermsAndConditions
-            || route === Routes.nonGroupMarketingPreferences;
+            || route === Routes.nonGroupMarketingPreferences
+            || route === Routes.groupViewOffer;
     }
 
     /**
@@ -185,7 +187,7 @@ export default class Routes {
      *
      * @param route
      */
-    public static constructPublicRoute = (route: "privacyPolicy" | "riskWarning" | "termsOfUse" | "createPitchTermsAndConditions" | "marketingPreferences") => {
+    public static constructPublicRoute = (route: "privacyPolicy" | "riskWarning" | "termsOfUse" | "createPitchTermsAndConditions" | "marketingPreferences" | "groupViewOffer") => {
         switch (route) {
             case "privacyPolicy":
                 return Routes.nonGroupPrivacyPolicy;
@@ -197,6 +199,8 @@ export default class Routes {
                 return Routes.nonGroupCreatePitchTermsAndConditions;
             case "marketingPreferences":
                 return Routes.nonGroupMarketingPreferences;
+            case "groupViewOffer":
+                return Routes.groupViewOffer;
         }
     }
 

@@ -7,7 +7,7 @@ import {
     ManageGroupUrlState,
     successfullyValidatedGroupUrl
 } from "../redux-store/reducers/manageGroupUrlReducer";
-import {RouteComponentProps} from "react-router-dom";
+import {RouteComponentProps, match} from "react-router-dom";
 import Routes from "./routes";
 import {ThunkDispatch} from "redux-thunk";
 import {AnyAction} from "redux";
@@ -39,6 +39,7 @@ interface GroupRouteProps extends GroupRouteLocalProps {
     ManageSystemAttributesState: ManageSystemAttributesState;
     ManageGroupUrlState: ManageGroupUrlState;
     AuthenticationState: AuthenticationState;
+    match: match<RouteParams>;
     loadSystemAttributes: () => any;
     validateGroupUrl: (path: string, groupUserName: string | null) => any;
     signIn: () => any;
@@ -127,14 +128,11 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             && !isAuthenticating(this.props.AuthenticationState)
             && !successfullyAuthenticated(this.props.AuthenticationState)
             && !this.state.navigatingToSignIn
+            && this.routePath !== Routes.groupViewOffer // Bypass for groupViewOffer
         ) {
             const { location } = this.props;
-
             safeSetItem('redirectToAfterAuth', `${location.pathname}${location?.search}`);
-
-            this.setState({
-                navigatingToSignIn: true
-            });
+            this.setState({ navigatingToSignIn: true });
             this.props.history.push(Routes.constructSignInRoute(this.routeParams));
         }
 
@@ -231,17 +229,24 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             showHeader,
             backgroundColor
         } = this.props;
-
+    
         this.updateRouteAndParams();
-
-        if (isLoadingSystemAttributes(ManageSystemAttributesState)
-            || isValidatingGroupUrl(ManageGroupUrlState)
-            || (successfullyValidatedGroupUrl(ManageGroupUrlState) && authIsNotInitialized(AuthenticationState))
-            || ((!Routes.isSignInRoute(this.routePath) && !Routes.isSignUpRoute(this.routePath))
-                && isAuthenticating(AuthenticationState))
+    
+        // Handle loading or validating states
+        if (
+            isLoadingSystemAttributes(ManageSystemAttributesState) ||
+            isValidatingGroupUrl(ManageGroupUrlState) ||
+            (successfullyValidatedGroupUrl(ManageGroupUrlState) && authIsNotInitialized(AuthenticationState)) ||
+            (!Routes.isSignInRoute(this.routePath) && !Routes.isSignUpRoute(this.routePath) && isAuthenticating(AuthenticationState))
         ) {
             return (
                 <Box>
+                    {/* Render component only if it's a valid React element */}
+                    {React.isValidElement(this.props.component) ? (
+                        this.props.component
+                    ) : (
+                        <div>Loading...</div>
+                    )}
                     <BarLoader
                         color={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main}
                         width="100%"
@@ -250,7 +255,8 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                 </Box>
             );
         }
-
+    
+        // Handle successfully validated state
         if (successfullyValidatedGroupUrl(ManageGroupUrlState)) {
             return (
                 <Container
@@ -262,57 +268,55 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                         backgroundColor: backgroundColor ?? "none"
                     }}
                 >
-                    {
-                        !showHeader
-                            ? null
-                            : <Row
-                                noGutters
-                            >
-                                <Col
-                                    xs={12}
-                                    sm={12}
-                                    md={12}
-                                    lg={12}
-                                >
-                                    <Header
-                                        routePath={this.routePath}
-                                        homUrl={Routes.constructHomeRoute(this.routeParams, ManageGroupUrlState, AuthenticationState)}
-                                        dashboardUrl={Routes.constructDashboardRoute(this.routeParams, ManageGroupUrlState, AuthenticationState)}
-                                        signInUrl={Routes.constructSignInRoute(this.routeParams)}
-                                    />
-                                </Col>
-                            </Row>
-                    }
-
-                    <Row
-                        noGutters
-                    >
-                        <Box
-                            width="100%"
-                            height="100%"
-                        >
-                            {
+                    {/* Render the header if showHeader is true */}
+                    {showHeader && (
+                        <Row noGutters>
+                            <Col xs={12} sm={12} md={12} lg={12}>
+                                <Header
+                                    routePath={this.routePath}
+                                    homUrl={Routes.constructHomeRoute(this.routeParams, ManageGroupUrlState, AuthenticationState)}
+                                    dashboardUrl={Routes.constructDashboardRoute(this.routeParams, ManageGroupUrlState, AuthenticationState)}
+                                    signInUrl={Routes.constructSignInRoute(this.routeParams)}
+                                />
+                            </Col>
+                        </Row>
+                    )}
+    
+                    {/* Main content area */}
+                    <Row noGutters>
+                        <Box width="100%" height="100%">
+                            {/* Render the component if it's a valid element */}
+                            {React.isValidElement(this.props.component) ? (
                                 this.props.component
-                            }
+                            ) : typeof this.props.component === "function" ? (
+                                /* If component is a function or class component, create an element from it */
+                                React.createElement(this.props.component)
+                            ) : (
+                                <div>Invalid component</div>
+                            )}
                         </Box>
                     </Row>
                 </Container>
             );
         }
-
+    
         return null;
-    }
+    }    
 
     validateRouteAndAuthentication = () => {
         this.updateRouteAndParams();
-
+    
+        if (this.routePath === Routes.groupViewOffer) {
+            // Skip authentication and group URL validation for groupViewOffer
+            return;
+        }
+    
         this.props.loadSystemAttributes();
-
         this.props.validateGroupUrl(
             this.routePath, this.routeParams.hasOwnProperty("groupUserName")
                 ? this.routeParams.groupUserName : null
         );
-
+    
         this.attachAuthListener();
     }
 
@@ -325,9 +329,14 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
         const {
             ManageGroupUrlState
         } = this.props;
-
+    
         if (successfullyValidatedGroupUrl(ManageGroupUrlState) && !this.authListener) {
             this.authListener = firebase.auth().onAuthStateChanged(firebaseUser => {
+                if (this.routePath === Routes.groupViewOffer) {
+                    // Skip sign in/out for groupViewOffer
+                    return;
+                }
+    
                 if (firebaseUser) {
                     this.props.signIn();
                 } else {

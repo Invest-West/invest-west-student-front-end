@@ -1,5 +1,5 @@
 import React from "react";
-import {BrowserRouter, Route, Switch} from "react-router-dom";
+import {BrowserRouter, Route, Switch, match} from "react-router-dom";
 import IssuerDashboard from "../pages/dashboard-issuer/IssuerDashboard";
 import InvestorDashboard from "../pages/dashboard-investor/InvestorDashboard";
 import AdminDashboard from "../pages/admin/AdminDashboard";
@@ -31,9 +31,9 @@ import {colors} from "@material-ui/core";
  * Parameters in the url
  */
 export interface RouteParams {
-    groupUserName: string;
-
-    [params: string]: string;
+    groupUserName?: string;
+    projectID?: string;
+    [key: string]: string | undefined;
 }
 
 const AppRouter = () => (
@@ -98,11 +98,18 @@ const AppRouter = () => (
                 // @ts-ignore
                    render={props => <GroupRoute {...props} showHeader={true}
                                                 component={<ProjectDetails {...props}/>}/>}/>
-            <Route path={Routes.groupViewOffer} exact
-                // @ts-ignore
-                   render={props => <GroupRoute {...props} showHeader={true}
-                                                component={<ProjectDetails {...props}/>}/>}/>
-
+            <Route
+                path={Routes.groupViewOffer}
+                exact
+                render={props => (
+                    <GroupRoute
+                        {...props}
+                        showHeader={true}
+                        component={ProjectDetails} // Pass the component class/type, not an object or JSX element
+                        match={props.match as match<RouteParams>} // Type-cast to match RouteParams
+                    />
+                )}
+            />
             <Route path={Routes.nonGroupCreateOffer} exact
                 // @ts-ignore
                    render={props => <GroupRoute {...props} showHeader={true}

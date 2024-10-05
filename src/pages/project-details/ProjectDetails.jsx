@@ -211,6 +211,9 @@ class ProjectDetailsMain extends Component {
     }
 
     componentDidMount() {
+        console.log('ProjectDetails component loaded');
+        console.log('Route Params:', this.props.match.params); // Check if params like groupUserName and projectID are present
+        console.log('Props:', this.props); // Check if any necessary props are missing
         const {
             groupPropertiesLoaded,
             shouldLoadOtherData,
