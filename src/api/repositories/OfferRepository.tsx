@@ -61,6 +61,21 @@ export default class OfferRepository {
     }
 
     /**
+     * Get non-group view offer
+     *
+     * @param offerId
+     */
+    public async getNonGroupViewOffer(offerId: string) {
+        return await new Api().request(
+            "get",
+            ApiRoutes.nonGroupViewOffer.replace(":offerId", offerId),
+            null,    // No optional parameters
+            false,   // Not a form data request
+            false    // requireAuth is false
+        );
+    }
+
+    /**
      * Export to csv
      *
      * @param options

@@ -16,9 +16,24 @@ export default class GroupRepository {
         return await new Api().request(
             "get",
             ApiRoutes.retrieveGroup.replace(":groupUserName", groupUserName),
-            null,    // No optional parameters
-            false,   // Not a form data request
-            false    // requireAuth is false
+            null,   
+            false,  
+            false   
+        );
+    }
+
+    /**
+     * Get group view offer
+     *
+     * @param groupUserName
+     */
+    public async getGroupViewOffer(groupUserName: string) {
+        return await new Api().request(
+            "get",
+            ApiRoutes.groupViewOffer.replace(":groupUserName", groupUserName),
+            null,   
+            false,  
+            false   
         );
     }
 

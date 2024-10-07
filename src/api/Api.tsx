@@ -35,6 +35,8 @@ export class ApiRoutes {
 
     static projectsBaseRoute = "/projects";
     static listProjectsRoute = ApiRoutes.projectsBaseRoute + "/list";
+    static groupViewOffer = ApiRoutes.projectsBaseRoute + "/group-view-offer/:groupUserName";
+    static nonGroupViewOffer = ApiRoutes.projectsBaseRoute + "/non-group-view-offer/:offerId";
     static sendProjectBackToIssuerRoute = ApiRoutes.projectsBaseRoute + "/send-back-to-issuer";
     static exportProjectsToCsvRoute = ApiRoutes.projectsBaseRoute + "/export";
 
@@ -73,6 +75,20 @@ export default class Api {
     private buildUrl(endPoint: string, queryParameters: any): string {
         let fullUrl = this.baseUrl + endPoint + Api.buildQueryParameters(queryParameters);
         return encodeURI(fullUrl);
+    }
+
+    /**
+     * Check if the route is public
+     *
+     * @param endPoint
+     * @private
+     */
+    private isPublicRoute(endPoint: string): boolean {
+        const publicRoutes = [
+            ApiRoutes.groupViewOffer,
+            ApiRoutes.nonGroupViewOffer
+        ];
+        return publicRoutes.some(route => endPoint.includes(route));
     }
 
     /**
@@ -158,7 +174,7 @@ export default class Api {
 
         let idToken: string | null = null;
 
-        if (requireAuth) {
+        if (requireAuth && !this.isPublicRoute(endPoint)) {
             let currentUser: firebase.default.User | null = await firebase.auth().currentUser;
 
             if (currentUser) {

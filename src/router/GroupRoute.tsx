@@ -99,133 +99,159 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
         this.validateRouteAndAuthentication();
     }
 
-    componentDidUpdate(prevProps: Readonly<GroupRouteProps & Readonly<RouteComponentProps<RouteParams>>>, prevState: Readonly<GroupRouteState>) {
+    componentDidUpdate(
+        prevProps: Readonly<GroupRouteProps & Readonly<RouteComponentProps<RouteParams>>>,
+        prevState: Readonly<GroupRouteState>
+      ) {
         console.log('componentDidUpdate called');
+        console.log('Current state:', this.state);
+        console.log('Previous state:', prevState);
+        console.log('Current props:', this.props);
+        console.log('Previous props:', prevProps);
+      
         this.validateRouteAndAuthentication();
-
+      
         // System attributes are being loaded
         if (isLoadingSystemAttributes(this.props.ManageSystemAttributesState)) {
-            console.log('System attributes are loading');
-            return;
+          console.log('System attributes are loading');
+          return;
         }
-
+      
         // Group URL is being validated
         if (this.props.ManageGroupUrlState.loadingGroup) {
-            console.log('Group URL is being validated');
-            return;
+          console.log('Group URL is being validated');
+          return;
         }
-
+      
         // Invalid group URL --> redirect to 404 page
         if (
-            !this.props.ManageGroupUrlState.loadingGroup &&
-            !this.props.ManageGroupUrlState.validGroupUrl &&
-            !this.state.navigatingToError
+          !this.props.ManageGroupUrlState.loadingGroup &&
+          !this.props.ManageGroupUrlState.validGroupUrl &&
+          !this.state.navigatingToError
         ) {
-            console.log('Invalid group URL, redirecting to 404');
-            this.setState({ navigatingToError: true });
+          console.log('Invalid group URL, redirecting to 404');
+          this.setState({ navigatingToError: true }, () => {
             this.props.history.push(Routes.error404);
-            return;
+          });
+          return;
         }
-
-        // redirect an unauthenticated user to the sign in route if they try to access protected routes
+      
+        // Redirect an unauthenticated user to the sign-in route if they try to access protected routes
         if (
-            Routes.isProtectedRoute(this.routePath) &&
-            !authIsNotInitialized(this.props.AuthenticationState) &&
-            !isAuthenticating(this.props.AuthenticationState) &&
-            !successfullyAuthenticated(this.props.AuthenticationState) &&
-            !this.state.navigatingToSignIn
+          Routes.isProtectedRoute(this.routePath) &&
+          !authIsNotInitialized(this.props.AuthenticationState) &&
+          !isAuthenticating(this.props.AuthenticationState) &&
+          !successfullyAuthenticated(this.props.AuthenticationState) &&
+          !this.state.navigatingToSignIn
         ) {
-            console.log('Route is protected, user is not authenticated, redirecting to sign-in');
-            const { location } = this.props;
-
-            safeSetItem('redirectToAfterAuth', `${location.pathname}${location?.search}`);
-
-            this.setState({ navigatingToSignIn: true });
+          console.log('Route is protected, user is not authenticated, redirecting to sign-in');
+          const { location } = this.props;
+      
+          safeSetItem('redirectToAfterAuth', `${location.pathname}${location?.search}`);
+      
+          this.setState({ navigatingToSignIn: true }, () => {
             this.props.history.push(Routes.constructSignInRoute(this.routeParams));
-            return;
+          });
+          return;
         }
-
-
-        // redirect the user to their dashboard if they are on the sign in/up route and are successfully authenticated
-        if ((Routes.isSignInRoute(this.routePath) || Routes.isSignUpRoute(this.routePath))
-            && successfullyAuthenticated(this.props.AuthenticationState)
-            && !this.state.navigatingFromSignInOrSignUpToDashboard
+      
+        // Redirect the user to their dashboard if they are on the sign-in/up route and are successfully authenticated
+        if (
+          (Routes.isSignInRoute(this.routePath) || Routes.isSignUpRoute(this.routePath)) &&
+          successfullyAuthenticated(this.props.AuthenticationState) &&
+          !this.state.navigatingFromSignInOrSignUpToDashboard
         ) {
-            const dashboardRoute: string = Routes.constructDashboardRoute(this.routeParams, this.props.ManageGroupUrlState, this.props.AuthenticationState);
-            this.setState({
-                navigatingFromSignInOrSignUpToDashboard: true
-            });
+          const dashboardRoute: string = Routes.constructDashboardRoute(
+            this.routeParams,
+            this.props.ManageGroupUrlState,
+            this.props.AuthenticationState
+          );
+      
+          this.setState({ navigatingFromSignInOrSignUpToDashboard: true }, () => {
             this.props.history.push(dashboardRoute);
+          });
+          return;
         }
-
-        // redirect the user to 404 page if they are trying to access routes that are not meant for them
+      
+        // Redirect the user to 404 page if they are trying to access routes that are not meant for them
         if (successfullyAuthenticated(this.props.AuthenticationState)) {
-            const currentUser: User | Admin | null = this.props.AuthenticationState.currentUser;
-            if (currentUser) {
-                const currentAdmin: Admin | null = isAdmin(currentUser);
-                let shouldRedirectToError: boolean = false;
-
-                if (Routes.isRouteReservedForSuperAdmin(this.routePath)) {
-                    if (!currentAdmin || (currentAdmin && !currentAdmin.superAdmin)) {
-                        shouldRedirectToError = true;
-                    }
-                } else if (Routes.isGroupAdminRoute(this.routePath)) {
-                    if (!currentAdmin) {
-                        shouldRedirectToError = true;
-                    } else {
-                        const adminGroup: GroupOfMembership = this.props.AuthenticationState.groupsOfMembership[0];
-                        if (adminGroup.group.groupUserName !== this.routeParams.groupUserName) {
-                            shouldRedirectToError = true;
-                        }
-                    }
-                } else if (Routes.isIssuerDashboardRoute(this.routePath)) {
-                    if (!isIssuer(currentUser)) {
-                        shouldRedirectToError = true;
-                    } else if (this.props.AuthenticationState.groupsOfMembership
-                        .filter(groupOfMembership =>
-                            groupOfMembership.group.groupUserName === this.routeParams.groupUserName).length === 0
-                    ) {
-                        shouldRedirectToError = true;
-                    }
-                } else if (Routes.isInvestorDashboardRoute(this.routePath)) {
-                    if (!isInvestor(currentUser)) {
-                        shouldRedirectToError = true;
-                    } else if (this.props.AuthenticationState.groupsOfMembership
-                        .filter(groupOfMembership =>
-                            groupOfMembership.group.groupUserName === this.routeParams.groupUserName).length === 0
-                    ) {
-                        shouldRedirectToError = true;
-                    }
+          const currentUser: User | Admin | null = this.props.AuthenticationState.currentUser;
+          if (currentUser) {
+            const currentAdmin: Admin | null = isAdmin(currentUser);
+            let shouldRedirectToError: boolean = false;
+      
+            if (Routes.isRouteReservedForSuperAdmin(this.routePath)) {
+              if (!currentAdmin || (currentAdmin && !currentAdmin.superAdmin)) {
+                shouldRedirectToError = true;
+              }
+            } else if (Routes.isGroupAdminRoute(this.routePath)) {
+              if (!currentAdmin) {
+                shouldRedirectToError = true;
+              } else {
+                const adminGroup: GroupOfMembership = this.props.AuthenticationState.groupsOfMembership[0];
+                if (adminGroup.group.groupUserName !== this.routeParams.groupUserName) {
+                  shouldRedirectToError = true;
                 }
-
-                if (shouldRedirectToError && !this.state.navigatingToError) {
-                    this.setState({
-                        navigatingToError: true
-                    });
-                    this.props.history.push(Routes.error404);
-                    return;
-                }
+              }
+            } else if (Routes.isIssuerDashboardRoute(this.routePath)) {
+              if (!isIssuer(currentUser)) {
+                shouldRedirectToError = true;
+              } else if (
+                this.props.AuthenticationState.groupsOfMembership.filter(
+                  (groupOfMembership) =>
+                    groupOfMembership.group.groupUserName === this.routeParams.groupUserName
+                ).length === 0
+              ) {
+                shouldRedirectToError = true;
+              }
+            } else if (Routes.isInvestorDashboardRoute(this.routePath)) {
+              if (!isInvestor(currentUser)) {
+                shouldRedirectToError = true;
+              } else if (
+                this.props.AuthenticationState.groupsOfMembership.filter(
+                  (groupOfMembership) =>
+                    groupOfMembership.group.groupUserName === this.routeParams.groupUserName
+                ).length === 0
+              ) {
+                shouldRedirectToError = true;
+              }
             }
+      
+            if (shouldRedirectToError && !this.state.navigatingToError) {
+              this.setState({ navigatingToError: true }, () => {
+                this.props.history.push(Routes.error404);
+              });
+              return;
+            }
+          }
         }
-
-        if (!Routes.isSignInRoute(this.routePath) && !Routes.isSignUpRoute(this.routePath) && this.state.navigatingFromSignInOrSignUpToDashboard) {
-            this.setState({
-                navigatingFromSignInOrSignUpToDashboard: false
-            });
+      
+        // Reset navigation flags when appropriate
+        if (
+          !Routes.isSignInRoute(this.routePath) &&
+          !Routes.isSignUpRoute(this.routePath) &&
+          this.state.navigatingFromSignInOrSignUpToDashboard &&
+          prevState.navigatingFromSignInOrSignUpToDashboard !== false
+        ) {
+          this.setState({ navigatingFromSignInOrSignUpToDashboard: false });
         }
-
-        if (Routes.isSignInRoute(this.routePath) && this.state.navigatingToSignIn) {
-            this.setState({
-                navigatingToSignIn: false
-            });
+      
+        if (
+          Routes.isSignInRoute(this.routePath) &&
+          this.state.navigatingToSignIn &&
+          prevState.navigatingToSignIn !== false
+        ) {
+          this.setState({ navigatingToSignIn: false });
         }
-
-        if (Routes.isErrorRoute(this.routePath) && this.state.navigatingToError) {
-            this.setState({
-                navigatingToError: false
-            });
+      
+        if (
+          Routes.isErrorRoute(this.routePath) &&
+          this.state.navigatingToError &&
+          prevState.navigatingToError !== false
+        ) {
+          this.setState({ navigatingToError: false });
         }
-    }
+      }
 
     componentWillUnmount() {
         this.detachAuthListener();

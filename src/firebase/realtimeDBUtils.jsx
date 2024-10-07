@@ -1677,50 +1677,61 @@ export const fetchProjectsBy = async (
  */
 export const loadAParticularProject = async (projectID) => {
     const db = firebase.database();
+    const user = firebase.auth().currentUser;
+  
     return new Promise((resolve, reject) => {
-        db.ref(DB_CONST.PROJECTS_CHILD)
-            .child(projectID)
-            .once('value', snapshot => {
-                if (!snapshot || !snapshot.exists() || !snapshot.val()) {
-                    return reject("No project found.");
-                }
-
-                let project = snapshot.val();
-
-                loadAngelNetworkBasedOnANID(project.anid)
-                    .then(group => {
-                        project.group = group;
-
-                        getUserBasedOnID(project.issuerID)
-                            .then(issuer => {
-                                project.issuer = issuer;
-
-                                // projects in pitch phase cannot have any pledges
-                                if (project.status !== DB_CONST.PROJECT_STATUS_PITCH_PHASE) {
-                                    // load pledges
-                                    loadPledges(projectID, null, LOAD_PLEDGES_ORDER_BY_PROJECT)
-                                        .then(pledges => {
-                                            project.pledges = pledges;
-                                            return resolve(project);
-                                        })
-                                        .catch(error => {
-                                            // error in loading pledges
-                                            return reject(error);
-                                        });
-                                } else {
-                                    return resolve(project);
-                                }
-                            })
-                            .catch(error => {
-                                return reject("Couldn't load project issuer");
-                            });
-                    })
-                    .catch(error => {
-                        return reject("Couldn't load group");
-                    });
+      db.ref(DB_CONST.PROJECTS_CHILD)
+        .child(projectID)
+        .once('value')
+        .then(snapshot => {
+          if (!snapshot || !snapshot.exists() || !snapshot.val()) {
+            console.error("No project found with ID:", projectID);
+            return reject("No project found.");
+          }
+  
+          let project = snapshot.val();
+          project.id = projectID;
+  
+          // Check project visibility
+          if (project.visibility !== 3 && !user) {
+            console.error("Project is not public or user is not authenticated.");
+            return reject("Access denied. Project is not public.");
+          }
+  
+          // Load group data (assumed to be publicly accessible)
+          loadAngelNetworkBasedOnANID(project.anid)
+            .then(group => {
+              project.group = group;
+  
+              // Conditionally load issuer data
+              if (user) {
+                getUserBasedOnID(project.issuerID)
+                  .then(issuer => {
+                    project.issuer = issuer;
+                    // Load pledges if needed
+                    // ...
+                    return resolve(project);
+                  })
+                  .catch(error => {
+                    console.error("Couldn't load project issuer:", error);
+                    return reject("Couldn't load project issuer");
+                  });
+              } else {
+                // For unauthenticated users, proceed without issuer data
+                return resolve(project);
+              }
+            })
+            .catch(error => {
+              console.error("Couldn't load group:", error);
+              return reject("Couldn't load group");
             });
-    })
-};
+        })
+        .catch(error => {
+          console.error("Error accessing project data:", error);
+          return reject(error);
+        });
+    });
+  };
 /**
  * ---------------------------------------------------------------------------------------------------------------------
  */

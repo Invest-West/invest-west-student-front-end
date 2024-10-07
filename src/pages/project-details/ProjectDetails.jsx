@@ -357,209 +357,153 @@ class ProjectDetailsMain extends Component {
             dataBeingLoaded
         } = this.state;
 
-        if (!userLoaded) {
-            return;
-        }
+     // Avoid reloading data if it's already loaded or being loaded
+     if (dataBeingLoaded || dataLoaded) {
+        return;
+    }
 
-        if (!user) {
-            if (!dataLoaded) {
-                this.setState({
-                    dataLoaded: true,
-                    dataBeingLoaded: false,
-                    investorPledgeLoaded: true,
-                    projectDetail: {
+    this.setState({
+        dataLoaded: false,
+        dataBeingLoaded: true
+    });
+
+    // Load the requested project
+    const projectID = this.props.match.params.projectID;
+    console.log(`Attempting to load project with ID: ${projectID}`);
+    realtimeDBUtils
+        .loadAParticularProject(projectID)
+        .then(project => {
+        console.log('Project data loaded:', project);
+            // Set project in state
+            this.setState({
+                projectDetail: {
+                    ...this.state.projectDetail,
+                    project: project,
+                    projectLoaded: true
+                },
+                dataLoaded: true,
+                dataBeingLoaded: false
+            });
+
+            // Load the project issuer
+            realtimeDBUtils
+                .getUserBasedOnID(project.issuerID)
+                .then(projectIssuer => {
+                    this.setState(prevState => ({
+                        projectDetail: {
+                            ...prevState.projectDetail,
+                            projectIssuer: projectIssuer,
+                            projectIssuerLoaded: true
+                        }
+                    }));
+                })
+                .catch(error => {
+                    console.error('Error loading project data:', error);
+                    this.setState({
+                      dataLoaded: true,
+                      dataBeingLoaded: false,
+                      projectDetail: {
                         ...this.state.projectDetail,
                         projectLoaded: true, // project is null
                         projectIssuerLoaded: true, // project issuer is null
                         votesLoaded: true,
                         pledgesLoaded: true
-                    }
-                });
-                return;
-            }
-        }
-
-        // data is being loaded
-        if (dataBeingLoaded) {
-            return;
-        }
-
-        this.setState({
-            dataLoaded: false,
-            dataBeingLoaded: true
-        });
-
-        // load the requested project
-        const projectID = this.props.match.params.projectID;
-        realtimeDBUtils
-            .loadAParticularProject(projectID)
-            .then(project => {
-                // track activity for investors only
-                if (user.type === DB_CONST.TYPE_INVESTOR) {
-                    realtimeDBUtils
-                        .trackActivity({
-                            userID: user.id,
-                            activityType: DB_CONST.ACTIVITY_TYPE_VIEW,
-                            interactedObjectLocation: DB_CONST.PROJECTS_CHILD,
-                            interactedObjectID: project.id,
-                            activitySummary: realtimeDBUtils.ACTIVITY_SUMMARY_TEMPLATE_VIEWED_PROJECT_DETAILS.replace("%project%", project.projectName),
-                            action: ROUTES.PROJECT_DETAILS_INVEST_WEST_SUPER.replace(":projectID", project.id)
-                        });
-                }
-
-                // set project for the Select component that is used to choose the project visibility
-                selectProjectVisibility_setProject(project);
-
-                this.setState({
-                    projectDetail: {
-                        ...this.state.projectDetail,
-                        project: project,
-                        projectLoaded: true
-                    },
-                    mainBody:
-                        user.type === DB_CONST.TYPE_ADMIN
-                            ?
-                            user.anid === project.anid
-                                ?
-                                MAIN_BODY_ADMIN_OFFER_STATES
-                                :
-                                MAIN_BODY_CAMPAIGN
-                            :
-                            MAIN_BODY_CAMPAIGN
-                    ,
-                    adminOfferStatesActiveStep:
-                        project.status === DB_CONST.PROJECT_STATUS_BEING_CHECKED
-                            ?
-                            ADMIN_OFFER_STATES_PUBLISH_PITCH
-                            :
-                            (project.status === DB_CONST.PROJECT_STATUS_PITCH_PHASE || project.status === DB_CONST.PROJECT_STATUS_PITCH_PHASE_EXPIRED_WAITING_TO_BE_CHECKED)
-                                ?
-                                ADMIN_OFFER_STATES_MOVE_TO_PLEDGE
-                                :
-                                (project.status === DB_CONST.PROJECT_STATUS_PRIMARY_OFFER_CREATED_WAITING_TO_BE_CHECKED || project.status === DB_CONST.PROJECT_STATUS_PRIMARY_OFFER_PHASE)
-                                    ?
-                                    ADMIN_OFFER_STATES_PUBLISH_PLEDGE
-                                    :
-                                    ADMIN_OFFER_STATES_PUBLISH_PITCH
-                });
-
-                // load votes
+                      },
+                      investorPledgeLoaded: true
+                    });
+                  });
+            // Load votes and pledges if needed
+            // If user is authenticated, load user-specific data
+            if (user) {
+                // Load votes
                 realtimeDBUtils
                     .loadVotes(project.id, null, realtimeDBUtils.LOAD_VOTES_ORDER_BY_PROJECT)
                     .then(votes => {
-
-                        this.setState({
+                        this.setState(prevState => ({
                             projectDetail: {
-                                ...this.state.projectDetail,
+                                ...prevState.projectDetail,
                                 votes: votes,
                                 votesLoaded: true
                             }
-                        });
-
-                        // load pledges
-                        realtimeDBUtils
-                            .loadPledges(project.id, null, realtimeDBUtils.LOAD_PLEDGES_ORDER_BY_PROJECT)
-                            .then(pledges => {
-
-                                // if the current user is an investor, check if they pledged this project
-                                if (user.type === DB_CONST.TYPE_INVESTOR) {
-                                    let currentUserPledgeIndex = pledges.findIndex(pledge => pledge.investorID === user.id && pledge.amount !== '');
-                                    // this investor has pledges this project before
-                                    if (currentUserPledgeIndex !== -1) {
-                                        this.setState({
-                                            investorPledge: pledges[currentUserPledgeIndex]
-                                        });
-                                    }
-                                }
-
-                                this.setState({
-                                    dataLoaded: true,
-                                    dataBeingLoaded: false,
-                                    investorPledgeLoaded: true,
-                                    projectDetail: {
-                                        ...this.state.projectDetail,
-                                        pledges: pledges,
-                                        pledgesLoaded: true
-                                    }
-                                });
-
-                                // load the profile of the Issuer or the Group Admin created this project
-                                // this user can be the issuer who created the offer themselves
-                                // or the group admin who created this offer on behalf of an unknown issuer
-                                // or the issuer who got the group admin create this offer for
-                                realtimeDBUtils
-                                    .getUserBasedOnID(project.issuerID)
-                                    .then(projectIssuer => {
-                                        this.setState({
-                                            projectDetail: {
-                                                ...this.state.projectDetail,
-                                                projectIssuer: projectIssuer,
-                                                projectIssuerLoaded: true
-                                            }
-                                        });
-                                    })
-                                    .catch(error => {
-                                        this.setState({
-                                            dataLoaded: true,
-                                            dataBeingLoaded: false,
-                                            investorPledgeLoaded: true,
-                                            projectDetail: {
-                                                ...this.state.projectDetail,
-                                                projectLoaded: true, // project is null
-                                                projectIssuerLoaded: true, // project issuer is null
-                                                votesLoaded: true,
-                                                pledgesLoaded: true
-                                            }
-                                        });
-                                    });
-                            })
-                            .catch(error => {
-                                this.setState({
-                                    dataLoaded: true,
-                                    dataBeingLoaded: false,
-                                    investorPledgeLoaded: true,
-                                    projectDetail: {
-                                        ...this.state.projectDetail,
-                                        projectLoaded: true, // project is null
-                                        projectIssuerLoaded: true, // project issuer is null
-                                        votesLoaded: true,
-                                        pledgesLoaded: true
-                                    }
-                                });
-                            });
+                        }));
                     })
                     .catch(error => {
-                        this.setState({
-                            dataLoaded: true,
-                            dataBeingLoaded: false,
-                            investorPledgeLoaded: true,
+                        this.setState(prevState => ({
                             projectDetail: {
-                                ...this.state.projectDetail,
-                                projectLoaded: true, // project is null
-                                projectIssuerLoaded: true, // project issuer is null
-                                votesLoaded: true,
+                                ...prevState.projectDetail,
+                                votesLoaded: true
+                            }
+                        }));
+                    });
+
+                // Load pledges
+                realtimeDBUtils
+                    .loadPledges(project.id, null, realtimeDBUtils.LOAD_PLEDGES_ORDER_BY_PROJECT)
+                    .then(pledges => {
+                        this.setState(prevState => ({
+                            projectDetail: {
+                                ...prevState.projectDetail,
+                                pledges: pledges,
                                 pledgesLoaded: true
                             }
-                        });
+                        }));
+
+                        // If user is an investor, check if they have pledged
+                        if (user && user.type === DB_CONST.TYPE_INVESTOR) {
+                            const currentUserPledge = pledges.find(pledge => pledge.investorID === user.id && pledge.amount !== '');
+                            if (currentUserPledge) {
+                                this.setState({
+                                    investorPledge: currentUserPledge,
+                                    investorPledgeLoaded: true
+                                });
+                            } else {
+                                this.setState({
+                                    investorPledgeLoaded: true
+                                });
+                            }
+                        } else {
+                            this.setState({
+                                investorPledgeLoaded: true
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        this.setState(prevState => ({
+                            projectDetail: {
+                                ...prevState.projectDetail,
+                                pledgesLoaded: true
+                            },
+                            investorPledgeLoaded: true
+                        }));
                     });
-            })
-            .catch(error => {
-                // error happens when loading the requested project
-                // we'll stop the loading process for all others
-                this.setState({
-                    dataLoaded: true,
-                    dataBeingLoaded: false,
-                    investorPledgeLoaded: true,
+            } else {
+                // If user is not authenticated, set votes and pledges as loaded
+                this.setState(prevState => ({
                     projectDetail: {
-                        ...this.state.projectDetail,
-                        projectLoaded: true, // project is null
-                        projectIssuerLoaded: true, // project issuer is null
+                        ...prevState.projectDetail,
                         votesLoaded: true,
                         pledgesLoaded: true
-                    }
-                });
+                    },
+                    investorPledgeLoaded: true
+                }));
+            }
+        })
+        .catch(error => {
+            // Handle error
+            this.setState({
+                dataLoaded: true,
+                dataBeingLoaded: false,
+                projectDetail: {
+                    ...this.state.projectDetail,
+                    projectLoaded: true, // project is null
+                    projectIssuerLoaded: true, // project issuer is null
+                    votesLoaded: true,
+                    pledgesLoaded: true
+                },
+                investorPledgeLoaded: true
             });
-    };
+        });
+};
 
     /**
      * Load data when UI elements change
@@ -1006,6 +950,12 @@ class ProjectDetailsMain extends Component {
         }
 
         let newVoteObj = {};
+
+        if (!user) {
+            // Prompt user to log in or show a message
+            alert('Please log in to vote.');
+            return;
+        }
 
         // investor has already voted before or voted and cancelled
         // when an investor cancelled their vote, the vote value will be ''
@@ -1801,24 +1751,18 @@ class ProjectDetailsMain extends Component {
     render() {
         const {
             AuthenticationState,
-
             isMobile,
-
             groupUserName,
             groupProperties,
             groupPropertiesLoaded,
             shouldLoadOtherData,
-
             authStatus,
             authenticating,
             user,
             userLoaded,
             groupsUserIsIn,
-
-
             createPledgeDialog_toggleDialog,
             createPledgeDialog_setProject,
-
             projectVisibilitySetting,
             selectProjectVisibility_setProject
         } = this.props;
@@ -1848,7 +1792,7 @@ class ProjectDetailsMain extends Component {
 
             addingRejectFeedback,
             rejectFeedback,
-            sendingProjectBack
+            sendingProjectBack,
         } = this.state;
 
         const {
@@ -1865,6 +1809,11 @@ class ProjectDetailsMain extends Component {
             projectIssuerLoaded
         } = this.state.projectDetail;
 
+        const {
+            dataLoaded,
+            dataBeingLoaded
+        } = this.state;
+    
         if (!groupPropertiesLoaded) {
             return (
                 <FlexView marginTop={30} hAlignContent="center">
@@ -1872,29 +1821,24 @@ class ProjectDetailsMain extends Component {
                 </FlexView>
             );
         }
-
+    
         if (!shouldLoadOtherData) {
             return <PageNotFoundWhole/>;
         }
-
-        if (authenticating || !userLoaded || isAuthenticating(AuthenticationState)) {
+    
+        // Remove authentication checks for loading data
+        if (dataBeingLoaded || !dataLoaded) {
             return (
                 <FlexView marginTop={30} hAlignContent="center">
                     <HashLoader
                         color={
                             !groupProperties
-                                ?
-                                colors.primaryColor
-                                :
-                                groupProperties.settings.primaryColor
+                                ? colors.primaryColor
+                                : groupProperties.settings.primaryColor
                         }
                     />
                 </FlexView>
             );
-        }
-
-        if (authStatus !== AUTH_SUCCESS || !user || hasAuthenticationError(AuthenticationState)) {
-            return <PageNotFoundWhole/>;
         }
 
         return (
@@ -1906,7 +1850,7 @@ class ProjectDetailsMain extends Component {
                     isMobile={isMobile}
                     user={user}
                     userLoaded={userLoaded}
-                    groupsUserIsIn={groupsUserIsIn}
+                    groupsUserIsIn={groupsUserIsIn}    
                     mainBody={mainBody}
                     adminOfferStatesActiveStep={adminOfferStatesActiveStep}
                     comments={comments}
@@ -2188,6 +2132,11 @@ class ProjectDetails extends Component {
             selectProjectVisibility_setProject
         } = this.props;
 
+        const userType = user ? user.type : null;
+        const userId = user ? user.id : null;
+        const userAnid = user ? user.anid : null;
+        const userIsSuperAdmin = user ? user.superAdmin : false;
+
         // if the data is being loaded
         // display loading
         if (!pledgesLoaded
@@ -2222,7 +2171,7 @@ class ProjectDetails extends Component {
             // the user is an investor/issuer that is not in the group that owns this project
             || (
                 project.visibility === DB_CONST.PROJECT_VISIBILITY_PRIVATE
-                && (user.type === DB_CONST.TYPE_INVESTOR || user.type === DB_CONST.TYPE_ISSUER)
+                && (user && user.type === DB_CONST.TYPE_INVESTOR || user && user.type === DB_CONST.TYPE_ISSUER)
                 && (groupsUserIsIn !== null && groupsUserIsIn.findIndex(group => group.anid === project.anid) === -1)
             )
         ) {
@@ -2240,14 +2189,15 @@ class ProjectDetails extends Component {
         // group admins that own this project, and the issuer of this project
         if (utils.isProjectTemporarilyClosed(project)
             && (
-                (user.type === DB_CONST.TYPE_ISSUER && user.id !== project.issuerID)
-                || (user.type === DB_CONST.TYPE_INVESTOR)
-                || (user.type === DB_CONST.TYPE_ADMIN && !user.superAdmin && user.anid !== project.anid)
+                (userType === DB_CONST.TYPE_ISSUER && userId !== project.issuerID)
+                || (userType === DB_CONST.TYPE_INVESTOR)
+                || (userType === DB_CONST.TYPE_ADMIN && !userIsSuperAdmin && userAnid !== project.anid)
+                || (!user) // If user is not authenticated
             )
         ) {
             return (
-                <Row noGutters style={{marginLeft: 10, marginRight: 10}}>
-                    <Col xs={12} md={{span: 10, offset: 1}} lg={{span: 8, offset: 2}}>
+                <Row noGutters style={{ marginLeft: 10, marginRight: 10 }}>
+                    <Col xs={12} md={{ span: 10, offset: 1 }} lg={{ span: 8, offset: 2 }}>
                         <FlexView marginTop={40} hAlignContent="center">
                             <Typography variant="h5" align="center">This offer has been closed temporarily.</Typography>
                         </FlexView>
@@ -2259,7 +2209,7 @@ class ProjectDetails extends Component {
         // the project is private
         // the user is a group admin that does not own this project
         if (project.visibility === DB_CONST.PROJECT_VISIBILITY_PRIVATE
-            && (user.type === DB_CONST.TYPE_ADMIN)
+            && (user && user.type === DB_CONST.TYPE_ADMIN)
             && !user.superAdmin
             && user.anid !== project.anid
         ) {
@@ -2389,8 +2339,8 @@ class ProjectDetails extends Component {
                                 }
                             </Typography>
                             {
-                                user.type === DB_CONST.TYPE_ADMIN
-                                || (user.type === DB_CONST.TYPE_ISSUER && user.id === project.issuerID)
+                                user && user.type === DB_CONST.TYPE_ADMIN
+                                || (user && user.type === DB_CONST.TYPE_ISSUER && user.id === project.issuerID)
                                     ?
                                     <FlexView width="100%" hAlignContent="center" vAlignContent="center" marginTop={20}>
                                         {
@@ -2422,7 +2372,7 @@ class ProjectDetails extends Component {
                                         {/*>*/}
                                         {/*    <InfoOverlay*/}
                                         {/*        message={*/}
-                                        {/*            user.type === DB_CONST.TYPE_ADMIN*/}
+                                        {/*            user && user.type === DB_CONST.TYPE_ADMIN*/}
                                         {/*                ?*/}
                                         {/*                "Edit offer."*/}
                                         {/*                :*/}
@@ -2639,7 +2589,7 @@ class ProjectDetails extends Component {
                                                 {/*</FlexView>*/}
                                             </FlexView>
                                             {/*{*/}
-                                            {/*    user.type === DB_CONST.TYPE_ISSUER*/}
+                                            {/*    user && user.type === DB_CONST.TYPE_ISSUER*/}
                                             {/*        ?*/}
                                             {/*        <Typography*/}
                                             {/*            variant="body2"*/}
@@ -2658,7 +2608,7 @@ class ProjectDetails extends Component {
                                         {
                                             this.shouldHideInformation()
                                                 ?
-                                                user.type === DB_CONST.TYPE_ADMIN
+                                                user && user.type === DB_CONST.TYPE_ADMIN
                                                     ?
                                                     <FlexView column marginTop={20}>
                                                         <Typography align="left" variant="body2" color="textSecondary">You cannot see detailed information of this restricted offer.</Typography>
@@ -2733,7 +2683,7 @@ class ProjectDetails extends Component {
                                 {
                                     // user is a super admin
                                     // or a course admin that owns the project
-                                    (user.type === DB_CONST.TYPE_ADMIN
+                                    (user && user.type === DB_CONST.TYPE_ADMIN
                                         && (user.superAdmin || (!user.superAdmin && user.anid === project.anid))
                                     )
                                     // project is not a draft
@@ -2755,11 +2705,11 @@ class ProjectDetails extends Component {
                                 {/*{*/}
                                 {/*    // user is a super admin*/}
                                 {/*    // or a group admin that owns the project*/}
-                                {/*    (user.type === DB_CONST.TYPE_ADMIN*/}
+                                {/*    (user && user.type === DB_CONST.TYPE_ADMIN*/}
                                 {/*        && (user.superAdmin || (!user.superAdmin && user.anid === project.anid))*/}
                                 {/*    )*/}
                                 {/*    // user is the issuer that owns the project*/}
-                                {/*    || (user.type === DB_CONST.TYPE_ISSUER && user.id === project.issuerID)*/}
+                                {/*    || (user && user.type === DB_CONST.TYPE_ISSUER && user.id === project.issuerID)*/}
                                 {/*        ?*/}
                                 {/*        <Tab*/}
                                 {/*            value={MAIN_BODY_INVESTORS_PLEDGED}*/}
@@ -3327,7 +3277,7 @@ class ProjectDetails extends Component {
                                                             disabled={
                                                                 user.type !== DB_CONST.TYPE_ADMIN
                                                                 || (
-                                                                    user.type === DB_CONST.TYPE_ADMIN
+                                                                    user && user.type === DB_CONST.TYPE_ADMIN
                                                                     && user.anid !== project.anid
                                                                 )
                                                             }
@@ -3374,7 +3324,7 @@ class ProjectDetails extends Component {
                                 ?
                                 <Col xs={12} sm={12} md={12} lg={{span: 6, offset: 3}}>
                                     {
-                                        user.type === DB_CONST.TYPE_ADMIN
+                                        user && user.type === DB_CONST.TYPE_ADMIN
                                             ?
                                             <FlexView column marginTop={30} hAlignContent="center">
                                                 <Typography align="center" variant="h5">Restricted to {project.group.displayName} members.
@@ -3465,7 +3415,7 @@ class ProjectDetails extends Component {
                                 ?
                                 <Col xs={12} sm={12} md={12} lg={{span: 6, offset: 3}}>
                                     {
-                                        user.type === DB_CONST.TYPE_ADMIN
+                                        user && user.type === DB_CONST.TYPE_ADMIN
                                             ?
                                             <FlexView column marginTop={30} hAlignContent="center">
                                                 <Typography align="center" variant="h5">Restricted to {project.group.displayName} members.
@@ -3494,7 +3444,7 @@ class ProjectDetails extends Component {
                                     <Row>
                                         <Col xs={{span: 12, order: 2}} sm={{span: 12, order: 2}} md={{span: 8, order: 1}} lg={{span: 8, order: 1}} style={{marginTop: 40}}>
                                             {
-                                                user.type === DB_CONST.TYPE_INVESTOR
+                                                user && user.type === DB_CONST.TYPE_INVESTOR
                                                     ?
                                                     null
                                                     :
@@ -3578,7 +3528,7 @@ class ProjectDetails extends Component {
                                                                                                                 {
                                                                                                                     reply.author.type === DB_CONST.TYPE_ADMIN
                                                                                                                         ?
-                                                                                                                        user.type === DB_CONST.TYPE_ADMIN
+                                                                                                                        user && user.type === DB_CONST.TYPE_ADMIN
                                                                                                                         && user.superAdmin
                                                                                                                             ?
                                                                                                                             `by group admin - ${reply.author.email}`
@@ -3612,7 +3562,7 @@ class ProjectDetails extends Component {
 
                                                                                         {/** Comment author */}
                                                                                         {
-                                                                                            user.type === DB_CONST.TYPE_ADMIN
+                                                                                            user && user.type === DB_CONST.TYPE_ADMIN
                                                                                             && user.superAdmin
                                                                                                 ?
                                                                                                 <NavLink
@@ -3638,10 +3588,10 @@ class ProjectDetails extends Component {
 
                                                                                         {/** Reply button */}
                                                                                         {
-                                                                                            (user.type === DB_CONST.TYPE_ISSUER
+                                                                                            (user && user.type === DB_CONST.TYPE_ISSUER
                                                                                                 && user.id === projectIssuer.id)
                                                                                             || (
-                                                                                                user.type === DB_CONST.TYPE_ADMIN
+                                                                                                user && user.type === DB_CONST.TYPE_ADMIN
                                                                                                 && project.hasOwnProperty('createdByGroupAdmin')
                                                                                                 && user.anid === project.anid
                                                                                             )
@@ -3713,7 +3663,7 @@ class ProjectDetails extends Component {
                                                                                                                 {
                                                                                                                     reply.author.type === DB_CONST.TYPE_ADMIN
                                                                                                                         ?
-                                                                                                                        user.type === DB_CONST.TYPE_ADMIN
+                                                                                                                        user && user.type === DB_CONST.TYPE_ADMIN
                                                                                                                         && user.superAdmin
                                                                                                                             ?
                                                                                                                             `by course admin - ${reply.author.email}`
@@ -3736,8 +3686,8 @@ class ProjectDetails extends Component {
                                                                                                             // and issuer that created this project and owns this reply
                                                                                                             // to edit/delete this reply
                                                                                                             (
-                                                                                                                user.type === DB_CONST.TYPE_ISSUER
-                                                                                                                || (user.type === DB_CONST.TYPE_ADMIN && !user.superAdmin)
+                                                                                                                user && user.type === DB_CONST.TYPE_ISSUER
+                                                                                                                || (user && user.type === DB_CONST.TYPE_ADMIN && !user.superAdmin)
                                                                                                             )
                                                                                                             && user.id === projectIssuer.id
                                                                                                             && user.id === reply.repliedBy
@@ -3786,7 +3736,7 @@ class ProjectDetails extends Component {
                                                                             <Button size="small" onClick={this.onPostACommentClick} variant="outlined" color="inherit" fullWidth={false}
                                                                                 disabled={
                                                                                     utils.isProjectLive(project)
-                                                                                    && user.type === DB_CONST.TYPE_INVESTOR                                                                                  
+                                                                                    && user && user.type === DB_CONST.TYPE_INVESTOR                                                                                  
                                                                                 }
                                                                             >Post a comment</Button>
                                                                         </div>
@@ -3803,7 +3753,7 @@ class ProjectDetails extends Component {
                                         <Col xs={{span: 12, order: 1}} sm={{span: 12, order: 1}} md={{span: 4, order: 2}} lg={{span: 4, order: 2}} style={{marginTop: 40}}>
 
                                             {
-                                                user.type === DB_CONST.TYPE_INVESTOR
+                                                user && user.type === DB_CONST.TYPE_INVESTOR
                                                     ?
                                                     (
                                                         comments.filter(comment => comment.commentedBy === user.id).length === 0
@@ -3819,7 +3769,7 @@ class ProjectDetails extends Component {
                                                                             <Button size="small" onClick={this.onPostACommentClick} variant="outlined" color="inherit"fullWidth={false}
                                                                                 disabled={
                                                                                     utils.isProjectLive(project)
-                                                                                    && user.type === DB_CONST.TYPE_INVESTOR
+                                                                                    && user && user.type === DB_CONST.TYPE_INVESTOR
                                                                                 }
                                                                             >Post a comment</Button>
                                                                         </div>
@@ -3849,7 +3799,7 @@ class ProjectDetails extends Component {
                                 ?
                                 <Col xs={12} sm={12} md={12} lg={{span: 6, offset: 3}}>
                                     {
-                                        user.type === DB_CONST.TYPE_ADMIN
+                                        user && user.type === DB_CONST.TYPE_ADMIN
                                             ?
                                             <FlexView column marginTop={30} hAlignContent="center">
                                                 <Typography align="center" variant="h5">Restricted to {project.group.displayName} members.</Typography>
@@ -3895,7 +3845,7 @@ class ProjectDetails extends Component {
                                 ?
                                 <Col xs={12} sm={12} md={12} lg={{span: 6, offset: 3}}>
                                     {
-                                        user.type === DB_CONST.TYPE_ADMIN
+                                        user && user.type === DB_CONST.TYPE_ADMIN
                                             ?
                                             <FlexView column marginTop={30} hAlignContent="center">
                                                 <Typography align="center" variant="h5">Restricted to {project.group.displayName} members.</Typography>
@@ -3959,16 +3909,16 @@ class ProjectDetails extends Component {
                                                     && groupProperties.groupUserName === "qib"
                                                 )
                                                 && (
-                                                    (user.type === DB_CONST.TYPE_ADMIN
+                                                    (user && user.type === DB_CONST.TYPE_ADMIN
                                                         && user.anid === groupProperties.anid)
-                                                    || (user.type === DB_CONST.TYPE_ISSUER
+                                                    || (user && user.type === DB_CONST.TYPE_ISSUER
                                                         && user.id === project.issuerID)
                                                 )
                                             )
                                             ||
                                             (
                                                 !groupProperties
-                                                && user.type === DB_CONST.TYPE_ADMIN
+                                                && user && user.type === DB_CONST.TYPE_ADMIN
                                                 && user.superAdmin
                                             )
                                         )
@@ -4051,7 +4001,7 @@ class ProjectDetails extends Component {
         } = this.props;
 
         // user is an admin
-        if (user.type === DB_CONST.TYPE_ADMIN) {
+        if (user && user.type === DB_CONST.TYPE_ADMIN) {
             // user is a super admin
             if (user.superAdmin) {
                 return false;
@@ -4077,7 +4027,7 @@ class ProjectDetails extends Component {
         // user is not an admin
         else {
             // should not hide any information if the user is an issuer that created this offer
-            if (user.type === DB_CONST.TYPE_ISSUER && user.id === project.issuerID) {
+            if (user && user.type === DB_CONST.TYPE_ISSUER && user.id === project.issuerID) {
                 return false;
             }
 
@@ -4197,7 +4147,7 @@ class ProjectDetails extends Component {
         // do not let the owner of the project vote for themselves
         // also, do not let the admin vote the project
         if (project.issuerID === firebase.auth().currentUser.uid
-            || user.type === DB_CONST.TYPE_ADMIN
+            || user && user.type === DB_CONST.TYPE_ADMIN
         ) {
             return true;
         }
@@ -4214,7 +4164,7 @@ class ProjectDetails extends Component {
         }
 
         // do not let issuers vote
-        if (user.type === DB_CONST.TYPE_ISSUER) {
+        if (user && user.type === DB_CONST.TYPE_ISSUER) {
             return true;
         }
 
