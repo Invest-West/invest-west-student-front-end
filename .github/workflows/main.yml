@@ -13,16 +13,17 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the front-end repository
+      # Step 1: Checkout front-end repository
       - name: Checkout front-end repository
         uses: actions/checkout@v3
 
-      # Step 2: Checkout the back-end repository into 'backend' directory
+      # Step 2: Checkout back-end repository into 'backend' directory
       - name: Checkout back-end repository
         uses: actions/checkout@v3
         with:
           repository: Invest-West/invest-west-student-back-end
           path: backend
+          token: ${{ secrets.PAT_TOKEN }}
 
       # Step 3: Create or switch to the predefined branch
       - name: Create or switch to the predefined branch
@@ -40,7 +41,7 @@ jobs:
           fi
           echo "branch_name=$branch_name" >> $GITHUB_OUTPUT
 
-      # Step 4: Identify relevant files in both repositories
+      # Step 4: Identify relevant files
       - name: Identify relevant files
         id: find_files
         run: |
@@ -63,13 +64,13 @@ jobs:
             echo "Processing $file"
             file_content=$(cat "$file")
             # Prepare the prompt
-            prompt="Here is the issue: $issue_description. Please provide a fix for the following file:\n\n$file_content"
+            prompt=$(printf "Here is the issue: %s. Please provide a fix for the following file:\n\n%s" "$issue_description" "$file_content")
             # Call ChatGPT API
             response=$(curl -s https://api.openai.com/v1/completions \
               -H "Authorization: Bearer ${{ secrets.OPENAI }}" \
               -H "Content-Type: application/json" \
               -d "{
-                \"model\": \"gpt-4\",
+                \"model\": \"o1-preview\",
                 \"prompt\": \"$prompt\",
                 \"max_tokens\": 1500,
                 \"temperature\": 0
