@@ -48,9 +48,9 @@ jobs:
               -H "Authorization: Bearer ${{ secrets.OPENAI }}" \
               -H "Content-Type: application/json" \
               -d '{
-                "model": "text-davinci-003",
+                "model": "o1-preview",
                 "prompt": "Here is the issue: '"$issue_description"'. Please provide a fix for the following React file:\n\n'"$file_content"'",
-                "max_tokens": 500
+                "max_tokens": 3000
               }')
 
             # Extract ChatGPT's suggestion
