@@ -23,16 +23,16 @@ jobs:
           branch_name="fix-issue-$(date +'%Y%m%d%H%M%S')"
           git checkout -b $branch_name
 
-      # Step 3: Find all relevant React files (.js, .ts, .jsx, .tsx)
+      # Step 3: Find all relevant React files (.js, .ts, .jsx, .tsx) recursively
       - name: Identify relevant files
         id: find_files
         run: |
-          # List all .js, .ts, .jsx, and .tsx files from the src directory
+          # Recursively find all .js, .ts, .jsx, and .tsx files in the src directory and its subfolders
           files=$(find ./src -type f \( -name "*.js" -o -name "*.ts" -o -name "*.jsx" -o -name "*.tsx" \))
           echo "Files found: $files"
           echo "::set-output name=files::$files"
 
-      # Step 4: Call ChatGPT to generate fixes
+      # Step 4: Call ChatGPT to generate fixes for each file
       - name: Call ChatGPT to suggest fixes
         id: chatgpt_response
         run: |
@@ -48,9 +48,9 @@ jobs:
               -H "Authorization: Bearer ${{ secrets.OPENAI }}" \
               -H "Content-Type: application/json" \
               -d '{
-                "model": "o1-preview",
+                "model": "text-davinci-003",
                 "prompt": "Here is the issue: '"$issue_description"'. Please provide a fix for the following React file:\n\n'"$file_content"'",
-                "max_tokens": 3000
+                "max_tokens": 500
               }')
 
             # Extract ChatGPT's suggestion
@@ -63,13 +63,25 @@ jobs:
             fi
           done
 
-      # Step 6: Create a commit with the applied changes
+      # Step 5: Configure git author information
+      - name: Set git user information
+        run: |
+          git config --local user.email "jserpis@hotmail.co.uk"
+          git config --local user.name "Styrle"
+
+      # Step 6: Run tests to ensure the fix doesn't break anything
+      - name: Run tests
+        run: |
+          npm install
+          npm test  # Replace with your actual test command (like 'npm test' or 'jest')
+
+      # Step 7: Create a commit with the applied changes
       - name: Commit the changes
         run: |
           git add .
           git commit -m "ChatGPT auto fix for issue: ${{ github.event.inputs.issue_description }}"
 
-      # Step 7: Save the branch (without pushing)
+      # Step 8: Save the branch (without pushing)
       - name: Keep branch for review
         run: |
           echo "Branch $branch_name created with ChatGPT fixes, ready for manual push."
