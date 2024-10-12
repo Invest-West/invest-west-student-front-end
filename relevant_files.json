@@ -1,11 +1,8 @@
 [
   "./src/pages/front/Front.tsx",
-  "./src/pages/project-details/ProjectDetails.jsx",
   "./src/router/routes.tsx",
-  "./src/router/GroupRoute.tsx",
-  "./src/router/router.tsx",
-  "./backend/src-invest-west/apps/auth/auth_viewsets.ts",
-  "./backend/lib/apps/auth/auth_viewsets.js",
-  "./backend/src-invest-west/apps/projects/projects_viewsets.ts",
-  "./backend/lib/apps/projects/projects_viewsets.js"
+  "./src/shared-components/explore-offers/ExploreOffers.tsx",
+  "./src/shared-components/explore-offers/ExploreOffersActions.tsx",
+  "./src/shared-components/explore-offers/ExploreOffersReducer.tsx",
+  "./backend/src-invest-west/apps/projects/projects_viewsets.ts"
 ]
