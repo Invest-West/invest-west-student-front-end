@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       issue_description:
-        description: "We want to make our projects viewable to visitors who are not logged in can you help with this is the page called groupViewOffer & nonGroupViewOffer"
+        description: "We want to make our projects viewable to visitors who are not logged in can you help with this is the page call groupViewOffer & nonGroupViewOffer"
         required: true
         type: string
 
