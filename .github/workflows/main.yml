@@ -73,7 +73,7 @@ jobs:
             json_payload=$(jq -n \
               --arg model "o1-preview" \
               --arg content "$user_message" \
-              --argjson max_tokens 1500 \
+              --argjson max_completion_tokens 3000 \
               --argjson temperature 0 \
               '{model: $model, messages: [{role: "user", content: $content}], max_tokens: $max_tokens, temperature: $temperature}')
             # Call OpenAI API
