@@ -96,7 +96,7 @@ jobs:
           # Output the list of relevant files
           echo "relevant_files=$PWD/relevant_files.json" >> $GITHUB_OUTPUT
 
-      # Step 6: Call OpenAI to suggest fixes for relevant files
+     # Step 6: Call OpenAI to suggest fixes for relevant files
       - name: Call OpenAI to suggest fixes
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI }}
@@ -113,8 +113,11 @@ jobs:
               user_message_file=$(mktemp)
               # Ensure temporary files are removed on exit
               trap 'rm -f "$temp_file" "$user_message_file"' EXIT
-              # Read the file content into a temporary file
-              cat "$file" > "$temp_file"
+              # Truncate the file content to the first 200 lines
+              head -n 200 "$file" > "$temp_file"
+              # Optionally, remove comments from the code to reduce token count
+              # For JavaScript/TypeScript files
+              sed -i '/^\s*\/\//d;/^\s*\/\*/,/\*\//d' "$temp_file"
               # Prepare the user message and save it to a temporary file
               {
                 echo "Here is the issue: $issue_description. Please provide a fix for the following file:"
@@ -125,7 +128,7 @@ jobs:
               json_payload=$(jq -n \
                 --arg model "gpt-4" \
                 --rawfile content "$user_message_file" \
-                --argjson max_tokens 3000 \
+                --argjson max_tokens 1500 \
                 '{model: $model, messages: [{role: "user", content: $content}], max_tokens: $max_tokens}')
               # Call OpenAI API
               response=$(echo "$json_payload" | curl -s https://api.openai.com/v1/chat/completions \
