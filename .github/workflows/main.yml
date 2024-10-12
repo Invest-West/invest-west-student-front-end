@@ -74,7 +74,7 @@ jobs:
           json_payload=$(jq -n \
             --arg model "gpt-4" \
             --arg content "$user_message" \
-            --argjson max_completion_tokens 3000 \
+            --argjson max_completion_tokens 6000 \
             '{model: $model, messages: [{role: "user", content: $content}], max_completion_tokens: $max_completion_tokens}')
           # Call OpenAI API
           response=$(echo "$json_payload" | curl -s https://api.openai.com/v1/chat/completions \
@@ -114,7 +114,7 @@ jobs:
               json_payload=$(jq -n \
                 --arg model "gpt-4" \
                 --arg content "$user_message" \
-                --argjson max_completion_tokens 3000 \
+                --argjson max_completion_tokens 6000 \
                 '{model: $model, messages: [{role: "user", content: $content}], max_completion_tokens: $max_completion_tokens}')
               # Call OpenAI API
               response=$(echo "$json_payload" | curl -s https://api.openai.com/v1/chat/completions \
