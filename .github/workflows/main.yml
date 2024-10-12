@@ -22,6 +22,8 @@ jobs:
         run: |
           branch_name="fix-issue-$(date +'%Y%m%d%H%M%S')"
           git checkout -b $branch_name
+          echo "New branch created: $branch_name"
+          echo "::set-output name=branch_name::$branch_name"
 
       # Step 3: Find all relevant React files (.js, .ts, .jsx, .tsx) recursively
       - name: Identify relevant files
@@ -50,7 +52,7 @@ jobs:
               -d '{
                 "model": "o1-preview",
                 "prompt": "Here is the issue: '"$issue_description"'. Please provide a fix for the following React file:\n\n'"$file_content"'",
-                "max_tokens": 3000
+                "max_tokens": 500
               }')
 
             # Extract ChatGPT's suggestion
@@ -69,13 +71,20 @@ jobs:
           git config --local user.email "jserpis@hotmail.co.uk"
           git config --local user.name "Styrle"
 
-      # Step 7: Create a commit with the applied changes
+      # Step 7: Display the list of changed files
+      - name: Show modified files
+        run: |
+          echo "Modified files:"
+          git diff --name-only
+
+      # Step 8: Commit the changes
       - name: Commit the changes
         run: |
           git add .
           git commit -m "ChatGPT auto fix for issue: ${{ github.event.inputs.issue_description }}"
 
-      # Step 8: Save the branch (without pushing)
-      - name: Keep branch for review
+      # Step 9: Push changes to the new branch
+      - name: Push the changes
         run: |
-          echo "Branch $branch_name created with ChatGPT fixes, ready for manual push."
+          branch_name="${{ steps.create_branch.outputs.branch_name }}"
+          git push origin "$branch_name"
