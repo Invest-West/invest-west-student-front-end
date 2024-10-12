@@ -19,11 +19,11 @@ jobs:
 
       # Step 2: Create a new branch for the changes
       - name: Create a new branch
+        id: create_branch   # Added id to reference this step's output
         run: |
           branch_name="fix-issue-$(date +'%Y%m%d%H%M%S')"
           git checkout -b $branch_name
-          echo "New branch created: $branch_name"
-          echo "::set-output name=branch_name::$branch_name"
+          echo "::set-output name=branch_name::$branch_name"  # Set the branch_name output
 
       # Step 3: Find all relevant React files (.js, .ts, .jsx, .tsx) recursively
       - name: Identify relevant files
@@ -71,7 +71,7 @@ jobs:
           git config --local user.email "jserpis@hotmail.co.uk"
           git config --local user.name "Styrle"
 
-      # Step 7: Display the list of changed files
+ # Step 7: Display the list of changed files
       - name: Show modified files
         run: |
           echo "Modified files:"
@@ -86,5 +86,4 @@ jobs:
       # Step 9: Push changes to the new branch
       - name: Push the changes
         run: |
-          branch_name="${{ steps.create_branch.outputs.branch_name }}"
-          git push origin "$branch_name"
+          git push origin "${{ steps.create_branch.outputs.branch_name }}"
