@@ -124,7 +124,7 @@ jobs:
               # Build JSON payload using jq, reading content from the file
               json_payload=$(jq -n \
                 --arg model "gpt-4" \
-                --argfile content "$user_message_file" \
+                --rawfile content "$user_message_file" \
                 --argjson max_tokens 3000 \
                 '{model: $model, messages: [{role: "user", content: $content}], max_tokens: $max_tokens}')
               # Call OpenAI API
