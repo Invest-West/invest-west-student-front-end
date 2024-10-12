@@ -71,7 +71,7 @@ jobs:
             user_message="Here is the issue: $issue_description. Please provide a fix for the following file:\n\n$file_content"
             # Build JSON payload using jq
             json_payload=$(jq -n \
-              --arg model "gpt-4" \
+              --arg model "GPT-4o" \
               --arg content "$user_message" \
               --argjson max_tokens 1500 \
               --argjson temperature 0 \
