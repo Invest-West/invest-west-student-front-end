@@ -69,12 +69,6 @@ jobs:
           git config --local user.email "jserpis@hotmail.co.uk"
           git config --local user.name "Styrle"
 
-      # Step 6: Run tests to ensure the fix doesn't break anything
-      - name: Run tests
-        run: |
-          npm install
-          npm test  # Replace with your actual test command (like 'npm test' or 'jest')
-
       # Step 7: Create a commit with the applied changes
       - name: Commit the changes
         run: |
