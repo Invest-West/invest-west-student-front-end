@@ -74,8 +74,7 @@ jobs:
               --arg model "o1-preview" \
               --arg content "$user_message" \
               --argjson max_completion_tokens 3000 \
-              --argjson temperature 0 \
-              '{model: $model, messages: [{role: "user", content: $content}], max_completion_tokens: $max_completion_tokens, temperature: $temperature}')
+              '{model: $model, messages: [{role: "user", content: $content}], max_completion_tokens: $max_completion_tokens}')
             # Call OpenAI API
             response=$(echo "$json_payload" | curl -s https://api.openai.com/v1/chat/completions \
               -H "Authorization: Bearer $OPENAI_API_KEY" \
