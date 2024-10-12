@@ -17,7 +17,8 @@ jobs:
       - name: Checkout front-end repository
         uses: actions/checkout@v3
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_TOKEN }}  # Use PAT_TOKEN with push permissions
+          persist-credentials: false
 
       # Step 2: Checkout back-end repository into 'backend' directory
       - name: Checkout back-end repository
@@ -28,7 +29,14 @@ jobs:
           token: ${{ secrets.PAT_TOKEN }}
           persist-credentials: false
 
-      # Step 3: Create or switch to the predefined branch
+      # Step 3: Set up Git to use PAT
+      - name: Configure Git to use PAT
+        run: |
+          git remote set-url origin https://x-access-token:${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}
+          git config --global user.email "jserpis@hotmail.co.uk"
+          git config --global user.name "Styrle"
+
+      # Step 4: Create or switch to the predefined branch
       - name: Create or switch to the predefined branch
         id: create_branch
         run: |
@@ -44,7 +52,7 @@ jobs:
           fi
           echo "branch_name=$branch_name" >> $GITHUB_OUTPUT
 
-      # Step 4: Identify all code files
+      # Step 5: Identify all code files
       - name: Identify all code files
         id: find_files
         run: |
@@ -57,7 +65,7 @@ jobs:
           # Output file paths
           echo "file_list=all_files.txt" >> $GITHUB_OUTPUT
 
-      # Step 5: Use OpenAI to identify relevant files
+      # Step 6: Use OpenAI to identify relevant files
       - name: Identify relevant files with OpenAI
         id: identify_relevant_files
         env:
@@ -96,7 +104,7 @@ jobs:
           # Output the list of relevant files
           echo "relevant_files=$PWD/relevant_files.json" >> $GITHUB_OUTPUT
 
-     # Step 6: Call OpenAI to suggest fixes for relevant files
+      # Step 7: Call OpenAI to suggest fixes for relevant files
       - name: Call OpenAI to suggest fixes
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI }}
@@ -108,61 +116,71 @@ jobs:
           for file in $files; do
             if [[ -f "$file" ]]; then
               echo "Processing $file"
-              # Create temporary files
+              # Create a backup of the original file
+              cp "$file" "$file.bak"
+              # Initialize variables
+              total_lines=$(wc -l < "$file")
+              start_line=1
+              chunk_size=200
               temp_file=$(mktemp)
-              user_message_file=$(mktemp)
-              # Ensure temporary files are removed on exit
-              trap 'rm -f "$temp_file" "$user_message_file"' EXIT
-              # Truncate the file content to the first 200 lines
-              head -n 200 "$file" > "$temp_file"
-              # Optionally, remove comments from the code to reduce token count
-              # For JavaScript/TypeScript files
-              sed -i '/^\s*\/\//d;/^\s*\/\*/,/\*\//d' "$temp_file"
-              # Prepare the user message and save it to a temporary file
-              {
-                echo "Here is the issue: $issue_description. Please provide a fix for the following file:"
-                echo
-                cat "$temp_file"
-              } > "$user_message_file"
-              # Build JSON payload using jq, reading content from the file
-              json_payload=$(jq -n \
-                --arg model "gpt-4" \
-                --rawfile content "$user_message_file" \
-                --argjson max_tokens 1500 \
-                '{model: $model, messages: [{role: "user", content: $content}], max_tokens: $max_tokens}')
-              # Call OpenAI API
-              response=$(echo "$json_payload" | curl -s https://api.openai.com/v1/chat/completions \
-                -H "Authorization: Bearer $OPENAI_API_KEY" \
-                -H "Content-Type: application/json" \
-                -d @-)
-              # Remove temporary files and reset trap
-              rm -f "$temp_file" "$user_message_file"
-              trap - EXIT
-              # Check for errors in the response
-              if echo "$response" | jq -e '.error' >/dev/null; then
-                error_message=$(echo "$response" | jq -r '.error.message')
-                echo "Error from OpenAI API: $error_message"
-                exit 1
-              fi
-              # Extract the suggestion
-              fix_code=$(echo "$response" | jq -r '.choices[0].message.content')
-              # Apply the fix to the file
-              if [[ -n "$fix_code" && "$fix_code" != "null" ]]; then
-                echo "Applying fix to $file"
-                echo "$fix_code" > "$file"
-              else
-                echo "No fix provided for $file"
-              fi
+              # Process the file in chunks of 200 lines
+              while [[ $start_line -le $total_lines ]]; do
+                end_line=$((start_line + chunk_size - 1))
+                if [[ $end_line -gt $total_lines ]]; then
+                  end_line=$total_lines
+                fi
+                echo "Processing lines $start_line to $end_line of $file"
+                # Extract the chunk
+                sed -n "${start_line},${end_line}p" "$file" > "$temp_file"
+                # Remove comments to reduce token count
+                sed -i '/^\s*\/\//d;/^\s*\/\*/,/\*\//d' "$temp_file"
+                # Prepare the user message
+                user_message="Here is the issue: $issue_description\n\nPlease provide the necessary code changes to fix the issue in the following code snippet. Provide the changes in unified diff format (diff -u) that can be applied directly.\n\nCode Snippet:\n$(cat "$temp_file")"
+                # Build JSON payload
+                json_payload=$(jq -n \
+                  --arg model "gpt-4" \
+                  --arg content "$user_message" \
+                  --argjson max_tokens 1500 \
+                  '{model: $model, messages: [{role: "user", content: $content}], max_tokens: $max_tokens}')
+                # Call OpenAI API
+                response=$(echo "$json_payload" | curl -s https://api.openai.com/v1/chat/completions \
+                  -H "Authorization: Bearer $OPENAI_API_KEY" \
+                  -H "Content-Type: application/json" \
+                  -d @-)
+                # Check for errors
+                if echo "$response" | jq -e '.error' >/dev/null; then
+                  error_message=$(echo "$response" | jq -r '.error.message')
+                  echo "Error from OpenAI API: $error_message"
+                  exit 1
+                fi
+                # Extract the suggestion
+                fix_patch=$(echo "$response" | jq -r '.choices[0].message.content')
+                # Apply the patch if it's in correct format
+                if [[ "$fix_patch" =~ ^--- ]]; then
+                  echo "Applying patch to $file (lines $start_line to $end_line)"
+                  # Write the patch to a temporary file
+                  patch_file=$(mktemp)
+                  echo "$fix_patch" > "$patch_file"
+                  # Adjust the file paths in the patch
+                  sed -i "s|^---.*|--- $file|; s|^\+\+\+.*|+++ $file|" "$patch_file"
+                  # Apply the patch
+                  if patch "$file" "$patch_file"; then
+                    echo "Patch applied successfully."
+                  else
+                    echo "Failed to apply patch to $file"
+                  fi
+                  rm -f "$patch_file"
+                else
+                  echo "No valid patch provided for $file (lines $start_line to $end_line)"
+                fi
+                # Move to the next chunk
+                start_line=$((end_line + 1))
+              done
+              rm -f "$temp_file"
             else
               echo "File $file does not exist"
             fi
           done
-
-      # Step 7: Set git user information
-      - name: Set git user information
-        run: |
-          git config --local user.email "jserpis@hotmail.co.uk"
-          git config --local user.name "Styrle"
 
       # Step 8: Show modified files
       - name: Show modified files
@@ -179,5 +197,4 @@ jobs:
       # Step 10: Push the changes
       - name: Push the changes
         run: |
-          git push origin "${{ steps.create_branch.outputs.branch_name }}"
-
+          git push -u origin "${{ steps.create_branch.outputs.branch_name }}"
