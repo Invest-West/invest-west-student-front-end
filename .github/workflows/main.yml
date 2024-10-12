@@ -1,0 +1,75 @@
+name: ChatGPT Auto Fix React Issue
+
+on:
+  workflow_dispatch:
+    inputs:
+      issue_description:
+        description: "We want to make our projects viewable to visitors who are not logged in can you help with this is the page called groupViewOffer & nonGroupViewOffer"
+        required: true
+        type: string
+
+jobs:
+  fix_issue:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Create a new branch for the changes
+      - name: Create a new branch
+        run: |
+          branch_name="fix-issue-$(date +'%Y%m%d%H%M%S')"
+          git checkout -b $branch_name
+
+      # Step 3: Find all relevant React files (.js, .ts, .jsx, .tsx)
+      - name: Identify relevant files
+        id: find_files
+        run: |
+          # List all .js, .ts, .jsx, and .tsx files from the src directory
+          files=$(find ./src -type f \( -name "*.js" -o -name "*.ts" -o -name "*.jsx" -o -name "*.tsx" \))
+          echo "Files found: $files"
+          echo "::set-output name=files::$files"
+
+      # Step 4: Call ChatGPT to generate fixes
+      - name: Call ChatGPT to suggest fixes
+        id: chatgpt_response
+        run: |
+          issue_description="${{ github.event.inputs.issue_description }}"
+          files="${{ steps.find_files.outputs.files }}"
+
+          for file in $files; do
+            # Read the file content
+            file_content=$(cat "$file")
+
+            # Request ChatGPT for a fix
+            response=$(curl https://api.openai.com/v1/completions \
+              -H "Authorization: Bearer ${{ secrets.OPENAI }}" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "model": "o1-preview",
+                "prompt": "Here is the issue: '"$issue_description"'. Please provide a fix for the following React file:\n\n'"$file_content"'",
+                "max_tokens": 3000
+              }')
+
+            # Extract ChatGPT's suggestion
+            fix_code=$(echo $response | jq -r '.choices[0].text')
+
+            # Apply the fix to the file (this example overwrites the file)
+            if [[ -n "$fix_code" ]]; then
+              echo "Applying ChatGPT fix to $file"
+              echo "$fix_code" > "$file"
+            fi
+          done
+
+      # Step 6: Create a commit with the applied changes
+      - name: Commit the changes
+        run: |
+          git add .
+          git commit -m "ChatGPT auto fix for issue: ${{ github.event.inputs.issue_description }}"
+
+      # Step 7: Save the branch (without pushing)
+      - name: Keep branch for review
+        run: |
+          echo "Branch $branch_name created with ChatGPT fixes, ready for manual push."
