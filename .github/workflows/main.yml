@@ -74,7 +74,7 @@ jobs:
           json_payload=$(jq -n \
             --arg model "gpt-4" \
             --arg content "$user_message" \
-            --argjson max_tokens 6000 \
+            --argjson max_tokens 3000 \
             '{model: $model, messages: [{role: "user", content: $content}], max_tokens: $max_tokens}')
           # Call OpenAI API
           response=$(echo "$json_payload" | curl -s https://api.openai.com/v1/chat/completions \
