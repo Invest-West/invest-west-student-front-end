@@ -71,12 +71,12 @@ jobs:
             user_message="Here is the issue: $issue_description. Please provide a fix for the following file:\n\n$file_content"
             # Build JSON payload using jq
             json_payload=$(jq -n \
-              --arg model "GPT-4o" \
+              --arg model "o1-preview" \
               --arg content "$user_message" \
               --argjson max_tokens 1500 \
               --argjson temperature 0 \
               '{model: $model, messages: [{role: "user", content: $content}], max_tokens: $max_tokens, temperature: $temperature}')
-            # Call ChatGPT API
+            # Call OpenAI API
             response=$(echo "$json_payload" | curl -s https://api.openai.com/v1/chat/completions \
               -H "Authorization: Bearer $OPENAI_API_KEY" \
               -H "Content-Type: application/json" \
@@ -87,11 +87,11 @@ jobs:
               echo "Error from OpenAI API: $error_message"
               exit 1
             fi
-            # Extract ChatGPT's suggestion
+            # Extract the suggestion
             fix_code=$(echo "$response" | jq -r '.choices[0].message.content')
             # Apply the fix to the file
             if [[ -n "$fix_code" && "$fix_code" != "null" ]]; then
-              echo "Applying ChatGPT fix to $file"
+              echo "Applying fix to $file"
               echo "$fix_code" > "$file"
             else
               echo "No fix provided for $file"
@@ -114,7 +114,7 @@ jobs:
       - name: Commit the changes
         run: |
           git add .
-          git commit -m "ChatGPT auto fix for issue: ${{ github.event.inputs.issue_description }}" || echo "No changes to commit"
+          git commit -m "Auto fix for issue: ${{ github.event.inputs.issue_description }}" || echo "No changes to commit"
 
       # Step 9: Push the changes
       - name: Push the changes
