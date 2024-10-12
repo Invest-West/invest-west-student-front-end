@@ -13,77 +13,97 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the repository
-      - name: Checkout repository
+      # Step 1: Checkout the front-end repository
+      - name: Checkout front-end repository
         uses: actions/checkout@v3
 
-      # Step 2: Create a new branch for the changes
-      - name: Create a new branch
-        id: create_branch   # Added id to reference this step's output
-        run: |
-          branch_name="fix-issue-$(date +'%Y%m%d%H%M%S')"
-          git checkout -b $branch_name
-          echo "::set-output name=branch_name::$branch_name"  # Set the branch_name output
+      # Step 2: Checkout the back-end repository into 'backend' directory
+      - name: Checkout back-end repository
+        uses: actions/checkout@v3
+        with:
+          repository: Invest-West/invest-west-student-back-end
+          path: backend
 
-      # Step 3: Find all relevant React files (.js, .ts, .jsx, .tsx) recursively
+      # Step 3: Create or switch to the predefined branch
+      - name: Create or switch to the predefined branch
+        id: create_branch
+        run: |
+          branch_name="ai-fixes"
+          git fetch origin $branch_name || true
+          if git rev-parse --verify origin/$branch_name; then
+            echo "Branch $branch_name exists. Checking it out."
+            git checkout $branch_name
+          else
+            echo "Branch $branch_name does not exist. Creating from development."
+            git checkout development
+            git checkout -b $branch_name
+          fi
+          echo "branch_name=$branch_name" >> $GITHUB_OUTPUT
+
+      # Step 4: Identify relevant files in both repositories
       - name: Identify relevant files
         id: find_files
         run: |
-          # Recursively find all .js, .ts, .jsx, and .tsx files in the src directory and its subfolders
-          files=$(find ./src -type f \( -name "*.js" -o -name "*.ts" -o -name "*.jsx" -o -name "*.tsx" \))
-          echo "Files found: $files"
-          echo "::set-output name=files::$files"
+          # Find files in the front-end 'src' directory
+          find ./src -type f \( -name "*.js" -o -name "*.ts" -o -name "*.jsx" -o -name "*.tsx" \) -print0 > frontend_files.txt
+          # Find files in the back-end directory
+          find ./backend -type f \( -name "*.js" -o -name "*.ts" -o -name "*.jsx" -o -name "*.tsx" \) -print0 > backend_files.txt
+          # Combine file lists
+          cat frontend_files.txt backend_files.txt > all_files.txt
+          # Output file paths
+          echo "file_list=all_files.txt" >> $GITHUB_OUTPUT
 
-      # Step 4: Call ChatGPT to generate fixes for each file
+      # Step 5: Call ChatGPT to suggest fixes
       - name: Call ChatGPT to suggest fixes
         id: chatgpt_response
         run: |
           issue_description="${{ github.event.inputs.issue_description }}"
-          files="${{ steps.find_files.outputs.files }}"
-
-          for file in $files; do
-            # Read the file content
+          file_list="${{ steps.find_files.outputs.file_list }}"
+          while IFS= read -r -d '' file; do
+            echo "Processing $file"
             file_content=$(cat "$file")
-
-            # Request ChatGPT for a fix
-            response=$(curl https://api.openai.com/v1/completions \
+            # Prepare the prompt
+            prompt="Here is the issue: $issue_description. Please provide a fix for the following file:\n\n$file_content"
+            # Call ChatGPT API
+            response=$(curl -s https://api.openai.com/v1/completions \
               -H "Authorization: Bearer ${{ secrets.OPENAI }}" \
               -H "Content-Type: application/json" \
-              -d '{
-                "model": "o1-preview",
-                "prompt": "Here is the issue: '"$issue_description"'. Please provide a fix for the following React file:\n\n'"$file_content"'",
-                "max_tokens": 500
-              }')
-
+              -d "{
+                \"model\": \"gpt-4\",
+                \"prompt\": \"$prompt\",
+                \"max_tokens\": 1500,
+                \"temperature\": 0
+              }")
             # Extract ChatGPT's suggestion
-            fix_code=$(echo $response | jq -r '.choices[0].text')
-
-            # Apply the fix to the file (this example overwrites the file)
-            if [[ -n "$fix_code" ]]; then
+            fix_code=$(echo "$response" | jq -r '.choices[0].text')
+            # Apply the fix to the file
+            if [[ -n "$fix_code" && "$fix_code" != "null" ]]; then
               echo "Applying ChatGPT fix to $file"
               echo "$fix_code" > "$file"
+            else
+              echo "No fix provided for $file"
             fi
-          done
+          done < "${file_list}"
 
-      # Step 5: Configure git author information
+      # Step 6: Set git user information
       - name: Set git user information
         run: |
           git config --local user.email "jserpis@hotmail.co.uk"
           git config --local user.name "Styrle"
 
- # Step 7: Display the list of changed files
+      # Step 7: Show modified files
       - name: Show modified files
         run: |
           echo "Modified files:"
-          git diff --name-only
+          git status --short
 
       # Step 8: Commit the changes
       - name: Commit the changes
         run: |
           git add .
-          git commit -m "ChatGPT auto fix for issue: ${{ github.event.inputs.issue_description }}"
+          git commit -m "ChatGPT auto fix for issue: ${{ github.event.inputs.issue_description }}" || echo "No changes to commit"
 
-      # Step 9: Push changes to the new branch
+      # Step 9: Push the changes
       - name: Push the changes
         run: |
           git push origin "${{ steps.create_branch.outputs.branch_name }}"
