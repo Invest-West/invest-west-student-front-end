@@ -48,13 +48,9 @@
     "start": "env-cmd -f .env react-scripts start",
     "build:prod": "env-cmd -f .env react-scripts build",
     "build": "react-scripts build",
-    "build:test": "env-cmd -f .env.test react-scripts build",
-    "build:demo": "env-cmd -f .env.demo react-scripts build",
+    "build:dev": "env-cmd -f .env.dev react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "deploy:prod": "git push -u production master",
-    "deploy:demo": "git push -u demo master",
-    "deploy:test": "git push -u test master"
+    "eject": "react-scripts eject"
   },
   "eslintConfig": {
     "extends": "react-app"
