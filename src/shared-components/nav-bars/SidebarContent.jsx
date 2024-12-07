@@ -31,7 +31,7 @@ import {School} from "@material-ui/icons";
 export const HOME_TAB = "Home";
 export const PROFILE_TAB = "Profile";
 export const FORUMS_TAB = "Forums";
-export const MY_OFFERS_TAB = "My projectss";
+export const MY_OFFERS_TAB = "My projects";
 // export const MY_PLEDGES_TAB = "My pledges";
 export const SETTINGS_TAB = "Settings";
 export const CHANGE_PASSWORD_TAB = "Change password";
