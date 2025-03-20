@@ -933,9 +933,6 @@ class HelpPage extends Component {
                         </ExpansionPanelDetails>
                     </ExpansionPanel>
                 </Col>
-                <Typography variant="h2" align="left">
-                                    13. Logging out
-                                </Typography>
             </Row>
             
         );
