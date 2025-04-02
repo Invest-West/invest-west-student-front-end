@@ -361,23 +361,23 @@ class ProjectDetailsMain extends Component {
             return;
         }
 
-        if (!user) {
-            if (!dataLoaded) {
-                this.setState({
-                    dataLoaded: true,
-                    dataBeingLoaded: false,
-                    investorPledgeLoaded: true,
-                    projectDetail: {
-                        ...this.state.projectDetail,
-                        projectLoaded: true, // project is null
-                        projectIssuerLoaded: true, // project issuer is null
-                        votesLoaded: true,
-                        pledgesLoaded: true
-                    }
-                });
-                return;
-            }
-        }
+        // if (!user) {
+        //     if (!dataLoaded) {
+        //         this.setState({
+        //             dataLoaded: true,
+        //             dataBeingLoaded: false,
+        //             investorPledgeLoaded: true,
+        //             projectDetail: {
+        //                 ...this.state.projectDetail,
+        //                 projectLoaded: true, // project is null
+        //                 projectIssuerLoaded: true, // project issuer is null
+        //                 votesLoaded: true,
+        //                 pledgesLoaded: true
+        //             }
+        //         });
+        //         return;
+        //     }
+        // }
 
         // data is being loaded
         if (dataBeingLoaded) {
@@ -1893,9 +1893,9 @@ class ProjectDetailsMain extends Component {
             );
         }
 
-        if (authStatus !== AUTH_SUCCESS || !user || hasAuthenticationError(AuthenticationState)) {
-            return <PageNotFoundWhole/>;
-        }
+        // if (authStatus !== AUTH_SUCCESS || !user || hasAuthenticationError(AuthenticationState)) {
+        //     return <PageNotFoundWhole/>;
+        // }
 
         return (
             <div>
