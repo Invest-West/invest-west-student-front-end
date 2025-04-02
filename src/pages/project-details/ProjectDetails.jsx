@@ -361,6 +361,7 @@ class ProjectDetailsMain extends Component {
             return;
         }
 
+        // Disable authentication
         // if (!user) {
         //     if (!dataLoaded) {
         //         this.setState({
@@ -1893,6 +1894,7 @@ class ProjectDetailsMain extends Component {
             );
         }
 
+        // Disable authentication
         // if (authStatus !== AUTH_SUCCESS || !user || hasAuthenticationError(AuthenticationState)) {
         //     return <PageNotFoundWhole/>;
         // }
