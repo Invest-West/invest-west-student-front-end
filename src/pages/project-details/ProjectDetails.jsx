@@ -396,10 +396,10 @@ class ProjectDetailsMain extends Component {
             .loadAParticularProject(projectID)
             .then(project => {
                 // track activity for investors only
-                if (user.type === DB_CONST.TYPE_INVESTOR) {
+                if (user?.type === DB_CONST.TYPE_INVESTOR) {
                     realtimeDBUtils
                         .trackActivity({
-                            userID: user.id,
+                            userID: user?.id,
                             activityType: DB_CONST.ACTIVITY_TYPE_VIEW,
                             interactedObjectLocation: DB_CONST.PROJECTS_CHILD,
                             interactedObjectID: project.id,
@@ -418,9 +418,9 @@ class ProjectDetailsMain extends Component {
                         projectLoaded: true
                     },
                     mainBody:
-                        user.type === DB_CONST.TYPE_ADMIN
+                        user?.type === DB_CONST.TYPE_ADMIN
                             ?
-                            user.anid === project.anid
+                            user?.anid === project.anid
                                 ?
                                 MAIN_BODY_ADMIN_OFFER_STATES
                                 :
@@ -463,8 +463,8 @@ class ProjectDetailsMain extends Component {
                             .then(pledges => {
 
                                 // if the current user is an investor, check if they pledged this project
-                                if (user.type === DB_CONST.TYPE_INVESTOR) {
-                                    let currentUserPledgeIndex = pledges.findIndex(pledge => pledge.investorID === user.id && pledge.amount !== '');
+                                if (user?.type === DB_CONST.TYPE_INVESTOR) {
+                                    let currentUserPledgeIndex = pledges.findIndex(pledge => pledge.investorID === user?.id && pledge.amount !== '');
                                     // this investor has pledges this project before
                                     if (currentUserPledgeIndex !== -1) {
                                         this.setState({
@@ -734,7 +734,7 @@ class ProjectDetailsMain extends Component {
                                                 currentPledge
                                             :
                                             // current pledge is null
-                                            pledge.investorID === user.id
+                                            pledge.investorID === user?.id
                                                 ?
                                                 pledge.amount === ""
                                                     ?
@@ -826,7 +826,7 @@ class ProjectDetailsMain extends Component {
                                             comment.replies = [];
 
                                             // assign comment to currentComment object if it belongs to the current investor
-                                            if (comment.commentedBy === user.id) {
+                                            if (comment.commentedBy === user?.id) {
                                                 const currentComment = this.state.currenComment;
                                                 if (!currentComment) {
                                                     this.setState({
@@ -1034,7 +1034,7 @@ class ProjectDetailsMain extends Component {
                     // record the investor's activity
                     realtimeDBUtils
                         .trackActivity({
-                            userID: user.id,
+                            userID: user?.id,
                             activityType: DB_CONST.ACTIVITY_TYPE_POST,
                             interactedObjectLocation: DB_CONST.VOTES_CHILD,
                             interactedObjectID: newVoteObj.id,
@@ -1062,7 +1062,7 @@ class ProjectDetailsMain extends Component {
 
             newVoteObj.id = id;
             newVoteObj.anid = groupProperties ? groupProperties.anid : null;
-            newVoteObj.investorID = user.id;
+            newVoteObj.investorID = user?.id;
             newVoteObj.projectID = project.id;
             newVoteObj.voted = voteVal;
             newVoteObj.date = utils.getCurrentDate();
@@ -1075,7 +1075,7 @@ class ProjectDetailsMain extends Component {
                     // record the investor's activity for first time voting
                     realtimeDBUtils
                         .trackActivity({
-                            userID: user.id,
+                            userID: user?.id,
                             activityType: DB_CONST.ACTIVITY_TYPE_POST,
                             interactedObjectLocation: DB_CONST.VOTES_CHILD,
                             interactedObjectID: id,
@@ -1355,7 +1355,7 @@ class ProjectDetailsMain extends Component {
             id,
             commenterANID: groupProperties ? groupProperties.anid : null,
             projectID: project.id,
-            commentedBy: user.id,
+            commentedBy: user?.id,
             status: DB_CONST.COMMENT_STATUS_POSTED,
             commentedDate: utils.getCurrentDate(),
             comment: commentText
@@ -1369,7 +1369,7 @@ class ProjectDetailsMain extends Component {
                 // track investor's activity for posting a new comment
                 realtimeDBUtils
                     .trackActivity({
-                        userID: user.id,
+                        userID: user?.id,
                         activityType: DB_CONST.ACTIVITY_TYPE_POST,
                         interactedObjectLocation: DB_CONST.COMMENTS_CHILD,
                         interactedObjectID: id,
@@ -1518,7 +1518,7 @@ class ProjectDetailsMain extends Component {
                 repliedDate: utils.getCurrentDate(),
                 projectID: project.id,
                 commentID: replyingToComment.id,
-                repliedBy: user.id,
+                repliedBy: user?.id,
                 status: DB_CONST.COMMENT_REPLY_STATUS_POSTED
             };
 
@@ -1528,7 +1528,7 @@ class ProjectDetailsMain extends Component {
                     // track activity
                     realtimeDBUtils
                         .trackActivity({
-                            userID: user.id,
+                            userID: user?.id,
                             activityType: DB_CONST.ACTIVITY_TYPE_POST,
                             interactedObjectLocation: DB_CONST.COMMENT_REPLIES_CHILD,
                             interactedObjectID: replyID,
@@ -1578,7 +1578,7 @@ class ProjectDetailsMain extends Component {
                     // track activity
                     realtimeDBUtils
                         .trackActivity({
-                            userID: user.id,
+                            userID: user?.id,
                             activityType: DB_CONST.ACTIVITY_TYPE_POST,
                             interactedObjectLocation: DB_CONST.COMMENT_REPLIES_CHILD,
                             interactedObjectID: replyAfterUpdating.id,
@@ -1638,7 +1638,7 @@ class ProjectDetailsMain extends Component {
                 // track activity
                 realtimeDBUtils
                     .trackActivity({
-                        userID: user.id,
+                        userID: user?.id,
                         activityType: DB_CONST.ACTIVITY_TYPE_POST,
                         interactedObjectLocation: DB_CONST.COMMENT_REPLIES_CHILD,
                         interactedObjectID: reply.id,
@@ -1709,7 +1709,7 @@ class ProjectDetailsMain extends Component {
             setFeedbackSnackbarContent
         } = this.props;
 
-        if (user.type !== DB_CONST.TYPE_ADMIN) {
+        if (user?.type !== DB_CONST.TYPE_ADMIN) {
             return;
         }
 
@@ -2224,7 +2224,7 @@ class ProjectDetails extends Component {
             // the user is an investor/issuer that is not in the group that owns this project
             || (
                 project.visibility === DB_CONST.PROJECT_VISIBILITY_PRIVATE
-                && (user.type === DB_CONST.TYPE_INVESTOR || user.type === DB_CONST.TYPE_ISSUER)
+                && (user?.type === DB_CONST.TYPE_INVESTOR || user?.type === DB_CONST.TYPE_ISSUER)
                 && (groupsUserIsIn !== null && groupsUserIsIn.findIndex(group => group.anid === project.anid) === -1)
             )
         ) {
@@ -2242,9 +2242,9 @@ class ProjectDetails extends Component {
         // group admins that own this project, and the issuer of this project
         if (utils.isProjectTemporarilyClosed(project)
             && (
-                (user.type === DB_CONST.TYPE_ISSUER && user.id !== project.issuerID)
-                || (user.type === DB_CONST.TYPE_INVESTOR)
-                || (user.type === DB_CONST.TYPE_ADMIN && !user.superAdmin && user.anid !== project.anid)
+                (user?.type === DB_CONST.TYPE_ISSUER && user?.id !== project.issuerID)
+                || (user?.type === DB_CONST.TYPE_INVESTOR)
+                || (user?.type === DB_CONST.TYPE_ADMIN && !user?.superAdmin && user?.anid !== project.anid)
             )
         ) {
             return (
@@ -2261,9 +2261,9 @@ class ProjectDetails extends Component {
         // the project is private
         // the user is a group admin that does not own this project
         if (project.visibility === DB_CONST.PROJECT_VISIBILITY_PRIVATE
-            && (user.type === DB_CONST.TYPE_ADMIN)
-            && !user.superAdmin
-            && user.anid !== project.anid
+            && (user?.type === DB_CONST.TYPE_ADMIN)
+            && !user?.superAdmin
+            && user?.anid !== project.anid
         ) {
             return (
                 <Row noGutters style={{marginLeft: 10, marginRight: 10}}>
@@ -2284,7 +2284,7 @@ class ProjectDetails extends Component {
                 return (comment1.commentedDate - comment2.commentedDate);
             });
 
-            let currentCommentIndex = sortedComments.findIndex(comment => comment.commentedBy === user.id);
+            let currentCommentIndex = sortedComments.findIndex(comment => comment.commentedBy === user?.id);
             if (currentCommentIndex !== -1) {
                 const currentComment = comments[currentCommentIndex];
                 sortedComments.splice(currentCommentIndex, 1);
@@ -2391,8 +2391,8 @@ class ProjectDetails extends Component {
                                 }
                             </Typography>
                             {
-                                user.type === DB_CONST.TYPE_ADMIN
-                                || (user.type === DB_CONST.TYPE_ISSUER && user.id === project.issuerID)
+                                user?.type === DB_CONST.TYPE_ADMIN
+                                || (user?.type === DB_CONST.TYPE_ISSUER && user?.id === project.issuerID)
                                     ?
                                     <FlexView width="100%" hAlignContent="center" vAlignContent="center" marginTop={20}>
                                         {
@@ -2424,7 +2424,7 @@ class ProjectDetails extends Component {
                                         {/*>*/}
                                         {/*    <InfoOverlay*/}
                                         {/*        message={*/}
-                                        {/*            user.type === DB_CONST.TYPE_ADMIN*/}
+                                        {/*            user?.type === DB_CONST.TYPE_ADMIN*/}
                                         {/*                ?*/}
                                         {/*                "Edit offer."*/}
                                         {/*                :*/}
@@ -2447,7 +2447,7 @@ class ProjectDetails extends Component {
                             }
 
                             {
-                                user.id === project.issuerID
+                                user?.id === project.issuerID
                                     ?
                                     null
                                     :
@@ -2576,7 +2576,7 @@ class ProjectDetails extends Component {
                                 />
                             </Col>
 
-                            {/** Funding goal / Pledged 
+                            {/** Funding goal / Pledged
                             <Col xs={12} sm={12} md={{span: 5, offset: 1, order: 2}} lg={{span: 12, offset: 0, order: 2}}>
                                 <FlexView column marginTop={18}>
                                     {
@@ -2591,7 +2591,7 @@ class ProjectDetails extends Component {
                                 </FlexView>
                             </Col>
                             */}
-                            
+
 
                             {/** Project status */}
                             <Col xs={12} sm={12} md={{span: 5, offset: 0, order: 4}} lg={{span: 12, offset: 0, order: 4}}>
@@ -2607,7 +2607,7 @@ class ProjectDetails extends Component {
                                     : <Col xs={12} sm={12} md={{span: 10, offset: 1, order: 5}} lg={{span: 12, offset: 0, order: 7}} style={{marginTop: 15}}>
                                         <FlexView column hAlignContent="left">
                                             <FlexView hAlignContent="center" vAlignContent="center">
-                                                <Button color="primary" variant="contained" className={css(sharedStyles.no_text_transform)} disabled={this.shouldHideInformation() || (user.type === TYPE_INVESTOR)} onClick={() => this.toggleContactPitchOwnerDialog()}>Contact us</Button>
+                                                <Button color="primary" variant="contained" className={css(sharedStyles.no_text_transform)} disabled={this.shouldHideInformation() || (user?.type === TYPE_INVESTOR)} onClick={() => this.toggleContactPitchOwnerDialog()}>Contact us</Button>
                                                 {/*<Button*/}
                                                 {/*    size="medium"*/}
                                                 {/*    variant={getInvestorVote(votes, user) && getInvestorVote(votes, user).voted ? "contained" : "outlined"}*/}
@@ -2641,7 +2641,7 @@ class ProjectDetails extends Component {
                                                 {/*</FlexView>*/}
                                             </FlexView>
                                             {/*{*/}
-                                            {/*    user.type === DB_CONST.TYPE_ISSUER*/}
+                                            {/*    user?.type === DB_CONST.TYPE_ISSUER*/}
                                             {/*        ?*/}
                                             {/*        <Typography*/}
                                             {/*            variant="body2"*/}
@@ -2660,7 +2660,7 @@ class ProjectDetails extends Component {
                                         {
                                             this.shouldHideInformation()
                                                 ?
-                                                user.type === DB_CONST.TYPE_ADMIN
+                                                user?.type === DB_CONST.TYPE_ADMIN
                                                     ?
                                                     <FlexView column marginTop={20}>
                                                         <Typography align="left" variant="body2" color="textSecondary">You cannot see detailed information of this restricted offer.</Typography>
@@ -2693,7 +2693,7 @@ class ProjectDetails extends Component {
                                     null
                                     :
                                     (
-                                        user.type !== DB_CONST.TYPE_INVESTOR
+                                        user?.type !== DB_CONST.TYPE_INVESTOR
                                             ?
                                             (
                                                 <Col xs={12} sm={12} md={{span: 10, offset: 1, order: 6}} lg={{span: 12, offset: 0, order: 6}} style={{marginTop: 30}}>
@@ -2735,8 +2735,8 @@ class ProjectDetails extends Component {
                                 {
                                     // user is a super admin
                                     // or a course admin that owns the project
-                                    (user.type === DB_CONST.TYPE_ADMIN
-                                        && (user.superAdmin || (!user.superAdmin && user.anid === project.anid))
+                                    (user?.type === DB_CONST.TYPE_ADMIN
+                                        && (user?.superAdmin || (!user?.superAdmin && user?.anid === project.anid))
                                     )
                                     // project is not a draft
                                     && !utils.isDraftProject(project)
@@ -2757,11 +2757,11 @@ class ProjectDetails extends Component {
                                 {/*{*/}
                                 {/*    // user is a super admin*/}
                                 {/*    // or a group admin that owns the project*/}
-                                {/*    (user.type === DB_CONST.TYPE_ADMIN*/}
-                                {/*        && (user.superAdmin || (!user.superAdmin && user.anid === project.anid))*/}
+                                {/*    (user?.type === DB_CONST.TYPE_ADMIN*/}
+                                {/*        && (user?.superAdmin || (!user?.superAdmin && user?.anid === project.anid))*/}
                                 {/*    )*/}
                                 {/*    // user is the issuer that owns the project*/}
-                                {/*    || (user.type === DB_CONST.TYPE_ISSUER && user.id === project.issuerID)*/}
+                                {/*    || (user?.type === DB_CONST.TYPE_ISSUER && user?.id === project.issuerID)*/}
                                 {/*        ?*/}
                                 {/*        <Tab*/}
                                 {/*            value={MAIN_BODY_INVESTORS_PLEDGED}*/}
@@ -2882,20 +2882,20 @@ class ProjectDetails extends Component {
                                                                             :
                                                                             isProjectCreatedByGroupAdmin(project)
                                                                                 ?
-                                                                                <Button fullWidth color="primary" variant="contained" className={css(sharedStyles.no_text_transform)} disabled={user.superAdmin} onClick={() => this.onMakeProjectGoLiveDecision({decision: true, projectVisibilitySetting})}>Publish project</Button>
+                                                                                <Button fullWidth color="primary" variant="contained" className={css(sharedStyles.no_text_transform)} disabled={user?.superAdmin} onClick={() => this.onMakeProjectGoLiveDecision({decision: true, projectVisibilitySetting})}>Publish project</Button>
                                                                                 :
                                                                                 <FlexView>
                                                                                     <FlexView grow marginRight={10}>
-                                                                                        <Button fullWidth color="primary" variant="contained" className={css(sharedStyles.no_text_transform)} disabled={user.superAdmin} onClick={() => this.onMakeProjectGoLiveDecision({decision: true, projectVisibilitySetting})}>Publish project</Button>
+                                                                                        <Button fullWidth color="primary" variant="contained" className={css(sharedStyles.no_text_transform)} disabled={user?.superAdmin} onClick={() => this.onMakeProjectGoLiveDecision({decision: true, projectVisibilitySetting})}>Publish project</Button>
                                                                                     </FlexView>
                                                                                     <FlexView grow marginLeft={10}>
-                                                                                        <Button fullWidth color="secondary" variant="outlined" className={css(sharedStyles.no_text_transform)} disabled={user.superAdmin} onClick={() => this.toggleRejectFeedback()}>Send back to issuer</Button>
+                                                                                        <Button fullWidth color="secondary" variant="outlined" className={css(sharedStyles.no_text_transform)} disabled={user?.superAdmin} onClick={() => this.toggleRejectFeedback()}>Send back to issuer</Button>
                                                                                     </FlexView>
                                                                                 </FlexView>
                                                                     }
 
                                                                     {
-                                                                        !user.superAdmin
+                                                                        !user?.superAdmin
                                                                             ?
                                                                             null
                                                                             :
@@ -2996,7 +2996,7 @@ class ProjectDetails extends Component {
                                                                                     style={{marginTop: 25}} onClick={this.bringPitchBackToLive}>Make project live again</Button>
 
                                                                                 <FlexView column marginTop={100}>
-                                                                                    <Button fullWidth color="secondary" className={css(sharedStyles.no_text_transform)} variant="contained" disabled={user.superAdmin} onClick={() => this.onMakeProjectGoToPledgePhaseDecision(false)}>Close project</Button>
+                                                                                    <Button fullWidth color="secondary" className={css(sharedStyles.no_text_transform)} variant="contained" disabled={user?.superAdmin} onClick={() => this.onMakeProjectGoToPledgePhaseDecision(false)}>Close project</Button>
 
                                                                                     <Typography align="center" variant="body2" style={{marginTop: 12}}>
                                                                                         <b>
@@ -3064,7 +3064,7 @@ class ProjectDetails extends Component {
                                                                     {/*                color="primary"*/}
                                                                     {/*                className={css(sharedStyles.no_text_transform)}*/}
                                                                     {/*                variant="outlined"*/}
-                                                                    {/*                disabled={user.superAdmin}*/}
+                                                                    {/*                disabled={user?.superAdmin}*/}
                                                                     {/*                onClick={() => this.onMakeProjectGoToPledgePhaseDecision(true)}*/}
                                                                     {/*            >*/}
                                                                     {/*                Move to pledge phase*/}
@@ -3079,7 +3079,7 @@ class ProjectDetails extends Component {
                                                                     {/*                color="secondary"*/}
                                                                     {/*                className={css(sharedStyles.no_text_transform)}*/}
                                                                     {/*                variant="outlined"*/}
-                                                                    {/*                disabled={user.superAdmin}*/}
+                                                                    {/*                disabled={user?.superAdmin}*/}
                                                                     {/*                onClick={() => this.onMakeProjectGoToPledgePhaseDecision(false)}*/}
                                                                     {/*            >*/}
                                                                     {/*                Close project*/}
@@ -3088,7 +3088,7 @@ class ProjectDetails extends Component {
                                                                     {/*    </FlexView>*/}
 
                                                                     {/*    {*/}
-                                                                    {/*        !user.superAdmin*/}
+                                                                    {/*        !user?.superAdmin*/}
                                                                     {/*            ?*/}
                                                                     {/*            null*/}
                                                                     {/*            :*/}
@@ -3242,7 +3242,7 @@ class ProjectDetails extends Component {
                                                 {/*                                color="primary"*/}
                                                 {/*                                className={css(sharedStyles.no_text_transform)}*/}
                                                 {/*                                variant="outlined"*/}
-                                                {/*                                disabled={user.superAdmin}*/}
+                                                {/*                                disabled={user?.superAdmin}*/}
                                                 {/*                                onClick={() => this.onMakeProjectPledgeGoLiveDecision({*/}
                                                 {/*                                    decision: true,*/}
                                                 {/*                                    projectVisibilitySetting*/}
@@ -3260,7 +3260,7 @@ class ProjectDetails extends Component {
                                                 {/*                                color="secondary"*/}
                                                 {/*                                className={css(sharedStyles.no_text_transform)}*/}
                                                 {/*                                variant="outlined"*/}
-                                                {/*                                disabled={user.superAdmin}*/}
+                                                {/*                                disabled={user?.superAdmin}*/}
                                                 {/*                                onClick={() => this.onMakeProjectPledgeGoLiveDecision({decision: false})}*/}
                                                 {/*                            >*/}
                                                 {/*                                Close pledge*/}
@@ -3269,7 +3269,7 @@ class ProjectDetails extends Component {
                                                 {/*                    </FlexView>*/}
 
                                                 {/*                    {*/}
-                                                {/*                        !user.superAdmin*/}
+                                                {/*                        !user?.superAdmin*/}
                                                 {/*                            ?*/}
                                                 {/*                            null*/}
                                                 {/*                            :*/}
@@ -3327,10 +3327,10 @@ class ProjectDetails extends Component {
                                                         <Button variant="outlined" color="primary" className={css(sharedStyles.no_text_transform)}
                                                             onClick={() => realtimeDBUtils.toggleProjectLivelinessTemporarily(user, JSON.parse(JSON.stringify(project)))}
                                                             disabled={
-                                                                user.type !== DB_CONST.TYPE_ADMIN
+                                                                user?.type !== DB_CONST.TYPE_ADMIN
                                                                 || (
-                                                                    user.type === DB_CONST.TYPE_ADMIN
-                                                                    && user.anid !== project.anid
+                                                                    user?.type === DB_CONST.TYPE_ADMIN
+                                                                    && user?.anid !== project.anid
                                                                 )
                                                             }
                                                         >
@@ -3343,7 +3343,7 @@ class ProjectDetails extends Component {
                                                             }
                                                         </Button>
                                                         {
-                                                            !user.superAdmin
+                                                            !user?.superAdmin
                                                                 ?
                                                                 null
                                                                 :
@@ -3376,7 +3376,7 @@ class ProjectDetails extends Component {
                                 ?
                                 <Col xs={12} sm={12} md={12} lg={{span: 6, offset: 3}}>
                                     {
-                                        user.type === DB_CONST.TYPE_ADMIN
+                                        user?.type === DB_CONST.TYPE_ADMIN
                                             ?
                                             <FlexView column marginTop={30} hAlignContent="center">
                                                 <Typography align="center" variant="h5">Restricted to {project.group.displayName} members.
@@ -3467,7 +3467,7 @@ class ProjectDetails extends Component {
                                 ?
                                 <Col xs={12} sm={12} md={12} lg={{span: 6, offset: 3}}>
                                     {
-                                        user.type === DB_CONST.TYPE_ADMIN
+                                        user?.type === DB_CONST.TYPE_ADMIN
                                             ?
                                             <FlexView column marginTop={30} hAlignContent="center">
                                                 <Typography align="center" variant="h5">Restricted to {project.group.displayName} members.
@@ -3496,7 +3496,7 @@ class ProjectDetails extends Component {
                                     <Row>
                                         <Col xs={{span: 12, order: 2}} sm={{span: 12, order: 2}} md={{span: 8, order: 1}} lg={{span: 8, order: 1}} style={{marginTop: 40}}>
                                             {
-                                                user.type === DB_CONST.TYPE_INVESTOR
+                                                user?.type === DB_CONST.TYPE_INVESTOR
                                                     ?
                                                     null
                                                     :
@@ -3528,7 +3528,7 @@ class ProjectDetails extends Component {
                                                                         sortedComments.map(comment => (
                                                                             (
                                                                                 // if the comment is from the current user
-                                                                                comment.commentedBy === user.id
+                                                                                comment.commentedBy === user?.id
                                                                                     ?
                                                                                     <FlexView key={comment.id} column marginTop={12} marginBottom={12} className={css(styles.border_box)} style={{backgroundColor: colors.white, width: "100%"}}>
                                                                                         <Typography style={{marginTop: 15, marginBottom: 10}} variant="body1" className={css(styles.gray_text)} align="left">Update your comment</Typography>
@@ -3580,8 +3580,8 @@ class ProjectDetails extends Component {
                                                                                                                 {
                                                                                                                     reply.author.type === DB_CONST.TYPE_ADMIN
                                                                                                                         ?
-                                                                                                                        user.type === DB_CONST.TYPE_ADMIN
-                                                                                                                        && user.superAdmin
+                                                                                                                        user?.type === DB_CONST.TYPE_ADMIN
+                                                                                                                        && user?.superAdmin
                                                                                                                             ?
                                                                                                                             `by group admin - ${reply.author.email}`
                                                                                                                             :
@@ -3614,8 +3614,8 @@ class ProjectDetails extends Component {
 
                                                                                         {/** Comment author */}
                                                                                         {
-                                                                                            user.type === DB_CONST.TYPE_ADMIN
-                                                                                            && user.superAdmin
+                                                                                            user?.type === DB_CONST.TYPE_ADMIN
+                                                                                            && user?.superAdmin
                                                                                                 ?
                                                                                                 <NavLink
                                                                                                     to={
@@ -3640,12 +3640,12 @@ class ProjectDetails extends Component {
 
                                                                                         {/** Reply button */}
                                                                                         {
-                                                                                            (user.type === DB_CONST.TYPE_ISSUER
-                                                                                                && user.id === projectIssuer.id)
+                                                                                            (user?.type === DB_CONST.TYPE_ISSUER
+                                                                                                && user?.id === projectIssuer.id)
                                                                                             || (
-                                                                                                user.type === DB_CONST.TYPE_ADMIN
+                                                                                                user?.type === DB_CONST.TYPE_ADMIN
                                                                                                 && project.hasOwnProperty('createdByGroupAdmin')
-                                                                                                && user.anid === project.anid
+                                                                                                && user?.anid === project.anid
                                                                                             )
                                                                                                 ?
                                                                                                 <FlexView marginTop={25}>
@@ -3715,8 +3715,8 @@ class ProjectDetails extends Component {
                                                                                                                 {
                                                                                                                     reply.author.type === DB_CONST.TYPE_ADMIN
                                                                                                                         ?
-                                                                                                                        user.type === DB_CONST.TYPE_ADMIN
-                                                                                                                        && user.superAdmin
+                                                                                                                        user?.type === DB_CONST.TYPE_ADMIN
+                                                                                                                        && user?.superAdmin
                                                                                                                             ?
                                                                                                                             `by course admin - ${reply.author.email}`
                                                                                                                             :
@@ -3738,11 +3738,11 @@ class ProjectDetails extends Component {
                                                                                                             // and issuer that created this project and owns this reply
                                                                                                             // to edit/delete this reply
                                                                                                             (
-                                                                                                                user.type === DB_CONST.TYPE_ISSUER
-                                                                                                                || (user.type === DB_CONST.TYPE_ADMIN && !user.superAdmin)
+                                                                                                                user?.type === DB_CONST.TYPE_ISSUER
+                                                                                                                || (user?.type === DB_CONST.TYPE_ADMIN && !user?.superAdmin)
                                                                                                             )
-                                                                                                            && user.id === projectIssuer.id
-                                                                                                            && user.id === reply.repliedBy
+                                                                                                            && user?.id === projectIssuer.id
+                                                                                                            && user?.id === reply.repliedBy
                                                                                                                 ?
                                                                                                                 <FlexView marginTop={16}>
                                                                                                                     <Button variant="outlined" className={css(sharedStyles.no_text_transform)} size="small" color="secondary" onClick={() => this.onDeleteCommentReply(reply)} style={{marginRight: 10}}>Delete<DeleteIcon fontSize="small" style={{marginLeft: 6}}/>
@@ -3775,7 +3775,7 @@ class ProjectDetails extends Component {
                                                                 </FlexView>
                                                             )
                                                             :
-                                                            user.type !== DB_CONST.TYPE_INVESTOR
+                                                            user?.type !== DB_CONST.TYPE_INVESTOR
                                                                 ?
                                                                 <FlexView hAlignContent="center" vAlignContent="center" column style={{padding: 30, backgroundColor: colors.kick_starter_background_color}}>
                                                                     <Typography variant="body2">No comments yet</Typography>
@@ -3788,7 +3788,7 @@ class ProjectDetails extends Component {
                                                                             <Button size="small" onClick={this.onPostACommentClick} variant="outlined" color="inherit" fullWidth={false}
                                                                                 disabled={
                                                                                     utils.isProjectLive(project)
-                                                                                    && user.type === DB_CONST.TYPE_INVESTOR                                                                                  
+                                                                                    && user?.type === DB_CONST.TYPE_INVESTOR
                                                                                 }
                                                                             >Post a comment</Button>
                                                                         </div>
@@ -3805,10 +3805,10 @@ class ProjectDetails extends Component {
                                         <Col xs={{span: 12, order: 1}} sm={{span: 12, order: 1}} md={{span: 4, order: 2}} lg={{span: 4, order: 2}} style={{marginTop: 40}}>
 
                                             {
-                                                user.type === DB_CONST.TYPE_INVESTOR
+                                                user?.type === DB_CONST.TYPE_INVESTOR
                                                     ?
                                                     (
-                                                        comments.filter(comment => comment.commentedBy === user.id).length === 0
+                                                        comments.filter(comment => comment.commentedBy === user?.id).length === 0
                                                             ?
                                                             <FlexView column>
                                                                 <Typography variant="subtitle1" align="left" style={{marginBottom: 25}}>This is your space to offer support and feedback to the issuer. Your identity will not be shared.</Typography>
@@ -3821,7 +3821,7 @@ class ProjectDetails extends Component {
                                                                             <Button size="small" onClick={this.onPostACommentClick} variant="outlined" color="inherit"fullWidth={false}
                                                                                 disabled={
                                                                                     utils.isProjectLive(project)
-                                                                                    && user.type === DB_CONST.TYPE_INVESTOR
+                                                                                    && user?.type === DB_CONST.TYPE_INVESTOR
                                                                                 }
                                                                             >Post a comment</Button>
                                                                         </div>
@@ -3851,7 +3851,7 @@ class ProjectDetails extends Component {
                                 ?
                                 <Col xs={12} sm={12} md={12} lg={{span: 6, offset: 3}}>
                                     {
-                                        user.type === DB_CONST.TYPE_ADMIN
+                                        user?.type === DB_CONST.TYPE_ADMIN
                                             ?
                                             <FlexView column marginTop={30} hAlignContent="center">
                                                 <Typography align="center" variant="h5">Restricted to {project.group.displayName} members.</Typography>
@@ -3897,7 +3897,7 @@ class ProjectDetails extends Component {
                                 ?
                                 <Col xs={12} sm={12} md={12} lg={{span: 6, offset: 3}}>
                                     {
-                                        user.type === DB_CONST.TYPE_ADMIN
+                                        user?.type === DB_CONST.TYPE_ADMIN
                                             ?
                                             <FlexView column marginTop={30} hAlignContent="center">
                                                 <Typography align="center" variant="h5">Restricted to {project.group.displayName} members.</Typography>
@@ -3961,17 +3961,17 @@ class ProjectDetails extends Component {
                                                     && groupProperties.groupUserName === "qib"
                                                 )
                                                 && (
-                                                    (user.type === DB_CONST.TYPE_ADMIN
-                                                        && user.anid === groupProperties.anid)
-                                                    || (user.type === DB_CONST.TYPE_ISSUER
-                                                        && user.id === project.issuerID)
+                                                    (user?.type === DB_CONST.TYPE_ADMIN
+                                                        && user?.anid === groupProperties.anid)
+                                                    || (user?.type === DB_CONST.TYPE_ISSUER
+                                                        && user?.id === project.issuerID)
                                                 )
                                             )
                                             ||
                                             (
                                                 !groupProperties
-                                                && user.type === DB_CONST.TYPE_ADMIN
-                                                && user.superAdmin
+                                                && user?.type === DB_CONST.TYPE_ADMIN
+                                                && user?.superAdmin
                                             )
                                         )
                                             ?
@@ -4004,7 +4004,7 @@ class ProjectDetails extends Component {
             project
         } = this.props;
 
-        if (user.type !== DB_CONST.TYPE_INVESTOR) {
+        if (user?.type !== DB_CONST.TYPE_INVESTOR) {
             return null;
         }
 
@@ -4046,6 +4046,8 @@ class ProjectDetails extends Component {
      * Function to decide if information should be hidden or not
      */
     shouldHideInformation = () => {
+        return false;
+        /*
         const {
             project,
             user,
@@ -4053,14 +4055,14 @@ class ProjectDetails extends Component {
         } = this.props;
 
         // user is an admin
-        if (user.type === DB_CONST.TYPE_ADMIN) {
+        if (user?.type === DB_CONST.TYPE_ADMIN) {
             // user is a super admin
-            if (user.superAdmin) {
+            if (user?.superAdmin) {
                 return false;
             }
 
             // user is a course admin and is the course that owns the project
-            if (user.anid === project.anid) {
+            if (user?.anid === project.anid) {
                 return false;
             }
 
@@ -4079,7 +4081,7 @@ class ProjectDetails extends Component {
         // user is not an admin
         else {
             // should not hide any information if the user is an issuer that created this offer
-            if (user.type === DB_CONST.TYPE_ISSUER && user.id === project.issuerID) {
+            if (user?.type === DB_CONST.TYPE_ISSUER && user?.id === project.issuerID) {
                 return false;
             }
 
@@ -4097,6 +4099,7 @@ class ProjectDetails extends Component {
             // otherwise, should not hide information
             return groupsUserIsIn.findIndex(group => group.anid === project.anid) === -1;
         }
+        */
     };
 
     /**
@@ -4199,7 +4202,7 @@ class ProjectDetails extends Component {
         // do not let the owner of the project vote for themselves
         // also, do not let the admin vote the project
         if (project.issuerID === firebase.auth().currentUser.uid
-            || user.type === DB_CONST.TYPE_ADMIN
+            || user?.type === DB_CONST.TYPE_ADMIN
         ) {
             return true;
         }
@@ -4216,7 +4219,7 @@ class ProjectDetails extends Component {
         }
 
         // do not let issuers vote
-        if (user.type === DB_CONST.TYPE_ISSUER) {
+        if (user?.type === DB_CONST.TYPE_ISSUER) {
             return true;
         }
 
@@ -4273,7 +4276,7 @@ const getInvestorVote = (votes, user) => {
         return null;
     }
 
-    let investorVoteIndex = votes.findIndex(vote => vote.investorID === user.id);
+    let investorVoteIndex = votes.findIndex(vote => vote.investorID === user?.id);
     // investor has voted
     if (investorVoteIndex !== -1) {
         return votes[investorVoteIndex];

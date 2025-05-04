@@ -426,6 +426,6 @@ export const isProjectOwner = (user: User | Admin, project: Project) => {
     if (admin) {
         return admin.anid === project.anid;
     } else {
-        return user.id === project.issuerID;
+        return user?.id === project.issuerID;
     }
 }
