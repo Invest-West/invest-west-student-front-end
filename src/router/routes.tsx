@@ -86,7 +86,9 @@ export default class Routes {
             && route !== Routes.nonGroupCreatePitchTermsAndConditions
             && route !== Routes.nonGroupMarketingPreferences
             && route !== Routes.nonGroupAuthAction
-            && route !== Routes.error404;
+            && route !== Routes.error404
+            && route !== Routes.nonGroupViewOffer
+            && route !== Routes.groupViewOffer;
     }
 
     /**
