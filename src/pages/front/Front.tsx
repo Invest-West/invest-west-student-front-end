@@ -1,31 +1,19 @@
 import React, {Component} from "react";
 import {connect} from "react-redux";
 import {AppState} from "../../redux-store/reducers";
-import {Col, Container, Image, Row} from "react-bootstrap";
-import {Box, Button, colors, Divider, Typography, Link} from "@material-ui/core";
-import CustomLink from "../../shared-js-css-styles/CustomLink";
 import {
-    getGroupRouteTheme,
-    isValidatingGroupUrl,
-    ManageGroupUrlState,
-    routeContainsGroupName
+    ManageGroupUrlState
 } from "../../redux-store/reducers/manageGroupUrlReducer";
 import {
-    AuthenticationState,
-    isAuthenticating,
-    successfullyAuthenticated
+    AuthenticationState
 } from "../../redux-store/reducers/authenticationReducer";
-import {RouteComponentProps} from "react-router-dom";
+import {RouteComponentProps, NavLink} from "react-router-dom";
 import {RouteParams} from "../../router/router";
-import {css} from "aphrodite";
-import sharedStyles from "../../shared-js-css-styles/SharedStyles";
-import {getGroupLogo} from "../../models/group_properties";
 import {MediaQueryState} from "../../redux-store/reducers/mediaQueryReducer";
 import Routes from "../../router/routes";
-import {toRGBWithOpacity} from "../../utils/colorUtils";
 
-const logoHeightMobile: number = 160;
-const logoHeight: number = 220;
+// Import images
+import studentLogo from "../../img/student_logo.png"; 
 
 interface FrontProps {
     ManageGroupUrlState: ManageGroupUrlState;
@@ -41,130 +29,90 @@ const mapStateToProps = (state: AppState) => {
     }
 }
 
-class Front extends Component<FrontProps & Readonly<RouteComponentProps<RouteParams>>, any> {
+interface FrontState {
+    activeTab: "academia" | "employer";
+}
+
+class Front extends Component<FrontProps & Readonly<RouteComponentProps<RouteParams>>, FrontState> {
+    constructor(props: FrontProps & Readonly<RouteComponentProps<RouteParams>>) {
+        super(props);
+        this.state = {
+            activeTab: "academia"
+        };
+    }
+      handleTabChange = (tab: "academia" | "employer") => {
+        this.setState({ activeTab: tab });
+    }
+    
     render() {
         const {
             ManageGroupUrlState,
-            AuthenticationState,
-            MediaQueryState
+            AuthenticationState
         } = this.props;
+        
+        // Not using activeTab in this component currently
+        const { match } = this.props;
+        const groupParam = match.params.groupUserName ? match.params.groupUserName : null;
+        
+        // Construct proper routes based on whether we have a group or not
+        const aboutRoute = groupParam ? `/groups/${groupParam}/about` : "/about";
+        const hiwRoute = groupParam ? `/groups/${groupParam}/Hiw` : "/Hiw";
+        const contactRoute = groupParam ? `/groups/${groupParam}/contact` : "contact-us-front";
+        const exploreRoute = groupParam ? `/groups/${groupParam}/explore` : "/explore";
+        const signInRoute = Routes.constructSignInRoute(match.params);
+        const homeRoute = Routes.constructHomeRoute(match.params, ManageGroupUrlState, AuthenticationState);
+        
+        return (
+        <main>
+           <header className="navbar transparent">
+            <div className="navbar-left">
+                <NavLink to={homeRoute}><img className="logo" src={studentLogo} alt="Logo"/></NavLink>
+            </div>
+        
+            <div className="burger-menu">
+                <div className="burger-bar"></div>
+                <div className="burger-bar"></div>
+                <div className="burger-bar"></div>
+            </div>
+            
+            <div className="nav-overlay"></div>
+        
+            <div className="navbar-center">
+                <NavLink to={aboutRoute}>About</NavLink>
+                <NavLink to={hiwRoute}>How It Works</NavLink>
+                <NavLink to={contactRoute}>Contact</NavLink>
+            </div>            <div className="navbar-right">
+                <NavLink to={exploreRoute}>Explore</NavLink>
+                <NavLink to={signInRoute}>Login</NavLink>
+            </div>
+           </header>
+             <section className="hero">
+                <div className="hero-content">
+                <h1>Helping You Show Your Talents To The World</h1>
+                <p>Connecting students with industry to find the next generation of thinkers. Displaying the best o the UK talent pool across the full range of disciplines, from Biology to Business.</p>
 
-        return <Container fluid style={{padding: 0, position: "fixed", height: "100% !important", overflowY: "auto", top: 0}}>
-            <Row noGutters >
-                <Col xs={12} sm={12} md={12} lg={12}>
-                    <Box display="flex" justifyContent="flex-end" alignItems="center" paddingX="30px" paddingY="20px">
-                        <CustomLink url={Routes.constructContactUsRoute(this.props.match.params)} color="black" activeColor={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main} activeUnderline={false} component="nav-link" 
-                        childComponent={
-                                <Typography variant="body1">Contact us</Typography>
-                            }/>
-
-                        <Box width="35px"/>
-
-                        <Box width="35px"/>
-
-                        <CustomLink
-                            url={
-                                isAuthenticating(AuthenticationState)
-                                    ? ""
-                                    : !successfullyAuthenticated(AuthenticationState)
-                                    ? Routes.constructSignInRoute(this.props.match.params)
-                                    : Routes.constructDashboardRoute(this.props.match.params, ManageGroupUrlState, AuthenticationState)
-                            }
-                            color="black"
-                            activeColor={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main}
-                            activeUnderline={false}
-                            // TODO: When completely migrate to the new authentication flow, change this component to "nav-link"
-                            component="a"
-                            childComponent={
-                                <Button color="primary" className={css(sharedStyles.no_text_transform)} variant="contained" size="medium">
-                                    {
-                                        isAuthenticating(AuthenticationState)
-                                            ? ""
-                                            : !successfullyAuthenticated(AuthenticationState)
-                                            ? "Sign in"
-                                            : "Dashboard"
-                                    }
-                                </Button>
-                            }
-                        />
-                    </Box>
-                </Col>
-            </Row>
-
-            <Row noGutters>
-                <Col xs={12} sm={12} md={12} lg={12}>
-                    <Divider/>
-                </Col>
-            </Row>
-
-            <Row noGutters>
-                <Col xs={12} sm={12} md={12} lg={12}>
-                    <Box display="flex" flexDirection="column" height="100%" minHeight="100vh"
-                        bgcolor={
-                            toRGBWithOpacity(
-                                getGroupRouteTheme(ManageGroupUrlState).palette.primary.main,
-                                0.12
-                            )
-                        }
-                    >
-                        {/* Front page link to website */}
-                        <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" flexGrow={3} paddingY="50px">
-                        <Link href={ManageGroupUrlState.group?.website ?? ""} target="_blank">
-
-                            {
-                                isValidatingGroupUrl(ManageGroupUrlState)
-                                    ? null
-                                    : <Image
-                                        alt="logo"
-                                        src={
-                                            !routeContainsGroupName(ManageGroupUrlState)
-                                                ? require("../../img/logo.png").default
-                                                : getGroupLogo(ManageGroupUrlState.group)
-                                        }
-                                        style={{
-                                            width: "auto",
-                                            height: MediaQueryState.isMobile ? logoHeightMobile : logoHeight
-                                        }}
-                                    />
-                            }
-                            </Link>
-
-                            <Box height="20px"/>
-
-                            <Typography color="primary" variant="h2" align="center">
-                                {
-                                    isValidatingGroupUrl(ManageGroupUrlState)
-                                        ? ""
-                                        : !routeContainsGroupName(ManageGroupUrlState)
-                                        ? "Invest West"
-                                        : ManageGroupUrlState.group?.displayName
-                                }
-                            </Typography>
-
-                            {
-                                routeContainsGroupName(ManageGroupUrlState)
-                                    ? null
-                                    : <Box color={colors.blueGrey["500"]} marginTop="20px">
-                                        <Typography variant="h4" align="center">Connecting universities and students</Typography>
-                                    </Box>
-                            }
-                        </Box>
-
-                        <Box display="flex" flexDirection="column" justifyContent="flex-end" flexGrow={1}>
-                            <Image alt="front_footer" src={require("../../img/front_page_cover_image.png").default} style={{objectFit: "fill"}}/>
-                            <Box height="90px"
-                                bgcolor={
-                                    toRGBWithOpacity(
-                                        getGroupRouteTheme(ManageGroupUrlState).palette.primary.main,
-                                        0.75
-                                    )
-                                }
-                            />
-                        </Box>
-                    </Box>
-                </Col>
-            </Row>
-        </Container>;
+                <NavLink to={exploreRoute} className="cta-button">Explore Projects</NavLink>
+                </div>
+                <div className="accreditation-logos">
+                <div className="logo-card">
+                    <p>UWE</p>
+                </div>
+                <div className="logo-card">
+                    <p>Bristol</p>
+                </div>
+                <div className="logo-card">
+                    <p>WU</p>
+                </div>
+                <div className="logo-card">
+                    <p>FIBAA</p>
+                </div>
+                <div className="logo-card">
+                    <p>ZfU</p>
+                </div>
+                </div>
+            </section>
+        </main>
+        )
     }
 }
 

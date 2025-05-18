@@ -16,6 +16,11 @@ export default class Routes {
     static nonGroupFront: string = "/";
     static groupFront: string = `${Routes.baseGroup}`;
 
+    static nonGroupAbout: string = "/about";  
+    static nonGroupHiw: string = "/Hiw";
+    static nonGroupContact: string = "/contact-us-front";
+    static nonGroupExploreFront: string = "/explore";
+
     static nonGroupSignIn: string = "/groups/invest-west/signin";
     static groupSignIn: string = `${Routes.baseGroup}/signin`;
     static superAdminSignIn: string = "/signin/super-admin";
@@ -74,7 +79,11 @@ export default class Routes {
     public static isProtectedRoute = (route: string) => {
         return route !== Routes.nonGroupFront
             && route !== Routes.groupFront
+            && route !== Routes.nonGroupAbout
+            && route !== Routes.nonGroupHiw
             && route !== Routes.nonGroupSignIn
+            && route !== Routes.nonGroupContact
+            && route !== Routes.nonGroupExploreFront
             && route !== Routes.groupSignIn
             && route !== Routes.nonGroupSignUp
             && route !== Routes.groupSignUp

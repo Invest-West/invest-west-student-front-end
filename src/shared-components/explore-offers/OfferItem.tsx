@@ -12,8 +12,7 @@ import {
     isProjectPublic,
     isProjectRestricted,
     PitchCover,
-    ProjectInstance,
-    shouldHideProjectInformationFromUser
+    ProjectInstance
 } from "../../models/project";
 import CustomLink from "../../shared-js-css-styles/CustomLink";
 import '../../shared-js-css-styles/sharedStyles.scss';
@@ -52,14 +51,9 @@ class OfferItem extends Component<OfferItemProps, any> {
             offerInstance
         } = this.props;
 
-        if (!AuthenticationState.currentUser) {
-            return null;
-        }
-
-
+        // Removed early return check for currentUser
 
         const pitchCover: PitchCover | null = getPitchCover(offerInstance.projectDetail);
-
 
         return <CustomLink
             url={Routes.constructProjectDetailRoute(ManageGroupUrlState.groupNameFromUrl ?? null, offerInstance.projectDetail.id)}
@@ -79,11 +73,8 @@ class OfferItem extends Component<OfferItemProps, any> {
                                     bgcolor={appColors.dark_green_last_lightness_94_hue_angle_minus_17_color_saturation_100}
                                 >
                                     {
-                                        shouldHideProjectInformationFromUser(AuthenticationState.currentUser, AuthenticationState.groupsOfMembership, offerInstance.projectDetail)
-                                            ? <Box display="flex" width="100%" height={CoverMaxHeight} justifyContent="center" >
-                                                <Image src={getGroupLogo(offerInstance.group) ?? ""} width="auto" height={CoverMaxHeight} style={{ padding: 20, objectFit: "scale-down" }} />
-                                            </Box>
-                                            : !pitchCover
+                                        // Removed shouldHideProjectInformationFromUser check
+                                        !pitchCover
                                             ? null
                                             : isImagePitchCover(pitchCover)
                                                 ? <Image src={pitchCover.url} width="100%" height={CoverMaxHeight} style={{ objectFit: "contain" }} />
@@ -119,9 +110,8 @@ class OfferItem extends Component<OfferItemProps, any> {
                                         <Box marginY="6px" >
                                             <Typography noWrap variant="h6" align="left" >
                                                 {
-                                                    shouldHideProjectInformationFromUser(AuthenticationState.currentUser, AuthenticationState.groupsOfMembership, offerInstance.projectDetail)
-                                                        ? "Members only offer"
-                                                        : offerInstance.projectDetail.projectName
+                                                    // Removed shouldHideProjectInformationFromUser check
+                                                    offerInstance.projectDetail.projectName
                                                 }
                                             </Typography>
                                         </Box>
@@ -131,9 +121,8 @@ class OfferItem extends Component<OfferItemProps, any> {
                                         <Box color={colors.grey["700"]}>
                                             <title className="projectInfo">
                                                 {
-                                                    shouldHideProjectInformationFromUser(AuthenticationState.currentUser, AuthenticationState.groupsOfMembership, offerInstance.projectDetail)
-                                                        ? `in ${offerInstance.projectDetail.sector} sector`
-                                                        : offerInstance.projectDetail.description
+                                                    // Removed shouldHideProjectInformationFromUser check
+                                                    offerInstance.projectDetail.description
                                                 }
                                             </title>
                                         </Box>
@@ -142,9 +131,8 @@ class OfferItem extends Component<OfferItemProps, any> {
                                         <Box color="black" marginTop="8px" className="issuer-offer" >
                                             <Typography variant="body2" noWrap >
                                                 {
-                                                    shouldHideProjectInformationFromUser(AuthenticationState.currentUser, AuthenticationState.groupsOfMembership, offerInstance.projectDetail)
-                                                        ? `by ${offerInstance.group.displayName}`
-                                                        : isProjectCreatedByGroupAdmin(offerInstance.projectDetail)
+                                                    // Removed shouldHideProjectInformationFromUser check
+                                                    isProjectCreatedByGroupAdmin(offerInstance.projectDetail)
                                                         ? `by ${offerInstance.group.displayName}`
                                                         : `by ${(offerInstance.issuer as User).firstName} ${(offerInstance.issuer as User).lastName}`
                                                 }
@@ -162,7 +150,7 @@ class OfferItem extends Component<OfferItemProps, any> {
                                         <Typography variant="body2" color="primary" align="left" >
                                             {
                                                 offerInstance.projectDetail.Pitch.fundRequired
-                                                    ? `£${Number(offerInstance.projectDetail.Pitch.fundRequired.toFixed(2)).toLocaleString()} goal`
+                                                    ? `Â£${Number(offerInstance.projectDetail.Pitch.fundRequired.toFixed(2)).toLocaleString()} goal`
                                                     : ""
                                             }
                                         </Typography>
