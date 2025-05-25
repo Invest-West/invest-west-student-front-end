@@ -11,6 +11,13 @@ import {RouteComponentProps, NavLink} from "react-router-dom";
 import {RouteParams} from "../../router/router";
 import {MediaQueryState} from "../../redux-store/reducers/mediaQueryReducer";
 import Routes from "../../router/routes";
+import {ThunkDispatch} from "redux-thunk";
+import {AnyAction} from "redux";
+import {fetchOffers} from "../../shared-components/explore-offers/ExploreOffersActions";
+import {ExploreOffersState, hasNotFetchedOffers} from "../../shared-components/explore-offers/ExploreOffersReducer";
+import {FetchProjectsOrderByOptions} from "../../api/repositories/OfferRepository";
+import OffersCarousel from "../../shared-components/offers-carousel/OffersCarousel";
+import {Box} from "@material-ui/core";
 
 // Import images
 import studentLogo from "../../img/student_logo.png"; 
@@ -19,13 +26,22 @@ interface FrontProps {
     ManageGroupUrlState: ManageGroupUrlState;
     AuthenticationState: AuthenticationState;
     MediaQueryState: MediaQueryState;
+    ExploreOffersLocalState: ExploreOffersState;
+    fetchOffers: (orderBy?: string) => any;
 }
 
 const mapStateToProps = (state: AppState) => {
     return {
         ManageGroupUrlState: state.ManageGroupUrlState,
         AuthenticationState: state.AuthenticationState,
-        MediaQueryState: state.MediaQueryState
+        MediaQueryState: state.MediaQueryState,
+        ExploreOffersLocalState: state.ExploreOffersLocalState
+    }
+}
+
+const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
+    return {
+        fetchOffers: (orderBy?: string) => dispatch(fetchOffers(orderBy))
     }
 }
 
@@ -40,6 +56,12 @@ class Front extends Component<FrontProps & Readonly<RouteComponentProps<RoutePar
             activeTab: "academia"
         };
     }
+
+    componentDidMount() {
+        if (hasNotFetchedOffers(this.props.ExploreOffersLocalState)) {
+            this.props.fetchOffers(FetchProjectsOrderByOptions.Phase);
+        }
+    }
       handleTabChange = (tab: "academia" | "employer") => {
         this.setState({ activeTab: tab });
     }
@@ -47,7 +69,8 @@ class Front extends Component<FrontProps & Readonly<RouteComponentProps<RoutePar
     render() {
         const {
             ManageGroupUrlState,
-            AuthenticationState
+            AuthenticationState,
+            ExploreOffersLocalState
         } = this.props;
         
         // Not using activeTab in this component currently
@@ -93,27 +116,26 @@ class Front extends Component<FrontProps & Readonly<RouteComponentProps<RoutePar
 
                 <NavLink to={exploreRoute} className="cta-button">Explore Projects</NavLink>
                 </div>
-                <div className="accreditation-logos">
-                <div className="logo-card">
-                    <p>UWE</p>
-                </div>
-                <div className="logo-card">
-                    <p>Bristol</p>
-                </div>
-                <div className="logo-card">
-                    <p>WU</p>
-                </div>
-                <div className="logo-card">
-                    <p>FIBAA</p>
-                </div>
-                <div className="logo-card">
-                    <p>ZfU</p>
-                </div>
-                </div>
+                {ExploreOffersLocalState.offerInstances.length > 0 && (
+                    <Box
+                        paddingX={this.props.MediaQueryState.isMobile ? "20px" : "56px"}
+                        paddingY={this.props.MediaQueryState.isMobile ? "15px" : "40px"}
+                        marginTop="2rem"
+                        style={{
+                            background: 'rgba(255, 255, 255, 0.1)',
+                            borderRadius: '10px',
+                            backdropFilter: 'blur(10px)',
+                            position: 'relative',
+                            zIndex: 10
+                        }}
+                    >
+                        <OffersCarousel offers={ExploreOffersLocalState.offerInstances.slice(0, 3)} />
+                    </Box>
+                )}
             </section>
         </main>
         )
     }
 }
 
-export default connect(mapStateToProps)(Front);
+export default connect(mapStateToProps, mapDispatchToProps)(Front);
