@@ -54,9 +54,12 @@ class OfferItem extends Component<OfferItemProps, any> {
         // Removed early return check for currentUser
 
         const pitchCover: PitchCover | null = getPitchCover(offerInstance.projectDetail);
+        const projectUrl = Routes.constructProjectDetailRoute(ManageGroupUrlState.groupNameFromUrl ?? null, offerInstance.projectDetail.id);
+        
+        console.log('OfferItem - Project URL:', projectUrl, 'for project:', offerInstance.projectDetail.projectName);
 
         return <CustomLink
-            url={Routes.constructProjectDetailRoute(ManageGroupUrlState.groupNameFromUrl ?? null, offerInstance.projectDetail.id)}
+            url={projectUrl}
             color="none"
             activeColor="none"
             activeUnderline={false}
@@ -70,7 +73,6 @@ class OfferItem extends Component<OfferItemProps, any> {
                                     className="offer-image"
                                     height={`${CoverMaxHeight}px`}
                                     width="100%"
-                                    bgcolor={appColors.dark_green_last_lightness_94_hue_angle_minus_17_color_saturation_100}
                                 >
                                     {
                                         // Removed shouldHideProjectInformationFromUser check
@@ -82,7 +84,7 @@ class OfferItem extends Component<OfferItemProps, any> {
                                     }
 
                                     {/** Course logo to be displayed at the top-right corner */}
-                                    <Image
+                                    {/* <Image
                                         src={getGroupLogo(offerInstance.group) ?? ""}
                                         roundedCircle
                                         height={46}
@@ -98,7 +100,7 @@ class OfferItem extends Component<OfferItemProps, any> {
                                             backgroundColor: colors.grey["300"],
                                             objectFit: "contain"
                                         }}
-                                    />
+                                    /> */}
                                 </Box>
 
                                 <Divider/>
@@ -140,10 +142,6 @@ class OfferItem extends Component<OfferItemProps, any> {
                                         </Box>
                                     </Box>
 
-
-
-                                    {/** Divider */}
-                                    <Box bgcolor={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main} className="offer-divier" />
 
                                     {/** Project phase information */}
                                     <Box className="phase-offer">
