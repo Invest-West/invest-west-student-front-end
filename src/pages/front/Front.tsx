@@ -122,7 +122,6 @@ class Front extends Component<FrontProps & Readonly<RouteComponentProps<RoutePar
                         paddingY={this.props.MediaQueryState.isMobile ? "15px" : "40px"}
                         marginTop="2rem"
                         style={{
-                            background: 'rgba(255, 255, 255, 0.1)',
                             borderRadius: '10px',
                             backdropFilter: 'blur(10px)',
                             position: 'relative',
