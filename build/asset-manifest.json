@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "https://student.investwest.online/static/css/main.70c9ab72.css",
-    "main.js": "https://student.investwest.online/static/js/main.abb401bb.js",
+    "main.css": "https://student.investwest.online/static/css/main.56470d40.css",
+    "main.js": "https://student.investwest.online/static/js/main.a99aace8.js",
     "static/media/employ_hire.svg": "https://student.investwest.online/static/media/employ_hire.3ac201d3ef420618ad98ca1b420f6d72.svg",
     "static/media/handshake_1.svg": "https://student.investwest.online/static/media/handshake_1.e75d54b484fd818cad1fcd2049d94a0f.svg",
     "static/media/student_shake.svg": "https://student.investwest.online/static/media/student_shake.70fdc67cbd9da5e68832272bb33bfb8f.svg",
@@ -81,7 +81,7 @@
     "index.html": "https://student.investwest.online/index.html"
   },
   "entrypoints": [
-    "static/css/main.70c9ab72.css",
-    "static/js/main.abb401bb.js"
+    "static/css/main.56470d40.css",
+    "static/js/main.a99aace8.js"
   ]
 }

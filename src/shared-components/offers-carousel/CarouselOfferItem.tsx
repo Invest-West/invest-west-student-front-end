@@ -19,7 +19,7 @@ const CarouselOfferItem: React.FC<CarouselOfferItemProps> = ({ offer, onClick })
         <div style={{ background: 'lightblue', padding: '10px', margin: '5px', border: '1px solid blue' }}>
             <h3>DEBUG: {offer.projectDetail.projectName}</h3>
             <p>ID: {offer.projectDetail.id}</p>
-            <p>Description: {offer.projectDetail.shortDescription || offer.projectDetail.description}</p>
+            <p>Description: {offer.projectDetail.description}</p>
         </div>
         /*<Card 
             onClick={onClick}
