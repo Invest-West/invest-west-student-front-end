@@ -229,7 +229,7 @@ class OffersTable extends Component<OffersTableProps, any> {
                                         childComponent={
                                             <Button variant="contained" color="primary" className={css(sharedStyles.no_text_transform)} >
                                                 <CreateOutlined fontSize="small" />
-                                                <Box width="10px" /> Create new offer
+                                                <Box width="10px" /> Create new project
                                             </Button>
                                         }
                                     />

@@ -71,6 +71,7 @@ import {getHomeGroup} from "../../models/group_of_membership";
 import {isDraftProjectNotSubmitted} from "../../models/project";
 import Api, {ApiRoutes} from "../../api/Api";
 import CustomLink from "../../shared-js-css-styles/CustomLink";
+import '../../shared-css/ReactQuillSizes.scss';
 
 const PITCH_COVER_FILES_CHANGED = 1;
 const PITCH_SUPPORTING_DOCUMENTS_FILES_CHANGED = 2;
@@ -3291,13 +3292,44 @@ class CreateProject extends Component {
                                                         && createProjectState.pitchCover.length > 0
                                                             ?
                                                             <FlexView column marginTop={35}>
-                                                                {
-                                                                    createProjectState.pitchCover[0].file.type !== "video/mp4"
-                                                                        ?
-                                                                        <Image fluid src={createProjectState.pitchCover[0].preview}/>
-                                                                        :
-                                                                        <ReactPlayer url={createProjectState.pitchCover[0].preview} playsInline width="100%" height="auto" playing={false} controls={true}/>
-                                                                }
+                                                                <Box
+                                                                    maxWidth="500px"
+                                                                    maxHeight="400px"
+                                                                    width="100%"
+                                                                    display="flex"
+                                                                    justifyContent="center"
+                                                                    alignItems="center"
+                                                                    overflow="hidden"
+                                                                    borderRadius="8px"
+                                                                    border="1px solid #e0e0e0"
+                                                                >
+                                                                    {
+                                                                        createProjectState.pitchCover[0].file.type !== "video/mp4"
+                                                                            ?
+                                                                            <Image 
+                                                                                fluid 
+                                                                                src={createProjectState.pitchCover[0].preview}
+                                                                                style={{
+                                                                                    maxWidth: "100%",
+                                                                                    maxHeight: "400px",
+                                                                                    objectFit: "contain"
+                                                                                }}
+                                                                            />
+                                                                            :
+                                                                            <ReactPlayer 
+                                                                                url={createProjectState.pitchCover[0].preview} 
+                                                                                playsInline 
+                                                                                width="100%" 
+                                                                                height="100%"
+                                                                                style={{
+                                                                                    maxWidth: "500px",
+                                                                                    maxHeight: "400px"
+                                                                                }}
+                                                                                playing={false} 
+                                                                                controls={true}
+                                                                            />
+                                                                    }
+                                                                </Box>
                                                                 <FlexView marginTop={10} hAlignContent="center">
                                                                     <OverlayTrigger trigger={['hover', 'focus']} placement="bottom" flip
                                                                         overlay={
@@ -3520,6 +3552,7 @@ class CreateProject extends Component {
                                                             {/** Rich text editor */}
                                                             <FlexView column marginTop={20}>
                                                                 <Typography variant="body1" paragraph align="left">Write overview</Typography>
+                                                                <div className="quill-medium">
                                                                 <ReactQuill
                                                                     theme="snow"
                                                                     placeholder={
@@ -3538,6 +3571,7 @@ class CreateProject extends Component {
                                                                     modules={modules}
                                                                     value={createProjectState.pitchPresentationText}
                                                                 />
+                                                                </div>
                                                             </FlexView>
                                                         </FlexView>
                                                 }

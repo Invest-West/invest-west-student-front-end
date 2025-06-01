@@ -115,6 +115,12 @@ export const createAccount: ActionCreator<any> = () => {
             return dispatch(completeAction);
         }
 
+        // password too short
+        if (password.length < 10) {
+            completeAction.error = "Please type a password with 10 or more characters";
+            return dispatch(completeAction);
+        }
+
         // password not strong enough
         if (checkPasswordStrength(password) === PASSWORD_VERY_WEAK) {
             completeAction.error = "Password is too weak. Please select a stronger password.";

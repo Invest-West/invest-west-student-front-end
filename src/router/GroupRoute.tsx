@@ -33,7 +33,7 @@ import User, {isInvestor, isIssuer} from "../models/user";
 import Admin, {isAdmin} from "../models/admin";
 import GroupOfMembership from "../models/group_of_membership";
 import {BarLoader} from "react-spinners";
-import { safeSetItem } from "../utils/browser";
+import { safeSetItem, safeGetItem, safeRemoveItem } from "../utils/browser";
 
 interface GroupRouteProps extends GroupRouteLocalProps {
     ManageSystemAttributesState: ManageSystemAttributesState;
@@ -113,7 +113,13 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
         }
 
         // invalid group url --> redirect to 404 page
-        if (!successfullyValidatedGroupUrl(this.props.ManageGroupUrlState) && !this.state.navigatingToError) {
+        // Skip this check for signup/signin routes where group validation might be pending
+        if (!successfullyValidatedGroupUrl(this.props.ManageGroupUrlState) 
+            && !this.state.navigatingToError 
+            && !this.state.navigatingFromSignInOrSignUpToDashboard
+            && !Routes.isSignInRoute(this.routePath) 
+            && !Routes.isSignUpRoute(this.routePath)) {
+            console.log('DEBUG: Redirecting to 404 - Group URL validation failed');
             this.setState({
                 navigatingToError: true
             });
@@ -138,20 +144,56 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             this.props.history.push(Routes.constructSignInRoute(this.routeParams));
         }
 
-        // redirect the user to their dashboard if they are on the sign in/up route and are successfully authenticated
+        // redirect the user to their stored redirect URL, or explore offers page if they are on the sign in/up route and are successfully authenticated
+        console.log('DEBUG: Route path:', this.routePath);
+        console.log('DEBUG: Is signup route:', Routes.isSignUpRoute(this.routePath));
+        console.log('DEBUG: Is signin route:', Routes.isSignInRoute(this.routePath));
+        console.log('DEBUG: Successfully authenticated:', successfullyAuthenticated(this.props.AuthenticationState));
+        console.log('DEBUG: Navigating from signin/signup:', this.state.navigatingFromSignInOrSignUpToDashboard);
+        
         if ((Routes.isSignInRoute(this.routePath) || Routes.isSignUpRoute(this.routePath))
             && successfullyAuthenticated(this.props.AuthenticationState)
             && !this.state.navigatingFromSignInOrSignUpToDashboard
         ) {
-            const dashboardRoute: string = Routes.constructDashboardRoute(this.routeParams, this.props.ManageGroupUrlState, this.props.AuthenticationState);
+            console.log('DEBUG: Entering authentication redirect logic');
+            // Check for stored redirect URL first
+            const storedRedirectUrl = safeGetItem('redirectToAfterAuth');
+            let redirectRoute: string;
+            
+            if (storedRedirectUrl) {
+                redirectRoute = storedRedirectUrl;
+                safeRemoveItem('redirectToAfterAuth');
+            } else {
+                // For signup/signin routes, use simple direct redirect to avoid complex logic
+                if (Routes.isSignUpRoute(this.routePath) || Routes.isSignInRoute(this.routePath)) {
+                    if (this.routeParams.groupUserName) {
+                        redirectRoute = Routes.groupExploreFront.replace(":groupUserName", this.routeParams.groupUserName);
+                        console.log('DEBUG: Using routeParams.groupUserName:', this.routeParams.groupUserName);
+                    } else if (this.props.ManageGroupUrlState.groupNameFromUrl) {
+                        redirectRoute = Routes.groupExploreFront.replace(":groupUserName", this.props.ManageGroupUrlState.groupNameFromUrl);
+                        console.log('DEBUG: Using ManageGroupUrlState.groupNameFromUrl:', this.props.ManageGroupUrlState.groupNameFromUrl);
+                    } else {
+                        // For invest-west signup/signin routes
+                        redirectRoute = Routes.groupExploreFront.replace(":groupUserName", "invest-west");
+                        console.log('DEBUG: Using default invest-west');
+                    }
+                } else {
+                    // For other routes, use the complex logic
+                    redirectRoute = Routes.constructExploreOffersRoute(this.routeParams, this.props.ManageGroupUrlState, this.props.AuthenticationState);
+                }
+                console.log('DEBUG: Redirect route constructed:', redirectRoute);
+            }
+            
+            console.log('DEBUG: About to redirect to:', redirectRoute);
             this.setState({
                 navigatingFromSignInOrSignUpToDashboard: true
             });
-            this.props.history.push(dashboardRoute);
+            this.props.history.push(redirectRoute);
+            return; // Exit early to prevent other redirect logic from running
         }
 
         // redirect the user to 404 page if they are trying to access routes that are not meant for them
-        if (successfullyAuthenticated(this.props.AuthenticationState)) {
+        if (successfullyAuthenticated(this.props.AuthenticationState) && !this.state.navigatingFromSignInOrSignUpToDashboard) {
             const currentUser: User | Admin | null = this.props.AuthenticationState.currentUser;
             if (currentUser) {
                 const currentAdmin: Admin | null = isAdmin(currentUser);
@@ -191,6 +233,7 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                 }
 
                 if (shouldRedirectToError && !this.state.navigatingToError) {
+                    console.log('DEBUG: Redirecting to 404 - Unauthorized route access');
                     this.setState({
                         navigatingToError: true
                     });
@@ -310,7 +353,10 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
 
         this.props.validateGroupUrl(
             this.routePath, this.routeParams.hasOwnProperty("groupUserName")
-                ? this.routeParams.groupUserName : null
+                ? this.routeParams.groupUserName 
+                : this.routePath === Routes.nonGroupSignIn || this.routePath === Routes.nonGroupSignUp
+                    ? "invest-west"
+                    : null
         );
 
         this.attachAuthListener();

@@ -1,0 +1,81 @@
+/* ReactQuill Size Control Classes */
+
+/* Small editor - for quick comments */
+.quill-small .ql-editor {
+  min-height: 150px !important;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.quill-small .ql-container.ql-snow {
+  font-size: 1em;
+}
+
+/* Medium editor - for standard forms */
+.quill-medium .ql-editor {
+  min-height: 300px !important;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+/* Add font size for medium editor */
+.quill-medium .ql-container.ql-snow {
+}
+
+/* Large editor - for detailed content */
+.quill-large .ql-editor {
+  min-height: 500px !important;
+  max-height: 800px;
+  overflow-y: auto;
+}
+
+.quill-large .ql-container.ql-snow {
+  font-size: 1.15em;
+}
+
+/* Fixed height editor - no scrolling */
+.quill-fixed .ql-editor {
+  height: 250px !important;
+  min-height: 250px !important;
+  max-height: 250px !important;
+  overflow-y: auto;
+}
+
+/* Responsive editor - adapts to screen size */
+.quill-responsive .ql-editor {
+  min-height: 200px !important;
+}
+
+@media (min-width: 768px) {
+  .quill-responsive .ql-editor {
+    min-height: 350px !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .quill-responsive .ql-editor {
+    min-height: 500px !important;
+  }
+}
+
+/* Compact toolbar for smaller editors */
+.quill-compact .ql-toolbar.ql-snow {
+  padding: 8px;
+}
+
+.quill-compact .ql-snow.ql-toolbar button, 
+.quill-compact .ql-snow .ql-toolbar button {
+  height: 22px;
+  width: 22px;
+}
+
+/* Full width container */
+.quill-full-width {
+  width: 100%;
+}
+
+/* Constrained width */
+.quill-constrained {
+  max-width: 800px;
+  margin: 0 auto;
+}
