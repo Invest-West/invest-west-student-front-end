@@ -182,7 +182,7 @@ class CreatePledgeDialog extends Component {
                             </Col>
 
                             {
-                                currentUser.type !== DB_CONST.TYPE_ADMIN
+                                currentUser?.type !== DB_CONST.TYPE_ADMIN
                                     ?
                                     null
                                     :

@@ -26,6 +26,7 @@ import sharedStyles from "../../shared-js-css-styles/SharedStyles";
 import VisibilityOff from "@material-ui/icons/VisibilityOff";
 import Visibility from "@material-ui/icons/Visibility";
 import Routes from "../../router/routes";
+import ExploreOffers from "../../shared-components/explore-offers/ExploreOffers";
 import {
     errorSendingResetPassword,
     isProcessingResetPasswordRequest,
@@ -100,7 +101,6 @@ class SignInNew extends Component<SignInProps & Readonly<RouteComponentProps<Rou
         } = this.props;
 
         return <Box>
-            {/** Sign in card */}
             <Row noGutters >
                 <Col xs={{span: 12, offset: 0}} md={{span: 6, offset: 3}} lg={{span: 6, offset: 3}} >
                     <Box display="flex" width="100%" justifyContent="center" paddingX={MediaQueryState.isMobile ? "10px" : "0px"} paddingY={MediaQueryState.isMobile ? "20px" : "60px"} >

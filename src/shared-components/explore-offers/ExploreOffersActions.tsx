@@ -74,11 +74,14 @@ export const fetchOffers: ActionCreator<any> = () => {
 
         try {
             const response = await new OfferRepository().fetchOffers(fetchOffersOptions);
+            console.log("Fetching offers with options:", response.data);
+
             dispatch({
                 type: ExploreOffersEvents.CompleteFetchingOffers,
                 offerInstances: response.data,
             });
         } catch (error) {
+            console.log("Error fetching offers:", error);
             dispatch({
                 type: ExploreOffersEvents.CompleteFetchingOffers,
                 error: error.toString(),

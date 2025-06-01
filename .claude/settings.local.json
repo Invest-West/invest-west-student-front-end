@@ -1,0 +1,37 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(/home/styrle/.nvm/versions/node/v24.1.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/rg -n \"import.*ManageGroupUrlState\" /mnt/c/Users/jserp/github/invest-west-student-front-end/src/pages/signup/SignUpNew.tsx)",
+      "Bash(/home/styrle/.nvm/versions/node/v24.1.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/rg -n \"ManageGroupUrlState.*state\\.\" /mnt/c/Users/jserp/github/invest-west-student-front-end/src/pages/signin/SignInNew.tsx)",
+      "Bash(/home/styrle/.nvm/versions/node/v24.1.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/rg -n \"ManageGroupUrlState.*state\\.\" /mnt/c/Users/jserp/github/invest-west-student-front-end/src/pages/signup/SignUpNew.tsx)",
+      "Bash(/home/styrle/.nvm/versions/node/v24.1.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/rg -n \"getGroupLogo\" /mnt/c/Users/jserp/github/invest-west-student-front-end/src/pages/signin/SignInNew.tsx)",
+      "Bash(/home/styrle/.nvm/versions/node/v24.1.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/rg -n \"getGroupLogo\" /mnt/c/Users/jserp/github/invest-west-student-front-end/src/pages/signup/SignUpNew.tsx)",
+      "Bash(/home/styrle/.nvm/versions/node/v24.1.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/rg -n \"HeaderWithoutDesc\" /mnt/c/Users/jserp/github/invest-west-student-front-end/src/pages/signin/SignInNew.tsx)",
+      "Bash(/home/styrle/.nvm/versions/node/v24.1.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/rg -n \"isSignInRoute\" /mnt/c/Users/jserp/github/invest-west-student-front-end/src/router/routes.tsx)",
+      "Bash(/home/styrle/.nvm/versions/node/v24.1.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/rg -n \"Header\\|header\" /mnt/c/Users/jserp/github/invest-west-student-front-end/src/pages/signup/SignUpNew.tsx)",
+      "Bash(/home/styrle/.nvm/versions/node/v24.1.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/rg -n \"return.*<\" /mnt/c/Users/jserp/github/invest-west-student-front-end/src/pages/signup/SignUpNew.tsx -A 5)",
+      "Bash(/home/styrle/.nvm/versions/node/v24.1.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/rg -n \"return.*<\" /mnt/c/Users/jserp/github/invest-west-student-front-end/src/pages/signin/SignInNew.tsx -A 5)",
+      "Bash(/home/styrle/.nvm/versions/node/v24.1.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/rg -n \"componentDid\\|useEffect\" /mnt/c/Users/jserp/github/invest-west-student-front-end/src/pages/signin/SignInNew.tsx)",
+      "Bash(/home/styrle/.nvm/versions/node/v24.1.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/rg -n \"connect.*mapStateToProps\" /mnt/c/Users/jserp/github/invest-west-student-front-end/src/pages/signin/SignInNew.tsx)",
+      "Bash(/home/styrle/.nvm/versions/node/v24.1.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/rg -n \"Footer\" /mnt/c/Users/jserp/github/invest-west-student-front-end/src/pages/signup/SignUpNew.tsx)",
+      "Bash(/home/styrle/.nvm/versions/node/v24.1.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/rg -n \"<ExploreOffers\" /mnt/c/Users/jserp/github/invest-west-student-front-end/src/pages/signin/SignInNew.tsx)",
+      "Bash(/home/styrle/.nvm/versions/node/v24.1.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/rg -n \"alt.*Document\" /mnt/c/Users/jserp/github/invest-west-student-front-end/src/pages/create-project/CreateProject.jsx -B 2 -A 2)",
+      "Bash(/home/styrle/.nvm/versions/node/v24.1.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/rg -n \"alt=\\\"Document\\\"\" /mnt/c/Users/jserp/github/invest-west-student-front-end/src/pages/create-project/CreateProject.jsx -B 2 -A 2)",
+      "Bash(/home/styrle/.nvm/versions/node/v24.1.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/rg -n 'alt=\"Document\"' /mnt/c/Users/jserp/github/invest-west-student-front-end/src/pages/create-project/CreateProject.jsx -B 2 -A 2)",
+      "Bash(/home/styrle/.nvm/versions/node/v24.1.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/rg -n \"document_icon\" /mnt/c/Users/jserp/github/invest-west-student-front-end/src/pages/create-project/CreateProject.jsx -B 2 -A 2)",
+      "Bash(/home/styrle/.nvm/versions/node/v24.1.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/rg -n \"<img\" /mnt/c/Users/jserp/github/invest-west-student-front-end/src/pages/create-project/CreateProject.jsx -B 1 -A 3)",
+      "Bash(/home/styrle/.nvm/versions/node/v24.1.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/rg -n \"document_icon\" /mnt/c/Users/jserp/github/invest-west-student-front-end/src/pages/create-project/CreateProject.jsx)",
+      "Bash(/home/styrle/.nvm/versions/node/v24.1.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/rg -n \"document_icon.png\" /mnt/c/Users/jserp/github/invest-west-student-front-end/src/shared-components/upload-documents/DocumentsUpload.jsx)",
+      "Bash(/home/styrle/.nvm/versions/node/v24.1.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/rg -n \"document_icon.png\" /mnt/c/Users/jserp/github/invest-west-student-front-end/src/shared-components/download-documents/DocumentsDownload.jsx)",
+      "Bash(/home/styrle/.nvm/versions/node/v24.1.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/rg -n \"createAccount.*=\" /mnt/c/Users/jserp/github/invest-west-student-front-end/src/pages/signup/SignUpActions.tsx -A 10)",
+      "Bash(/home/styrle/.nvm/versions/node/v24.1.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/rg -n \"errorCreatingAccount\" /mnt/c/Users/jserp/github/invest-west-student-front-end/src/pages/signup/SignUpReducer.tsx)",
+      "Bash(/home/styrle/.nvm/versions/node/v24.1.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/rg -n \"errorCreatingAccount\\|SignUpLocalState.*error\" /mnt/c/Users/jserp/github/invest-west-student-front-end/src/pages/signup/SignUpNew.tsx)",
+      "Bash(/home/styrle/.nvm/versions/node/v24.1.0/lib/node_modules/@anthropic-ai/claude-code/vendor/ripgrep/x64-linux/rg -n \"createProjectState.pitchCover\\[0\\].file.type\" /mnt/c/Users/jserp/github/invest-west-student-front-end/src/pages/create-project/CreateProject.jsx -B 3 -A 5)",
+      "Bash(npm run build:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx eslint:*)",
+      "Bash(grep:*)"
+    ]
+  },
+  "enableAllProjectMcpServers": false
+}

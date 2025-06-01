@@ -68,10 +68,21 @@ const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
     }
 }
 
-class SignUpNew extends Component<SignUpProps & Readonly<RouteComponentProps<RouteParams>>, {}> {
+interface SignUpLocalComponentState {
+    isPasswordFocused: boolean;
+}
+
+class SignUpNew extends Component<SignUpProps & Readonly<RouteComponentProps<RouteParams>>, SignUpLocalComponentState> {
     // invited user id (optional parameter from the url)
     // if invitedUserId = undefined --> public registration
     private invitedUserId: string | undefined;
+
+    constructor(props: SignUpProps & Readonly<RouteComponentProps<RouteParams>>) {
+        super(props);
+        this.state = {
+            isPasswordFocused: false
+        };
+    }
 
     componentDidMount() {
         const {
@@ -437,6 +448,8 @@ class SignUpNew extends Component<SignUpProps & Readonly<RouteComponentProps<Rou
                                         margin="dense"
                                         type="password"
                                         onChange={handleInputFieldChanged}
+                                        onFocus={() => this.setState({ isPasswordFocused: true })}
+                                        onBlur={() => this.setState({ isPasswordFocused: false })}
                                     />
                                 </FormControl>
 
@@ -457,6 +470,22 @@ class SignUpNew extends Component<SignUpProps & Readonly<RouteComponentProps<Rou
                                         onChange={handleInputFieldChanged}
                                     />
                                 </FormControl>
+
+                                                                    {/** Password length validation feedback */}
+                                    {(this.state.isPasswordFocused || SignUpLocalState.password.length > 0) && (
+                                        <Box marginTop="8px">
+                                            <Typography
+                                                variant="body2"
+                                                style={{
+                                                    color: SignUpLocalState.password.length >= 10 
+                                                        ? getGroupRouteTheme(ManageGroupUrlState).palette.success?.main || '#4caf50'
+                                                        : getGroupRouteTheme(ManageGroupUrlState).palette.error?.main || '#f44336'
+                                                }}
+                                            >
+                                                Password must be at least 10 characters ({SignUpLocalState.password.length}/10)
+                                            </Typography>
+                                        </Box>
+                                    )}
 
 
                                 {/** How did you hear about us */}
@@ -596,6 +625,29 @@ class SignUpNew extends Component<SignUpProps & Readonly<RouteComponentProps<Rou
                                     Create account
                                 </Button>
                             </Box>
+
+                            {/** Error message */}
+                            {hasErrorCreatingAccount(SignUpLocalState) && (
+                                <Box
+                                    marginTop="16px"
+                                    display="flex"
+                                    justifyContent="center"
+                                >
+                                    <Typography
+                                        variant="body2"
+                                        color="error"
+                                        align="center"
+                                    >
+                                        {SignUpLocalState.errorCreatingAccount?.detail.includes("email") || 
+                                         SignUpLocalState.errorCreatingAccount?.detail.includes("already") ||
+                                         SignUpLocalState.errorCreatingAccount?.detail.includes("used") ||
+                                         SignUpLocalState.errorCreatingAccount?.detail.includes("exists")
+                                            ? "Email address is already being used"
+                                            : SignUpLocalState.errorCreatingAccount?.detail
+                                        }
+                                    </Typography>
+                                </Box>
+                            )}
 
                             {/** Sign in if have an account */}
                             <Box

@@ -17,6 +17,10 @@ import MarketingPreferencesPage from "../pages/system-public-pages/MarketingPref
 import ProfilePageEditable from "../pages/profile/ProfilePageEditable";
 
 import Front from "../pages/front/Front";
+import About from "../pages/front/About";
+import Hiw from "../pages/front/Hiw";
+import Contact from "../pages/front/Contact";
+import ExploreFront from "../pages/front/ExploreFront";
 import SignIn from "../pages/signin/SignInNew";
 import PageNotFound from "../shared-components/page-not-found/PageNotFoundNew";
 import ErrorBoundary from './ErrorBoundary';
@@ -47,17 +51,44 @@ const AppRouter = () => (
                                                 component={<SignUpNew {...props}/>}/>}/>
 
             <Route path={Routes.nonGroupSignUp} exact
-                            // @ts-ignore
-                            render={props => <GroupRoute {...props} showHeader={true} backgroundColor={colors.grey["200"]}
-                                // @ts-ignore
-                                                            component={<SignUpNew {...props}/>}/>}/>
-
-            <Route path={Routes.nonGroupFront} exact
+                    // @ts-ignore
+                    render={props => <GroupRoute {...props} showHeader={true} backgroundColor={colors.grey["200"]} component={<SignUpNew {...props}/>}/>}/>            
+                    <Route path={Routes.nonGroupFront} exact
                 // @ts-ignore
                    render={props => <GroupRoute {...props} showHeader={false} component={<Front {...props}/>}/>}/>
             <Route path={Routes.groupFront} exact
                 // @ts-ignore
                    render={props => <GroupRoute {...props} showHeader={false} component={<Front {...props}/>}/>}/>
+            <Route path={Routes.nonGroupAbout} exact
+                // @ts-ignore
+                   render={props => <GroupRoute {...props} showHeader={false} component={<About {...props}/>}/>}/>
+            <Route path={Routes.groupAbout} exact
+                // @ts-ignore
+                   render={props => <GroupRoute {...props} showHeader={false} component={<About {...props}/>}/>}/>
+
+            <Route path={Routes.nonGroupHiw} exact
+                // @ts-ignore
+                   render={props => <GroupRoute {...props} showHeader={false} component={<Hiw {...props}/>}/>}/>
+
+            <Route path={Routes.groupHiw} exact
+                // @ts-ignore
+                   render={props => <GroupRoute {...props} showHeader={false} component={<Hiw {...props}/>}/>}/>
+
+            <Route path={Routes.nonGroupContact} exact
+                // @ts-ignore
+                   render={props => <GroupRoute {...props} showHeader={false} component={<Contact {...props}/>}/>}/>
+            
+            <Route path={Routes.groupContact} exact
+                // @ts-ignore
+                   render={props => <GroupRoute {...props} showHeader={false} component={<Contact {...props}/>}/>}/>    
+
+            <Route path={Routes.nonGroupExploreFront} exact
+                // @ts-ignore
+                   render={props => <GroupRoute {...props} showHeader={false} component={<ExploreFront {...props}/>}/>}/>
+
+            <Route path={Routes.groupExploreFront} exact
+                // @ts-ignore
+                   render={props => <GroupRoute {...props} showHeader={false} component={<ExploreFront {...props}/>}/>}/>
 
             <Route path={Routes.nonGroupSignIn} exact
                 // @ts-ignore

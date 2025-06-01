@@ -96,7 +96,7 @@ interface ExploreOffersComponentState {
         if (hasNotFetchedOffers(this.props.ExploreOffersLocalState)) {
           this.props.fetchOffers(FetchProjectsOrderByOptions.Phase);
         }
-        this.fetchGroups();
+        //this.fetchGroups();
       }
   
       fetchGroups = async () => {
@@ -130,33 +130,6 @@ interface ExploreOffersComponentState {
             paddingY={MediaQueryState.isMobile ? "15px" : "40px"}
         >
             <Row>
-                {/** Group filter for Explore offers */}
-                <Col xs={12} sm={12} md={6} lg={4}>
-                    <Box paddingY="6px">
-                    <Typography variant="body1">Course:</Typography>
-                    <Box height="8px" />
-                    <Paper>
-                        <Select
-                        fullWidth
-                        variant="outlined"
-                        name="groupFilter"
-                        value={ExploreOffersLocalState.groupFilter}
-                        onChange={filterChanged}
-                        input={<OutlinedInput />}
-                        /* disabled={!successfullyFetchedOffers(ExploreOffersLocalState)}  */
-                        >
-                        <MenuItem key="all" value="all">
-                            All
-                        </MenuItem>
-                        {this.state.groups.map((group) => (
-                            <MenuItem key={group.anid} value={group.anid}>
-                            {group.displayName}
-                            </MenuItem>
-                        ))}
-                        </Select>
-                    </Paper>
-                    </Box>
-                </Col>
 
 
                 {/** Sector filter */}

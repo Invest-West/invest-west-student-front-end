@@ -16,6 +16,18 @@ export default class Routes {
     static nonGroupFront: string = "/";
     static groupFront: string = `${Routes.baseGroup}`;
 
+    static nonGroupAbout: string = "/about";  
+    static groupAbout: string = `${Routes.baseGroup}/about`;
+    
+    static nonGroupHiw: string = "/Hiw";
+    static groupHiw: string = `${Routes.baseGroup}/Hiw`;
+
+    static nonGroupContact: string = "/contact-us-front";
+    static groupContact: string = `${Routes.baseGroup}/contact-us-front`;
+
+    static nonGroupExploreFront: string = "/explore";
+    static groupExploreFront: string = `${Routes.baseGroup}/explore`;
+
     static nonGroupSignIn: string = "/groups/invest-west/signin";
     static groupSignIn: string = `${Routes.baseGroup}/signin`;
     static superAdminSignIn: string = "/signin/super-admin";
@@ -74,7 +86,15 @@ export default class Routes {
     public static isProtectedRoute = (route: string) => {
         return route !== Routes.nonGroupFront
             && route !== Routes.groupFront
+            && route !== Routes.nonGroupAbout
+            && route !== Routes.groupAbout
+            && route !== Routes.nonGroupHiw
+            && route !== Routes.groupHiw
             && route !== Routes.nonGroupSignIn
+            && route !== Routes.nonGroupContact
+            && route !== Routes.nonGroupExploreFront
+            && route !== Routes.groupExploreFront
+            && route !== Routes.groupContact
             && route !== Routes.groupSignIn
             && route !== Routes.nonGroupSignUp
             && route !== Routes.groupSignUp
@@ -86,7 +106,9 @@ export default class Routes {
             && route !== Routes.nonGroupCreatePitchTermsAndConditions
             && route !== Routes.nonGroupMarketingPreferences
             && route !== Routes.nonGroupAuthAction
-            && route !== Routes.error404;
+            && route !== Routes.error404
+            && route !== Routes.nonGroupViewOffer
+            && route !== Routes.groupViewOffer;
     }
 
     /**
@@ -301,6 +323,58 @@ export default class Routes {
         }
     }
 
+
+    /**
+     * Construct explore offers route (navigate to Explore Offers page)
+     *
+     * @param routeParams
+     * @param ManageGroupUrlState
+     * @param AuthenticationState
+     */
+    public static constructExploreOffersRoute = (routeParams: any, ManageGroupUrlState: ManageGroupUrlState,
+                                                 AuthenticationState: AuthenticationState) => {
+        // Priority 1: Use the group from the current URL context if available
+        if (routeParams.groupUserName) {
+            return Routes.groupExploreFront.replace(":groupUserName", routeParams.groupUserName);
+        }
+
+        // Priority 2: Use the group from ManageGroupUrlState if available
+        if (ManageGroupUrlState.groupNameFromUrl) {
+            return Routes.groupExploreFront.replace(":groupUserName", ManageGroupUrlState.groupNameFromUrl);
+        }
+
+        // Priority 2.5: Special handling for signup routes - extract group from route path
+        if (ManageGroupUrlState.routePath === Routes.nonGroupSignUp || ManageGroupUrlState.routePath === Routes.nonGroupSignIn) {
+            return Routes.groupExploreFront.replace(":groupUserName", "invest-west");
+        }
+
+        // Priority 3: Check user's group memberships
+        if (AuthenticationState.currentUser) {
+            const currentAdmin: Admin | null = isAdmin(AuthenticationState.currentUser);
+            if (currentAdmin) {
+                if (currentAdmin.superAdmin) {
+                    return Routes.nonGroupExploreFront;
+                } else {
+                    if (AuthenticationState.groupsOfMembership.length >= 1) {
+                        const adminGroup: GroupOfMembership = AuthenticationState.groupsOfMembership[0];
+                        return Routes.groupExploreFront.replace(":groupUserName", adminGroup.group.groupUserName);
+                    }
+                }
+            } else {
+                const homeGroup: GroupOfMembership | null = getHomeGroup(AuthenticationState.groupsOfMembership);
+                if (homeGroup) {
+                    return Routes.groupExploreFront.replace(":groupUserName", homeGroup.group.groupUserName);
+                }
+                // Fallback to first group if no home group is set
+                if (AuthenticationState.groupsOfMembership.length >= 1) {
+                    return Routes.groupExploreFront.replace(":groupUserName", AuthenticationState.groupsOfMembership[0].group.groupUserName);
+                }
+            }
+        }
+
+        // Default fallback
+        return Routes.nonGroupExploreFront;
+    }
 
     /**
      * Construct dashboard route (navigate to Dashboard page)

@@ -20,7 +20,7 @@ export default interface Admin {
  * @param user
  */
 export const isAdmin = (user: User | Admin): Admin | null => {
-    if ("anid" in user) {
+    if (user && "anid" in user) {
         return JSON.parse(JSON.stringify(user));
     }
     return null;

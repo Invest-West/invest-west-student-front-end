@@ -6,6 +6,7 @@ import {Button, Paper, TextField, Typography} from '@material-ui/core';
 import ReactQuill from 'react-quill';
 import {Col, Row} from 'react-bootstrap';
 import sharedStyles from '../../shared-js-css-styles/SharedStyles';
+import '../../shared-css/ReactQuillSizes.scss';
 
 import {connect} from 'react-redux';
 import * as forumsActions from '../../redux-store/actions/forumsActions';
@@ -66,13 +67,15 @@ class CreateReply extends Component {
 
                     <FlexView column marginTop={30} >
                         <Typography paragraph variant="body1" >Message *</Typography>
-                        <ReactQuill
-                            placeholder="Write your reply here. Add images for visual effects."
-                            value={threadReplyMessage}
-                            theme="snow"
-                            onChange={this.handleQuillChanged(forumsActions.THREAD_REPLY_CONTENT_QUILL)}
-                            modules={modules}
-                        />
+                        <div className="quill-medium">
+                            <ReactQuill
+                                placeholder="Write your reply here. Add images for visual effects."
+                                value={threadReplyMessage}
+                                theme="snow"
+                                onChange={this.handleQuillChanged(forumsActions.THREAD_REPLY_CONTENT_QUILL)}
+                                modules={modules}
+                            />
+                        </div>
                     </FlexView>
 
                     <Row noGutters >
