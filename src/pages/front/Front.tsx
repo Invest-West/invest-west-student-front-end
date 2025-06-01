@@ -80,7 +80,7 @@ class Front extends Component<FrontProps & Readonly<RouteComponentProps<RoutePar
         // Construct proper routes based on whether we have a group or not
         const aboutRoute = groupParam ? `/groups/${groupParam}/about` : "/about";
         const hiwRoute = groupParam ? `/groups/${groupParam}/Hiw` : "/Hiw";
-        const contactRoute = groupParam ? `/groups/${groupParam}/contact` : "contact-us-front";
+        const contactRoute = groupParam ? Routes.groupContact.replace(":groupUserName", groupParam) : Routes.nonGroupContact;
         const exploreRoute = groupParam ? `/groups/${groupParam}/explore` : "/explore";
         const signInRoute = Routes.constructSignInRoute(match.params);
         const homeRoute = Routes.constructHomeRoute(match.params, ManageGroupUrlState, AuthenticationState);
@@ -112,7 +112,7 @@ class Front extends Component<FrontProps & Readonly<RouteComponentProps<RoutePar
              <section className="hero">
                 <div className="hero-content">
                 <h1>Helping You Show Your Talents To The World</h1>
-                <p>Connecting students with industry to find the next generation of thinkers. Displaying the best o the UK talent pool across the full range of disciplines, from Biology to Business.</p>
+                <p>Connecting students with industry to find the next generation of thinkers. Displaying the best of UK talent across the full range of disciplines, from Biology to Business.</p>
 
                 <NavLink to={exploreRoute} className="cta-button">Explore Projects</NavLink>
                 </div>

@@ -56,6 +56,7 @@ class Header extends Component<HeaderProps, {}> {
             signInUrl
         } = this.props;
 
+
         return <Container fluid style={{ padding: 0 }} >
             <Row noGutters style={{ paddingTop: 10, paddingBottom: 10, backgroundColor: appColors.white }}>
                 {/** Home/Dashboard */}
@@ -119,13 +120,9 @@ class Header extends Component<HeaderProps, {}> {
                                         src={
                                             Routes.isErrorRoute(routePath) || Routes.isSystemPublicRoute(routePath)
                                                 ? require("../../img/logo.png").default
-                                                : isValidatingGroupUrl(ManageGroupUrlState)
-                                                ? null
-                                                : !routeContainsGroupName(ManageGroupUrlState)
-                                                    ? require("../../img/logo.png").default
-                                                    : successfullyValidatedGroupUrl(ManageGroupUrlState)
-                                                        ? getGroupLogo(ManageGroupUrlState.group)
-                                                        : null
+                                                : ManageGroupUrlState.group && getGroupLogo(ManageGroupUrlState.group)
+                                                    ? getGroupLogo(ManageGroupUrlState.group)
+                                                    : require("../../img/logo.png").default
                                         }
                                         style={{ width: "auto", height: 36, objectFit: "contain" }}
                                     />
@@ -142,11 +139,11 @@ class Header extends Component<HeaderProps, {}> {
                                             {
                                                 Routes.isErrorRoute(routePath) || Routes.isSystemPublicRoute(routePath)
                                                     ? "Default student"
-                                                    : isValidatingGroupUrl(ManageGroupUrlState)
-                                                    ? ""
-                                                    : !routeContainsGroupName(ManageGroupUrlState)
-                                                        ? "Default student"
-                                                        : ManageGroupUrlState.group?.displayName
+                                                    : ManageGroupUrlState.group?.displayName 
+                                                        ? ManageGroupUrlState.group.displayName
+                                                        : routeContainsGroupName(ManageGroupUrlState)
+                                                            ? "Loading..."
+                                                            : "Default student"
                                             }
                                         </Typography>
                                     </Box>

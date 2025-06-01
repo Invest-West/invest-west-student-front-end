@@ -342,14 +342,14 @@ class ProfilePageViewOnly extends Component {
                                 !userToBeViewed.BusinessProfile
                                     ?
                                     <FlexView column>
-                                        <Typography variant="h6" color="primary">Uni profile</Typography>
+                                        <Typography variant="h6" color="primary">University profile</Typography>
                                         <FlexView column marginTop={15} marginLeft={15} marginRight={15} hAlignContent="center" vAlignContent="center">
-                                            <Typography align="center" variant="body1">Uni profile has not been uploaded.</Typography>
+                                            <Typography align="center" variant="body1">University profile has not been uploaded.</Typography>
                                         </FlexView>
                                     </FlexView>
                                     :
                                     <FlexView column>
-                                        <Typography variant="h6" color="primary">Uni profile</Typography>
+                                        <Typography variant="h6" color="primary">University profile</Typography>
                                         <FlexView column marginTop={15} marginLeft={15} marginRight={15}>
                                             <Typography variant="subtitle1" align="left"> Student project name:&nbsp;&nbsp;
                                                 <b>{userToBeViewed.BusinessProfile.companyName}</b>
@@ -419,7 +419,7 @@ class ProfilePageViewOnly extends Component {
 
         if (invitedUser.status) {
             if (invitedUser.type === DB_CONST.TYPE_ISSUER) {
-                statusMessage.msg = "Teacher of Student";
+                statusMessage.msg = "Teacher";
                 statusMessage.color = "primary";
             } else {
                 statusMessage.msg = "Student";
