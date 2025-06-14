@@ -76,12 +76,12 @@ class Footer extends Component<FooterProps, any> {
 
             <Box display="flex" flexDirection="row" alignItems="center" justifyContent="center" >
                 <Image
-                    alt="Invest West logo"
+                    alt="Student Showcase logo"
                     src={require("../../img/logo.png").default}
                     style={{ width: "auto", height: 34, objectFit: "contain" }}
                 />
                 <Box width="20px" />
-                <Typography align="left" variant="body1">Powered by Student Invest West. <br/> Copyright © 2021 Student Invest West Ltd - All Rights Reserved.</Typography>
+                <Typography align="left" variant="body1">Powered by Student Showcase. <br/> Copyright © 2021 Student Showcase Ltd - All Rights Reserved.</Typography>
             </Box>
         </Box>;
     }

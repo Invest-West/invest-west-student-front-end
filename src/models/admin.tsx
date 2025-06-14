@@ -12,6 +12,7 @@ export default interface Admin {
     type: number;
     isInvestWest: boolean;
     dateAdded?: number; // superAdmin doesn't have this field
+    lastLoginDate?: number; // timestamp when admin last logged in
 }
 
 /**

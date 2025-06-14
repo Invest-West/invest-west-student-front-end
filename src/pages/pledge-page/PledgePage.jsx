@@ -872,18 +872,18 @@ class PledgePage extends Component {
                             <Col xs={12} sm={12} md={12} lg={{span: 6, offset: 3}} style={{marginTop: 50}}>
                                 <FlexView column>
                                     <Typography variant="body1" align="left" paragraph>
-                                        By making a pledge you authorise Invest West to share your registered contact
+                                        By making a pledge you authorise Student Showcase to share your registered contact
                                         details with the issuer.
                                         The issuer will then contact you with regards to next steps.
                                         Making a pledge is simply an instruction to pass on your contact details.
                                         Making a pledge does not constitute a contractual or investment obligation of
                                         any sort.
                                         <br/><br/>
-                                        Invest West is not regulated or authorised by the FCA. Invest West is for self
+                                        Student Showcase is not regulated or authorised by the FCA. Student Showcase is for self
                                         certified investors only. If you are in any doubt please seek advice from an
                                         investment professional.
                                         <br/><br/>
-                                        Neither Invest West nor the Groups offer any guarantees or assurances about the
+                                        Neither Student Showcase nor the Groups offer any guarantees or assurances about the
                                         suitability or viability of any investment opportunity.
                                         <br/><br/>
                                         We rely upon issuers to provide accurate information and complete information.

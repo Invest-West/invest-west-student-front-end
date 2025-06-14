@@ -274,19 +274,19 @@ class HelpPage extends Component {
             <Container>
             <Row noGutters style={{marginBottom: 50}}>
                 <Col xs={12} sm={12} md={{span: 8, offset: 2}} lg={{span: 6, offset: 3}}>
-                    {/** 1. Navigating Invest West */}
+                    {/** 1. Navigating Student Showcase */}
                     <ExpansionPanel expanded={expandedPanel === 'group_admin_help_navigating_invest_west'} onChange={this.handleExpandPanel('group_admin_help_navigating_invest_west')}>
                         <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
-                                    1. Navigating Invest West
+                                    1. Navigating Student Showcase
                                 </Typography>
                             </FlexView>
                         </ExpansionPanelSummary>
                         <ExpansionPanelDetails>
                             <FlexView column>
                                 <Typography variant="body1" align="left" paragraph>
-                                    Welcome to Invest West, we are excited to work with you. Here is a basic
+                                    Welcome to Student Showcase, we are excited to work with you. Here is a basic
                                     tutorial showing the key functions of the site.
                                 </Typography>
 

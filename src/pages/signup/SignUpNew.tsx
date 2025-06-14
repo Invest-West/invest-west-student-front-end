@@ -657,7 +657,7 @@ class SignUpNew extends Component<SignUpProps & Readonly<RouteComponentProps<Rou
                                     variant="body2"
                                     align="center"
                                 >
-                                    Already have an Invest West account?&nbsp;
+                                    Already have an Student Showcase account?&nbsp;
                                     <CustomLink
                                         url={Routes.constructSignInRoute(this.props.match.params)}
                                         color={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main}

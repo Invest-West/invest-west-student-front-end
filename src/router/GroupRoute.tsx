@@ -31,7 +31,7 @@ import {
 import {loadSystemAttributes} from "../redux-store/actions/manageSystemAttributesActions";
 import User, {isInvestor, isIssuer} from "../models/user";
 import Admin, {isAdmin} from "../models/admin";
-import GroupOfMembership from "../models/group_of_membership";
+import GroupOfMembership, {getHomeGroup} from "../models/group_of_membership";
 import {BarLoader} from "react-spinners";
 import { safeSetItem, safeGetItem, safeRemoveItem } from "../utils/browser";
 
@@ -95,11 +95,105 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
         }
     }
 
+    /**
+     * Construct a simple post-login redirect route that directly matches user types to their dashboards
+     */
+    constructPostLoginRoute = (): string => {
+        const { AuthenticationState } = this.props;
+        const currentUser = AuthenticationState.currentUser;
+        const groupsOfMembership = AuthenticationState.groupsOfMembership || [];
+        
+        console.log('ROUTE CONSTRUCTION: User:', currentUser?.email);
+        console.log('ROUTE CONSTRUCTION: User type:', currentUser?.type);
+        console.log('ROUTE CONSTRUCTION: Available groups:', groupsOfMembership.map(g => g.group.groupUserName));
+        console.log('ROUTE CONSTRUCTION: URL group param:', this.routeParams.groupUserName);
+        
+        if (!currentUser) {
+            console.log('ROUTE CONSTRUCTION: No user found');
+            return Routes.constructHomeRoute(this.routeParams, this.props.ManageGroupUrlState, this.props.AuthenticationState);
+        }
+
+        // Determine the group to use for group-based users
+        const getGroupForUser = (): string => {
+            // First priority: Use group from URL if available and user is a member
+            if (this.routeParams.groupUserName) {
+                const isGroupMember = groupsOfMembership.some(membership => 
+                    membership.group.groupUserName === this.routeParams.groupUserName
+                );
+                if (isGroupMember) {
+                    console.log('ROUTE CONSTRUCTION: Using URL group:', this.routeParams.groupUserName);
+                    return this.routeParams.groupUserName;
+                }
+            }
+            
+            // Second priority: Look for invest-west group specifically
+            const investWestGroup = groupsOfMembership.find(membership => 
+                membership.group.groupUserName === 'invest-west'
+            );
+            if (investWestGroup) {
+                console.log('ROUTE CONSTRUCTION: Using invest-west group');
+                return 'invest-west';
+            }
+            
+            // Third priority: Use their first available group
+            if (groupsOfMembership.length > 0) {
+                const firstGroup = groupsOfMembership[0].group.groupUserName;
+                console.log('ROUTE CONSTRUCTION: Using first available group:', firstGroup);
+                return firstGroup;
+            }
+            
+            // Default fallback to invest-west
+            console.log('ROUTE CONSTRUCTION: No groups found, defaulting to invest-west');
+            return 'invest-west';
+        };
+
+        // Get the group name to use
+        const groupName = getGroupForUser();
+        
+        // Check if user is admin
+        const currentAdmin: Admin | null = isAdmin(currentUser);
+        
+        if (currentAdmin) {
+            console.log('ROUTE CONSTRUCTION: User is admin');
+            
+            // Super admin → system admin dashboard
+            if (currentAdmin.superAdmin) {
+                console.log('ROUTE CONSTRUCTION: Super admin → system admin dashboard');
+                return Routes.nonGroupAdminDashboard;
+            }
+            
+            // Group admin → group admin dashboard with invest-west group
+            console.log('ROUTE CONSTRUCTION: Group admin → group admin dashboard for:', groupName);
+            return Routes.groupAdminDashboard.replace(":groupUserName", groupName) + "?tab=Home";
+        }
+        
+        // Regular users (investors/issuers)
+        if (isInvestor(currentUser as User)) {
+            console.log('ROUTE CONSTRUCTION: Investor → investor dashboard for:', groupName);
+            return Routes.groupInvestorDashboard.replace(":groupUserName", groupName) + "?tab=Home";
+        } else {
+            // Assume issuer if not investor
+            console.log('ROUTE CONSTRUCTION: Issuer → issuer dashboard for:', groupName);
+            return Routes.groupIssuerDashboard.replace(":groupUserName", groupName) + "?tab=Home";
+        }
+    };
+
     componentDidMount() {
         this.validateRouteAndAuthentication();
     }
 
     componentDidUpdate(prevProps: Readonly<GroupRouteProps & Readonly<RouteComponentProps<RouteParams>>>, prevState: Readonly<GroupRouteState>, snapshot?: any) {
+        // Reset navigation state when user logs out (goes from authenticated to null)
+        // This allows fresh redirect logic for the next login
+        if (prevProps.AuthenticationState.currentUser !== null && this.props.AuthenticationState.currentUser === null) {
+            console.log('DEBUG: User logged out, resetting navigation flags for next login');
+            this.setState({
+                navigatingFromSignInOrSignUpToDashboard: false,
+                navigatingToSignIn: false,
+                navigatingToError: false
+            });
+        }
+
         this.validateRouteAndAuthentication();
 
         // system attributes are being loaded
@@ -145,11 +239,16 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
         }
 
         // redirect the user to their stored redirect URL, or explore offers page if they are on the sign in/up route and are successfully authenticated
+        console.log('=== LOGIN REDIRECT DEBUG ===');
         console.log('DEBUG: Route path:', this.routePath);
+        console.log('DEBUG: Route params:', this.routeParams);
         console.log('DEBUG: Is signup route:', Routes.isSignUpRoute(this.routePath));
         console.log('DEBUG: Is signin route:', Routes.isSignInRoute(this.routePath));
         console.log('DEBUG: Successfully authenticated:', successfullyAuthenticated(this.props.AuthenticationState));
+        console.log('DEBUG: Current user:', this.props.AuthenticationState.currentUser?.email);
         console.log('DEBUG: Navigating from signin/signup:', this.state.navigatingFromSignInOrSignUpToDashboard);
+        console.log('DEBUG: Authentication status:', this.props.AuthenticationState.status);
+        console.log('=== END DEBUG INFO ===');
         
         if ((Routes.isSignInRoute(this.routePath) || Routes.isSignUpRoute(this.routePath))
             && successfullyAuthenticated(this.props.AuthenticationState)
@@ -164,30 +263,31 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                 redirectRoute = storedRedirectUrl;
                 safeRemoveItem('redirectToAfterAuth');
             } else {
-                // For signup/signin routes, use simple direct redirect to avoid complex logic
-                if (Routes.isSignUpRoute(this.routePath) || Routes.isSignInRoute(this.routePath)) {
-                    if (this.routeParams.groupUserName) {
-                        redirectRoute = Routes.groupExploreFront.replace(":groupUserName", this.routeParams.groupUserName);
-                        console.log('DEBUG: Using routeParams.groupUserName:', this.routeParams.groupUserName);
-                    } else if (this.props.ManageGroupUrlState.groupNameFromUrl) {
-                        redirectRoute = Routes.groupExploreFront.replace(":groupUserName", this.props.ManageGroupUrlState.groupNameFromUrl);
-                        console.log('DEBUG: Using ManageGroupUrlState.groupNameFromUrl:', this.props.ManageGroupUrlState.groupNameFromUrl);
-                    } else {
-                        // For invest-west signup/signin routes
-                        redirectRoute = Routes.groupExploreFront.replace(":groupUserName", "invest-west");
-                        console.log('DEBUG: Using default invest-west');
-                    }
-                } else {
-                    // For other routes, use the complex logic
-                    redirectRoute = Routes.constructExploreOffersRoute(this.routeParams, this.props.ManageGroupUrlState, this.props.AuthenticationState);
-                }
-                console.log('DEBUG: Redirect route constructed:', redirectRoute);
+                // Construct redirect route with robust fallback logic
+                redirectRoute = this.constructPostLoginRoute();
+                console.log('DEBUG: Post-login route constructed:', redirectRoute);
             }
             
             console.log('DEBUG: About to redirect to:', redirectRoute);
+            
+            // Validate the route before redirecting
+            if (!redirectRoute || redirectRoute === '') {
+                console.error('ERROR: Redirect route is empty or null!');
+                redirectRoute = '/groups/invest-west'; // Emergency fallback
+            }
+            
+            // Ensure route starts with / for absolute path
+            if (!redirectRoute.startsWith('/')) {
+                console.warn('WARNING: Redirect route is not absolute, fixing:', redirectRoute);
+                redirectRoute = '/' + redirectRoute;
+            }
+            
+            console.log('DEBUG: Final redirect route:', redirectRoute);
             this.setState({
                 navigatingFromSignInOrSignUpToDashboard: true
             });
+            
+            console.log('DEBUG: Executing history.push to:', redirectRoute);
             this.props.history.push(redirectRoute);
             return; // Exit early to prevent other redirect logic from running
         }

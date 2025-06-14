@@ -93,7 +93,7 @@ export default  class AboutUs extends Component {
                             About Us
                         </Typography>
                         <Typography paragraph variant="h6" align="center" style={{ marginTop: 35}}>
-                            Invest West brings together students and founders to help grow the business community in the South West of England. Invest West requires a fully managed end to end technology platform that will facilitate the efficient and effective, low cost registration of participants, administration of projects, and communication of club members.
+                            Student Showcase brings together students and founders to help grow the business community in the South West of England. Student Showcase requires a fully managed end to end technology platform that will facilitate the efficient and effective, low cost registration of participants, administration of projects, and communication of club members.
                         </Typography>
                     </Col>
                     <Col xs={12} md={12} lg={12}style={{marginTop: 65}}>
@@ -128,7 +128,7 @@ export default  class AboutUs extends Component {
                                     </Typography>
                                     <Divider style={{width: 80, marginBottom: 10, backgroundColor: colors.gray_300}}/>
                                     <Typography paragraph variant="body1" align="center" color="textSecondary">
-                                        Use the Invest West platform to communicate with a huge pool of potential investors that already have an interest in working with businesses in the South West.
+                                        Use the Student Showcase platform to communicate with a huge pool of potential investors that already have an interest in working with businesses in the South West.
                                     </Typography>
                                     <Typography paragraph variant="body1" align="center" color="textSecondary">
                                         Ask us about;

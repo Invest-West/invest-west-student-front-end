@@ -131,6 +131,30 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
 
                 authenticationCompleteAction.groupsOfMembership = listGroupsOfMembershipResponse.data;
 
+                // Update last login date
+                try {
+                    const currentTimestamp = Date.now();
+                    const updatedUser = { ...currentUser, lastLoginDate: currentTimestamp };
+                    
+                    console.log(`LOGIN TRACKING: Attempting to update login date for user ${currentUser.email} (${currentUser.id})`);
+                    console.log(`LOGIN TRACKING: Current timestamp: ${currentTimestamp} (${new Date(currentTimestamp).toLocaleString()})`);
+                    console.log(`LOGIN TRACKING: Updated user object:`, updatedUser);
+                    
+                    const updateResponse = await new UserRepository().updateUser({
+                        updatedUser: updatedUser
+                    });
+                    
+                    console.log(`LOGIN TRACKING: Update response:`, updateResponse);
+                    console.log(`LOGIN TRACKING: Successfully updated last login date for ${currentUser.email}`);
+                    
+                    // Update the user in the authentication state with the new last login date
+                    authenticationCompleteAction.currentUser = updatedUser;
+                } catch (error) {
+                    console.error("LOGIN TRACKING: Failed to update last login date:", error);
+                    console.error("LOGIN TRACKING: Error details:", error.message || error);
+                    // Continue with authentication even if login tracking fails
+                }
+
                 authenticationCompleteAction.status = AuthenticationStatus.Authenticated;
                 return dispatch(authenticationCompleteAction);
             } else {

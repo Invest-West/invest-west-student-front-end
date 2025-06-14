@@ -36,6 +36,9 @@ import * as DB_CONST from "../../../firebase/databaseConsts";
 import * as ROUTES from "../../../router/routes";
 import * as myUtils from "../../../utils/utils";
 import * as colors from "../../../values/colors";
+import OfferRepository, {FetchProjectsOrderByOptions} from "../../../api/repositories/OfferRepository";
+import firebase from "../../../firebase/firebaseApp";
+import UserRepository from "../../../api/repositories/UserRepository";
 
 export const FILTER_REGISTRATION_STATUS_ALL = -1;
 
@@ -93,6 +96,18 @@ const mapDispatchToProps = dispatch => {
 
 class InvitedUsers extends Component {
 
+    constructor(props) {
+        super(props);
+        this.state = {
+            userProjectCounts: {}, // Map of userID -> project count
+            loadingProjectCounts: false,
+            userLastLoginDates: {}, // Map of userID -> last login date
+            loadingLastLoginDates: false
+        };
+        this.offerRepository = new OfferRepository();
+        this.userRepository = new UserRepository();
+    }
+
     componentDidMount() {
         const {
             invitedUsers,
@@ -114,6 +129,7 @@ class InvitedUsers extends Component {
             invitedUsers,
             invitedUsersLoaded,
             invitedUsersBeingLoaded,
+            matchedInvitedUsers,
 
             loadInvitedUsers
         } = this.props;
@@ -123,7 +139,173 @@ class InvitedUsers extends Component {
         }
 
         this.addListener();
+        
+        // Load project counts when users are loaded and we haven't loaded them yet
+        if (invitedUsersLoaded && !prevProps.invitedUsersLoaded && !this.state.loadingProjectCounts && Object.keys(this.state.userProjectCounts).length === 0) {
+            this.loadProjectCounts();
+        }
+        
+        // Load last login dates when users are loaded
+        if (invitedUsersLoaded && (!prevProps.invitedUsersLoaded || prevProps.matchedInvitedUsers !== matchedInvitedUsers) && !this.state.loadingLastLoginDates) {
+            this.loadLastLoginDates();
+        }
     }
+
+    /**
+     * Load project counts for all users
+     */
+    loadProjectCounts = async () => {
+        const { invitedUsers, matchedInvitedUsers } = this.props;
+        
+        if (!invitedUsers || invitedUsers.length === 0) {
+            return;
+        }
+
+        this.setState({ loadingProjectCounts: true });
+
+        try {
+            const projectCounts = {};
+            
+            // Get unique user IDs from matched users (displayed users)
+            const usersToCount = matchedInvitedUsers || invitedUsers;
+
+            // Process each user individually to handle both invited user ID and official user ID
+            for (const user of usersToCount) {
+                try {
+                    // Use officialUserID for registered users, fall back to id for unregistered users
+                    const userIdToQuery = user.officialUserID || user.id;
+                    
+                    console.log(`Fetching projects for user ${user.email} (ID: ${user.id}, Official ID: ${user.officialUserID}, Query ID: ${userIdToQuery})`);
+                    
+                    const response = await this.offerRepository.fetchOffers({
+                        issuer: userIdToQuery,
+                        phase: "all", // Include all phases (approved, expired, etc.)
+                        orderBy: FetchProjectsOrderByOptions.Issuer
+                    });
+                    
+                    console.log(`API response for user ${user.email}:`, response);
+                    const projectCount = response.data ? response.data.length : 0;
+                    console.log(`Project count for user ${user.email}: ${projectCount}`);
+                    
+                    // Store the count using the invited user's ID (for display purposes)
+                    projectCounts[user.id] = projectCount;
+                } catch (error) {
+                    console.warn(`Failed to fetch projects for user ${user.email}:`, error);
+                    projectCounts[user.id] = 0;
+                }
+            }
+
+            this.setState({ 
+                userProjectCounts: projectCounts,
+                loadingProjectCounts: false 
+            });
+        } catch (error) {
+            console.error("Error loading project counts:", error);
+            this.setState({ loadingProjectCounts: false });
+        }
+    };
+
+    /**
+     * Load last login dates for all users
+     */
+    loadLastLoginDates = async () => {
+        const { invitedUsers, matchedInvitedUsers } = this.props;
+        
+        if (!invitedUsers || invitedUsers.length === 0) {
+            return;
+        }
+
+        this.setState({ loadingLastLoginDates: true });
+
+        try {
+            const lastLoginDates = {};
+            
+            // Get users to process
+            const usersToProcess = matchedInvitedUsers || invitedUsers;
+
+            // Fetch last login dates for registered users
+            for (const user of usersToProcess) {
+                try {
+                    // Only fetch for users who have registered (have officialUserID)
+                    if (user.officialUserID) {
+                        console.log(`FETCH LOGIN: Fetching last login date for user ${user.email} (Official ID: ${user.officialUserID})`);
+                        
+                        const response = await this.userRepository.retrieveUser(user.officialUserID);
+                        console.log(`FETCH LOGIN: API response for ${user.email}:`, response);
+                        
+                        const userProfile = response.data;
+                        console.log(`FETCH LOGIN: User profile for ${user.email}:`, userProfile);
+                        
+                        if (userProfile && userProfile.lastLoginDate) {
+                            lastLoginDates[user.id] = userProfile.lastLoginDate;
+                            console.log(`FETCH LOGIN: Found login date for ${user.email}: ${userProfile.lastLoginDate} (${new Date(userProfile.lastLoginDate).toLocaleString()})`);
+                        } else {
+                            console.log(`FETCH LOGIN: No lastLoginDate field found for ${user.email}. Available fields:`, Object.keys(userProfile || {}));
+                        }
+                    } else {
+                        console.log(`FETCH LOGIN: User ${user.email} has not registered yet (no officialUserID)`);
+                    }
+                } catch (error) {
+                    console.warn(`Failed to fetch last login date for user ${user.email}:`, error);
+                }
+            }
+
+            this.setState({ 
+                userLastLoginDates: lastLoginDates,
+                loadingLastLoginDates: false 
+            });
+        } catch (error) {
+            console.error("Error loading last login dates:", error);
+            this.setState({ loadingLastLoginDates: false });
+        }
+    };
+
+    /**
+     * Refresh login dates manually
+     */
+    refreshLoginDates = () => {
+        console.log("REFRESH LOGIN: Manual refresh triggered");
+        this.setState({ 
+            userLastLoginDates: {},  // Clear existing data
+            loadingLastLoginDates: false 
+        }, () => {
+            this.loadLastLoginDates();
+        });
+    };
+
+    /**
+     * Test login date update for a specific user (for debugging)
+     */
+    testUpdateLoginDate = async (userId) => {
+        try {
+            console.log(`TEST UPDATE: Testing login date update for user ID: ${userId}`);
+            
+            // First, retrieve the current user profile
+            const retrieveResponse = await this.userRepository.retrieveUser(userId);
+            console.log(`TEST UPDATE: Current user profile:`, retrieveResponse.data);
+            
+            // Update with current timestamp
+            const currentTimestamp = Date.now();
+            const updatedUser = { ...retrieveResponse.data, lastLoginDate: currentTimestamp };
+            
+            console.log(`TEST UPDATE: Updating user with:`, updatedUser);
+            
+            const updateResponse = await this.userRepository.updateUser({
+                updatedUser: updatedUser
+            });
+            
+            console.log(`TEST UPDATE: Update response:`, updateResponse);
+            
+            // Verify the update by retrieving the user again
+            const verifyResponse = await this.userRepository.retrieveUser(userId);
+            console.log(`TEST UPDATE: Verified user profile after update:`, verifyResponse.data);
+            
+            return verifyResponse.data;
+        } catch (error) {
+            console.error(`TEST UPDATE: Error during test:`, error);
+            return null;
+        }
+    };
 
     /**
      * Add listener
@@ -249,7 +431,7 @@ class InvitedUsers extends Component {
                                         <InfoOverlay
                                             placement="right"
                                             message={
-                                                "Home members are the students that registered through this course. Platform members are existing users of Student Invest West who requested access to this course."
+                                                "Home members are the students that registered through this course. Platform members are existing users of Student Showcase who requested access to this course."
                                             }
                                         />
                                     </FlexView>
@@ -383,6 +565,17 @@ class InvitedUsers extends Component {
                                 }
                             </Button>
 
+                            <Button variant="outlined" className={css(sharedStyles.no_text_transform)} onClick={this.refreshLoginDates} style={{marginRight: 10}}
+                            >
+                                {
+                                    this.state.loadingLastLoginDates
+                                        ?
+                                        "Refreshing ..."
+                                        :
+                                        "Refresh Login Dates"
+                                }
+                            </Button>
+
                             <InfoOverlay placement="right"
                                 message={
                                     admin.superAdmin
@@ -444,13 +637,13 @@ class InvitedUsers extends Component {
                                 <Typography align="left" variant="body2"><b>User type</b></Typography>
                             </TableCell>
                             <TableCell colSpan={2}>
-                                <Typography align="left" variant="body2"><b>Invited/requested to join date</b></Typography>
+                                <Typography align="left" variant="body2"><b>Projects Created</b></Typography>
                             </TableCell>
                             <TableCell colSpan={1}>
                                 <Typography align="left" variant="body2"><b>Registration status</b></Typography>
                             </TableCell>
                             <TableCell colSpan={2}>
-                                <Typography align="left" variant="body2" ><b>Registered/joined date</b></Typography>
+                                <Typography align="left" variant="body2" ><b>Last logged in</b></Typography>
                             </TableCell>
                         </TableRow>
                     </TableHead>
@@ -712,23 +905,19 @@ class InvitedUsers extends Component {
                                 </Typography>
                             </TableCell>
 
-                            {/** Date invited / requested to join / registered via public link */}
+                            {/** Projects Created */}
                             <TableCell colSpan={2}>
                                 <Typography align="left" variant="body2">
                                     {
-                                        invitedUser.invitedDate !== "none"
-                                        && (
-                                            invitedUser.hasOwnProperty('requestedToJoinDate')
-                                            && invitedUser.requestedToJoinDate !== "none"
-                                        )
+                                        this.state.loadingProjectCounts
                                             ?
-                                            `Registered via public link on ${myUtils.dateInReadableFormat(invitedUser.invitedDate)}`
+                                            "Loading..."
                                             :
-                                            invitedUser.invitedDate !== "none"
+                                            this.state.userProjectCounts.hasOwnProperty(invitedUser.id)
                                                 ?
-                                                `Invited on ${myUtils.dateInReadableFormat(invitedUser.invitedDate)}`
+                                                this.state.userProjectCounts[invitedUser.id]
                                                 :
-                                                `Requested to join on ${myUtils.dateInReadableFormat(invitedUser.requestedToJoinDate)}`
+                                                "0"
                                     }
                                 </Typography>
                             </TableCell>
@@ -736,19 +925,23 @@ class InvitedUsers extends Component {
                             {/** Registration status */}
                             <TableCell colSpan={1}>{this.renderInvitedUserRegistrationStatus(invitedUser)}</TableCell>
 
-                            {/** Date registered/joined */}
+                            {/** Last logged in */}
                             <TableCell colSpan={2}>
                                 <Typography align="left" variant="body2">
                                     {
-                                        !invitedUser.hasOwnProperty('joinedDate')
+                                        this.state.loadingLastLoginDates
                                             ?
-                                            null
+                                            "Loading..."
                                             :
-                                            !invitedUser.requestedToJoin
+                                            this.state.userLastLoginDates.hasOwnProperty(invitedUser.id)
                                                 ?
-                                                `Registered on ${myUtils.dateInReadableFormat(invitedUser.joinedDate)}`
+                                                myUtils.dateInReadableFormat(this.state.userLastLoginDates[invitedUser.id])
                                                 :
-                                                `Joined on ${myUtils.dateInReadableFormat(invitedUser.joinedDate)}`
+                                                invitedUser.hasOwnProperty('joinedDate') && invitedUser.joinedDate
+                                                    ?
+                                                    `${myUtils.dateInReadableFormat(invitedUser.joinedDate)} (Registration)`
+                                                    :
+                                                    "Never logged in"
                                     }
                                 </Typography>
                             </TableCell>

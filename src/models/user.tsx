@@ -21,6 +21,7 @@ export default interface User {
     profilePicture?: ProfileImage[];
     BusinessProfile?: BusinessProfile;
     type: number;
+    lastLoginDate?: number; // timestamp when user last logged in
 }
 
 export interface BusinessProfile {
