@@ -3926,7 +3926,7 @@ class ProjectDetails extends Component {
 
                                     {/** Financial round */}
                                     {
-                                        !project.Pitch.hasOwnProperty('financialRound')
+                                        /**!project.Pitch.hasOwnProperty('financialRound')
                                             ?
                                             null
                                             :
@@ -3936,7 +3936,7 @@ class ProjectDetails extends Component {
                                                         {project.Pitch.financialRound}
                                                     </b>
                                                 </Typography>
-                                            </FlexView>
+                                            </FlexView>*/
                                     }
 
 

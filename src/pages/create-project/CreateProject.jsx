@@ -3053,8 +3053,9 @@ class CreateProject extends Component {
                                                     && createProjectState.pitchProjectDescription.trim().length === 0
                                                 }
                                                 multiline
-                                                rowsMax={5}
-                                                rows={5}
+                                                minRows={3}
+                                                maxRows={6}
+                                                inputProps={{ maxLength: 300 }}
                                                 onChange={this.onInputChanged}
                                             />
                                             <FormHelperText>
