@@ -207,13 +207,13 @@ interface ExploreOffersComponentState {
                                 value={ExploreOffersLocalState.searchFilter}
                                 placeholder="Search name, course or issuer"
                                 onChange={filterChanged}
-                                disabled={!successfullyFetchedOffers(ExploreOffersLocalState)}
+                                /*disabled={!successfullyFetchedOffers(ExploreOffersLocalState)}*/
                                 startAdornment={
                                     <InputAdornment position="start" >
                                         <IconButton
                                             type="submit"
                                             onClick={() => fetchOffers(FetchProjectsOrderByOptions.Phase)}
-                                            disabled={!successfullyFetchedOffers(ExploreOffersLocalState)}
+                                            /*disabled={!successfullyFetchedOffers(ExploreOffersLocalState)}*/
                                         >
                                             <Search fontSize="small"/>
                                         </IconButton>
