@@ -16,6 +16,7 @@ import {
     ListItem,
     Typography
 } from "@material-ui/core";
+import DescriptionIcon from '@material-ui/icons/Description';
 import {DocumentsDownloadState} from "./DocumentsDownloadReducer";
 import {onAcceptRiskWarningClick, onCancelRiskWarningClick, onDocumentClick} from "./DocumentsDownloadActions";
 import {css} from "aphrodite";
@@ -96,12 +97,7 @@ class DocumentsDownload extends Component<DocumentsDownloadProps, any> {
                                 button
                                 onClick={() => onDocumentClick(document, shouldShowRiskWarningOnDownload ?? false)}
                             >
-                                <img
-                                    alt="Document image"
-                                    src={require("../../img/document_icon.png").default}
-                                    width={48}
-                                    height={48}
-                                />
+                                <DescriptionIcon style={{ color: '#4caf50', fontSize: 48 }} />
                                 <Box display="flex" flexDirection="row" >
                                     <Typography variant="body2" align="left">{document.fileName}</Typography>
                                     <Typography variant="body2" color="textSecondary" align="left">{document.readableSize}</Typography>

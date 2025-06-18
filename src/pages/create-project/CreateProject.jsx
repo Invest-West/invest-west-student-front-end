@@ -17,11 +17,8 @@ import {
     FormHelperText,
     FormLabel,
     IconButton,
-    InputAdornment,
     MenuItem,
     OutlinedInput,
-    Radio,
-    RadioGroup,
     Select,
     Step,
     StepLabel,
@@ -3069,7 +3066,7 @@ class CreateProject extends Component {
                                          * Financial round
                                          */
                                     }
-                                    <FlexView marginTop={45}>
+                                    {/* <FlexView marginTop={45}>
                                         <FormControl required fullWidth
                                             error={
                                                 createProjectState.pitchPublishCheck === PITCH_PUBLISH_FALSE_MISSING_FIELDS_IN_GENERAL_INFORMATION
@@ -3085,7 +3082,7 @@ class CreateProject extends Component {
                                                 }
                                             </RadioGroup>
                                         </FormControl>
-                                    </FlexView>
+                                    </FlexView> */}
 
                                     {
                                         /**
@@ -3143,7 +3140,7 @@ class CreateProject extends Component {
                                                         ?
                                                         null
                                                         :
-                                                        <FlexView column width="100%" marginTop={25} marginBottom={25}>
+                                                        <FlexView column width="400px" marginTop={25} marginBottom={25}>
                                                             <Typography variant="body1" color="textSecondary" align="left" style={{marginBottom: 20}}>Your current project cover</Typography>
 
                                                             {
