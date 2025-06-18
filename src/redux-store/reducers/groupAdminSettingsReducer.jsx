@@ -6,6 +6,7 @@ import * as utils from "../../utils/utils"
 
 const initState = {
     groupAttributesEdited: null,
+    clubAttributesEdited: {},
 
     website: '',
     description: '',
@@ -37,6 +38,7 @@ const groupAdminSettingsReducer = (state = initState, action) => {
             return {
                 ...state,
                 groupAttributesEdited: groupSettings,
+                clubAttributesEdited: action.clubAttributes,
                 website:  action.group.hasOwnProperty('website') ? action.group.website : '',
                 description: action.group.hasOwnProperty('description') ? action.group.description : '',
                 primaryColor: action.group.settings.primaryColor,
@@ -119,6 +121,14 @@ const groupAdminSettingsReducer = (state = initState, action) => {
                 ...state,
                 primaryColor: action.field === "primaryColor" ? action.color : state.primaryColor,
                 secondaryColor: action.field === "secondaryColor" ? action.color : state.secondaryColor
+            };
+        case groupAdminSettingsActions.GROUP_ADMIN_SETTINGS_QUILL_EDITOR_CHANGED:
+            return {
+                ...state,
+                clubAttributesEdited: {
+                    ...state.clubAttributesEdited,
+                    [action.fieldName]: action.value
+                }
             };
         default:
             return state;
