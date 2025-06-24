@@ -33,7 +33,7 @@ const initState = {
         pitchProjectDescription: '',
         pitchExpiredDate: null,
 
-        pitchInvestorsCommitted: '',
+        //pitchInvestorsCommitted: '',
 
         // project cover (image or video) --- 1 file
         pitchCover: [],
@@ -141,13 +141,13 @@ const createProjectReducer = (state = initState, action) => {
                                         :
                                         null
                                 ,
-                                pitchInvestorsCommitted:
-                                    project.Pitch.hasOwnProperty('investorsCommitted')
-                                        ?
-                                        project.Pitch.investorsCommitted
-                                        :
-                                        ''
-                                ,
+                                // pitchInvestorsCommitted:
+                                //     project.Pitch.hasOwnProperty('investorsCommitted')
+                                //         ?
+                                //         project.Pitch.investorsCommitted
+                                //         :
+                                //         ''
+                                // ,
 
                                 pitchPresentationText:
                                     !project.Pitch.presentationText

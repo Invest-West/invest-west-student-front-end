@@ -64,7 +64,7 @@ export interface ProjectCsv {
     description: string | undefined;
     sector: string | undefined;
     postedDate: number | undefined; // = pitch postedDate
-    financialRound: string | undefined; // = pitch financialRound
+    //financialRound: string | undefined; // = pitch financialRound
 
     detailsAboutEarlierFundraisingRounds: string | undefined; // = pitch detailsAboutEarlierFundraisingRounds
     investorsCommitted: string | undefined; // = pitch investorsCommitted
@@ -98,7 +98,7 @@ export interface ProjectPitch {
     postMoneyValuation?: number;
     detailsAboutEarlierFundraisingRounds?: string;
     investorsCommitted?: string;
-    financialRound?: string;
+    //financialRound?: string;
     presentationDocument?: PitchDocument[];
     supportingDocuments?: PitchDocument[];
     presentationText?: any;
