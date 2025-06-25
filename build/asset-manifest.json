@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "https://student.investwest.online/static/css/main.12ee0639.css",
-    "main.js": "https://student.investwest.online/static/js/main.91267e3a.js",
+    "main.css": "https://student.investwest.online/static/css/main.e5510de3.css",
+    "main.js": "https://student.investwest.online/static/js/main.fc05fec3.js",
     "static/media/employ_hire.svg": "https://student.investwest.online/static/media/employ_hire.13b994311feb9b98ef2f72ecfd1ad9e9.svg",
     "static/media/handshake_1.svg": "https://student.investwest.online/static/media/handshake_1.2f630d9a63d5f18fb7d0beaeaacc0e81.svg",
     "static/media/student_shake.svg": "https://student.investwest.online/static/media/student_shake.829038fd9c2295a93810234c0d672c07.svg",
@@ -52,6 +52,7 @@
     "static/media/issuer_help_support_02.png": "https://student.investwest.online/static/media/issuer_help_support_02.39aafbdcec05447066d2.png",
     "static/media/issuer_help_manage_offer.png": "https://student.investwest.online/static/media/issuer_help_manage_offer.3aaa83e4fac64bc49c8f.png",
     "static/media/issuer_help_edit_profile_02.png": "https://student.investwest.online/static/media/issuer_help_edit_profile_02.5ba1a9b1149cdf6eefd7.png",
+    "static/media/logo.png": "https://student.investwest.online/static/media/logo.e9f008980e1bf6b22282.png",
     "static/media/student_logo.png": "https://student.investwest.online/static/media/student_logo.e9f008980e1bf6b22282.png",
     "static/media/issuer_help_edit_profile_01.png": "https://student.investwest.online/static/media/issuer_help_edit_profile_01.f76d41fdf7142f428df6.png",
     "static/media/investor_help_editing_your_profile.png": "https://student.investwest.online/static/media/investor_help_editing_your_profile.7557feb58b6bbd76e7c7.png",
@@ -75,13 +76,12 @@
     "static/media/issuer_help_reset_password.png": "https://student.investwest.online/static/media/issuer_help_reset_password.6e395e52ba5352a4b644.png",
     "static/media/group_admin_help_password.png": "https://student.investwest.online/static/media/group_admin_help_password.6b0f1016db47e31cd41e.png",
     "static/media/group_admin_help_reopening_a_temporarily_closed_offer.png": "https://student.investwest.online/static/media/group_admin_help_reopening_a_temporarily_closed_offer.a6df5162055110756485.png",
-    "static/media/logo.png": "https://student.investwest.online/static/media/logo.5e7ff337c9db885edebb.png",
     "static/media/group_admin_help_accept_reject_2_offer.png": "https://student.investwest.online/static/media/group_admin_help_accept_reject_2_offer.ef822bde9daffcb66756.png",
     "static/media/admin_logo.png": "https://student.investwest.online/static/media/admin_logo.ba46fba41160c4fa6f39.png",
     "index.html": "https://student.investwest.online/index.html"
   },
   "entrypoints": [
-    "static/css/main.12ee0639.css",
-    "static/js/main.91267e3a.js"
+    "static/css/main.e5510de3.css",
+    "static/js/main.fc05fec3.js"
   ]
 }
