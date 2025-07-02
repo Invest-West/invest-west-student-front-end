@@ -574,7 +574,7 @@ class HelpPage extends Component {
                                         <Typography variant="subtitle1" align="left" paragraph>
                                             <b>10.1.1. Public</b>
                                         </Typography>
-                                        <Typography variant="body1" align="left">Selecting “Public” allows all Invest West users (including users who are not a member of your course) to see an project’s full details and also interact with the project. Here is an example of a public project, where all information on the project is visible.</Typography>
+                                        <Typography variant="body1" align="left">Selecting “Public” allows all users (including users who are not a member of your course) to see an project’s full details and also interact with the project. Here is an example of a public project, where all information on the project is visible.</Typography>
                                         <img alt="group_admin_help_public_offer" src={require("../../img/group_admin_help_public_offer.png").default} className={css(styles.image_style)}/>
                                         <Typography variant="body1" align="left" paragraph>When an project is public all investors can also see the projects, project deck, documents, comments and extra information.</Typography>
                                     </FlexView>
@@ -584,7 +584,7 @@ class HelpPage extends Component {
                                         <Typography variant="subtitle1" align="left" paragraph>
                                             <b>10.1.2. Restricted</b>
                                         </Typography>
-                                        <Typography variant="body1" align="left">Selecting “Restricted” allows all Invest West users (including users who are not a member of your course) to see the project’s basic information only. Only member of your course will be able to see the project’s full details. Here is an example of the same project as above but restricted. Investors who are not members of your course will not be able to see the projects, project deck, documents, comments or extra information. If they want to see this, they will be prompted to join your course.</Typography>
+                                        <Typography variant="body1" align="left">Selecting “Restricted” allows all users (including users who are not a member of your course) to see the project’s basic information only. Only member of your course will be able to see the project’s full details. Here is an example of the same project as above but restricted. Investors who are not members of your course will not be able to see the projects, project deck, documents, comments or extra information. If they want to see this, they will be prompted to join your course.</Typography>
                                         <img alt="group_admin_help_restricted_offer" src={require("../../img/group_admin_help_restricted_offer.png").default} className={css(styles.image_style)}/>
                                     </FlexView>
 

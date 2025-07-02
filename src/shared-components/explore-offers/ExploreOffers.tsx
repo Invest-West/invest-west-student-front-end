@@ -37,7 +37,7 @@ import {BeatLoader} from "react-spinners";
 import OfferItem from "./OfferItem";
 import {Pagination} from "@material-ui/lab";
 import RiskWarning from "../risk-warning/RiskWarning";
-import {isIssuer} from "../../models/user";
+import {isIssuer, isInvestor} from "../../models/user";
 import CustomLink from "../../shared-js-css-styles/CustomLink";
 import Routes from "../../router/routes";
 import CreateIcon from "@material-ui/icons/CreateOutlined";
@@ -276,11 +276,11 @@ interface ExploreOffersComponentState {
                                             </Box>
                                         </Box>
 
-                                        {/** Create offer button (only available for issuers) */}
+                                        {/** Create offer button (available for issuers and investors) */}
                                         {
                                             !AuthenticationState.currentUser
                                                 ? null
-                                                : !isIssuer(AuthenticationState.currentUser)
+                                                : !isIssuer(AuthenticationState.currentUser) && !isInvestor(AuthenticationState.currentUser)
                                                 ? null
                                                 : <Box marginBottom="40px" >
                                                     <CustomLink

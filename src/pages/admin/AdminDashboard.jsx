@@ -391,6 +391,29 @@ class AdminDashboard extends Component {
                         </Accordion>
                     </Col>
 
+                    {/* Manage courses */}
+                    {
+                        currentUser.superAdmin
+                            ?
+                            null
+                            :
+                            <Col xs={12} md={12} lg={12}>
+                                <Accordion className={css(styles.card_style)}>
+                                    <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
+                                        <FlexView column>
+                                            <Typography paragraph variant="h6" color="primary" align="left">Manage courses</Typography>
+                                            <Typography paragraph variant="body1" align="left">Create and manage courses within your network.</Typography>
+                                        </FlexView>
+                                    </AccordionSummary>
+                                    <AccordionDetails>
+                                        <FlexView column width="100%">
+                                            <AngelNetWorks/>
+                                        </FlexView>
+                                    </AccordionDetails>
+                                </Accordion>
+                            </Col>
+                    }
+
                     {/* Manage group admins */}
                     {
                         currentUser.superAdmin

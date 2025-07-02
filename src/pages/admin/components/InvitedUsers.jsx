@@ -175,7 +175,6 @@ class InvitedUsers extends Component {
                     // Use officialUserID for registered users, fall back to id for unregistered users
                     const userIdToQuery = user.officialUserID || user.id;
                     
-                    console.log(`Fetching projects for user ${user.email} (ID: ${user.id}, Official ID: ${user.officialUserID}, Query ID: ${userIdToQuery})`);
                     
                     const response = await this.offerRepository.fetchOffers({
                         issuer: userIdToQuery,
@@ -183,14 +182,11 @@ class InvitedUsers extends Component {
                         orderBy: FetchProjectsOrderByOptions.Issuer
                     });
                     
-                    console.log(`API response for user ${user.email}:`, response);
                     const projectCount = response.data ? response.data.length : 0;
-                    console.log(`Project count for user ${user.email}: ${projectCount}`);
                     
                     // Store the count using the invited user's ID (for display purposes)
                     projectCounts[user.id] = projectCount;
                 } catch (error) {
-                    console.warn(`Failed to fetch projects for user ${user.email}:`, error);
                     projectCounts[user.id] = 0;
                 }
             }
@@ -228,17 +224,13 @@ class InvitedUsers extends Component {
                 try {
                     // Only fetch for users who have registered (have officialUserID)
                     if (user.officialUserID) {
-                        console.log(`FETCH LOGIN: Fetching last login date for user ${user.email} (Official ID: ${user.officialUserID})`);
                         
                         const response = await this.userRepository.retrieveUser(user.officialUserID);
-                        console.log(`FETCH LOGIN: API response for ${user.email}:`, response);
                         
                         const userProfile = response.data;
-                        console.log(`FETCH LOGIN: User profile for ${user.email}:`, userProfile);
                         
                         if (userProfile && userProfile.lastLoginDate) {
                             lastLoginDates[user.id] = userProfile.lastLoginDate;
-                            console.log(`FETCH LOGIN: Found login date for ${user.email}: ${userProfile.lastLoginDate} (${new Date(userProfile.lastLoginDate).toLocaleString()})`);
                         } else {
                             console.log(`FETCH LOGIN: No lastLoginDate field found for ${user.email}. Available fields:`, Object.keys(userProfile || {}));
                         }
@@ -264,7 +256,6 @@ class InvitedUsers extends Component {
      * Refresh login dates manually
      */
     refreshLoginDates = () => {
-        console.log("REFRESH LOGIN: Manual refresh triggered");
         this.setState({ 
             userLastLoginDates: {},  // Clear existing data
             loadingLastLoginDates: false 
@@ -277,28 +268,22 @@ class InvitedUsers extends Component {
      * Test login date update for a specific user (for debugging)
      */
     testUpdateLoginDate = async (userId) => {
-        try {
-            console.log(`TEST UPDATE: Testing login date update for user ID: ${userId}`);
-            
+        try {            
             // First, retrieve the current user profile
             const retrieveResponse = await this.userRepository.retrieveUser(userId);
-            console.log(`TEST UPDATE: Current user profile:`, retrieveResponse.data);
             
             // Update with current timestamp
             const currentTimestamp = Date.now();
             const updatedUser = { ...retrieveResponse.data, lastLoginDate: currentTimestamp };
             
-            console.log(`TEST UPDATE: Updating user with:`, updatedUser);
             
             const updateResponse = await this.userRepository.updateUser({
                 updatedUser: updatedUser
             });
             
-            console.log(`TEST UPDATE: Update response:`, updateResponse);
             
             // Verify the update by retrieving the user again
             const verifyResponse = await this.userRepository.retrieveUser(userId);
-            console.log(`TEST UPDATE: Verified user profile after update:`, verifyResponse.data);
             
             return verifyResponse.data;
         } catch (error) {

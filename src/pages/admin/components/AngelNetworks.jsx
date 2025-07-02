@@ -86,8 +86,8 @@ class AngelNetworks extends Component {
             stopListeningForAngelNetworksChanged
         } = this.props;
 
-        // cancel all listeners if user is set to null
-        if (!admin || (admin && !admin.superAdmin) || !shouldLoadOtherData) {
+        // cancel all listeners if user is set to null or user is not an admin with permission
+        if (!admin || (admin && !admin.superAdmin && admin.type !== DB_CONST.TYPE_ADMIN) || !shouldLoadOtherData) {
             stopListeningForAngelNetworksChanged();
             return;
         }
@@ -121,14 +121,14 @@ class AngelNetworks extends Component {
 
         if (shouldLoadOtherData) {
             if (inComponentDidMount) {
-                if (admin && admin.superAdmin) {
+                if (admin && (admin.superAdmin || admin.type === DB_CONST.TYPE_ADMIN)) {
                     loadAngelNetworks();
                 }
             } else {
                 // loadAngelNetworks() is called in componentDidUpdate which happens after every state changes
                 // therefore, in order to avoid unlimited calls of loadAngelNetworks, another check variable called loadingAngelNetworks
                 // is added to ensure the function only gets called once.
-                if (admin && admin.superAdmin && !loadingAngelNetworks && !angelNetworksLoaded) {
+                if (admin && (admin.superAdmin || admin.type === DB_CONST.TYPE_ADMIN) && !loadingAngelNetworks && !angelNetworksLoaded) {
                     loadAngelNetworks();
                 }
             }
@@ -203,7 +203,7 @@ class AngelNetworks extends Component {
             toggleSearchMode
         } = this.props;
 
-        if (!groupPropertiesLoaded || !admin || (admin && !admin.superAdmin)) {
+        if (!groupPropertiesLoaded || !admin || (admin && !admin.superAdmin && admin.type !== DB_CONST.TYPE_ADMIN)) {
             return null;
         }
 

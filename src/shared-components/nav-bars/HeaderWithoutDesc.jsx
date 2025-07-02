@@ -119,7 +119,7 @@ class HeaderWithoutDesc extends Component {
                                                 {
                                                     !groupProperties
                                                         ?
-                                                        "Default student"
+                                                        "Student Showcase"
                                                         :
                                                         groupProperties.displayName
                                                 }
@@ -153,7 +153,7 @@ class HeaderWithoutDesc extends Component {
                                                 {
                                                     !groupProperties
                                                         ?
-                                                        "Default student"
+                                                        "Student Showcase"
                                                         :
                                                         groupProperties.displayName
                                                 }

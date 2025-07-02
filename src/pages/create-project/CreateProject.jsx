@@ -63,7 +63,7 @@ import sharedStyles from "../../shared-js-css-styles/SharedStyles";
 import {getGroupRouteTheme, isValidatingGroupUrl} from "../../redux-store/reducers/manageGroupUrlReducer";
 import {isAuthenticating, successfullyAuthenticated} from "../../redux-store/reducers/authenticationReducer";
 import {isLoadingSystemAttributes} from "../../redux-store/reducers/manageSystemAttributesReducer";
-import {isIssuer} from "../../models/user";
+import {isIssuer, isInvestor} from "../../models/user";
 import {getHomeGroup} from "../../models/group_of_membership";
 import {isDraftProjectNotSubmitted} from "../../models/project";
 import Api, {ApiRoutes} from "../../api/Api";
@@ -363,15 +363,56 @@ class CreatePitchPageMain extends Component {
             return;
         }
 
-        if (!successfullyAuthenticated(AuthenticationState)
-        || (AuthenticationState.currentUser && AuthenticationState.currentUser.type === DB_CONST.TYPE_INVESTOR)
-        ) {
+        if (!successfullyAuthenticated(AuthenticationState)) {
             if (!projectEditedLoaded) {
                 this.setState({
                     projectEditedLoaded: true
                 });
             }
             return;
+        }
+
+        // Handle investors - they need proper initialization but same flow as issuers for editing
+        if (AuthenticationState.currentUser && AuthenticationState.currentUser.type === DB_CONST.TYPE_INVESTOR) {
+            // get project id from the URL
+            const params = queryString.parse(this.props.location.search);
+
+            // if in edit mode, treat investors like issuers
+            if (params.edit || projectIDToBeLoadedAfterSavingFirstTime) {
+                // Continue to issuer logic below for edit mode
+            } else {
+                // New project creation - handle initialization for investors
+                if (!projectEditedLoaded) {
+                    this.setState({
+                        projectEditedLoaded: true,
+                        projectIDToBeLoadedAfterSavingFirstTime: null,
+
+                        createProject: {
+                            ...this.state.createProject,
+                            groupIssuerCreateOfferFor: ManageGroupUrlState.group
+                                ? ManageGroupUrlState.group.anid
+                                : getHomeGroup(AuthenticationState.groupsOfMembership) === null
+                                    ? "undefined"
+                                    : getHomeGroup(AuthenticationState.groupsOfMembership).group.anid,
+                            pitchExpiryDate:
+                                ManageGroupUrlState.group && ManageGroupUrlState.group.groupUserName === "qib"
+                                    ?
+                                    // if the group is QIB,
+                                    // set the project expiry date to the one specified by the QIB' admins
+                                    // Note: must ensure the defaultPitchExpiryDate field is valid
+                                    ManageGroupUrlState.group.settings.defaultPitchExpiryDate
+                                    :
+                                    this.state.createProject.pitchExpiryDate
+                        }
+                    });
+
+                    // allow investors to change the visibility of the project
+                    if (AuthenticationState.currentUser.type === DB_CONST.TYPE_INVESTOR) {
+                        selectProjectVisibility_setProject(null);
+                    }
+                }
+                return;
+            }
         }
 
         this.setState({
@@ -388,8 +429,8 @@ class CreatePitchPageMain extends Component {
                 .loadAParticularProject(!params.edit ? projectIDToBeLoadedAfterSavingFirstTime : params.edit)
                 .then(project => {
 
-                    // allow the group admin to change the visibility of the project
-                    if (AuthenticationState.currentUser.type === DB_CONST.TYPE_ADMIN) {
+                    // allow the group admin and investors to change the visibility of the project
+                    if (AuthenticationState.currentUser.type === DB_CONST.TYPE_ADMIN || AuthenticationState.currentUser.type === DB_CONST.TYPE_INVESTOR) {
                         selectProjectVisibility_setProject(project);
                     }
 
@@ -534,8 +575,8 @@ class CreatePitchPageMain extends Component {
                 }
             });
 
-            // allow the group admin to change the visibility of the project
-            if (AuthenticationState.currentUser.type === DB_CONST.TYPE_ADMIN) {
+            // allow the group admin and investors to change the visibility of the project
+            if (AuthenticationState.currentUser.type === DB_CONST.TYPE_ADMIN || AuthenticationState.currentUser.type === DB_CONST.TYPE_INVESTOR) {
                 selectProjectVisibility_setProject(null);
             }
         }
@@ -599,16 +640,22 @@ class CreatePitchPageMain extends Component {
                     //financialRound: financialRound,
                     groupIssuerCreateOfferFor: groupIssuerCreateOfferFor,
                     isIssuer: isIssuer(AuthenticationState.currentUser),
+                    isInvestor: isInvestor(AuthenticationState.currentUser),
                     isEdit: params.edit && projectEdited,
                     groupName: ManageGroupUrlState.groupNameFromUrl,
                     qibSpecialNews: qibSpecialNews
                 });
                 
-                // if one of the fields in the General information part is missing, ask the user to fill them
+                // Auto-fill expiry date to 1 year from now if not provided
+                let finalExpiryDate = pitchExpiryDate;
+                if (pitchExpiryDate === null) {
+                    finalExpiryDate = utils.getDateWithDaysFurtherThanToday(365);
+                }
+
+                // if one of the required fields in the General information part is missing, ask the user to fill them
+                // Note: project description and expiry date are now optional
                 if (pitchSector.trim().length === 0
                     || pitchProjectName.trim().length === 0
-                    || pitchProjectDescription.trim().length === 0
-                    || pitchExpiryDate === null
                     //|| financialRound.trim().length === 0
                     || (ManageGroupUrlState.groupNameFromUrl === "qib" && qibSpecialNews.trim().length === 0)
                     || (isIssuer(AuthenticationState.currentUser) && !(params.edit && projectEdited) && groupIssuerCreateOfferFor === "undefined")
@@ -625,9 +672,9 @@ class CreatePitchPageMain extends Component {
                 }
 
                 // check if the entered date is in a valid format or the entered is less than the minimum date
-                if (isNaN(pitchExpiryDate)
+                if (isNaN(finalExpiryDate)
                     ||
-                    (pitchExpiryDate && (pitchExpiryDate < utils.getDateWithDaysFurtherThanToday(0)))
+                    (finalExpiryDate && (finalExpiryDate < utils.getDateWithDaysFurtherThanToday(0)))
                 ) {
                     this.setState({
                         createProject: {
@@ -643,6 +690,7 @@ class CreatePitchPageMain extends Component {
                     createProject: {
                         ...this.state.createProject,
                         activeStep: activeStep + 1,
+                        pitchExpiryDate: finalExpiryDate, // Update with auto-filled date if it was null
                         pitchPublishCheck: PITCH_PUBLISH_CHECK_NONE,
                         pitchPublishErrorMessageShowed: false
                     }
@@ -850,7 +898,7 @@ class CreatePitchPageMain extends Component {
                 activeStep: activeStep - 1
             }
         });
-        this.navigateToTheSamePageWithActiveStepSaved(activeStep - 1, projectEdited.id);
+        this.navigateToTheSamePageWithActiveStepSaved(activeStep - 1, projectEdited ? projectEdited.id : null);
     };
 
     /**
@@ -2503,13 +2551,10 @@ class CreatePitchPageMain extends Component {
         }
 
         // when creating a new offer,
-        // if no user found or found user is an investor or a super admin
+        // if no user found or found user is a super admin (allow investors now)
         // --> display Page Not Found
         if (!successfullyAuthenticated(AuthenticationState)
-            || (successfullyAuthenticated(AuthenticationState) && AuthenticationState.currentUser.type === DB_CONST.TYPE_INVESTOR)
-            || (!params.edit && AuthenticationState.currentUser && (AuthenticationState.currentUser.type === DB_CONST.TYPE_INVESTOR
-                    || (AuthenticationState.currentUser.type === DB_CONST.TYPE_ADMIN && AuthenticationState.currentUser.superAdmin))
-            )
+            || (!params.edit && AuthenticationState.currentUser && (AuthenticationState.currentUser.type === DB_CONST.TYPE_ADMIN && AuthenticationState.currentUser.superAdmin))
         ) {
             return (
                 <Redirect to={Routes.error404}/>
@@ -2815,7 +2860,7 @@ class CreateProject extends Component {
                                     </FlexView>
 
                                     {
-                                        currentUser.type === DB_CONST.TYPE_ADMIN
+                                        currentUser.type === DB_CONST.TYPE_ADMIN || currentUser.type === DB_CONST.TYPE_INVESTOR
                                             ?
                                             <FlexView marginTop={30}>
                                                 <SelectPitchVisibility/>
@@ -2830,7 +2875,7 @@ class CreateProject extends Component {
                                             ? null
                                             : params.edit && projectEdited && !isDraftProjectNotSubmitted(projectEdited)
                                             ? null
-                                            : !isIssuer(AuthenticationState.currentUser)
+                                            : !isIssuer(AuthenticationState.currentUser) && !isInvestor(AuthenticationState.currentUser)
                                                 ? null
                                                 : AuthenticationState.groupsOfMembership === null || AuthenticationState.groupsOfMembership.length === 0
                                                     ? null
@@ -2921,10 +2966,8 @@ class CreateProject extends Component {
                                                                     value={createProjectState.pitchExpiryDate}
                                                                     InputAdornmentProps={{position: "start"}}
                                                                     error={
-                                                                        (createProjectState.pitchPublishCheck === PITCH_PUBLISH_FALSE_MISSING_FIELDS_IN_GENERAL_INFORMATION
-                                                                            && createProjectState.pitchExpiryDate === null)
-                                                                        ||
                                                                         (createProjectState.pitchPublishCheck === PITCH_PUBLISH_FALSE_INVALID_DATE
+                                                                            && createProjectState.pitchExpiryDate !== null
                                                                             && (isNaN(createProjectState.pitchExpiryDate)
                                                                                 || createProjectState.pitchExpiryDate < utils.getDateWithDaysFurtherThanToday(0))
                                                                         )
@@ -3055,7 +3098,7 @@ class CreateProject extends Component {
                                     <FlexView marginTop={10}>
                                         <FormControl required fullWidth>
                                             <TextField
-                                                label="Please provide a brief summary of what your project is about (max 300 characters)"
+                                                label="Please provide a brief introduction of what your project is about (max 300 characters)"
                                                 name="pitchProjectDescription"
                                                 value={createProjectState.pitchProjectDescription}
                                                 margin="normal"
@@ -3540,7 +3583,7 @@ class CreateProject extends Component {
 
                                                             {/** Rich text editor */}
                                                             <FlexView column marginTop={20}>
-                                                                <Typography variant="body1" paragraph align="left">Write overview</Typography>
+                                                                <Typography variant="body1" paragraph align="left">Write extended project details</Typography>
                                                                 <div className="quill-medium">
                                                                 <ReactQuill
                                                                     theme="snow"

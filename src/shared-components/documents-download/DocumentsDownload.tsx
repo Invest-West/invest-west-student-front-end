@@ -79,7 +79,7 @@ class DocumentsDownload extends Component<DocumentsDownloadProps, any> {
             .split("%groupName%")
             .join(ManageGroupUrlState.group
                 ? ManageGroupUrlState.group.displayName
-                : "Default student"
+                : "Student Showcase"
             );
 
         let riskWarningTextSplits = riskWarningFooter.split("%URL%");

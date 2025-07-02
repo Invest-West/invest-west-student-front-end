@@ -1,5 +1,6 @@
 import * as createProjectActions from '../actions/createProjectActions';
 import * as authActions from '../actions/authActions';
+import * as utils from '../../utils/utils';
 import {
     STEP_PITCH_GENERAL_INFORMATION,
     PITCH_PUBLISH_CHECK_NONE,
@@ -31,7 +32,7 @@ const initState = {
         // project project name
         pitchProjectName: '',
         pitchProjectDescription: '',
-        pitchExpiredDate: null,
+        pitchExpiredDate: utils.getDateWithDaysFurtherThanToday(365), // Default to 1 year from now
 
         //pitchInvestorsCommitted: '',
 

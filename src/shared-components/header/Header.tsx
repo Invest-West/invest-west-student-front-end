@@ -130,7 +130,8 @@ class Header extends Component<HeaderProps, {}> {
                                                 } else if (ManageGroupUrlState.group && getGroupLogo(ManageGroupUrlState.group)) {
                                                     const groupLogo = getGroupLogo(ManageGroupUrlState.group);
                                                     console.log('Using group logo:', groupLogo);
-                                                    return groupLogo;
+                                                    // Ensure groupLogo is never null
+                                                    return groupLogo ?? undefined;
                                                 } else {
                                                     console.log('Using default logo:', defaultLogo);
                                                     return defaultLogo;
@@ -151,12 +152,12 @@ class Header extends Component<HeaderProps, {}> {
                                         <Typography variant="body1" noWrap >
                                             {
                                                 Routes.isErrorRoute(routePath) || Routes.isSystemPublicRoute(routePath)
-                                                    ? "Default student"
+                                                    ? "Student Showcase"
                                                     : ManageGroupUrlState.group?.displayName 
                                                         ? ManageGroupUrlState.group.displayName
                                                         : routeContainsGroupName(ManageGroupUrlState)
                                                             ? "Loading..."
-                                                            : "Default student"
+                                                            : "Student Showcase"
                                             }
                                         </Typography>
                                     </Box>
