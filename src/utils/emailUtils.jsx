@@ -15,6 +15,7 @@ export const isValidEmailAddress = (email) => {
 
 export const EMAIL_ENQUIRY = 0;
 export const EMAIL_INVITATION = 1;
+export const EMAIL_CONTACT_PITCH_OWNER = 5; // Based on ClientEmailTypes.ContactPitchOwner enum position
 
 export const sendEmail = async (
     {

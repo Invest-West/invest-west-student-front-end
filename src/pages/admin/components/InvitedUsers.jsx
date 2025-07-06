@@ -22,6 +22,8 @@ import {
 import Add from "@material-ui/icons/Add";
 import SearchIcon from "@material-ui/icons/Search";
 import CloseIcon from "@material-ui/icons/Close";
+import ArrowUpwardIcon from "@material-ui/icons/ArrowUpward";
+import ArrowDownwardIcon from "@material-ui/icons/ArrowDownward";
 import {Col, Row} from "react-bootstrap";
 import FlexView from "react-flexview";
 import {HashLoader} from "react-spinners";
@@ -102,7 +104,10 @@ class InvitedUsers extends Component {
             userProjectCounts: {}, // Map of userID -> project count
             loadingProjectCounts: false,
             userLastLoginDates: {}, // Map of userID -> last login date
-            loadingLastLoginDates: false
+            loadingLastLoginDates: false,
+            // Sorting state
+            sortColumn: 'lastLogin', // default to sorting by last logged in
+            sortDirection: 'desc' // 'desc' to show most recent logins first
         };
         this.offerRepository = new OfferRepository();
         this.userRepository = new UserRepository();
@@ -306,6 +311,99 @@ class InvitedUsers extends Component {
         if (invitedUsers && invitedUsersLoaded) {
             startListeningForInvitedUsersChanged();
         }
+    };
+
+    /**
+     * Handle column header click for sorting
+     */
+    handleSort = (column) => {
+        const { sortColumn, sortDirection } = this.state;
+        
+        let newDirection = 'asc';
+        if (sortColumn === column && sortDirection === 'asc') {
+            newDirection = 'desc';
+        }
+        
+        this.setState({
+            sortColumn: column,
+            sortDirection: newDirection
+        });
+    };
+
+    /**
+     * Sort users based on current sort column and direction
+     */
+    sortUsers = (users) => {
+        const { sortColumn, sortDirection } = this.state;
+        
+        if (!sortColumn) {
+            return users;
+        }
+        
+        const sortedUsers = [...users].sort((a, b) => {
+            let aValue, bValue;
+            
+            switch (sortColumn) {
+                case 'name':
+                    aValue = a.officialUser ? `${a.officialUser.firstName} ${a.officialUser.lastName}`.toLowerCase() : '';
+                    bValue = b.officialUser ? `${b.officialUser.firstName} ${b.officialUser.lastName}`.toLowerCase() : '';
+                    break;
+                case 'email':
+                    aValue = a.email.toLowerCase();
+                    bValue = b.email.toLowerCase();
+                    break;
+                case 'userType':
+                    aValue = a.type === DB_CONST.TYPE_ISSUER ? 'student' : 'project viewer';
+                    bValue = b.type === DB_CONST.TYPE_ISSUER ? 'student' : 'project viewer';
+                    break;
+                case 'projectsCreated':
+                    aValue = this.state.userProjectCounts[a.id] || 0;
+                    bValue = this.state.userProjectCounts[b.id] || 0;
+                    break;
+                case 'registrationStatus':
+                    aValue = a.status;
+                    bValue = b.status;
+                    break;
+                case 'lastLogin':
+                    aValue = this.state.userLastLoginDates[a.id] || 0;
+                    bValue = this.state.userLastLoginDates[b.id] || 0;
+                    break;
+                default:
+                    return 0;
+            }
+            
+            // Handle string comparison
+            if (typeof aValue === 'string' && typeof bValue === 'string') {
+                const comparison = aValue.localeCompare(bValue);
+                return sortDirection === 'asc' ? comparison : -comparison;
+            }
+            
+            // Handle numeric comparison
+            if (aValue < bValue) {
+                return sortDirection === 'asc' ? -1 : 1;
+            }
+            if (aValue > bValue) {
+                return sortDirection === 'asc' ? 1 : -1;
+            }
+            return 0;
+        });
+        
+        return sortedUsers;
+    };
+
+    /**
+     * Render sort icon for table headers
+     */
+    renderSortIcon = (column) => {
+        const { sortColumn, sortDirection } = this.state;
+        
+        if (sortColumn !== column) {
+            return null;
+        }
+        
+        return sortDirection === 'asc' ? 
+            <ArrowUpwardIcon fontSize="small" style={{ marginLeft: 4 }} /> : 
+            <ArrowDownwardIcon fontSize="small" style={{ marginLeft: 4 }} />;
     };
 
     render() {
@@ -603,11 +701,17 @@ class InvitedUsers extends Component {
                 <Table>
                     <TableHead>
                         <TableRow>
-                            <TableCell colSpan={2}>
-                                <Typography align="left" variant="body2"><b>Name</b></Typography>
+                            <TableCell colSpan={2} style={{ cursor: 'pointer' }} onClick={() => this.handleSort('name')}>
+                                <FlexView vAlignContent="center">
+                                    <Typography align="left" variant="body2"><b>Name</b></Typography>
+                                    {this.renderSortIcon('name')}
+                                </FlexView>
                             </TableCell>
-                            <TableCell colSpan={2}>
-                                <Typography align="left" variant="body2"><b>Email</b></Typography>
+                            <TableCell colSpan={2} style={{ cursor: 'pointer' }} onClick={() => this.handleSort('email')}>
+                                <FlexView vAlignContent="center">
+                                    <Typography align="left" variant="body2"><b>Email</b></Typography>
+                                    {this.renderSortIcon('email')}
+                                </FlexView>
                             </TableCell>
                             {
                                 !admin.superAdmin
@@ -618,17 +722,29 @@ class InvitedUsers extends Component {
                                         <Typography align="left" variant="body2"><b>Group</b></Typography>
                                     </TableCell>
                             }
-                            <TableCell colSpan={1}>
-                                <Typography align="left" variant="body2"><b>User type</b></Typography>
+                            <TableCell colSpan={1} style={{ cursor: 'pointer' }} onClick={() => this.handleSort('userType')}>
+                                <FlexView vAlignContent="center">
+                                    <Typography align="left" variant="body2"><b>User type</b></Typography>
+                                    {this.renderSortIcon('userType')}
+                                </FlexView>
                             </TableCell>
-                            <TableCell colSpan={2}>
-                                <Typography align="left" variant="body2"><b>Projects Created</b></Typography>
+                            <TableCell colSpan={2} style={{ cursor: 'pointer' }} onClick={() => this.handleSort('projectsCreated')}>
+                                <FlexView vAlignContent="center">
+                                    <Typography align="left" variant="body2"><b>Projects Created</b></Typography>
+                                    {this.renderSortIcon('projectsCreated')}
+                                </FlexView>
                             </TableCell>
-                            <TableCell colSpan={1}>
-                                <Typography align="left" variant="body2"><b>Registration status</b></Typography>
+                            <TableCell colSpan={1} style={{ cursor: 'pointer' }} onClick={() => this.handleSort('registrationStatus')}>
+                                <FlexView vAlignContent="center">
+                                    <Typography align="left" variant="body2"><b>Registration status</b></Typography>
+                                    {this.renderSortIcon('registrationStatus')}
+                                </FlexView>
                             </TableCell>
-                            <TableCell colSpan={2}>
-                                <Typography align="left" variant="body2" ><b>Last logged in</b></Typography>
+                            <TableCell colSpan={2} style={{ cursor: 'pointer' }} onClick={() => this.handleSort('lastLogin')}>
+                                <FlexView vAlignContent="center">
+                                    <Typography align="left" variant="body2"><b>Last logged in</b></Typography>
+                                    {this.renderSortIcon('lastLogin')}
+                                </FlexView>
                             </TableCell>
                         </TableRow>
                     </TableHead>
@@ -736,6 +852,9 @@ class InvitedUsers extends Component {
         } else {
             renderedInvitedUsers = [...matchedUsersInvitedByTheGroup, ...matchedUsersRequestedToJoin];
         }
+
+        // Apply sorting if a sort column is selected
+        renderedInvitedUsers = this.sortUsers(renderedInvitedUsers);
 
         return (
             !renderedInvitedUsers
@@ -922,11 +1041,11 @@ class InvitedUsers extends Component {
                                                 ?
                                                 myUtils.dateInReadableFormat(this.state.userLastLoginDates[invitedUser.id])
                                                 :
-                                                invitedUser.hasOwnProperty('joinedDate') && invitedUser.joinedDate
+                                                invitedUser.status === DB_CONST.INVITED_USER_STATUS_ACTIVE
                                                     ?
-                                                    `${myUtils.dateInReadableFormat(invitedUser.joinedDate)} (Registration)`
-                                                    :
                                                     "Never logged in"
+                                                    :
+                                                    "Not registered"
                                     }
                                 </Typography>
                             </TableCell>

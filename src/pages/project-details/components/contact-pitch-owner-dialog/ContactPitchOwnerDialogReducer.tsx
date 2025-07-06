@@ -2,7 +2,9 @@ import {
     CompleteSendingContactEmailAction,
     ContactPitchOwnerDialogAction,
     ContactPitchOwnerDialogEvents,
-    ToggleContactDialogAction
+    ToggleContactDialogAction,
+    UpdateSenderEmailAction,
+    UpdateSenderNameAction
 } from "./ContactPitchOwnerDialogActions";
 import Error from "../../../../models/error";
 
@@ -12,13 +14,17 @@ export interface ContactPitchOwnerDialogState {
     contactDialogOpen: boolean;
     sendingContactEmail: boolean;
     errorSendingContactEmail?: Error;
+    senderEmail: string;
+    senderName: string;
 }
 
 const initialState: ContactPitchOwnerDialogState = {
     projectName: null,
     projectOwnerEmail: null,
     contactDialogOpen: false,
-    sendingContactEmail: false
+    sendingContactEmail: false,
+    senderEmail: '',
+    senderName: ''
 }
 
 export const isSendingContactEmail = (state: ContactPitchOwnerDialogState) => {
@@ -54,6 +60,18 @@ const contactPitchOwnerDialogReducer = (state = initialState, action: ContactPit
                 errorSendingContactEmail: completeSendingContactEmailFunction.error !== undefined
                     ? {detail: completeSendingContactEmailFunction.error}
                     : state.errorSendingContactEmail
+            }
+        case ContactPitchOwnerDialogEvents.UpdateSenderEmail:
+            const updateSenderEmailAction: UpdateSenderEmailAction = action as UpdateSenderEmailAction;
+            return {
+                ...state,
+                senderEmail: updateSenderEmailAction.senderEmail
+            }
+        case ContactPitchOwnerDialogEvents.UpdateSenderName:
+            const updateSenderNameAction: UpdateSenderNameAction = action as UpdateSenderNameAction;
+            return {
+                ...state,
+                senderName: updateSenderNameAction.senderName
             }
         default:
             return state;

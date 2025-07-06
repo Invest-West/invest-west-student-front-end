@@ -32,7 +32,8 @@
       "Bash(npx eslint:*)",
       "Bash(grep:*)",
       "Bash(rg:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(curl:*)"
     ]
   },
   "enableAllProjectMcpServers": false

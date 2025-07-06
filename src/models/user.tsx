@@ -22,6 +22,7 @@ export default interface User {
     BusinessProfile?: BusinessProfile;
     type: number;
     lastLoginDate?: number; // timestamp when user last logged in
+    registrationDate?: number; // timestamp when user first registered/created account
 }
 
 export interface BusinessProfile {

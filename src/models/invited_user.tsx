@@ -88,11 +88,11 @@ export interface InvitedUserWithProfile extends InvitedUser {
 export interface InvitedUserCsv {
     name: string; // user's official profile --> title + first name + last name
     email: string;
-    userType: "investor" | "issuer";
+    userType: "student" | "teacher";
     memberType: "home" | "platform";
     homeGroup?: string; // specified only when exporting to csv for super admins
     statusInGroup: "unregistered" | "active"; // this list will be expanded more in the future
-    joinedDate: string | undefined;
+    lastLoginDate: string | undefined; // changed from registrationDate to lastLoginDate
     offersCreated: string | "none" | "not applicable"; // none if the issuer has not created any offers, not applicable if the user is not an issuer
     pledges: number | "not applicable"; // number of pledges for investor, not applicable if the user is not an issuer
     certifiedDate: string | "not certified" | "not applicable";

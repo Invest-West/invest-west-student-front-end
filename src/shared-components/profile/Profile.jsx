@@ -417,7 +417,7 @@ class Profile extends Component {
                                         <Col xs={12} sm={12} md={6} lg={{span: 6, order: 4}} style={{ marginBottom: 20 }} >
                                             <FormControl fullWidth >
                                                 <FormLabel><b>First name</b></FormLabel>
-                                                <TextField name="firstName" placeholder="Enter first name" value={userEdited.firstName} margin="dense" variant="outlined" onChange={this.handleEditUser(editUserActions.EDIT_PERSONAL_INFORMATION)} error={userEdited.firstName.trim().length === 0} />
+                                                <TextField name="firstName" placeholder="Enter first name" value={userEdited.firstName || ''} margin="dense" variant="outlined" onChange={this.handleEditUser(editUserActions.EDIT_PERSONAL_INFORMATION)} error={userEdited.firstName && userEdited.firstName.trim().length === 0} />
                                             </FormControl>
                                         </Col>
 
@@ -425,7 +425,7 @@ class Profile extends Component {
                                         <Col xs={12} sm={12} md={6} lg={{span: 6, order: 5}} style={{ marginBottom: 20 }} >
                                             <FormControl fullWidth >
                                                 <FormLabel><b>Last name</b></FormLabel>
-                                                <TextField name="lastName" placeholder="Enter last name" value={userEdited.lastName} margin="dense" variant="outlined" onChange={this.handleEditUser(editUserActions.EDIT_PERSONAL_INFORMATION)} error={userEdited.lastName.trim().length === 0} />
+                                                <TextField name="lastName" placeholder="Enter last name" value={userEdited.lastName || ''} margin="dense" variant="outlined" onChange={this.handleEditUser(editUserActions.EDIT_PERSONAL_INFORMATION)} error={userEdited.lastName && userEdited.lastName.trim().length === 0} />
                                             </FormControl>
                                         </Col>
 
@@ -446,7 +446,7 @@ class Profile extends Component {
                                                     variant="outlined"
                                                     onChange={this.handleEditUser(editUserActions.EDIT_PERSONAL_INFORMATION)}
                                                     disabled={true} // --> do not allow the users (including the admins) to change the email field for now.
-                                                    error={userEdited.email.trim().length === 0}
+                                                    error={userEdited.email && userEdited.email.trim().length === 0}
                                                 />
                                             </FormControl>
                                         </Col>
@@ -467,11 +467,11 @@ class Profile extends Component {
                                                     margin="dense"
                                                     variant="outlined"
                                                     onChange={this.handleEditUser(editUserActions.EDIT_PERSONAL_INFORMATION)}
-                                                    error={!utils.isValidLinkedInURL(userEdited.linkedin)}
+                                                    error={userEdited.linkedin && !utils.isValidLinkedInURL(userEdited.linkedin)}
                                                 />
                                             </FormControl>
                                             {
-                                                utils.isValidLinkedInURL(userEdited.linkedin)
+                                                !userEdited.linkedin || utils.isValidLinkedInURL(userEdited.linkedin)
                                                     ?
                                                     null
                                                     :
@@ -495,8 +495,8 @@ class Profile extends Component {
                                                         && !allowEditing
                                                     )
                                                     ||
-                                                    userEdited.firstName.trim().length === 0
-                                                    || userEdited.lastName.trim().length === 0
+                                                    (userEdited.firstName && userEdited.firstName.trim().length === 0)
+                                                    || (userEdited.lastName && userEdited.lastName.trim().length === 0)
                                                     ||
                                                     (
                                                         userEdited.title === originalUser.title
@@ -771,7 +771,7 @@ class Profile extends Component {
                                         variant="outlined"
                                         fullWidth
                                         onChange={this.handleEditUser(editUserActions.EDIT_ORDINARY_BUSINESS_PROFILE_INFORMATION)}
-                                        error={userEdited.BusinessProfile.hasOwnProperty('companyName') && userEdited.BusinessProfile.companyName.trim().length === 0}
+                                        error={userEdited.BusinessProfile.hasOwnProperty('companyName') && userEdited.BusinessProfile.companyName && userEdited.BusinessProfile.companyName.trim().length === 0}
                                     />
                                 </FormControl>
                             </FlexView>
@@ -836,9 +836,9 @@ class Profile extends Component {
                                         onChange={this.handleEditUser(editUserActions.EDIT_ORDINARY_BUSINESS_PROFILE_INFORMATION)}
                                         error={
                                             (userEdited.BusinessProfile.hasOwnProperty('companyWebsite')
-                                                && userEdited.BusinessProfile.companyWebsite.trim().length === 0)
+                                                && userEdited.BusinessProfile.companyWebsite && userEdited.BusinessProfile.companyWebsite.trim().length === 0)
                                             || (userEdited.BusinessProfile.hasOwnProperty('companyWebsite')
-                                                && userEdited.BusinessProfile.companyWebsite.trim().length > 0
+                                                && userEdited.BusinessProfile.companyWebsite && userEdited.BusinessProfile.companyWebsite.trim().length > 0
                                                 && !utils.isValidWebURL(userEdited.BusinessProfile.companyWebsite)
                                             )
                                         }
@@ -847,10 +847,10 @@ class Profile extends Component {
                                 {
                                     !userEdited.BusinessProfile.hasOwnProperty('companyWebsite')
                                     || (userEdited.BusinessProfile.hasOwnProperty('companyWebsite')
-                                        && userEdited.BusinessProfile.companyWebsite.trim().length === 0
+                                        && userEdited.BusinessProfile.companyWebsite && userEdited.BusinessProfile.companyWebsite.trim().length === 0
                                     )
                                     || (userEdited.BusinessProfile.hasOwnProperty('companyWebsite')
-                                        && userEdited.BusinessProfile.companyWebsite.trim().length > 0
+                                        && userEdited.BusinessProfile.companyWebsite && userEdited.BusinessProfile.companyWebsite.trim().length > 0
                                         && utils.isValidWebURL(userEdited.BusinessProfile.companyWebsite)
                                     )
                                         ?
@@ -874,10 +874,10 @@ class Profile extends Component {
                                                 && !currentUser.superAdmin
                                                 && !allowEditing
                                             )
-                                            || (userEdited.BusinessProfile.hasOwnProperty('companyName') && userEdited.BusinessProfile.companyName.trim().length === 0)
-                                            || (userEdited.BusinessProfile.hasOwnProperty('companyWebsite') && userEdited.BusinessProfile.companyWebsite.trim().length === 0)
+                                            || (userEdited.BusinessProfile.hasOwnProperty('companyName') && userEdited.BusinessProfile.companyName && userEdited.BusinessProfile.companyName.trim().length === 0)
+                                            || (userEdited.BusinessProfile.hasOwnProperty('companyWebsite') && userEdited.BusinessProfile.companyWebsite && userEdited.BusinessProfile.companyWebsite.trim().length === 0)
                                             || (userEdited.BusinessProfile.hasOwnProperty('companyWebsite')
-                                                && userEdited.BusinessProfile.companyWebsite.trim().length > 0
+                                                && userEdited.BusinessProfile.companyWebsite && userEdited.BusinessProfile.companyWebsite.trim().length > 0
                                                 && !utils.isValidWebURL(userEdited.BusinessProfile.companyWebsite)
                                             )
                                             || JSON.stringify(originalUser.BusinessProfile) === JSON.stringify(userEdited.BusinessProfile)
@@ -1019,7 +1019,7 @@ class Profile extends Component {
                                                 }
                                             />
                                             {
-                                                createBusinessProfile.BusinessProfile.companyWebsite.trim().length === 0
+                                                !createBusinessProfile.BusinessProfile.companyWebsite || createBusinessProfile.BusinessProfile.companyWebsite.trim().length === 0
                                                 || utils.isValidWebURL(createBusinessProfile.BusinessProfile.companyWebsite)
                                                     ?
                                                     null
@@ -1140,11 +1140,11 @@ class Profile extends Component {
 
         // user is an issuer
         if (originalUser.type === DB_CONST.TYPE_ISSUER) {
-            if (createBusinessProfile.BusinessProfile.companyName.trim().length === 0
+            if (!createBusinessProfile.BusinessProfile.companyName || createBusinessProfile.BusinessProfile.companyName.trim().length === 0
                 || createBusinessProfile.BusinessProfile.directors.length === 0
                 || createBusinessProfile.BusinessProfile.sector === 'None'
-                || createBusinessProfile.BusinessProfile.companyWebsite.trim().length === 0
-                || (createBusinessProfile.BusinessProfile.companyWebsite.trim().length > 0
+                || !createBusinessProfile.BusinessProfile.companyWebsite || createBusinessProfile.BusinessProfile.companyWebsite.trim().length === 0
+                || (createBusinessProfile.BusinessProfile.companyWebsite && createBusinessProfile.BusinessProfile.companyWebsite.trim().length > 0
                     && !utils.isValidWebURL(createBusinessProfile.BusinessProfile.companyWebsite)
                 )
             ) {
@@ -1154,11 +1154,11 @@ class Profile extends Component {
         // user is an investor
         else if (originalUser.type === DB_CONST.TYPE_INVESTOR) {
             if (createBusinessProfile.expandBusinessProfileFilling) {
-                if (createBusinessProfile.BusinessProfile.companyName.trim().length === 0
+                if (!createBusinessProfile.BusinessProfile.companyName || createBusinessProfile.BusinessProfile.companyName.trim().length === 0
                     || createBusinessProfile.BusinessProfile.directors.length === 0
                     || createBusinessProfile.BusinessProfile.sector === 'None'
-                    || createBusinessProfile.BusinessProfile.companyWebsite.trim().length === 0
-                    || (createBusinessProfile.BusinessProfile.companyWebsite.trim().length > 0
+                    || !createBusinessProfile.BusinessProfile.companyWebsite || createBusinessProfile.BusinessProfile.companyWebsite.trim().length === 0
+                    || (createBusinessProfile.BusinessProfile.companyWebsite && createBusinessProfile.BusinessProfile.companyWebsite.trim().length > 0
                         && !utils.isValidWebURL(createBusinessProfile.BusinessProfile.companyWebsite)
                     )
                 ) {

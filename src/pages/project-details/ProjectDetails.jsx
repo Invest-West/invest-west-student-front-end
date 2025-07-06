@@ -3355,7 +3355,7 @@ class ProjectDetails extends Component {
                                                                     ?
                                                                     "This offer will be opened again."
                                                                     :
-                                                                    "This offer will be closed temporarily and it will no longer be visible to any investors until you open it again."
+                                                                    "This project will be closed temporarily, and it will no longer be visible until you open it again."
                                                             }
                                                         </Typography>
                                                     </FlexView>

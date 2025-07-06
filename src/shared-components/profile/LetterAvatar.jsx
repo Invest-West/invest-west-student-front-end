@@ -16,6 +16,24 @@ export default class LetterAvatar extends Component {
             textVariant
         } = this.props;
 
+        // Handle undefined or empty names
+        if (!firstName || !lastName || firstName.length === 0 || lastName.length === 0) {
+            return (
+                <Avatar
+                    style={{
+                        color: colors.white,
+                        backgroundColor: colors.gray_400,
+                        width: width,
+                        height: height
+                    }}
+                >
+                    <Typography variant={textVariant}>
+                        ?
+                    </Typography>
+                </Avatar>
+            );
+        }
+
         return (
             <Avatar
                 style={{
@@ -34,6 +52,11 @@ export default class LetterAvatar extends Component {
 
     getBackgroundColor = () => {
         const { firstName } = this.props;
+
+        // Handle undefined or empty firstName
+        if (!firstName || firstName.length === 0) {
+            return colors.gray_400;
+        }
 
         switch (firstName[0].toLowerCase()) {
             case "a":
@@ -89,7 +112,7 @@ export default class LetterAvatar extends Component {
             case "z":
                 return colors.background_z;
             default:
-                return;
+                return colors.gray_400;
         }
     }
 }
