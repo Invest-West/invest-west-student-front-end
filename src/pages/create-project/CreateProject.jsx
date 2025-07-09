@@ -3583,7 +3583,7 @@ class CreateProject extends Component {
 
                                                             {/** Rich text editor */}
                                                             <FlexView column marginTop={20}>
-                                                                <Typography variant="body1" paragraph align="left">Write extended project details</Typography>
+                                                                <Typography variant="body1" paragraph align="left">Please add a more detailed explanation of your project</Typography>
                                                                 <div className="quill-medium">
                                                                 <ReactQuill
                                                                     theme="snow"
