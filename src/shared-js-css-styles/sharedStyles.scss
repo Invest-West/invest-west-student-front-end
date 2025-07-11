@@ -1,14 +1,9 @@
 /* web line clamp can be looked at for further details on this process */
 .projectInfo {
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 1;
-    -webkit-box-orient: vertical;  
-    overflow: hidden;
-  &:hover {
-    -webkit-line-clamp: 8;
-    transition: 0.8s;
-  }
+    display: block;
+    overflow: visible;
+    text-overflow: initial;
+    min-height: 250px;
 }
 
 .tileHoverEffect:hover {

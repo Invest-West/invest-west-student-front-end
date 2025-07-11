@@ -403,9 +403,29 @@ class Profile extends Component {
                                             </FormControl>
                                         </Col>
 
-                                        {/** Empty column to reserve empty space */}
-                                        <Col xs={12} sm={12} md={6} lg={{span: 6, order: 2}} >
-                                            {/** Empty column to reserve empty space */}
+                                        {/** Course */}
+                                        <Col xs={12} sm={12} md={6} lg={{span: 6, order: 2}} style={{ marginBottom: 20 }} >
+                                            <FormControl fullWidth >
+                                                <FormLabel><b>Course</b></FormLabel>
+                                                <Select 
+                                                    name="course" 
+                                                    value={userEdited.course || "-1"} 
+                                                    onChange={this.handleEditUser(editUserActions.EDIT_PERSONAL_INFORMATION)} 
+                                                    input={<OutlinedInput/>} 
+                                                    margin="dense"
+                                                >
+                                                    <MenuItem value="-1">Please select</MenuItem>
+                                                    {
+                                                        !clubAttributes || !clubAttributes.Courses
+                                                            ?
+                                                            null
+                                                            :
+                                                            clubAttributes.Courses.map((course, index) => (
+                                                                <MenuItem key={index} value={course}>{course}</MenuItem>
+                                                            ))
+                                                    }
+                                                </Select>
+                                            </FormControl>
                                         </Col>
 
                                         {/** Divider */}

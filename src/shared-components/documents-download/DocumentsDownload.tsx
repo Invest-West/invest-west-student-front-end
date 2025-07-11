@@ -18,13 +18,14 @@ import {
 } from "@material-ui/core";
 import DescriptionIcon from '@material-ui/icons/Description';
 import {DocumentsDownloadState} from "./DocumentsDownloadReducer";
-import {onAcceptRiskWarningClick, onCancelRiskWarningClick, onDocumentClick} from "./DocumentsDownloadActions";
+import {onAcceptRiskWarningClick, onCancelRiskWarningClick, onDocumentClick, onClosePdfViewer} from "./DocumentsDownloadActions";
 import {css} from "aphrodite";
 import sharedStyles from "../../shared-js-css-styles/SharedStyles";
 import {ManageSystemAttributesState} from "../../redux-store/reducers/manageSystemAttributesReducer";
 import {getGroupRouteTheme, ManageGroupUrlState} from "../../redux-store/reducers/manageGroupUrlReducer";
 import CustomLink from "../../shared-js-css-styles/CustomLink";
 import Routes from "../../router/routes";
+import PdfViewerModal from "../pdf-viewer/PdfViewerModal";
 
 interface DocumentsDownloadProps {
     ManageSystemAttributesState: ManageSystemAttributesState;
@@ -35,6 +36,7 @@ interface DocumentsDownloadProps {
     onDocumentClick: (document: PitchDocument, shouldShowRiskWarning: boolean) => any;
     onAcceptRiskWarningClick: () => any;
     onCancelRiskWarningClick: () => any;
+    onClosePdfViewer: () => any;
 }
 
 const mapStateToProps = (state: AppState) => {
@@ -49,7 +51,8 @@ const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
     return {
         onDocumentClick: (document: PitchDocument, shouldShowRiskWarning: boolean) => dispatch(onDocumentClick(document, shouldShowRiskWarning)),
         onAcceptRiskWarningClick: () => dispatch(onAcceptRiskWarningClick()),
-        onCancelRiskWarningClick: () => dispatch(onCancelRiskWarningClick())
+        onCancelRiskWarningClick: () => dispatch(onCancelRiskWarningClick()),
+        onClosePdfViewer: () => dispatch(onClosePdfViewer())
     }
 }
 
@@ -63,7 +66,8 @@ class DocumentsDownload extends Component<DocumentsDownloadProps, any> {
             DocumentsDownloadLocalState,
             onDocumentClick,
             onAcceptRiskWarningClick,
-            onCancelRiskWarningClick
+            onCancelRiskWarningClick,
+            onClosePdfViewer
         } = this.props;
 
         if (!documents || documents.length === 0) {
@@ -147,6 +151,17 @@ class DocumentsDownload extends Component<DocumentsDownloadProps, any> {
                     </Box>
                 </DialogActions>
             </Dialog>
+
+            {/* PDF Viewer Modal */}
+            {DocumentsDownloadLocalState.selectedDocument && (
+                <PdfViewerModal
+                    open={DocumentsDownloadLocalState.openPdfViewer}
+                    onClose={onClosePdfViewer}
+                    fileUrl={DocumentsDownloadLocalState.selectedDocument.downloadURL}
+                    fileName={DocumentsDownloadLocalState.selectedDocument.fileName}
+                    onDownload={() => window.open(DocumentsDownloadLocalState.selectedDocument!.downloadURL, "_blank")}
+                />
+            )}
         </Box>;
     }
 }

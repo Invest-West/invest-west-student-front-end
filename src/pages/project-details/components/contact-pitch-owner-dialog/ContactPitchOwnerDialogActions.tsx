@@ -110,24 +110,22 @@ export const sendContactEmail: ActionCreator<any> = () => {
             type: ContactPitchOwnerDialogEvents.CompleteSendingContactEmail
         };
 
+        // Get server URL from clubAttributes (same as working ContactUs and invitations)
+        const state = getState() as any; // Cast to access legacy reducer
+        const { clubAttributes } = state.manageClubAttributes || {};
+        
+        const emailData = {
+            receiver: projectOwnerEmail,
+            sender: senderEmail,
+            userName: senderName,
+            projectName: projectName
+        };
+
         try {
-            const { senderEmail, senderName } = getState().ContactPitchOwnerDialogLocalState;
-            
-            // Get server URL from clubAttributes (same as working ContactUs and invitations)
-            const state = getState() as any; // Cast to access legacy reducer
-            const { clubAttributes } = state.manageClubAttributes || {};
-            
             if (!clubAttributes || !clubAttributes.serverURL) {
                 console.error('Server URL not available in clubAttributes. State:', state.manageClubAttributes);
                 throw new Error('Server configuration not available. Please refresh the page.');
             }
-            
-            const emailData = {
-                receiver: projectOwnerEmail,
-                sender: senderEmail,
-                userName: senderName,
-                projectName: projectName
-            };
 
             console.log('Sending contact email with data:', emailData);
             console.log('Using server URL:', clubAttributes.serverURL);

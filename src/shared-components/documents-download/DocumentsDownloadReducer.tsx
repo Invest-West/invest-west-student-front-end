@@ -4,10 +4,12 @@ import {PitchDocument} from "../../models/project";
 export interface DocumentsDownloadState {
     selectedDocument?: PitchDocument;
     openRiskWarningDialog: boolean;
+    openPdfViewer: boolean;
 }
 
 const initialState: DocumentsDownloadState = {
-    openRiskWarningDialog: false
+    openRiskWarningDialog: false,
+    openPdfViewer: false
 }
 
 const documentsDownloadReducer = (state: DocumentsDownloadState = initialState, action: DocumentsDownloadAction) => {
@@ -24,6 +26,19 @@ const documentsDownloadReducer = (state: DocumentsDownloadState = initialState, 
                 ...state,
                 selectedDocument: undefined,
                 openRiskWarningDialog: false
+            }
+        case DocumentsDownloadEvents.OpenPdfViewer:
+            const openPdfViewerAction: DocumentClickAction = action as DocumentClickAction;
+            return {
+                ...state,
+                selectedDocument: openPdfViewerAction.selectedDocument,
+                openPdfViewer: true
+            }
+        case DocumentsDownloadEvents.ClosePdfViewer:
+            return {
+                ...state,
+                selectedDocument: undefined,
+                openPdfViewer: false
             }
         default:
             return state;

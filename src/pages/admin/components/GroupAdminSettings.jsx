@@ -34,6 +34,7 @@ import * as utils from "../../../utils/utils";
 import * as ROUTES from "../../../router/routes";
 import Routes from "../../../router/routes";
 import ManageSectors from "./manage-sectors/ManageSectors";
+import ManageCourses from "./manage-courses/ManageCourses";
 
 const mapStateToProps = state => {
     return {
@@ -450,6 +451,23 @@ class GroupAdminSettings extends Component {
                     {/** Edit sectors */}
                     <Col xs={12} sm={12} md={12} lg={12}>
                         <ManageSectors/>
+                    </Col>
+
+                    {/** Divider */}
+                    <Col xs={12} sm={12} md={12} lg={12}>
+                        <Divider style={{marginTop: 40, marginBottom: 40, height: 4,
+                                backgroundColor:
+                                    !groupDetails
+                                        ?
+                                        colors.primaryColor
+                                        :
+                                        groupDetails.settings.primaryColor
+                            }}/>
+                    </Col>
+
+                    {/** Edit courses */}
+                    <Col xs={12} sm={12} md={12} lg={12}>
+                        <ManageCourses/>
                     </Col>
 
                     {/** Divider */}

@@ -183,6 +183,7 @@ export const handleMoveToNextStep = (params) => {
             activeStep,
 
             pitchSector,
+            pitchCourse,
             pitchProjectName,
             pitchProjectDescription,
             pitchExpiredDate,
@@ -213,6 +214,7 @@ export const handleMoveToNextStep = (params) => {
                 // if one of the required fields in the General information part is missing, ask the user to fill them
                 // Note: project description and expiry date are now optional
                 if (pitchSector === "-"
+                    || pitchCourse === "-"
                     || pitchProjectName.trim().length === 0) {
 
                     this.setState({

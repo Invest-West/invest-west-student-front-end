@@ -152,6 +152,7 @@ const initState = {
         // pitch sector
         pitchSector: '-',
         // pitch project name
+        pitchCourse: '',
         pitchProjectName: '',
         pitchProjectDescription: '',
         pitchExpiryDate: null,
@@ -456,6 +457,13 @@ class CreatePitchPageMain extends Component {
                                     :
                                     ''
                             ,
+                            pitchCourse: 
+                                project.hasOwnProperty('course')
+                                    ?
+                                    project.course
+                                    :
+                                    ''
+                            ,
                             // pitch project name
                             pitchProjectName:
                                 project.hasOwnProperty('projectName')
@@ -570,6 +578,7 @@ class CreatePitchPageMain extends Component {
             activeStep,
 
             pitchSector,
+            pitchCourse,
             pitchProjectName,
             pitchProjectDescription,
             pitchExpiryDate,
@@ -598,6 +607,7 @@ class CreatePitchPageMain extends Component {
             case STEP_PITCH_GENERAL_INFORMATION:
                 // if one of the fields in the General information part is missing, ask the user to fill them
                 if (pitchSector === "-"
+                    || pitchCourse === "-"
                     || pitchProjectName.trim().length === 0
                     || pitchProjectDescription.trim().length === 0
                     || pitchExpiryDate === null
@@ -615,6 +625,7 @@ class CreatePitchPageMain extends Component {
 
                     return;
                 }
+                
 
                 // check if the entered date is in a valid format or the entered is less than the minimum date
                 if (isNaN(pitchExpiryDate)
@@ -1069,6 +1080,7 @@ class CreatePitchPageMain extends Component {
             activeStep,
 
             pitchSector,
+            pitchCourse,
             pitchProjectName,
             pitchProjectDescription,
             pitchExpiryDate,
@@ -1192,6 +1204,17 @@ class CreatePitchPageMain extends Component {
                                                     pitchSector
                                                 :
                                                 pitchSector
+                                        ,
+                                        course:
+                                            saveProgress
+                                                ?
+                                                pitchCourse === "-"
+                                                    ?
+                                                    null
+                                                    :
+                                                    pitchCourse
+                                                :
+                                                pitchCourse
                                         ,
                                         description:
                                             saveProgress
@@ -1641,6 +1664,7 @@ class CreatePitchPageMain extends Component {
                                         ,
                                         projectName: saveProgress ? (pitchProjectName.trim().length === 0 ? null : pitchProjectName) : pitchProjectName,
                                         sector: saveProgress ? (pitchSector === "-" ? null : pitchSector) : pitchSector,
+                                        course: saveProgress ? (pitchCourse === "-" ? null : pitchCourse) : pitchCourse,
                                         description: saveProgress ? (pitchProjectDescription.trim().length === 0 ? null : pitchProjectDescription) : pitchProjectDescription,
                                         status:
                                             saveProgress
@@ -2157,6 +2181,7 @@ class CreatePitchPageMain extends Component {
             activeStep,
 
             pitchSector,
+            pitchCourse,
             pitchProjectName,
             pitchProjectDescription,
             pitchExpiryDate,
@@ -2169,6 +2194,7 @@ class CreatePitchPageMain extends Component {
         if (activeStep === STEP_PITCH_GENERAL_INFORMATION) {
             // check if at least one field is filled
             if (pitchSector === "-"
+                && pitchCourse === "-"
                 && pitchProjectName.trim().length === 0
                 && pitchProjectDescription.trim().length === 0
                 && pitchExpiryDate === null
@@ -2795,6 +2821,31 @@ class CreateProject extends Component {
                                                         :
                                                         clubAttributes.Sectors.map((sector, index) => (
                                                             <MenuItem key={index} value={sector}>{sector}</MenuItem>
+                                                        ))
+                                                }
+                                            </Select>
+                                        </FormControl>
+                                    </FlexView>
+
+                                    <FlexView marginTop={30}>
+                                        <FormControl fullWidth required
+                                            error={
+                                                createProjectState.pitchPublishCheck === PITCH_PUBLISH_FALSE_MISSING_FIELDS_IN_GENERAL_INFORMATION
+                                                && createProjectState.pitchCourse === "-"
+                                            }
+                                        >
+                                            <FormLabel>Choose course</FormLabel>
+                                            <Select name="pitchCourse" value={createProjectState.pitchCourse} margin="dense" input={<OutlinedInput/>} onChange={this.onInputChanged}>
+                                                <MenuItem key={-1} value="-">
+                                                    -
+                                                </MenuItem>
+                                                {
+                                                    !clubAttributes
+                                                        ?
+                                                        null
+                                                        :
+                                                        clubAttributes.Courses.map((course, index) => (
+                                                            <MenuItem key={index} value={course}>{course}</MenuItem>
                                                         ))
                                                 }
                                             </Select>

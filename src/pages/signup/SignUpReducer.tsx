@@ -18,6 +18,7 @@ export interface SignUpState {
     userType: number;
     title: string;
     discover: string;
+    course: string;
     firstName: string;
     lastName: string;
     email: string;
@@ -37,6 +38,7 @@ const initialState: SignUpState = {
     userType: -1,
     title: "-1",
     discover: "-1",
+    course: "-1",
     firstName: "",
     lastName: "",
     email: "",

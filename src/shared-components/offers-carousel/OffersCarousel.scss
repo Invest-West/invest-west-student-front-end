@@ -45,17 +45,14 @@
       text-overflow: ellipsis;
     }
     
-    // Style project info to be exactly 3 lines with ellipsis
+    // Style project info to show maximum content
     .project-info, 
     .projectInfo,
     title.projectInfo {
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      display: block;
+      overflow: visible;
+      text-overflow: initial;
       line-height: 1.4;
-      height: calc(1.4em * 3); // Exactly 3 lines
       white-space: normal;
     }
   }

@@ -6,6 +6,7 @@ export enum FetchProjectsOrderByOptions {
     Investor = "investor",
     Issuer = "issuer",
     Sector = "sector",
+    Course = "course",
     Phase = "phase"
 }
 
@@ -29,6 +30,7 @@ export interface FetchProjectsOptions {
     issuer?: string | "all"; // filter projects by issuer id
     issuerCompanyName?: string; // filter projects by issuer Student project name
     sector?: string | "all"; // filter projects by sector
+    course?: string | "all"; // filter projects by course
     phase?: string | number | "all"; // filter projects by status
     orderBy?: FetchProjectsOrderByOptions; // mode to use orderByChild
 }

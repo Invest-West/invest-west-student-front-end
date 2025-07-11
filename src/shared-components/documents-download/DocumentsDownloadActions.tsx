@@ -4,7 +4,9 @@ import {AppState} from "../../redux-store/reducers";
 
 export enum DocumentsDownloadEvents {
     OpenRiskWarningDialog = "DocumentsDownloadEvents.OpenRiskWarningDialog",
-    CloseRiskWarningDialog = "DocumentsDownloadEvents.CloseRiskWarningDialog"
+    CloseRiskWarningDialog = "DocumentsDownloadEvents.CloseRiskWarningDialog",
+    OpenPdfViewer = "DocumentsDownloadEvents.OpenPdfViewer",
+    ClosePdfViewer = "DocumentsDownloadEvents.ClosePdfViewer"
 }
 
 export interface DocumentsDownloadAction extends Action {
@@ -17,10 +19,25 @@ export interface DocumentClickAction extends DocumentsDownloadAction {
 
 export const onDocumentClick: ActionCreator<any> = (document: PitchDocument, shouldShowRiskWarning: boolean) => {
     return (dispatch: Dispatch, getState: () => AppState) => {
+        // Check if it's a PDF file
+        const isPdf = document.fileName.toLowerCase().endsWith('.pdf');
+        
         if (!shouldShowRiskWarning) {
-            window.open(document.downloadURL, "_blank");
-            return;
+            if (isPdf) {
+                // Open PDF viewer for PDF files
+                const action: DocumentClickAction = {
+                    type: DocumentsDownloadEvents.OpenPdfViewer,
+                    selectedDocument: document
+                };
+                return dispatch(action);
+            } else {
+                // Open in new tab for non-PDF files
+                window.open(document.downloadURL, "_blank");
+                return;
+            }
         }
+        
+        // Show risk warning dialog
         const action: DocumentClickAction = {
             type: DocumentsDownloadEvents.OpenRiskWarningDialog,
             selectedDocument: document
@@ -37,10 +54,26 @@ export const onAcceptRiskWarningClick: ActionCreator<any> = () => {
         if (selectedDocument === undefined) {
             return;
         }
-        window.open(selectedDocument.downloadURL, "_blank");
-        return dispatch({
-            type: DocumentsDownloadEvents.CloseRiskWarningDialog
-        });
+        
+        // Check if it's a PDF file
+        const isPdf = selectedDocument.fileName.toLowerCase().endsWith('.pdf');
+        
+        if (isPdf) {
+            // Open PDF viewer for PDF files
+            dispatch({
+                type: DocumentsDownloadEvents.CloseRiskWarningDialog
+            });
+            return dispatch({
+                type: DocumentsDownloadEvents.OpenPdfViewer,
+                selectedDocument: selectedDocument
+            });
+        } else {
+            // Open in new tab for non-PDF files
+            window.open(selectedDocument.downloadURL, "_blank");
+            return dispatch({
+                type: DocumentsDownloadEvents.CloseRiskWarningDialog
+            });
+        }
     }
 }
 
@@ -48,6 +81,14 @@ export const onCancelRiskWarningClick: ActionCreator<any> = () => {
     return (dispatch: Dispatch, getState: () => AppState) => {
         return dispatch({
             type: DocumentsDownloadEvents.CloseRiskWarningDialog
+        });
+    }
+}
+
+export const onClosePdfViewer: ActionCreator<any> = () => {
+    return (dispatch: Dispatch, getState: () => AppState) => {
+        return dispatch({
+            type: DocumentsDownloadEvents.ClosePdfViewer
         });
     }
 }

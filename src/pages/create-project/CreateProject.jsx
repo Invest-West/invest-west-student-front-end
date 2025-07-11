@@ -140,6 +140,7 @@ const initState = {
 
         // project sector  
         pitchSector: '',
+        pitchCourse: '',
         // project project name
         pitchProjectName: '',
         pitchProjectDescription: '',
@@ -476,6 +477,13 @@ class CreatePitchPageMain extends Component {
                                     :
                                     ''
                             ,
+                            pitchCourse:
+                                project.hasOwnProperty('course')
+                                    ?
+                                    project.course
+                                    :
+                                    ''
+                            ,
                             // project project name
                             pitchProjectName:
                                 project.hasOwnProperty('projectName')
@@ -606,6 +614,7 @@ class CreatePitchPageMain extends Component {
             activeStep,
 
             pitchSector,
+            pitchCourse,
             pitchProjectName,
             pitchProjectDescription,
             pitchExpiryDate,
@@ -634,6 +643,7 @@ class CreatePitchPageMain extends Component {
                 // Debug: Log validation values
                 console.log('Validation check:', {
                     pitchSector: pitchSector, 
+                    pitchCourse: pitchCourse,
                     pitchProjectName: pitchProjectName,
                     pitchProjectDescription: pitchProjectDescription,
                     pitchExpiryDate: pitchExpiryDate,
@@ -655,6 +665,7 @@ class CreatePitchPageMain extends Component {
                 // if one of the required fields in the General information part is missing, ask the user to fill them
                 // Note: project description and expiry date are now optional
                 if (pitchSector.trim().length === 0
+                    || pitchCourse.trim().length === 0
                     || pitchProjectName.trim().length === 0
                     //|| financialRound.trim().length === 0
                     || (ManageGroupUrlState.groupNameFromUrl === "qib" && qibSpecialNews.trim().length === 0)
@@ -1178,6 +1189,7 @@ class CreatePitchPageMain extends Component {
             activeStep,
 
             pitchSector,
+            pitchCourse,
             pitchProjectName,
             pitchProjectDescription,
             pitchExpiryDate,
@@ -1307,6 +1319,17 @@ class CreatePitchPageMain extends Component {
                                                     pitchSector
                                                 :
                                                 pitchSector
+                                        ,
+                                        course:
+                                            saveProgress
+                                                ?
+                                                pitchCourse.trim().length === 0
+                                                    ?
+                                                    null
+                                                    :
+                                                    pitchCourse
+                                                :
+                                                pitchCourse
                                         ,
                                         description:
                                             saveProgress
@@ -1770,6 +1793,7 @@ class CreatePitchPageMain extends Component {
                                         ,
                                         projectName: saveProgress ? (pitchProjectName.trim().length === 0 ? null : pitchProjectName) : pitchProjectName,
                                         sector: saveProgress ? (pitchSector.trim().length === 0 ? null : pitchSector) : pitchSector,
+                                        course: saveProgress ? (pitchCourse.trim().length === 0 ? null : pitchCourse) : pitchCourse,
                                         description: saveProgress ? (pitchProjectDescription.trim().length === 0 ? null : pitchProjectDescription) : pitchProjectDescription,
                                         status:
                                             saveProgress
@@ -2297,6 +2321,7 @@ class CreatePitchPageMain extends Component {
             activeStep,
 
             pitchSector,
+            pitchCourse,
             pitchProjectName,
             pitchProjectDescription,
             pitchExpiryDate,
@@ -2309,6 +2334,7 @@ class CreatePitchPageMain extends Component {
         if (activeStep === STEP_PITCH_GENERAL_INFORMATION) {
             // check if at least one field is filled
             if (pitchSector.trim().length === 0
+                && pitchCourse.trim().length === 0
                 && pitchProjectName.trim().length === 0
                 && pitchProjectDescription.trim().length === 0
                 && pitchExpiryDate === null
@@ -2322,6 +2348,7 @@ class CreatePitchPageMain extends Component {
                 );
                 return;
             }
+
 
             // check if the entered date is in a valid format or the entered date is less than the minimum date
             if (isNaN(pitchExpiryDate)
@@ -2905,12 +2932,25 @@ class CreateProject extends Component {
                                             required
                                             error={
                                                 createProjectState.pitchPublishCheck === PITCH_PUBLISH_FALSE_MISSING_FIELDS_IN_GENERAL_INFORMATION
-                                                && createProjectState.pitchSector.trim().length === 0
+                                                && (!createProjectState.pitchSector || createProjectState.pitchSector.trim().length === 0 || createProjectState.pitchSector === "-")
                                             }
                                         >
                                             <FormLabel>Choose sector</FormLabel>
-                                            <Select name="pitchSector" value={createProjectState.pitchSector} margin="dense" input={<OutlinedInput/>} onChange={this.onInputChanged}>
-                                                <MenuItem key={-1} value="">
+                                            <Select 
+                                                name="pitchSector" 
+                                                value={
+                                                    createProjectState.pitchSector && 
+                                                    clubAttributes && 
+                                                    clubAttributes.Sectors && 
+                                                    (clubAttributes.Sectors.includes(createProjectState.pitchSector) || createProjectState.pitchSector === "-")
+                                                        ? createProjectState.pitchSector 
+                                                        : "-"
+                                                } 
+                                                margin="dense" 
+                                                input={<OutlinedInput/>} 
+                                                onChange={this.onInputChanged}
+                                            >
+                                                <MenuItem key={-1} value="-">
                                                     -
                                                 </MenuItem>
                                                 {
@@ -2920,6 +2960,49 @@ class CreateProject extends Component {
                                                         :
                                                         clubAttributes.Sectors.map((sector, index) => (
                                                             <MenuItem key={index} value={sector}>{sector}</MenuItem>
+                                                        ))
+                                                }
+                                            </Select>
+                                        </FormControl>
+                                    </FlexView>
+
+                                    {/**
+                                     * Choosing course
+                                     */}
+                                    <FlexView marginTop={30}>
+                                        <FormControl
+                                            fullWidth
+                                            required
+                                            error={
+                                                createProjectState.pitchPublishCheck === PITCH_PUBLISH_FALSE_MISSING_FIELDS_IN_GENERAL_INFORMATION
+                                                && (!createProjectState.pitchCourse || createProjectState.pitchCourse.trim().length === 0 || createProjectState.pitchCourse === "-")
+                                            }
+                                        >
+                                            <FormLabel>Choose course</FormLabel>
+                                            <Select 
+                                                name="pitchCourse" 
+                                                value={
+                                                    createProjectState.pitchCourse && 
+                                                    clubAttributes && 
+                                                    clubAttributes.Courses && 
+                                                    (clubAttributes.Courses.includes(createProjectState.pitchCourse) || createProjectState.pitchCourse === "-")
+                                                        ? createProjectState.pitchCourse 
+                                                        : "-"
+                                                } 
+                                                margin="dense" 
+                                                input={<OutlinedInput/>} 
+                                                onChange={this.onInputChanged}
+                                            >
+                                                <MenuItem key={-1} value="-">
+                                                    -
+                                                </MenuItem>
+                                                {
+                                                    !clubAttributes || !clubAttributes.Courses
+                                                        ?
+                                                        null
+                                                        :
+                                                        clubAttributes.Courses.map((course, index) => (
+                                                            <MenuItem key={index} value={course}>{course}</MenuItem>
                                                         ))
                                                 }
                                             </Select>

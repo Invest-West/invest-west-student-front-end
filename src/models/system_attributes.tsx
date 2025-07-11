@@ -1,6 +1,7 @@
 export interface SystemAttributes {
     PledgeFAQs: PledgeFAQ[];
     Sectors: string[];
+    Courses: string[];
     allowVideoUpload: boolean;
     privacyPolicy: any;
     termsOfUse: any;

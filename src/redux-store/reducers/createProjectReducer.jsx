@@ -29,6 +29,8 @@ const initState = {
 
         // project sector
         pitchSector: '-',
+        // project course
+        pitchCourse: '-',
         // project project name
         pitchProjectName: '',
         pitchProjectDescription: '',
@@ -114,11 +116,19 @@ const createProjectReducer = (state = initState, action) => {
                                 ...state.createNewPitch,
                                 // project sector
                                 pitchSector:
-                                    project.hasOwnProperty('sector')
+                                    project.hasOwnProperty('sector') && project.sector && project.sector.trim() !== ""
                                         ?
                                         project.sector
                                         :
-                                        ''
+                                        '-'
+                                ,
+                                // project course
+                                pitchCourse:
+                                    project.hasOwnProperty('course') && project.course && project.course.trim() !== ""
+                                        ?
+                                        project.course
+                                        :
+                                        '-'
                                 ,
                                 // project project name
                                 pitchProjectName:
