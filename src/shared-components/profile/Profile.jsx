@@ -278,7 +278,8 @@ class Profile extends Component {
             currentUser,
             originalUser,
             userEdited,
-            allowEditing
+            allowEditing,
+            clubAttributes
         } = this.props;
 
         if (!groupPropertiesLoaded) {
@@ -561,6 +562,7 @@ class Profile extends Component {
                 </Row>
 
                 {/** Business profile */}
+                {/*
                 <Row noGutters style={{ backgroundColor: colors.kick_starter_background_color_1 }} >
                     <Col xs={12} md={12} lg={12} style={{ padding: 24 }} >
                         {
@@ -569,10 +571,11 @@ class Profile extends Component {
                     </Col>
 
                     {/** Divider */}
-                    <Col xs={12} sm={12} md={12} lg={12} >
+                    {/*<Col xs={12} sm={12} md={12} lg={12} >
                         <Divider/>
                     </Col>
                 </Row>
+                */}
 
                 {/** Fundraising summary - only available for super user who is viewing the profile of an issuer or an investor */}
                 {

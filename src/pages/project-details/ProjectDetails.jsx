@@ -69,6 +69,7 @@ import {
     isProjectWaitingToGoLive
 } from "../../models/project";
 import DocumentsDownload from "../../shared-components/documents-download/DocumentsDownload";
+import InlinePdfViewer from "../../shared-components/pdf-viewer/InlinePdfViewer";
 import RiskWarning from "../../shared-components/risk-warning/RiskWarning";
 import {toggleContactPitchOwnerDialog} from "./components/contact-pitch-owner-dialog/ContactPitchOwnerDialogActions";
 import ContactPitchOwnerDialog from "./components/contact-pitch-owner-dialog/ContactPitchOwnerDialog";
@@ -3411,7 +3412,7 @@ class ProjectDetails extends Component {
                                             :
                                             <FlexView column marginTop={30}>
                                                 <Typography variant="h5">Project deck</Typography>
-                                                <DocumentsDownload documents={project.Pitch.presentationDocument} shouldShowRiskWarningOnDownload={true}/>
+                                                <InlinePdfViewer documents={project.Pitch.presentationDocument} shouldShowRiskWarningOnDownload={true}/>
                                                 <Divider style={{marginTop: 10}}/>
                                             </FlexView>
                                     }
@@ -3880,7 +3881,7 @@ class ProjectDetails extends Component {
                                     {
                                         project.Pitch.supportingDocuments && project.Pitch.supportingDocuments.findIndex(document => !document.hasOwnProperty('removed')) !== -1
                                             ?
-                                            <DocumentsDownload documents={project.Pitch.supportingDocuments} shouldShowRiskWarningOnDownload={true}/>
+                                            <InlinePdfViewer documents={project.Pitch.supportingDocuments} shouldShowRiskWarningOnDownload={true}/>
                                             :
                                             <Typography variant="body1" color="textSecondary" style={{marginTop: 35}}>No supporting documents uploaded.</Typography>
                                     }
