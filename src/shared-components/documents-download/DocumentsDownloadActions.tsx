@@ -31,8 +31,7 @@ export const onDocumentClick: ActionCreator<any> = (document: PitchDocument, sho
                 };
                 return dispatch(action);
             } else {
-                // Open in new tab for non-PDF files
-                window.open(document.downloadURL, "_blank");
+                // For non-PDF files, do nothing (prevent automatic download)
                 return;
             }
         }
@@ -68,8 +67,7 @@ export const onAcceptRiskWarningClick: ActionCreator<any> = () => {
                 selectedDocument: selectedDocument
             });
         } else {
-            // Open in new tab for non-PDF files
-            window.open(selectedDocument.downloadURL, "_blank");
+            // For non-PDF files, do nothing (prevent automatic download)
             return dispatch({
                 type: DocumentsDownloadEvents.CloseRiskWarningDialog
             });

@@ -17,6 +17,10 @@ import {
     Typography
 } from "@material-ui/core";
 import DescriptionIcon from '@material-ui/icons/Description';
+import PictureAsPdfIcon from '@material-ui/icons/PictureAsPdf';
+import ImageIcon from '@material-ui/icons/Image';
+import VideoLibraryIcon from '@material-ui/icons/VideoLibrary';
+import TableChartIcon from '@material-ui/icons/TableChart';
 import {DocumentsDownloadState} from "./DocumentsDownloadReducer";
 import {onAcceptRiskWarningClick, onCancelRiskWarningClick, onDocumentClick, onClosePdfViewer} from "./DocumentsDownloadActions";
 import {css} from "aphrodite";
@@ -57,6 +61,40 @@ const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
 }
 
 class DocumentsDownload extends Component<DocumentsDownloadProps, any> {
+    
+    getFileTypeInfo = (fileName: string) => {
+        const extension = fileName.toLowerCase().split('.').pop();
+        
+        switch (extension) {
+            case 'pdf':
+                return { icon: PictureAsPdfIcon, color: '#f44336', label: 'PDF Document' };
+            case 'doc':
+            case 'docx':
+                return { icon: DescriptionIcon, color: '#2196f3', label: 'Word Document' };
+            case 'xls':
+            case 'xlsx':
+                return { icon: TableChartIcon, color: '#4caf50', label: 'Excel Spreadsheet' };
+            case 'ppt':
+            case 'pptx':
+                return { icon: DescriptionIcon, color: '#ff9800', label: 'PowerPoint Presentation' };
+            case 'jpg':
+            case 'jpeg':
+            case 'png':
+            case 'gif':
+            case 'bmp':
+                return { icon: ImageIcon, color: '#9c27b0', label: 'Image File' };
+            case 'mp4':
+            case 'avi':
+            case 'mov':
+            case 'wmv':
+                return { icon: VideoLibraryIcon, color: '#607d8b', label: 'Video File' };
+            case 'txt':
+                return { icon: DescriptionIcon, color: '#795548', label: 'Text File' };
+            default:
+                return { icon: DescriptionIcon, color: '#4caf50', label: 'Document' };
+        }
+    };
+
     render() {
         const {
             ManageSystemAttributesState,
@@ -101,10 +139,23 @@ class DocumentsDownload extends Component<DocumentsDownloadProps, any> {
                                 button
                                 onClick={() => onDocumentClick(document, shouldShowRiskWarningOnDownload ?? false)}
                             >
-                                <DescriptionIcon style={{ color: '#4caf50', fontSize: 48 }} />
-                                <Box display="flex" flexDirection="row" >
+                                {(() => {
+                                    const fileInfo = this.getFileTypeInfo(document.fileName);
+                                    const IconComponent = fileInfo.icon;
+                                    return <IconComponent style={{ color: fileInfo.color, fontSize: 48 }} />;
+                                })()}
+                                <Box display="flex" flexDirection="column" marginLeft="12px">
                                     <Typography variant="body2" align="left">{document.fileName}</Typography>
                                     <Typography variant="body2" color="textSecondary" align="left">{document.readableSize}</Typography>
+                                    {document.description ? (
+                                        <Typography variant="body2" color="textSecondary" align="left" style={{fontStyle: 'italic', marginTop: 4}}>
+                                            {document.description}
+                                        </Typography>
+                                    ) : (
+                                        <Typography variant="body2" color="textSecondary" align="left" style={{fontStyle: 'italic', marginTop: 4, opacity: 0.5}}>
+                                            [No description]
+                                        </Typography>
+                                    )}
                                 </Box>
                             </ListItem>
                     ))

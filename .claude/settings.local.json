@@ -42,7 +42,8 @@
       "Bash(npm start)",
       "Bash(timeout 30 npm run build:*)",
       "Bash(timeout 60 npm start)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(timeout 10 npm start:*)"
     ]
   },
   "enableAllProjectMcpServers": false

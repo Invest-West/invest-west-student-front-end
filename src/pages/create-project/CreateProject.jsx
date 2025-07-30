@@ -50,6 +50,7 @@ import InfoOverlay from "../../shared-components/info_overlay/InfoOverlay";
 import {connect} from "react-redux";
 import * as selectProjectVisibilityActions from "../../redux-store/actions/selectProjectVisibilityActions";
 import * as feedbackSnackbarActions from "../../redux-store/actions/feedbackSnackbarActions";
+import * as uploadFilesActions from "../../redux-store/actions/uploadFilesActions";
 
 import firebase from "../../firebase/firebaseApp";
 import * as colors from "../../values/colors";
@@ -106,6 +107,7 @@ const mapStateToProps = state => {
         ManageGroupUrlState: state.ManageGroupUrlState,
         AuthenticationState: state.AuthenticationState,
         isMobile: state.MediaQueryState.isMobile,
+        uploadFilesState: state.uploadFiles,
 
         projectVisibilitySetting: state.manageSelectProjectVisibility.projectVisibilitySetting
     }
@@ -114,7 +116,9 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => {
     return {
         selectProjectVisibility_setProject: (project) => dispatch(selectProjectVisibilityActions.setProject(project)),
-        setFeedbackSnackbarContent: (message, color, position) => dispatch(feedbackSnackbarActions.setFeedbackSnackbarContent(message, color, position))
+        setFeedbackSnackbarContent: (message, color, position) => dispatch(feedbackSnackbarActions.setFeedbackSnackbarContent(message, color, position)),
+        updateDocumentDescription: (mode, index, description) => dispatch(uploadFilesActions.updateDocumentDescription(mode, index, description)),
+        deleteToBeUploadedFile: (mode, index) => dispatch(uploadFilesActions.deleteToBeUploadedFile(mode, index))
     }
 };
 
@@ -969,7 +973,8 @@ class CreatePitchPageMain extends Component {
         reader.addEventListener('load', () => {
             const fileRead = {
                 file: files[files.length - 1],
-                preview: reader.result
+                preview: reader.result,
+                description: '' // Initialize empty description
             };
 
             switch (mode) {
@@ -2133,7 +2138,8 @@ class CreatePitchPageMain extends Component {
                                 fileName: storageFileName.split(DB_CONST.STORAGE_FILE_NAME_ID_SPLIT)[1],
                                 readableSize: document.file.sizeReadable,
                                 downloadURL: fileDownloadURL,
-                                storageID: storageID
+                                storageID: storageID,
+                                description: document.description || ''
                             };
                             // capture the file uploaded to storage and store in this variable for uploading to Realtime DB
                             this.pitchSupportingDocumentsRealtimeDB = [...this.pitchSupportingDocumentsRealtimeDB, formattedSupportingDocument];
@@ -2143,7 +2149,8 @@ class CreatePitchPageMain extends Component {
                                 fileName: storageFileName.split(DB_CONST.STORAGE_FILE_NAME_ID_SPLIT)[1],
                                 readableSize: document.file.sizeReadable,
                                 downloadURL: fileDownloadURL,
-                                storageID: storageID
+                                storageID: storageID,
+                                description: document.description || ''
                             };
                             // capture the file uploaded to storage and store in this variable for uploading to Realtime DB
                             this.pitchPresentationDocumentRealtimeDB = [...this.pitchPresentationDocumentRealtimeDB, formattedPresentationDocument];
@@ -2190,6 +2197,46 @@ class CreatePitchPageMain extends Component {
                         pitchCover: []
                     }
                 });
+                break;
+            default:
+                break;
+        }
+    };
+
+    /**
+     * This function gets called when document description changes.
+     */
+    handleDescriptionChange = (mode, index, description) => {
+        switch (mode) {
+            case PITCH_SUPPORTING_DOCUMENTS_FILES_CHANGED:
+                let supportingDocuments = [...this.state.createProject.pitchSupportingDocuments];
+                if (supportingDocuments[index]) {
+                    supportingDocuments[index] = {
+                        ...supportingDocuments[index],
+                        description: description
+                    };
+                    this.setState({
+                        createProject: {
+                            ...this.state.createProject,
+                            pitchSupportingDocuments: supportingDocuments
+                        }
+                    });
+                }
+                break;
+            case PITCH_PRESENTATION_FILES_CHANGED:
+                let presentationDocument = [...this.state.createProject.pitchPresentationDocument];
+                if (presentationDocument[index]) {
+                    presentationDocument[index] = {
+                        ...presentationDocument[index],
+                        description: description
+                    };
+                    this.setState({
+                        createProject: {
+                            ...this.state.createProject,
+                            pitchPresentationDocument: presentationDocument
+                        }
+                    });
+                }
                 break;
             default:
                 break;
@@ -2656,6 +2703,7 @@ class CreatePitchPageMain extends Component {
                     onFilesChanged={this.handleFilesChanged}
                     onFilesError={this.handleFileError}
                     onDeleteDocument={this.handleDeleteDocument}
+                    onDescriptionChange={this.handleDescriptionChange}
                     onInputChanged={this.handleCreatePitchInputChanged}
                     onPitchEditorChanged={this.handlePitchEditorChanged}
                     attachNextStepButtonRef={this.attachNextStepButtonRef}
@@ -2719,6 +2767,10 @@ class CreateProject extends Component {
 
     onDeleteDocument = mode => index => {
         this.props.onDeleteDocument(mode, index);
+    };
+
+    onDescriptionChange = mode => (index, description) => {
+        this.props.onDescriptionChange(mode, index, description);
     };
 
     attachNextStepButtonRef = (target) => {
@@ -3545,7 +3597,11 @@ class CreateProject extends Component {
                                                                     only.
                                                                 </Typography>
 
-                                                                <UploadDocuments documents={createProjectState.pitchPresentationDocument} onDeleteDocument={this.onDeleteDocument(PITCH_PRESENTATION_FILES_CHANGED)}/>
+                                                                <UploadDocuments 
+                                                                    documents={createProjectState.pitchPresentationDocument} 
+                                                                    onDeleteDocument={this.onDeleteDocument(PITCH_PRESENTATION_FILES_CHANGED)}
+                                                                    onDescriptionChange={this.onDescriptionChange(PITCH_PRESENTATION_FILES_CHANGED)}
+                                                                />
                                                             </FlexView>
 
                                                             {/** Explanation text */}
@@ -3661,6 +3717,7 @@ class CreateProject extends Component {
                                                                 <UploadDocuments
                                                                     documents={createProjectState.pitchPresentationDocument}
                                                                     onDeleteDocument={this.onDeleteDocument(PITCH_PRESENTATION_FILES_CHANGED)}
+                                                                    onDescriptionChange={this.onDescriptionChange(PITCH_PRESENTATION_FILES_CHANGED)}
                                                                 />
                                                             </FlexView>
 
@@ -3765,7 +3822,11 @@ class CreateProject extends Component {
                                                                             and .xlsx are accepted only.
                                                                         </Typography>
 
-                                                                        <UploadDocuments documents={createProjectState.pitchSupportingDocuments} onDeleteDocument={this.onDeleteDocument(PITCH_SUPPORTING_DOCUMENTS_FILES_CHANGED)}/>
+                                                                        <UploadDocuments 
+                                                                            documents={createProjectState.pitchSupportingDocuments} 
+                                                                            onDeleteDocument={this.onDeleteDocument(PITCH_SUPPORTING_DOCUMENTS_FILES_CHANGED)}
+                                                                            onDescriptionChange={this.onDescriptionChange(PITCH_SUPPORTING_DOCUMENTS_FILES_CHANGED)}
+                                                                        />
                                                                     </FlexView>
 
                                                                     {/** Divider */}
@@ -3855,7 +3916,11 @@ class CreateProject extends Component {
                                                                             and .xlsx are accepted only.
                                                                         </Typography>
 
-                                                                        <UploadDocuments documents={createProjectState.pitchSupportingDocuments} onDeleteDocument={this.onDeleteDocument(PITCH_SUPPORTING_DOCUMENTS_FILES_CHANGED)}/>
+                                                                        <UploadDocuments 
+                                                                            documents={createProjectState.pitchSupportingDocuments} 
+                                                                            onDeleteDocument={this.onDeleteDocument(PITCH_SUPPORTING_DOCUMENTS_FILES_CHANGED)}
+                                                                            onDescriptionChange={this.onDescriptionChange(PITCH_SUPPORTING_DOCUMENTS_FILES_CHANGED)}
+                                                                        />
                                                                     </FlexView>
 
                                                                     {/** Divider */}

@@ -3925,6 +3925,28 @@ class ProjectDetails extends Component {
                                 <Col xs={12} sm={12} md={12} lg={{span: 6, offset: 3}} style={{marginTop: 30}}>
                                     <Typography variant="h5" color="inherit">Extra information</Typography>
 
+                                    {/** Sector */}
+                                    {
+                                        project.sector
+                                            ?
+                                            <FlexView className={css(styles.border_box)} style={{backgroundColor: colors.kick_starter_background_color}} column marginTop={30} vAlignContent="center">
+                                                <Typography variant="body1" align="left">Sector: <b>{project.sector}</b></Typography>
+                                            </FlexView>
+                                            :
+                                            null
+                                    }
+
+                                    {/** Course */}
+                                    {
+                                        project.course
+                                            ?
+                                            <FlexView className={css(styles.border_box)} style={{backgroundColor: colors.kick_starter_background_color}} column marginTop={30} vAlignContent="center">
+                                                <Typography variant="body1" align="left">Course: <b>{project.course}</b></Typography>
+                                            </FlexView>
+                                            :
+                                            null
+                                    }
+
                                     {/** Financial round */}
                                     {
                                         /**!project.Pitch.hasOwnProperty('financialRound')

@@ -10,6 +10,10 @@ import {
 } from '@material-ui/core';
 import { GetApp, OpenInNew } from '@material-ui/icons';
 import DescriptionIcon from '@material-ui/icons/Description';
+import PictureAsPdfIcon from '@material-ui/icons/PictureAsPdf';
+import ImageIcon from '@material-ui/icons/Image';
+import VideoLibraryIcon from '@material-ui/icons/VideoLibrary';
+import TableChartIcon from '@material-ui/icons/TableChart';
 import { PitchDocument } from '../../models/project';
 
 interface InlinePdfViewerProps {
@@ -21,6 +25,39 @@ const InlinePdfViewer: React.FC<InlinePdfViewerProps> = ({ documents, shouldShow
     const [loadingStates, setLoadingStates] = useState<{ [key: number]: boolean }>({});
     const [errorStates, setErrorStates] = useState<{ [key: number]: string | null }>({});
 
+    const getFileTypeInfo = (fileName: string) => {
+        const extension = fileName.toLowerCase().split('.').pop();
+        
+        switch (extension) {
+            case 'pdf':
+                return { icon: PictureAsPdfIcon, color: '#f44336', label: 'PDF Document', isPdf: true };
+            case 'doc':
+            case 'docx':
+                return { icon: DescriptionIcon, color: '#2196f3', label: 'Word Document', isPdf: false };
+            case 'xls':
+            case 'xlsx':
+                return { icon: TableChartIcon, color: '#4caf50', label: 'Excel Spreadsheet', isPdf: false };
+            case 'ppt':
+            case 'pptx':
+                return { icon: DescriptionIcon, color: '#ff9800', label: 'PowerPoint Presentation', isPdf: false };
+            case 'jpg':
+            case 'jpeg':
+            case 'png':
+            case 'gif':
+            case 'bmp':
+                return { icon: ImageIcon, color: '#9c27b0', label: 'Image File', isPdf: false };
+            case 'mp4':
+            case 'avi':
+            case 'mov':
+            case 'wmv':
+                return { icon: VideoLibraryIcon, color: '#607d8b', label: 'Video File', isPdf: false };
+            case 'txt':
+                return { icon: DescriptionIcon, color: '#795548', label: 'Text File', isPdf: false };
+            default:
+                return { icon: DescriptionIcon, color: '#4caf50', label: 'Document', isPdf: false };
+        }
+    };
+
     const handleIframeLoad = (index: number) => {
         setLoadingStates(prev => ({ ...prev, [index]: false }));
         setErrorStates(prev => ({ ...prev, [index]: null }));
@@ -31,12 +68,32 @@ const InlinePdfViewer: React.FC<InlinePdfViewerProps> = ({ documents, shouldShow
         setErrorStates(prev => ({ ...prev, [index]: 'Failed to load PDF. Your browser may not support inline PDF viewing.' }));
     };
 
-    const openInNewTab = (fileUrl: string) => {
-        window.open(fileUrl, '_blank');
+    const openInNewTab = (fileUrl: string, fileName: string) => {
+        const fileInfo = getFileTypeInfo(fileName);
+        if (fileInfo.isPdf) {
+            // For PDFs, open in new tab
+            window.open(fileUrl, '_blank');
+        } else {
+            // For non-PDFs, open in new tab but don't force download
+            window.open(fileUrl, '_blank');
+        }
     };
 
-    const downloadFile = (fileUrl: string) => {
-        window.open(fileUrl, '_blank');
+    const downloadFile = (fileUrl: string, fileName: string) => {
+        const fileInfo = getFileTypeInfo(fileName);
+        if (fileInfo.isPdf) {
+            // For PDFs, open in new tab for download
+            window.open(fileUrl, '_blank');
+        } else {
+            // For non-PDF files, create a temporary link to force download
+            const link = document.createElement('a');
+            link.href = fileUrl;
+            link.download = fileName;
+            link.target = '_blank';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
     };
 
     if (!documents || documents.length === 0) {
@@ -54,6 +111,8 @@ const InlinePdfViewer: React.FC<InlinePdfViewerProps> = ({ documents, shouldShow
             {validDocuments.map((document, index) => {
                 const isLoading = loadingStates[index] !== false;
                 const error = errorStates[index];
+                const fileInfo = getFileTypeInfo(document.fileName);
+                const IconComponent = fileInfo.icon;
 
                 return (
                     <Box key={index} marginBottom="30px">
@@ -61,14 +120,23 @@ const InlinePdfViewer: React.FC<InlinePdfViewerProps> = ({ documents, shouldShow
                         <Paper elevation={1} style={{ padding: '12px', marginBottom: '16px' }}>
                             <Box display="flex" alignItems="center" justifyContent="space-between" flexWrap="wrap">
                                 <Box display="flex" alignItems="center">
-                                    <DescriptionIcon style={{ color: '#4caf50', fontSize: 24, marginRight: '8px' }} />
+                                    <IconComponent style={{ color: fileInfo.color, fontSize: 24, marginRight: '8px' }} />
                                     <Box>
                                         <Typography variant="body1" style={{ fontWeight: 'bold' }}>
                                             {document.fileName}
                                         </Typography>
                                         <Typography variant="body2" color="textSecondary">
-                                            {document.readableSize}
+                                            {document.readableSize} • {fileInfo.label}
                                         </Typography>
+                                        {document.description ? (
+                                            <Typography variant="body2" color="textSecondary" style={{fontStyle: 'italic', marginTop: '4px'}}>
+                                                {document.description}
+                                            </Typography>
+                                        ) : (
+                                            <Typography variant="body2" color="textSecondary" style={{fontStyle: 'italic', marginTop: '4px', opacity: 0.5}}>
+                                                [No description]
+                                            </Typography>
+                                        )}
                                     </Box>
                                 </Box>
                                 
@@ -77,7 +145,7 @@ const InlinePdfViewer: React.FC<InlinePdfViewerProps> = ({ documents, shouldShow
                                         size="small"
                                         variant="outlined"
                                         startIcon={<OpenInNew />}
-                                        onClick={() => openInNewTab(document.downloadURL)}
+                                        onClick={() => openInNewTab(document.downloadURL, document.fileName)}
                                     >
                                         Open in New Tab
                                     </Button>
@@ -85,7 +153,7 @@ const InlinePdfViewer: React.FC<InlinePdfViewerProps> = ({ documents, shouldShow
                                         size="small"
                                         variant="outlined"
                                         startIcon={<GetApp />}
-                                        onClick={() => downloadFile(document.downloadURL)}
+                                        onClick={() => downloadFile(document.downloadURL, document.fileName)}
                                     >
                                         Download
                                     </Button>
@@ -104,20 +172,20 @@ const InlinePdfViewer: React.FC<InlinePdfViewerProps> = ({ documents, shouldShow
                                         variant="contained"
                                         color="primary"
                                         startIcon={<OpenInNew />}
-                                        onClick={() => openInNewTab(document.downloadURL)}
+                                        onClick={() => openInNewTab(document.downloadURL, document.fileName)}
                                     >
                                         Open in New Tab
                                     </Button>
                                     <Button
                                         variant="outlined"
                                         startIcon={<GetApp />}
-                                        onClick={() => downloadFile(document.downloadURL)}
+                                        onClick={() => downloadFile(document.downloadURL, document.fileName)}
                                     >
-                                        Download PDF
+                                        Download {fileInfo.label}
                                     </Button>
                                 </Box>
                             </Box>
-                        ) : (
+                        ) : fileInfo.isPdf ? (
                             <>
                                 {/* Loading indicator */}
                                 {isLoading && (
@@ -150,6 +218,16 @@ const InlinePdfViewer: React.FC<InlinePdfViewerProps> = ({ documents, shouldShow
                                     />
                                 </Box>
                             </>
+                        ) : (
+                            <Box display="flex" flexDirection="column" alignItems="center" padding="40px">
+                                <IconComponent style={{ fontSize: 64, color: fileInfo.color, marginBottom: '16px' }} />
+                                <Typography variant="h6" style={{ marginBottom: '8px' }}>
+                                    {fileInfo.label}
+                                </Typography>
+                                <Typography variant="body2" color="textSecondary" style={{ marginBottom: '24px' }}>
+                                    This file type cannot be previewed in the browser. Use the buttons above to open or download.
+                                </Typography>
+                            </Box>
                         )}
                     </Box>
                 );

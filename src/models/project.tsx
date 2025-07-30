@@ -152,6 +152,7 @@ export interface PitchDocument {
     storageID: number;
     downloadURL: string;
     removed?: boolean;
+    description?: string;
 }
 
 /**

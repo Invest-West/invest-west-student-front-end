@@ -209,6 +209,37 @@ const uploadFilesReducer = (state = initState, action) => {
                     pitchSupportingDocuments: [...state.filesDBReferences.pitchSupportingDocuments, action.fileDBRef]
                 }
             };
+        case uploadFilesActions.UPDATE_DOCUMENT_DESCRIPTION:
+            const updateDocumentInArray = (array, index, description) => {
+                return array.map((item, i) => 
+                    i === index ? { ...item, description } : item
+                );
+            };
+            
+            return {
+                ...state,
+                filesToBeUploaded: {
+                    ...state.filesToBeUploaded,
+                    legalDocuments:
+                        action.mode === UPLOAD_LEGAL_DOCUMENTS_MODE
+                            ?
+                            updateDocumentInArray(state.filesToBeUploaded.legalDocuments, action.index, action.description)
+                            :
+                            state.filesToBeUploaded.legalDocuments,
+                    pitchPresentationDocument:
+                        action.mode === UPLOAD_PITCH_PRESENTATION_DOCUMENT_MODE
+                            ?
+                            updateDocumentInArray(state.filesToBeUploaded.pitchPresentationDocument, action.index, action.description)
+                            :
+                            state.filesToBeUploaded.pitchPresentationDocument,
+                    pitchSupportingDocuments:
+                        action.mode === UPLOAD_PITCH_SUPPORTING_DOCUMENTS_MODE
+                            ?
+                            updateDocumentInArray(state.filesToBeUploaded.pitchSupportingDocuments, action.index, action.description)
+                            :
+                            state.filesToBeUploaded.pitchSupportingDocuments
+                }
+            };
         default:
             return state;
     }
