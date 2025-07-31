@@ -18,6 +18,7 @@
 .DS_Store
 # .env
 .env
+.env.dev
 .env.demo
 .env.development
 .env.production
