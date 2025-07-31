@@ -26,7 +26,6 @@
   .MuiBox-root {
     background: rgba(255, 255, 255, 0.95);
     border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(79, 109, 122, 0.15);
     border: none !important;
     overflow: hidden;
     
@@ -46,17 +45,14 @@
       text-overflow: ellipsis;
     }
     
-    // Style project info to be exactly 3 lines with ellipsis
+    // Style project info to show maximum content
     .project-info, 
     .projectInfo,
     title.projectInfo {
-      display: -webkit-box;
-      -webkit-line-clamp: 3;
-      -webkit-box-orient: vertical;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      display: block;
+      overflow: visible;
+      text-overflow: initial;
       line-height: 1.4;
-      height: calc(1.4em * 3); // Exactly 3 lines
       white-space: normal;
     }
   }

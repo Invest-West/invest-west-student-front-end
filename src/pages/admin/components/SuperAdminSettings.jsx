@@ -32,6 +32,7 @@ import * as colors from '../../../values/colors';
 import {connect} from 'react-redux';
 import * as superAdminSettingsActions from '../../../redux-store/actions/superAdminSettingsActions';
 import ManageSectors from "./manage-sectors/ManageSectors";
+import ManageCourses from "./manage-courses/ManageCourses";
 import FeedbackSnackbarNew from "../../../shared-components/feedback-snackbar/FeedbackSnackbarNew";
 
 const mapStateToProps = state => {
@@ -164,6 +165,16 @@ class SuperAdminSettings extends Component {
                     {/** Edit sectors */}
                     <Col xs={12}sm={12} md={12} lg={12}>
                         <ManageSectors/>
+                    </Col>
+
+                    {/** Divider */}
+                    <Col xs={12} sm={12} md={12} lg={12}>
+                        <Divider style={{marginTop: 40, marginBottom: 40, height: 3, backgroundColor: colors.primaryColor}}/>
+                    </Col>
+
+                    {/** Edit courses */}
+                    <Col xs={12} sm={12} md={12} lg={12}>
+                        <ManageCourses/>
                     </Col>
 
                     {/** Divider */}

@@ -64,7 +64,7 @@ class ContactResourceDialog extends Component<ContactResourceDialogProps, any> {
                         variant="body1"
                         align="left"
                     >
-                        {`Are you happy for Invest West to share your email address with ${resourceName}?`}
+                        {`Are you happy for Student Showcase to share your email address with ${resourceName}?`}
                     </Typography>
                 </Box>
             </DialogContent>

@@ -183,6 +183,7 @@ export const handleMoveToNextStep = (params) => {
             activeStep,
 
             pitchSector,
+            pitchCourse,
             pitchProjectName,
             pitchProjectDescription,
             pitchExpiredDate,
@@ -204,11 +205,17 @@ export const handleMoveToNextStep = (params) => {
         switch (activeStep) {
             // General information
             case STEP_PITCH_GENERAL_INFORMATION:
-                // if one of the fields in the General information part is missing, ask the user to fill them
+                // Auto-fill expiry date to 1 year from now if not provided
+                let finalExpiredDate = pitchExpiredDate;
+                if (pitchExpiredDate === null) {
+                    finalExpiredDate = myUtils.getDateWithDaysFurtherThanToday(365);
+                }
+
+                // if one of the required fields in the General information part is missing, ask the user to fill them
+                // Note: project description and expiry date are now optional
                 if (pitchSector === "-"
-                    || pitchProjectName.trim().length === 0
-                    || pitchProjectDescription.trim().length === 0
-                    || pitchExpiredDate === null) {
+                    || pitchCourse === "-"
+                    || pitchProjectName.trim().length === 0) {
 
                     this.setState({
                         createNewPitch: {
@@ -222,9 +229,9 @@ export const handleMoveToNextStep = (params) => {
                 }
 
                 // check if the entered date is in a valid format or the entered is less than the minimum date
-                if (isNaN(pitchExpiredDate)
+                if (isNaN(finalExpiredDate)
                     ||
-                    (pitchExpiredDate && (pitchExpiredDate < myUtils.getDateWithDaysFurtherThanToday(0)))
+                    (finalExpiredDate && (finalExpiredDate < myUtils.getDateWithDaysFurtherThanToday(0)))
                 ) {
                     this.setState({
                         createNewPitch: {
@@ -239,6 +246,7 @@ export const handleMoveToNextStep = (params) => {
                     createNewPitch: {
                         ...this.state.createNewPitch,
                         activeStep: activeStep + 1,
+                        pitchExpiredDate: finalExpiredDate, // Update the state with the auto-filled date
                         pitchPublishCheck: PITCH_PUBLISH_CHECK_NONE,
                         pitchPublishErrorMessageShowed: false
                     }

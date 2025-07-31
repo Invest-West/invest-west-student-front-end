@@ -85,7 +85,7 @@ class SelectPledgeVisibility extends Component {
                                     :
                                     ""
                         }
-                        The full pledge will be visible to all Invest West users)`}
+                        The full pledge will be visible to all users)`}
                     </MenuItem>
                     <MenuItem value={DB_CONST.PROJECT_VISIBILITY_RESTRICTED} >
                         {`Restricted (
@@ -104,7 +104,7 @@ class SelectPledgeVisibility extends Component {
                                     :
                                     ""
                         }
-                        Restricted information from this pledge will be visible to all Invest West users. Only members of your course will see the full pledge)`}
+                        Restricted information from this pledge will be visible to all users. Only members of your course will see the full pledge)`}
                     </MenuItem>
                     <MenuItem value={DB_CONST.PROJECT_VISIBILITY_PRIVATE} >
                         {`Private (

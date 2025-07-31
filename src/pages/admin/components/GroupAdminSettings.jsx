@@ -20,6 +20,9 @@ import {
 import FlexView from "react-flexview";
 import {css} from "aphrodite";
 import {NavLink} from "react-router-dom";
+import 'react-quill/dist/quill.snow.css';
+// React Quill - text editor
+import ReactQuill from 'react-quill';
 
 import {connect} from "react-redux";
 import * as groupAdminSettingsActions from "../../../redux-store/actions/groupAdminSettingsActions";
@@ -30,6 +33,8 @@ import * as colors from "../../../values/colors";
 import * as utils from "../../../utils/utils";
 import * as ROUTES from "../../../router/routes";
 import Routes from "../../../router/routes";
+import ManageSectors from "./manage-sectors/ManageSectors";
+import ManageCourses from "./manage-courses/ManageCourses";
 
 const mapStateToProps = state => {
     return {
@@ -38,6 +43,7 @@ const mapStateToProps = state => {
         groupAttributesEdited: state.groupAdminSettings.groupAttributesEdited,
 
         clubAttributes: state.manageClubAttributes.clubAttributes,
+        clubAttributesEdited: state.groupAdminSettings.clubAttributesEdited,
 
         groupWebsite: state.groupAdminSettings.website,
         groupDescription: state.groupAdminSettings.description,
@@ -73,7 +79,9 @@ const mapDispatchToProps = dispatch => {
         submitNewPledgeFAQ: () => dispatch(groupAdminSettingsActions.submitNewPledgeFAQ()),
         toggleEditExpandedPledgeFAQ: () => dispatch(groupAdminSettingsActions.toggleEditExpandedPledgeFAQ()),
         saveEditedPledgeFAQ: () => dispatch(groupAdminSettingsActions.saveEditedPledgeFAQ()),
-        deleteExistingPledgeFAQ: () => dispatch(groupAdminSettingsActions.deleteExistingPledgeFAQ())
+        deleteExistingPledgeFAQ: () => dispatch(groupAdminSettingsActions.deleteExistingPledgeFAQ()),
+        handleQuillEditorChanged: (fieldName, content, delta, source, editor) => dispatch(groupAdminSettingsActions.handleQuillEditorChanged(fieldName, content, delta, source, editor)),
+        saveEditedQuill: (fieldName) => dispatch(groupAdminSettingsActions.saveEditedQuill(fieldName))
     }
 };
 
@@ -81,6 +89,10 @@ class GroupAdminSettings extends Component {
 
     handleExpandPledgeFAQPanel = FAQ => (event, isExpanded) => {
         this.props.handleExpandPledgeFAQPanel(FAQ, isExpanded);
+    };
+
+    handleQuillEditorChanged = fieldName => (content, delta, source, editor) => {
+        this.props.handleQuillEditorChanged(fieldName, content, delta, source, editor);
     };
 
     componentDidMount() {
@@ -97,6 +109,9 @@ class GroupAdminSettings extends Component {
             groupDetails,
             groupAttributesEdited,
 
+            clubAttributes,
+            clubAttributesEdited,
+
             groupWebsite,
             groupDescription,
             primaryColor,
@@ -109,7 +124,8 @@ class GroupAdminSettings extends Component {
             saveGroupDetails,
             cancelEditingGroupDetails,
             saveColor,
-            cancelEditingColor
+            cancelEditingColor,
+            saveEditedQuill,
         } = this.props;
 
         if (!groupAttributesEdited) {
@@ -431,6 +447,113 @@ class GroupAdminSettings extends Component {
                                         groupDetails.settings.primaryColor
                             }}/>
                     </Col>
+
+                    {/** Edit sectors */}
+                    <Col xs={12} sm={12} md={12} lg={12}>
+                        <ManageSectors/>
+                    </Col>
+
+                    {/** Divider */}
+                    <Col xs={12} sm={12} md={12} lg={12}>
+                        <Divider style={{marginTop: 40, marginBottom: 40, height: 4,
+                                backgroundColor:
+                                    !groupDetails
+                                        ?
+                                        colors.primaryColor
+                                        :
+                                        groupDetails.settings.primaryColor
+                            }}/>
+                    </Col>
+
+                    {/** Edit courses */}
+                    <Col xs={12} sm={12} md={12} lg={12}>
+                        <ManageCourses/>
+                    </Col>
+
+                    {/** Divider */}
+                    <Col xs={12} sm={12} md={12} lg={12}>
+                        <Divider style={{marginTop: 40, marginBottom: 40, height: 4,
+                                backgroundColor:
+                                    !groupDetails
+                                        ?
+                                        colors.primaryColor
+                                        :
+                                        groupDetails.settings.primaryColor
+                            }}/>
+                    </Col>
+
+                    {/** Edit create project terms and conditions */}
+                    <Col xs={12} sm={12} md={12} lg={12}>
+                        <FlexView column>
+                            <Typography variant="h6" color="primary">Edit create project terms and conditions</Typography>
+
+                            <NavLink to={ROUTES.CREATE_PITCH_TERMS_AND_CONDITIONS} target="_blank" className={css(sharedStyles.nav_link_hover_without_changing_text_color)} style={{marginTop: 30}}>
+                                <Button variant="outlined" color="primary" className={css(sharedStyles.no_text_transform)}>View create project terms and conditions page</Button>
+                            </NavLink>
+
+                            <ReactQuill theme="snow" onChange={this.handleQuillEditorChanged('createPitchTermsAndConditions')} modules={modules} value={clubAttributesEdited && clubAttributesEdited.hasOwnProperty('createPitchTermsAndConditions') ? clubAttributesEdited.createPitchTermsAndConditions : {ops: []}} style={{marginTop: 20}}/>
+
+                            <FlexView marginTop={15} width="100%" hAlignContent="right">
+                                <Button variant="contained" color="primary" onClick={() => saveEditedQuill('createPitchTermsAndConditions')} style={{marginLeft: 12}}>Save</Button>
+                            </FlexView>
+                        </FlexView>
+                    </Col>
+{/* 
+                    <Col xs={12} sm={12} md={12} lg={12}>
+                        <FlexView column>
+                            <Typography variant="h6" color="primary">Edit privacy policy</Typography>
+
+                            <NavLink to={ROUTES.PRIVACY_POLICY} target="_blank" className={css(sharedStyles.nav_link_hover_without_changing_text_color)} style={{marginTop: 30}}>
+                                <Button variant="outlined" color="primary" className={css(sharedStyles.no_text_transform)}>View privacy policy page</Button>
+                            </NavLink>
+
+                            <ReactQuill theme="snow" onChange={this.handleQuillEditorChanged('privacyPolicy')} modules={modules} value={clubAttributesEdited && clubAttributesEdited.hasOwnProperty('privacyPolicy') ? clubAttributesEdited.privacyPolicy : {ops: []}} style={{marginTop: 20 }}/>
+
+                            <FlexView marginTop={15} width="100%" hAlignContent="right">
+                                <Button variant="contained" color="primary" onClick={() => saveEditedQuill('privacyPolicy')} style={{marginLeft: 12}}>Save</Button>
+                            </FlexView>
+                        </FlexView>
+                    </Col>
+
+                    <Col xs={12} sm={12} md={12} lg={12}>
+                        <Divider style={{marginTop: 40, marginBottom: 40, height: 4,
+                                backgroundColor:
+                                    !groupDetails
+                                        ?
+                                        colors.primaryColor
+                                        :
+                                        groupDetails.settings.primaryColor
+                            }}/>
+                    </Col>
+
+                    <Col xs={12} sm={12} md={12} lg={12}>
+                        <FlexView column>
+                            <Typography variant="h6" color="primary">Edit terms of use</Typography>
+
+                            <NavLink to={ROUTES.TERMS_OF_USE} target="_blank" className={css(sharedStyles.nav_link_hover_without_changing_text_color)} style={{marginTop: 30}}>
+                                <Button variant="outlined" color="primary" className={css(sharedStyles.no_text_transform)}>View terms of use page</Button>
+                            </NavLink>
+
+                            <ReactQuill theme="snow" onChange={this.handleQuillEditorChanged('termsOfUse')} modules={modules} value={clubAttributesEdited && clubAttributesEdited.hasOwnProperty('termsOfUse') ? clubAttributesEdited.termsOfUse : {ops: []}} style={{marginTop: 20 }}/>
+
+                            <FlexView marginTop={15} width="100%" hAlignContent="right">
+                                <Button variant="contained" color="primary" onClick={() => saveEditedQuill('termsOfUe')} style={{marginLeft: 12}}>Save</Button>
+                            </FlexView>
+                        </FlexView>
+                    </Col>
+                    */}
+
+                    {/** Final Divider */}
+                    <Col xs={12} sm={12} md={12} lg={12}>
+                        <Divider style={{marginTop: 40, marginBottom: 40, height: 4,
+                                backgroundColor:
+                                    !groupDetails
+                                        ?
+                                        colors.primaryColor
+                                        :
+                                        groupDetails.settings.primaryColor
+                            }}/>
+                    </Col> 
                 </Row>
             </Container>
         );
@@ -438,3 +561,16 @@ class GroupAdminSettings extends Component {
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(GroupAdminSettings);
+
+const modules = {
+    toolbar: [
+        [{'header': [1, 2, 3, 4, 5, 6, false]}],
+        ['bold', 'italic', 'underline', 'strike'],
+        ['blockquote'],
+        [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}, {'align': []}],
+        [{'script': 'sub'}, {'script': 'super'}],
+        [{'color': []}, {'background': []}],
+        ['link', 'image'],
+        ['clean']
+    ]
+};

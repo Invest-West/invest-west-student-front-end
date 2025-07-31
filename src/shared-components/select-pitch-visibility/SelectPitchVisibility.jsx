@@ -104,7 +104,7 @@ class SelectPitchVisibility extends Component {
                                     :
                                     ""
                         }
-                        Restricted information from this project will be visible to all Invest West users. Only members of your course will see the full project)`}
+                        Restricted information from this project will be visible to all users. Only members of your course will see the full project)`}
                     </MenuItem>
                     <MenuItem
                         value={DB_CONST.PROJECT_VISIBILITY_PRIVATE}

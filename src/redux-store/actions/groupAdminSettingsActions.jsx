@@ -7,9 +7,11 @@ import * as feedbackSnackbarActions from "./feedbackSnackbarActions";
 export const GROUP_ADMIN_SETTINGS_INITIALIZE_GROUP_ATTRIBUTES_EDITED = 'GROUP_ADMIN_SETTINGS_INITIALIZE_GROUP_ATTRIBUTES_EDITED';
 export const initializeGroupAttributesEdited = () => {
     return (dispatch, getState) => {
+        const clubAttributes = getState().manageClubAttributes.clubAttributes;
         dispatch({
             type: GROUP_ADMIN_SETTINGS_INITIALIZE_GROUP_ATTRIBUTES_EDITED,
-            group: getState().manageGroupFromParams.groupProperties
+            group: getState().manageGroupFromParams.groupProperties,
+            clubAttributes: clubAttributes || {}
         });
     }
 };
@@ -342,5 +344,34 @@ export const cancelEditingColor = field => {
             field,
             color
         });
+    }
+};
+
+export const GROUP_ADMIN_SETTINGS_QUILL_EDITOR_CHANGED = 'GROUP_ADMIN_SETTINGS_QUILL_EDITOR_CHANGED';
+export const handleQuillEditorChanged = (fieldName, content, delta, source, editor) => {
+    return (dispatch, getState) => {
+        if (editor.getText().trim().length === 0) {
+            dispatch({
+                type: GROUP_ADMIN_SETTINGS_QUILL_EDITOR_CHANGED,
+                fieldName,
+                value: {ops: []}
+            });
+        } else {
+            dispatch({
+                type: GROUP_ADMIN_SETTINGS_QUILL_EDITOR_CHANGED,
+                fieldName,
+                value: editor.getContents()
+            });
+        }
+    }
+};
+
+export const saveEditedQuill = fieldName => {
+    return (dispatch, getState) => {
+        firebase
+            .database()
+            .ref(DB_CONST.CLUB_ATTRIBUTES_CHILD)
+            .child(fieldName)
+            .set(getState().groupAdminSettings.clubAttributesEdited[fieldName])
     }
 };

@@ -25,6 +25,7 @@ export default interface Project {
     projectName?: string; // optional for draft projects only
     description?: string; // optional for draft projects only
     sector?: string; // optional for draft projects only
+    course?: string; // optional for draft projects only
     edited?: number;
     temporarilyClosed?: boolean;
 
@@ -63,8 +64,9 @@ export interface ProjectCsv {
     projectName: string | undefined;
     description: string | undefined;
     sector: string | undefined;
+    course: string | undefined;
     postedDate: number | undefined; // = pitch postedDate
-    financialRound: string | undefined; // = pitch financialRound
+    //financialRound: string | undefined; // = pitch financialRound
 
     detailsAboutEarlierFundraisingRounds: string | undefined; // = pitch detailsAboutEarlierFundraisingRounds
     investorsCommitted: string | undefined; // = pitch investorsCommitted
@@ -98,7 +100,7 @@ export interface ProjectPitch {
     postMoneyValuation?: number;
     detailsAboutEarlierFundraisingRounds?: string;
     investorsCommitted?: string;
-    financialRound?: string;
+    //financialRound?: string;
     presentationDocument?: PitchDocument[];
     supportingDocuments?: PitchDocument[];
     presentationText?: any;
@@ -150,6 +152,7 @@ export interface PitchDocument {
     storageID: number;
     downloadURL: string;
     removed?: boolean;
+    description?: string;
 }
 
 /**

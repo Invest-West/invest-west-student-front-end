@@ -18,9 +18,12 @@ export default interface User {
     lastName: string | "none";
     title: string | "none";
     discover: string | "none";
+    course?: string;
     profilePicture?: ProfileImage[];
     BusinessProfile?: BusinessProfile;
     type: number;
+    lastLoginDate?: number; // timestamp when user last logged in
+    registrationDate?: number; // timestamp when user first registered/created account
 }
 
 export interface BusinessProfile {

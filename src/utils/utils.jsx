@@ -401,10 +401,6 @@ export const getUserHomeGroup = groupsUserIsIn => {
  * @returns {boolean}
  */
 export const shouldAProjectBeEdited = (user, project) => {
-    if (user.type === DB_CONST.TYPE_INVESTOR) {
-        return false;
-    }
-
     if (user.type === DB_CONST.TYPE_ADMIN) {
         return !(project.status === DB_CONST.PROJECT_STATUS_SUCCESSFUL
             || project.status === DB_CONST.PROJECT_STATUS_FAILED
@@ -412,19 +408,22 @@ export const shouldAProjectBeEdited = (user, project) => {
         );
     }
 
-    // user is an issuer, but not the owner of the project
+    // user is an issuer or investor, but not the owner of the project
     if (user.id !== project.issuerID) {
         return false;
     }
 
-    if (project.status === DB_CONST.PROJECT_STATUS_DRAFT
-        || project.status === DB_CONST.PROJECT_STATUS_BEING_CHECKED
-    ) {
-        return true;
-    }
+    // Allow both issuers and investors to edit their own projects
+    if (user.type === DB_CONST.TYPE_ISSUER || user.type === DB_CONST.TYPE_INVESTOR) {
+        if (project.status === DB_CONST.PROJECT_STATUS_DRAFT
+            || project.status === DB_CONST.PROJECT_STATUS_BEING_CHECKED
+        ) {
+            return true;
+        }
 
-    if (project.status === DB_CONST.PROJECT_STATUS_PITCH_PHASE) {
-        return project.Pitch.status === DB_CONST.PITCH_STATUS_ON_GOING;
+        if (project.status === DB_CONST.PROJECT_STATUS_PITCH_PHASE) {
+            return project.Pitch.status === DB_CONST.PITCH_STATUS_ON_GOING;
+        }
     }
 
     return false;

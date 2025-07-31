@@ -260,7 +260,7 @@ class FounderCatalyst extends Component<FounderCatalystProps, any> {
                                         </li>
                                         <br/>
                                         <li>
-                                            Invest West has negotiated a further 10% discount for our members. Please
+                                            Student Showcase has negotiated a further 10% discount for our members. Please
                                             sign up via the button below to receive your discount.
                                             <br/><br/>
                                             <CustomLink

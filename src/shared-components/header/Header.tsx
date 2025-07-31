@@ -22,6 +22,7 @@ import {getGroupLogo} from "../../models/group_properties";
 import Routes from "../../router/routes";
 import {css} from "aphrodite";
 import sharedStyles from "../../shared-js-css-styles/SharedStyles";
+import defaultLogo from "../../img/logo.png";
 
 interface HeaderProps extends HeaderLocalProps {
     MediaQueryState: MediaQueryState;
@@ -118,11 +119,24 @@ class Header extends Component<HeaderProps, {}> {
                                     <img
                                         alt="logo"
                                         src={
-                                            Routes.isErrorRoute(routePath) || Routes.isSystemPublicRoute(routePath)
-                                                ? require("../../img/logo.png").default
-                                                : ManageGroupUrlState.group && getGroupLogo(ManageGroupUrlState.group)
-                                                    ? getGroupLogo(ManageGroupUrlState.group)
-                                                    : require("../../img/logo.png").default
+                                            (() => {
+                                                const isSystemPublic = Routes.isSystemPublicRoute(routePath);
+                                                const isError = Routes.isErrorRoute(routePath);
+                                                console.log('Header Debug:', { routePath, isSystemPublic, isError });
+                                                
+                                                if (isError || isSystemPublic) {
+                                                    console.log('Using system logo:', defaultLogo);
+                                                    return defaultLogo;
+                                                } else if (ManageGroupUrlState.group && getGroupLogo(ManageGroupUrlState.group)) {
+                                                    const groupLogo = getGroupLogo(ManageGroupUrlState.group);
+                                                    console.log('Using group logo:', groupLogo);
+                                                    // Ensure groupLogo is never null
+                                                    return groupLogo ?? undefined;
+                                                } else {
+                                                    console.log('Using default logo:', defaultLogo);
+                                                    return defaultLogo;
+                                                }
+                                            })()
                                         }
                                         style={{ width: "auto", height: 36, objectFit: "contain" }}
                                     />
@@ -138,12 +152,12 @@ class Header extends Component<HeaderProps, {}> {
                                         <Typography variant="body1" noWrap >
                                             {
                                                 Routes.isErrorRoute(routePath) || Routes.isSystemPublicRoute(routePath)
-                                                    ? "Default student"
+                                                    ? "Student Showcase"
                                                     : ManageGroupUrlState.group?.displayName 
                                                         ? ManageGroupUrlState.group.displayName
                                                         : routeContainsGroupName(ManageGroupUrlState)
                                                             ? "Loading..."
-                                                            : "Default student"
+                                                            : "Student Showcase"
                                             }
                                         </Typography>
                                     </Box>

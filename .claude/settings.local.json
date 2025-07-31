@@ -30,7 +30,20 @@
       "Bash(npm run build:*)",
       "Bash(npx tsc:*)",
       "Bash(npx eslint:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(node:*)",
+      "Bash(curl:*)",
+      "Bash(mkdir:*)",
+      "Bash(find:*)",
+      "Bash(pkill:*)",
+      "Bash(npm install:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm start)",
+      "Bash(timeout 30 npm run build:*)",
+      "Bash(timeout 60 npm start)",
+      "Bash(rm:*)",
+      "Bash(timeout 10 npm start:*)"
     ]
   },
   "enableAllProjectMcpServers": false

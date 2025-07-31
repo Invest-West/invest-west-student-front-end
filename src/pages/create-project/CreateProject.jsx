@@ -17,11 +17,8 @@ import {
     FormHelperText,
     FormLabel,
     IconButton,
-    InputAdornment,
     MenuItem,
     OutlinedInput,
-    Radio,
-    RadioGroup,
     Select,
     Step,
     StepLabel,
@@ -53,6 +50,7 @@ import InfoOverlay from "../../shared-components/info_overlay/InfoOverlay";
 import {connect} from "react-redux";
 import * as selectProjectVisibilityActions from "../../redux-store/actions/selectProjectVisibilityActions";
 import * as feedbackSnackbarActions from "../../redux-store/actions/feedbackSnackbarActions";
+import * as uploadFilesActions from "../../redux-store/actions/uploadFilesActions";
 
 import firebase from "../../firebase/firebaseApp";
 import * as colors from "../../values/colors";
@@ -66,7 +64,7 @@ import sharedStyles from "../../shared-js-css-styles/SharedStyles";
 import {getGroupRouteTheme, isValidatingGroupUrl} from "../../redux-store/reducers/manageGroupUrlReducer";
 import {isAuthenticating, successfullyAuthenticated} from "../../redux-store/reducers/authenticationReducer";
 import {isLoadingSystemAttributes} from "../../redux-store/reducers/manageSystemAttributesReducer";
-import {isIssuer} from "../../models/user";
+import {isIssuer, isInvestor} from "../../models/user";
 import {getHomeGroup} from "../../models/group_of_membership";
 import {isDraftProjectNotSubmitted} from "../../models/project";
 import Api, {ApiRoutes} from "../../api/Api";
@@ -109,6 +107,7 @@ const mapStateToProps = state => {
         ManageGroupUrlState: state.ManageGroupUrlState,
         AuthenticationState: state.AuthenticationState,
         isMobile: state.MediaQueryState.isMobile,
+        uploadFilesState: state.uploadFiles,
 
         projectVisibilitySetting: state.manageSelectProjectVisibility.projectVisibilitySetting
     }
@@ -117,7 +116,9 @@ const mapStateToProps = state => {
 const mapDispatchToProps = dispatch => {
     return {
         selectProjectVisibility_setProject: (project) => dispatch(selectProjectVisibilityActions.setProject(project)),
-        setFeedbackSnackbarContent: (message, color, position) => dispatch(feedbackSnackbarActions.setFeedbackSnackbarContent(message, color, position))
+        setFeedbackSnackbarContent: (message, color, position) => dispatch(feedbackSnackbarActions.setFeedbackSnackbarContent(message, color, position)),
+        updateDocumentDescription: (mode, index, description) => dispatch(uploadFilesActions.updateDocumentDescription(mode, index, description)),
+        deleteToBeUploadedFile: (mode, index) => dispatch(uploadFilesActions.deleteToBeUploadedFile(mode, index))
     }
 };
 
@@ -141,16 +142,17 @@ const initState = {
 
         groupIssuerCreateOfferFor: "undefined",
 
-        // project sector
-        pitchSector: '-',
+        // project sector  
+        pitchSector: '',
+        pitchCourse: '',
         // project project name
         pitchProjectName: '',
         pitchProjectDescription: '',
         pitchExpiryDate: null,
 
-        financialRound: '',
+        //financialRound: '',
         detailsAboutEarlierFundraisingRounds: '',
-        pitchInvestorsCommitted: '',
+        //pitchInvestorsCommitted: '',
 
         // project cover (image or video) --- 1 file
         pitchCover: [],
@@ -182,8 +184,8 @@ const initState = {
 
         // T&Cs and marketing preferences ------------------------------------------------------------------------------
         acceptedTermsAndConditions: false,
-        agreedToShareRaisePublicly: false,
-        agreedToReceiveLocalInvestmentInfo: false,
+        //agreedToShareRaisePublicly: false,
+        //agreedToReceiveLocalInvestmentInfo: false,
         // -------------------------------------------------------------------------------------------------------------
 
         projectID: null, // set when project has been successfully published to pass to UploadDialog
@@ -366,15 +368,56 @@ class CreatePitchPageMain extends Component {
             return;
         }
 
-        if (!successfullyAuthenticated(AuthenticationState)
-        || (AuthenticationState.currentUser && AuthenticationState.currentUser.type === DB_CONST.TYPE_INVESTOR)
-        ) {
+        if (!successfullyAuthenticated(AuthenticationState)) {
             if (!projectEditedLoaded) {
                 this.setState({
                     projectEditedLoaded: true
                 });
             }
             return;
+        }
+
+        // Handle investors - they need proper initialization but same flow as issuers for editing
+        if (AuthenticationState.currentUser && AuthenticationState.currentUser.type === DB_CONST.TYPE_INVESTOR) {
+            // get project id from the URL
+            const params = queryString.parse(this.props.location.search);
+
+            // if in edit mode, treat investors like issuers
+            if (params.edit || projectIDToBeLoadedAfterSavingFirstTime) {
+                // Continue to issuer logic below for edit mode
+            } else {
+                // New project creation - handle initialization for investors
+                if (!projectEditedLoaded) {
+                    this.setState({
+                        projectEditedLoaded: true,
+                        projectIDToBeLoadedAfterSavingFirstTime: null,
+
+                        createProject: {
+                            ...this.state.createProject,
+                            groupIssuerCreateOfferFor: ManageGroupUrlState.group
+                                ? ManageGroupUrlState.group.anid
+                                : getHomeGroup(AuthenticationState.groupsOfMembership) === null
+                                    ? "undefined"
+                                    : getHomeGroup(AuthenticationState.groupsOfMembership).group.anid,
+                            pitchExpiryDate:
+                                ManageGroupUrlState.group && ManageGroupUrlState.group.groupUserName === "qib"
+                                    ?
+                                    // if the group is QIB,
+                                    // set the project expiry date to the one specified by the QIB' admins
+                                    // Note: must ensure the defaultPitchExpiryDate field is valid
+                                    ManageGroupUrlState.group.settings.defaultPitchExpiryDate
+                                    :
+                                    this.state.createProject.pitchExpiryDate
+                        }
+                    });
+
+                    // allow investors to change the visibility of the project
+                    if (AuthenticationState.currentUser.type === DB_CONST.TYPE_INVESTOR) {
+                        selectProjectVisibility_setProject(null);
+                    }
+                }
+                return;
+            }
         }
 
         this.setState({
@@ -391,8 +434,8 @@ class CreatePitchPageMain extends Component {
                 .loadAParticularProject(!params.edit ? projectIDToBeLoadedAfterSavingFirstTime : params.edit)
                 .then(project => {
 
-                    // allow the group admin to change the visibility of the project
-                    if (AuthenticationState.currentUser.type === DB_CONST.TYPE_ADMIN) {
+                    // allow the group admin and investors to change the visibility of the project
+                    if (AuthenticationState.currentUser.type === DB_CONST.TYPE_ADMIN || AuthenticationState.currentUser.type === DB_CONST.TYPE_INVESTOR) {
                         selectProjectVisibility_setProject(project);
                     }
 
@@ -436,7 +479,14 @@ class CreatePitchPageMain extends Component {
                                     ?
                                     project.sector
                                     :
-                                    '-'
+                                    ''
+                            ,
+                            pitchCourse:
+                                project.hasOwnProperty('course')
+                                    ?
+                                    project.course
+                                    :
+                                    ''
                             ,
                             // project project name
                             pitchProjectName:
@@ -460,13 +510,13 @@ class CreatePitchPageMain extends Component {
                                     :
                                     null
                             ,
-                            financialRound:
-                                project.Pitch.hasOwnProperty('financialRound')
-                                    ?
-                                    project.Pitch.financialRound
-                                    :
-                                    ''
-                            ,
+                            // financialRound:
+                            //     project.Pitch.hasOwnProperty('financialRound')
+                            //         ?
+                            //         project.Pitch.financialRound
+                            //         :
+                            //         ''
+                            // ,
                             detailsAboutEarlierFundraisingRounds:
                                 project.Pitch.hasOwnProperty('detailsAboutEarlierFundraisingRounds')
                                     ?
@@ -474,13 +524,13 @@ class CreatePitchPageMain extends Component {
                                     :
                                     ''
                             ,
-                            pitchInvestorsCommitted:
-                                project.Pitch.hasOwnProperty('investorsCommitted')
-                                    ?
-                                    project.Pitch.investorsCommitted
-                                    :
-                                    ''
-                            ,
+                            // pitchInvestorsCommitted:
+                            //     project.Pitch.hasOwnProperty('investorsCommitted')
+                            //         ?
+                            //         project.Pitch.investorsCommitted
+                            //         :
+                            //         ''
+                            // ,
                             pitchPresentationText:
                                 !project.Pitch.presentationText
                                     ?
@@ -537,8 +587,8 @@ class CreatePitchPageMain extends Component {
                 }
             });
 
-            // allow the group admin to change the visibility of the project
-            if (AuthenticationState.currentUser.type === DB_CONST.TYPE_ADMIN) {
+            // allow the group admin and investors to change the visibility of the project
+            if (AuthenticationState.currentUser.type === DB_CONST.TYPE_ADMIN || AuthenticationState.currentUser.type === DB_CONST.TYPE_INVESTOR) {
                 selectProjectVisibility_setProject(null);
             }
         }
@@ -558,7 +608,8 @@ class CreatePitchPageMain extends Component {
 
         const {
             projectEdited,
-            progressBeingSaved
+            progressBeingSaved,
+            projectEditedLoaded
         } = this.state;
 
         const {
@@ -567,11 +618,12 @@ class CreatePitchPageMain extends Component {
             activeStep,
 
             pitchSector,
+            pitchCourse,
             pitchProjectName,
             pitchProjectDescription,
             pitchExpiryDate,
 
-            financialRound,
+            //financialRound,
 
             pitchCover,
             pitchCoverVideoURL,
@@ -583,21 +635,43 @@ class CreatePitchPageMain extends Component {
             qibSpecialNews
         } = this.state.createProject;
 
-        // progress is being saved,
+        // progress is being saved or data is still loading,
         // we shouldn't let the user click
-        if (progressBeingSaved) {
+        if (progressBeingSaved || !projectEditedLoaded) {
             return;
         }
 
         switch (activeStep) {
             // General information
             case STEP_PITCH_GENERAL_INFORMATION:
-                // if one of the fields in the General information part is missing, ask the user to fill them
-                if (pitchSector === "-"
+                // Debug: Log validation values
+                console.log('Validation check:', {
+                    pitchSector: pitchSector, 
+                    pitchCourse: pitchCourse,
+                    pitchProjectName: pitchProjectName,
+                    pitchProjectDescription: pitchProjectDescription,
+                    pitchExpiryDate: pitchExpiryDate,
+                    //financialRound: financialRound,
+                    groupIssuerCreateOfferFor: groupIssuerCreateOfferFor,
+                    isIssuer: isIssuer(AuthenticationState.currentUser),
+                    isInvestor: isInvestor(AuthenticationState.currentUser),
+                    isEdit: params.edit && projectEdited,
+                    groupName: ManageGroupUrlState.groupNameFromUrl,
+                    qibSpecialNews: qibSpecialNews
+                });
+                
+                // Auto-fill expiry date to 1 year from now if not provided
+                let finalExpiryDate = pitchExpiryDate;
+                if (pitchExpiryDate === null) {
+                    finalExpiryDate = utils.getDateWithDaysFurtherThanToday(365);
+                }
+
+                // if one of the required fields in the General information part is missing, ask the user to fill them
+                // Note: project description and expiry date are now optional
+                if (pitchSector.trim().length === 0
+                    || pitchCourse.trim().length === 0
                     || pitchProjectName.trim().length === 0
-                    || pitchProjectDescription.trim().length === 0
-                    || pitchExpiryDate === null
-                    || financialRound.trim().length === 0
+                    //|| financialRound.trim().length === 0
                     || (ManageGroupUrlState.groupNameFromUrl === "qib" && qibSpecialNews.trim().length === 0)
                     || (isIssuer(AuthenticationState.currentUser) && !(params.edit && projectEdited) && groupIssuerCreateOfferFor === "undefined")
                 ) {
@@ -613,9 +687,9 @@ class CreatePitchPageMain extends Component {
                 }
 
                 // check if the entered date is in a valid format or the entered is less than the minimum date
-                if (isNaN(pitchExpiryDate)
+                if (isNaN(finalExpiryDate)
                     ||
-                    (pitchExpiryDate && (pitchExpiryDate < utils.getDateWithDaysFurtherThanToday(0)))
+                    (finalExpiryDate && (finalExpiryDate < utils.getDateWithDaysFurtherThanToday(0)))
                 ) {
                     this.setState({
                         createProject: {
@@ -631,6 +705,7 @@ class CreatePitchPageMain extends Component {
                     createProject: {
                         ...this.state.createProject,
                         activeStep: activeStep + 1,
+                        pitchExpiryDate: finalExpiryDate, // Update with auto-filled date if it was null
                         pitchPublishCheck: PITCH_PUBLISH_CHECK_NONE,
                         pitchPublishErrorMessageShowed: false
                     }
@@ -838,7 +913,7 @@ class CreatePitchPageMain extends Component {
                 activeStep: activeStep - 1
             }
         });
-        this.navigateToTheSamePageWithActiveStepSaved(activeStep - 1, projectEdited.id);
+        this.navigateToTheSamePageWithActiveStepSaved(activeStep - 1, projectEdited ? projectEdited.id : null);
     };
 
     /**
@@ -898,7 +973,8 @@ class CreatePitchPageMain extends Component {
         reader.addEventListener('load', () => {
             const fileRead = {
                 file: files[files.length - 1],
-                preview: reader.result
+                preview: reader.result,
+                description: '' // Initialize empty description
             };
 
             switch (mode) {
@@ -1118,13 +1194,14 @@ class CreatePitchPageMain extends Component {
             activeStep,
 
             pitchSector,
+            pitchCourse,
             pitchProjectName,
             pitchProjectDescription,
             pitchExpiryDate,
 
-            financialRound,
+            //financialRound,
             detailsAboutEarlierFundraisingRounds,
-            pitchInvestorsCommitted,
+            //pitchInvestorsCommitted,
 
             pitchCover,
             pitchCoverVideoURL,
@@ -1132,8 +1209,8 @@ class CreatePitchPageMain extends Component {
             pitchPresentationText,
             pitchPresentationPlainText,
 
-            agreedToShareRaisePublicly,
-            agreedToReceiveLocalInvestmentInfo,
+            //agreedToShareRaisePublicly,
+            //agreedToReceiveLocalInvestmentInfo,
 
             // this field is only available for QIB
             qibSpecialNews
@@ -1240,13 +1317,24 @@ class CreatePitchPageMain extends Component {
                                         sector:
                                             saveProgress
                                                 ?
-                                                pitchSector === "-"
+                                                pitchSector.trim().length === 0
                                                     ?
                                                     null
                                                     :
                                                     pitchSector
                                                 :
                                                 pitchSector
+                                        ,
+                                        course:
+                                            saveProgress
+                                                ?
+                                                pitchCourse.trim().length === 0
+                                                    ?
+                                                    null
+                                                    :
+                                                    pitchCourse
+                                                :
+                                                pitchCourse
                                         ,
                                         description:
                                             saveProgress
@@ -1296,17 +1384,17 @@ class CreatePitchPageMain extends Component {
                                                 null
                                         ,
                                         Pitch: {
-                                            financialRound:
-                                                saveProgress
-                                                    ?
-                                                    financialRound.trim().length === 0
-                                                        ?
-                                                        null
-                                                        :
-                                                        financialRound
-                                                    :
-                                                    financialRound
-                                            ,
+                                            // financialRound:
+                                            //     saveProgress
+                                            //         ?
+                                            //         financialRound.trim().length === 0
+                                            //             ?
+                                            //             null
+                                            //             :
+                                            //             financialRound
+                                            //         :
+                                            //         financialRound
+                                            // ,
                                             detailsAboutEarlierFundraisingRounds:
                                                 detailsAboutEarlierFundraisingRounds.trim().length === 0
                                                     ?
@@ -1314,14 +1402,14 @@ class CreatePitchPageMain extends Component {
                                                     :
                                                     detailsAboutEarlierFundraisingRounds
                                             ,
-                                            investorsCommitted:
-                                                pitchInvestorsCommitted.trim().length === 0
-                                                    ?
-                                                    null
-                                                    :
-                                                    pitchInvestorsCommitted
-                                            ,
-                                            supportingDocuments:
+                                            // investorsCommitted:
+                                            //     pitchInvestorsCommitted.trim().length === 0
+                                            //         ?
+                                            //         null
+                                            //         :
+                                            //         pitchInvestorsCommitted
+                                            // ,
+                                             supportingDocuments:
                                                 projectEdited.Pitch.supportingDocuments
                                                     ?
                                                     [...projectEdited.Pitch.supportingDocuments, ...this.pitchSupportingDocumentsRealtimeDB]
@@ -1517,8 +1605,8 @@ class CreatePitchPageMain extends Component {
                                                     const acceptedTCsObj = {
                                                         issuerID: AuthenticationState.currentUser.id,
                                                         projectID: projectEdited.id,
-                                                        date: utils.getCurrentDate(),
-                                                        agreedToShareRaisePublicly
+                                                        date: utils.getCurrentDate()
+                                                        //agreedToShareRaisePublicly
                                                     };
 
                                                     // push to Create project T&Cs
@@ -1554,17 +1642,17 @@ class CreatePitchPageMain extends Component {
 
                                                             // if the user is an issuer,
                                                             // update the marketing preferences setting
-                                                            if (AuthenticationState.currentUser.type === DB_CONST.TYPE_ISSUER) {
-                                                                realtimeDBUtils
-                                                                    .updateMarketingPreferencesSetting({
-                                                                        userID: AuthenticationState.currentUser.id,
-                                                                        field: "agreedToReceiveLocalInvestmentInfo",
-                                                                        value: agreedToReceiveLocalInvestmentInfo
-                                                                    })
-                                                                    .catch(error => {
-                                                                        // handle error
-                                                                    });
-                                                            }
+                                                            // if (AuthenticationState.currentUser.type === DB_CONST.TYPE_ISSUER) {
+                                                            //     realtimeDBUtils
+                                                            //         .updateMarketingPreferencesSetting({
+                                                            //             userID: AuthenticationState.currentUser.id,
+                                                            //             field: "agreedToReceiveLocalInvestmentInfo",
+                                                            //             value: agreedToReceiveLocalInvestmentInfo
+                                                            //         })
+                                                            //         .catch(error => {
+                                                            //             // handle error
+                                                            //         });
+                                                            // }
 
                                                             this.setState({
                                                                 createProject: {
@@ -1709,7 +1797,8 @@ class CreatePitchPageMain extends Component {
                                                     null
                                         ,
                                         projectName: saveProgress ? (pitchProjectName.trim().length === 0 ? null : pitchProjectName) : pitchProjectName,
-                                        sector: saveProgress ? (pitchSector === "-" ? null : pitchSector) : pitchSector,
+                                        sector: saveProgress ? (pitchSector.trim().length === 0 ? null : pitchSector) : pitchSector,
+                                        course: saveProgress ? (pitchCourse.trim().length === 0 ? null : pitchCourse) : pitchCourse,
                                         description: saveProgress ? (pitchProjectDescription.trim().length === 0 ? null : pitchProjectDescription) : pitchProjectDescription,
                                         status:
                                             saveProgress
@@ -1738,24 +1827,24 @@ class CreatePitchPageMain extends Component {
                                                     :
                                                     detailsAboutEarlierFundraisingRounds
                                             ,
-                                            financialRound:
-                                                saveProgress
-                                                    ?
-                                                    financialRound.trim().length === 0
-                                                        ?
-                                                        null
-                                                        :
-                                                        financialRound
-                                                    :
-                                                    financialRound
-                                            ,
-                                            investorsCommitted:
-                                                pitchInvestorsCommitted.trim().length === 0
-                                                    ?
-                                                    null
-                                                    :
-                                                    pitchInvestorsCommitted
-                                            ,
+                                            // financialRound:
+                                            //     saveProgress
+                                            //         ?
+                                            //         financialRound.trim().length === 0
+                                            //             ?
+                                            //             null
+                                            //             :
+                                            //             financialRound
+                                            //         :
+                                            //         financialRound
+                                            // ,
+                                            // investorsCommitted:
+                                            //     pitchInvestorsCommitted.trim().length === 0
+                                            //         ?
+                                            //         null
+                                            //         :
+                                            //         pitchInvestorsCommitted
+                                            // ,
                                             supportingDocuments: this.pitchSupportingDocumentsRealtimeDB,
                                             presentationText:
                                                 pitchPresentationText.ops.length === 0
@@ -2049,7 +2138,8 @@ class CreatePitchPageMain extends Component {
                                 fileName: storageFileName.split(DB_CONST.STORAGE_FILE_NAME_ID_SPLIT)[1],
                                 readableSize: document.file.sizeReadable,
                                 downloadURL: fileDownloadURL,
-                                storageID: storageID
+                                storageID: storageID,
+                                description: document.description || ''
                             };
                             // capture the file uploaded to storage and store in this variable for uploading to Realtime DB
                             this.pitchSupportingDocumentsRealtimeDB = [...this.pitchSupportingDocumentsRealtimeDB, formattedSupportingDocument];
@@ -2059,7 +2149,8 @@ class CreatePitchPageMain extends Component {
                                 fileName: storageFileName.split(DB_CONST.STORAGE_FILE_NAME_ID_SPLIT)[1],
                                 readableSize: document.file.sizeReadable,
                                 downloadURL: fileDownloadURL,
-                                storageID: storageID
+                                storageID: storageID,
+                                description: document.description || ''
                             };
                             // capture the file uploaded to storage and store in this variable for uploading to Realtime DB
                             this.pitchPresentationDocumentRealtimeDB = [...this.pitchPresentationDocumentRealtimeDB, formattedPresentationDocument];
@@ -2106,6 +2197,46 @@ class CreatePitchPageMain extends Component {
                         pitchCover: []
                     }
                 });
+                break;
+            default:
+                break;
+        }
+    };
+
+    /**
+     * This function gets called when document description changes.
+     */
+    handleDescriptionChange = (mode, index, description) => {
+        switch (mode) {
+            case PITCH_SUPPORTING_DOCUMENTS_FILES_CHANGED:
+                let supportingDocuments = [...this.state.createProject.pitchSupportingDocuments];
+                if (supportingDocuments[index]) {
+                    supportingDocuments[index] = {
+                        ...supportingDocuments[index],
+                        description: description
+                    };
+                    this.setState({
+                        createProject: {
+                            ...this.state.createProject,
+                            pitchSupportingDocuments: supportingDocuments
+                        }
+                    });
+                }
+                break;
+            case PITCH_PRESENTATION_FILES_CHANGED:
+                let presentationDocument = [...this.state.createProject.pitchPresentationDocument];
+                if (presentationDocument[index]) {
+                    presentationDocument[index] = {
+                        ...presentationDocument[index],
+                        description: description
+                    };
+                    this.setState({
+                        createProject: {
+                            ...this.state.createProject,
+                            pitchPresentationDocument: presentationDocument
+                        }
+                    });
+                }
                 break;
             default:
                 break;
@@ -2237,22 +2368,24 @@ class CreatePitchPageMain extends Component {
             activeStep,
 
             pitchSector,
+            pitchCourse,
             pitchProjectName,
             pitchProjectDescription,
             pitchExpiryDate,
 
-            financialRound,
+            //financialRound,
 
             qibSpecialNews
         } = this.state.createProject;
 
         if (activeStep === STEP_PITCH_GENERAL_INFORMATION) {
             // check if at least one field is filled
-            if (pitchSector === "-"
+            if (pitchSector.trim().length === 0
+                && pitchCourse.trim().length === 0
                 && pitchProjectName.trim().length === 0
                 && pitchProjectDescription.trim().length === 0
                 && pitchExpiryDate === null
-                && financialRound.trim().length === 0
+                //&& financialRound.trim().length === 0
                 && (ManageGroupUrlState.groupNameFromUrl === "qib" && qibSpecialNews.trim().length === 0)
             ) {
                 setFeedbackSnackbarContent(
@@ -2262,6 +2395,7 @@ class CreatePitchPageMain extends Component {
                 );
                 return;
             }
+
 
             // check if the entered date is in a valid format or the entered date is less than the minimum date
             if (isNaN(pitchExpiryDate)
@@ -2491,13 +2625,10 @@ class CreatePitchPageMain extends Component {
         }
 
         // when creating a new offer,
-        // if no user found or found user is an investor or a super admin
+        // if no user found or found user is a super admin (allow investors now)
         // --> display Page Not Found
         if (!successfullyAuthenticated(AuthenticationState)
-            || (successfullyAuthenticated(AuthenticationState) && AuthenticationState.currentUser.type === DB_CONST.TYPE_INVESTOR)
-            || (!params.edit && AuthenticationState.currentUser && (AuthenticationState.currentUser.type === DB_CONST.TYPE_INVESTOR
-                    || (AuthenticationState.currentUser.type === DB_CONST.TYPE_ADMIN && AuthenticationState.currentUser.superAdmin))
-            )
+            || (!params.edit && AuthenticationState.currentUser && (AuthenticationState.currentUser.type === DB_CONST.TYPE_ADMIN && AuthenticationState.currentUser.superAdmin))
         ) {
             return (
                 <Redirect to={Routes.error404}/>
@@ -2572,6 +2703,7 @@ class CreatePitchPageMain extends Component {
                     onFilesChanged={this.handleFilesChanged}
                     onFilesError={this.handleFileError}
                     onDeleteDocument={this.handleDeleteDocument}
+                    onDescriptionChange={this.handleDescriptionChange}
                     onInputChanged={this.handleCreatePitchInputChanged}
                     onPitchEditorChanged={this.handlePitchEditorChanged}
                     attachNextStepButtonRef={this.attachNextStepButtonRef}
@@ -2635,6 +2767,10 @@ class CreateProject extends Component {
 
     onDeleteDocument = mode => index => {
         this.props.onDeleteDocument(mode, index);
+    };
+
+    onDescriptionChange = mode => (index, description) => {
+        this.props.onDescriptionChange(mode, index, description);
     };
 
     attachNextStepButtonRef = (target) => {
@@ -2803,7 +2939,7 @@ class CreateProject extends Component {
                                     </FlexView>
 
                                     {
-                                        currentUser.type === DB_CONST.TYPE_ADMIN
+                                        currentUser.type === DB_CONST.TYPE_ADMIN || currentUser.type === DB_CONST.TYPE_INVESTOR
                                             ?
                                             <FlexView marginTop={30}>
                                                 <SelectPitchVisibility/>
@@ -2818,7 +2954,7 @@ class CreateProject extends Component {
                                             ? null
                                             : params.edit && projectEdited && !isDraftProjectNotSubmitted(projectEdited)
                                             ? null
-                                            : !isIssuer(AuthenticationState.currentUser)
+                                            : !isIssuer(AuthenticationState.currentUser) && !isInvestor(AuthenticationState.currentUser)
                                                 ? null
                                                 : AuthenticationState.groupsOfMembership === null || AuthenticationState.groupsOfMembership.length === 0
                                                     ? null
@@ -2848,11 +2984,24 @@ class CreateProject extends Component {
                                             required
                                             error={
                                                 createProjectState.pitchPublishCheck === PITCH_PUBLISH_FALSE_MISSING_FIELDS_IN_GENERAL_INFORMATION
-                                                && createProjectState.pitchSector === "-"
+                                                && (!createProjectState.pitchSector || createProjectState.pitchSector.trim().length === 0 || createProjectState.pitchSector === "-")
                                             }
                                         >
                                             <FormLabel>Choose sector</FormLabel>
-                                            <Select name="pitchSector" value={createProjectState.pitchSector} margin="dense" input={<OutlinedInput/>} onChange={this.onInputChanged}>
+                                            <Select 
+                                                name="pitchSector" 
+                                                value={
+                                                    createProjectState.pitchSector && 
+                                                    clubAttributes && 
+                                                    clubAttributes.Sectors && 
+                                                    (clubAttributes.Sectors.includes(createProjectState.pitchSector) || createProjectState.pitchSector === "-")
+                                                        ? createProjectState.pitchSector 
+                                                        : "-"
+                                                } 
+                                                margin="dense" 
+                                                input={<OutlinedInput/>} 
+                                                onChange={this.onInputChanged}
+                                            >
                                                 <MenuItem key={-1} value="-">
                                                     -
                                                 </MenuItem>
@@ -2863,6 +3012,49 @@ class CreateProject extends Component {
                                                         :
                                                         clubAttributes.Sectors.map((sector, index) => (
                                                             <MenuItem key={index} value={sector}>{sector}</MenuItem>
+                                                        ))
+                                                }
+                                            </Select>
+                                        </FormControl>
+                                    </FlexView>
+
+                                    {/**
+                                     * Choosing course
+                                     */}
+                                    <FlexView marginTop={30}>
+                                        <FormControl
+                                            fullWidth
+                                            required
+                                            error={
+                                                createProjectState.pitchPublishCheck === PITCH_PUBLISH_FALSE_MISSING_FIELDS_IN_GENERAL_INFORMATION
+                                                && (!createProjectState.pitchCourse || createProjectState.pitchCourse.trim().length === 0 || createProjectState.pitchCourse === "-")
+                                            }
+                                        >
+                                            <FormLabel>Choose course</FormLabel>
+                                            <Select 
+                                                name="pitchCourse" 
+                                                value={
+                                                    createProjectState.pitchCourse && 
+                                                    clubAttributes && 
+                                                    clubAttributes.Courses && 
+                                                    (clubAttributes.Courses.includes(createProjectState.pitchCourse) || createProjectState.pitchCourse === "-")
+                                                        ? createProjectState.pitchCourse 
+                                                        : "-"
+                                                } 
+                                                margin="dense" 
+                                                input={<OutlinedInput/>} 
+                                                onChange={this.onInputChanged}
+                                            >
+                                                <MenuItem key={-1} value="-">
+                                                    -
+                                                </MenuItem>
+                                                {
+                                                    !clubAttributes || !clubAttributes.Courses
+                                                        ?
+                                                        null
+                                                        :
+                                                        clubAttributes.Courses.map((course, index) => (
+                                                            <MenuItem key={index} value={course}>{course}</MenuItem>
                                                         ))
                                                 }
                                             </Select>
@@ -2909,10 +3101,8 @@ class CreateProject extends Component {
                                                                     value={createProjectState.pitchExpiryDate}
                                                                     InputAdornmentProps={{position: "start"}}
                                                                     error={
-                                                                        (createProjectState.pitchPublishCheck === PITCH_PUBLISH_FALSE_MISSING_FIELDS_IN_GENERAL_INFORMATION
-                                                                            && createProjectState.pitchExpiryDate === null)
-                                                                        ||
                                                                         (createProjectState.pitchPublishCheck === PITCH_PUBLISH_FALSE_INVALID_DATE
+                                                                            && createProjectState.pitchExpiryDate !== null
                                                                             && (isNaN(createProjectState.pitchExpiryDate)
                                                                                 || createProjectState.pitchExpiryDate < utils.getDateWithDaysFurtherThanToday(0))
                                                                         )
@@ -3043,7 +3233,7 @@ class CreateProject extends Component {
                                     <FlexView marginTop={10}>
                                         <FormControl required fullWidth>
                                             <TextField
-                                                label="Please provide a brief summary of what your project is about (max 300 characters)"
+                                                label="Please provide a brief introduction of what your project is about (max 300 characters)"
                                                 name="pitchProjectDescription"
                                                 value={createProjectState.pitchProjectDescription}
                                                 margin="normal"
@@ -3053,8 +3243,9 @@ class CreateProject extends Component {
                                                     && createProjectState.pitchProjectDescription.trim().length === 0
                                                 }
                                                 multiline
-                                                rowsMax={5}
-                                                rows={5}
+                                                minRows={3}
+                                                maxRows={6}
+                                                inputProps={{ maxLength: 300 }}
                                                 onChange={this.onInputChanged}
                                             />
                                             <FormHelperText>
@@ -3068,7 +3259,7 @@ class CreateProject extends Component {
                                          * Financial round
                                          */
                                     }
-                                    <FlexView marginTop={45}>
+                                    {/* <FlexView marginTop={45}>
                                         <FormControl required fullWidth
                                             error={
                                                 createProjectState.pitchPublishCheck === PITCH_PUBLISH_FALSE_MISSING_FIELDS_IN_GENERAL_INFORMATION
@@ -3084,36 +3275,12 @@ class CreateProject extends Component {
                                                 }
                                             </RadioGroup>
                                         </FormControl>
-                                    </FlexView>
+                                    </FlexView> */}
 
                                     {
                                         /**
                                          * Special news - QIB only
                                          */
-                                    }
-                                    {
-                                        groupUserName === "qib"
-                                        || (
-                                            !groupUserName
-                                            && currentUser.type === DB_CONST.TYPE_ADMIN
-                                            && currentUser.superAdmin
-                                        )
-                                            ?
-                                            <FlexView marginTop={45}>
-                                                <FormControl required fullWidth>
-                                                    <FormLabel>What special news should Briony talk about when she mentions your investment raise at the QIB?</FormLabel>
-                                                    <TextField name="qibSpecialNews" value={createProjectState.qibSpecialNews} placeholder="This would be a good place to mention if you have already made progress in your funding round." fullWidth variant="outlined" onChange={this.onInputChanged} multiline rowsMax={3}
-                                                        error={
-                                                            groupUserName === "qib"
-                                                            && createProjectState.qibSpecialNews === PITCH_PUBLISH_FALSE_INVALID_FUND
-                                                            && createProjectState.qibSpecialNews.trim().length === 0
-                                                        }
-                                                    />
-                                                    <FormHelperText>QIB won't be able to mention everyone. So, you can make it REALLY exciting.</FormHelperText>
-                                                </FormControl>
-                                            </FlexView>
-                                            :
-                                            null
                                     }
                                 </FlexView>
 
@@ -3142,7 +3309,7 @@ class CreateProject extends Component {
                                                         ?
                                                         null
                                                         :
-                                                        <FlexView column width="100%" marginTop={25} marginBottom={25}>
+                                                        <FlexView column width="400px" marginTop={25} marginBottom={25}>
                                                             <Typography variant="body1" color="textSecondary" align="left" style={{marginBottom: 20}}>Your current project cover</Typography>
 
                                                             {
@@ -3430,7 +3597,11 @@ class CreateProject extends Component {
                                                                     only.
                                                                 </Typography>
 
-                                                                <UploadDocuments documents={createProjectState.pitchPresentationDocument} onDeleteDocument={this.onDeleteDocument(PITCH_PRESENTATION_FILES_CHANGED)}/>
+                                                                <UploadDocuments 
+                                                                    documents={createProjectState.pitchPresentationDocument} 
+                                                                    onDeleteDocument={this.onDeleteDocument(PITCH_PRESENTATION_FILES_CHANGED)}
+                                                                    onDescriptionChange={this.onDescriptionChange(PITCH_PRESENTATION_FILES_CHANGED)}
+                                                                />
                                                             </FlexView>
 
                                                             {/** Explanation text */}
@@ -3546,12 +3717,13 @@ class CreateProject extends Component {
                                                                 <UploadDocuments
                                                                     documents={createProjectState.pitchPresentationDocument}
                                                                     onDeleteDocument={this.onDeleteDocument(PITCH_PRESENTATION_FILES_CHANGED)}
+                                                                    onDescriptionChange={this.onDescriptionChange(PITCH_PRESENTATION_FILES_CHANGED)}
                                                                 />
                                                             </FlexView>
 
                                                             {/** Rich text editor */}
                                                             <FlexView column marginTop={20}>
-                                                                <Typography variant="body1" paragraph align="left">Write overview</Typography>
+                                                                <Typography variant="body1" paragraph align="left">Please add a more detailed explanation of your project</Typography>
                                                                 <div className="quill-medium">
                                                                 <ReactQuill
                                                                     theme="snow"
@@ -3650,7 +3822,11 @@ class CreateProject extends Component {
                                                                             and .xlsx are accepted only.
                                                                         </Typography>
 
-                                                                        <UploadDocuments documents={createProjectState.pitchSupportingDocuments} onDeleteDocument={this.onDeleteDocument(PITCH_SUPPORTING_DOCUMENTS_FILES_CHANGED)}/>
+                                                                        <UploadDocuments 
+                                                                            documents={createProjectState.pitchSupportingDocuments} 
+                                                                            onDeleteDocument={this.onDeleteDocument(PITCH_SUPPORTING_DOCUMENTS_FILES_CHANGED)}
+                                                                            onDescriptionChange={this.onDescriptionChange(PITCH_SUPPORTING_DOCUMENTS_FILES_CHANGED)}
+                                                                        />
                                                                     </FlexView>
 
                                                                     {/** Divider */}
@@ -3740,7 +3916,11 @@ class CreateProject extends Component {
                                                                             and .xlsx are accepted only.
                                                                         </Typography>
 
-                                                                        <UploadDocuments documents={createProjectState.pitchSupportingDocuments} onDeleteDocument={this.onDeleteDocument(PITCH_SUPPORTING_DOCUMENTS_FILES_CHANGED)}/>
+                                                                        <UploadDocuments 
+                                                                            documents={createProjectState.pitchSupportingDocuments} 
+                                                                            onDeleteDocument={this.onDeleteDocument(PITCH_SUPPORTING_DOCUMENTS_FILES_CHANGED)}
+                                                                            onDescriptionChange={this.onDescriptionChange(PITCH_SUPPORTING_DOCUMENTS_FILES_CHANGED)}
+                                                                        />
                                                                     </FlexView>
 
                                                                     {/** Divider */}
@@ -3758,7 +3938,7 @@ class CreateProject extends Component {
                                                                  * Agree to share raise publicly
                                                                  */
                                                             }
-                                                            <FormControl component="fieldset" style={{marginTop: 30}}>
+                                                            {/* <FormControl component="fieldset" style={{marginTop: 30}}>
                                                                 <FormControlLabel
                                                                     control={
                                                                         <Checkbox color="primary" name="agreedToShareRaisePublicly" value={createProjectState.agreedToShareRaisePublicly} checked={createProjectState.agreedToShareRaisePublicly} onChange={this.onCheckboxChanged}/>
@@ -3766,17 +3946,16 @@ class CreateProject extends Component {
                                                                     label={
                                                                         <Typography variant="body1" align="left">If you're happy to share news of your raise publicly e.g. via Twitter, please tick this box.</Typography>
                                                                     }/>
-                                                            </FormControl>
+                                                            </FormControl> */}
 
                                                             {/** Divider */}
-                                                            <Divider style={{marginTop: 20, marginBottom: 20}}/>
 
                                                             {
                                                                 /**
                                                                  * Agree to receive local investment information
                                                                  */
                                                             }
-                                                            <FormControl component="fieldset">
+                                                            {/* <FormControl component="fieldset">
                                                                 <FormControlLabel
                                                                     control={
                                                                         <Checkbox color="primary" name="agreedToReceiveLocalInvestmentInfo" value={createProjectState.agreedToReceiveLocalInvestmentInfo} checked={createProjectState.agreedToReceiveLocalInvestmentInfo} onChange={this.onCheckboxChanged}/>
@@ -3785,7 +3964,7 @@ class CreateProject extends Component {
                                                                         <Typography variant="body1" align="left">If you're happy to receive information about the local investment ecosystem (max 8 times a year), please tick this box.</Typography>
                                                                     }
                                                                 />
-                                                            </FormControl>
+                                                            </FormControl> */}
 
                                                             {/** Divider */}
                                                             <Divider style={{marginTop: 20, marginBottom: 20}}/>
@@ -4096,12 +4275,12 @@ class UploadingDialog extends Component {
                                                 (
                                                     projectEdited.status === DB_CONST.PROJECT_STATUS_DRAFT
                                                         ?
-                                                        "View submitted offer"
+                                                        "View submitted project"
                                                         :
-                                                        "View updated offer"
+                                                        "View updated project"
                                                 )
                                                 :
-                                                "View submitted offer"
+                                                "View submitted project"
                                         }
                                     </Button>
                                 </NavLink>
@@ -4167,11 +4346,11 @@ class UploadingDialog extends Component {
             case UPLOAD_DONE_MODE: {
                 if (params.edit && projectEdited) {
                     if (projectEdited.status !== DB_CONST.PROJECT_STATUS_DRAFT) {
-                        return <Typography variant="body1" color="textSecondary" align="left">Your offer has been successfully updated.</Typography>;
+                        return <Typography variant="body1" color="textSecondary" align="left">Your project has been successfully updated.</Typography>;
                     } else if (currentUser.type === DB_CONST.TYPE_ADMIN) {
                         return <Typography variant="body1" color="textSecondary" align="left">
                             {
-                                "Your offer has been uploaded.\n" +
+                                "Your project has been uploaded.\n" +
                                 "Please double check and publish it."
                             }
                         </Typography>;
@@ -4179,7 +4358,7 @@ class UploadingDialog extends Component {
                         return <FlexView column>
                             <Typography variant="body1" color="textSecondary" align="left">
                                 {
-                                    "Your offer has been uploaded.\n" +
+                                    "Your project has been uploaded.\n" +
                                     "It will not be published until the group administrator has approved" +
                                     " it.\n" +
                                     "You will be notified once approved.\n"
@@ -4203,10 +4382,10 @@ class UploadingDialog extends Component {
                         {
                             currentUser.type === DB_CONST.TYPE_ADMIN
                                 ?
-                                "Your offer has been uploaded.\n" +
+                                "Your project has been uploaded.\n" +
                                 "Please double check and make it go live."
                                 :
-                                "Your offer has been uploaded.\n" +
+                                "Your project has been uploaded.\n" +
                                 "It will not be published until the group administrator has approved it.\n" +
                                 "You will be notified once approved."
                         }

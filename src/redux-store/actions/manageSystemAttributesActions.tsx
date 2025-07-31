@@ -4,6 +4,7 @@ import Error from "../../models/error";
 import {SystemAttributes} from "../../models/system_attributes";
 import SystemAttributesRepository from "../../api/repositories/SystemAttributesRepository";
 import {setSectors} from "../../pages/admin/components/manage-sectors/ManageSectorsActions";
+import {setCourses} from "../../pages/admin/components/manage-courses/ManageCoursesActions";
 
 export enum ManageSystemAttributesEvents {
     LoadingSystemAttributes = "ManageSystemAttributesEvents.LoadingSystemAttributes",
@@ -40,7 +41,8 @@ export const loadSystemAttributes: ActionCreator<any> = () => {
                 const response = await new SystemAttributesRepository().getSystemAttributes();
                 const systemAttributes: SystemAttributes = response.data;
                 finishedAction.systemAttributes = systemAttributes;
-                dispatch(setSectors(systemAttributes.Sectors))
+                dispatch(setSectors(systemAttributes.Sectors));
+                dispatch(setCourses(systemAttributes.Courses || []));
                 return dispatch(finishedAction);
             } catch (error) {
                 finishedAction.error = {

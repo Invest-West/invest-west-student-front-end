@@ -142,9 +142,9 @@ export const getUserProfileAndValidateUser = uid => {
                             // do nothing
                         }
                     }
-                    // angel network is not specified in the URL --> Invest West login
+                    // angel network is not specified in the URL --> Student Showcase login
                     else {
-                        // admins are from Invest West
+                        // admins are from Student Showcase
                         if (user.isInvestWest || user.superAdmin) {
                             dispatch({
                                 type: FINISHED_AUTHENTICATING,

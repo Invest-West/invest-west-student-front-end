@@ -26,7 +26,8 @@ export const handleFilesChanged = (mode, files, user = null, project = null) => 
         reader.addEventListener('load', () => {
             const fileRead = {
                 file: files[files.length - 1],
-                preview: reader.result
+                preview: reader.result,
+                description: '' // Initialize empty description
             };
 
             switch (mode) {
@@ -108,6 +109,16 @@ export const closeErrorSnackbar = () => {
     return {
         type: CLOSE_FILE_UPLOAD_ERROR_SNACKBAR
     }
+};
+
+export const UPDATE_DOCUMENT_DESCRIPTION = 'UPDATE_DOCUMENT_DESCRIPTION';
+export const updateDocumentDescription = (mode, index, description) => {
+    return {
+        type: UPDATE_DOCUMENT_DESCRIPTION,
+        mode,
+        index,
+        description
+    };
 };
 
 export const RESET_ERROR_MESSAGE_WHEN_FILE_UPLOAD_ERROR_SNACKBAR_EXITED = 'RESET_ERROR_MESSAGE_WHEN_FILE_UPLOAD_ERROR_SNACKBAR_EXITED';
@@ -338,7 +349,8 @@ const uploadIndividualFile = async (dispatch, mode, file, totalFiles, user = nul
                                     fileName: storageFileName.split(DB_CONST.STORAGE_FILE_NAME_ID_SPLIT)[1],
                                     readableSize: file.file.sizeReadable,
                                     downloadURL: fileDownloadURL,
-                                    storageID: storageID
+                                    storageID: storageID,
+                                    description: file.description || ''
                                 };
                                 // updating progress
                                 dispatch({
@@ -376,7 +388,8 @@ const uploadIndividualFile = async (dispatch, mode, file, totalFiles, user = nul
                                     fileName: storageFileName.split(DB_CONST.STORAGE_FILE_NAME_ID_SPLIT)[1],
                                     readableSize: file.file.sizeReadable,
                                     downloadURL: fileDownloadURL,
-                                    storageID: storageID
+                                    storageID: storageID,
+                                    description: file.description || ''
                                 };
                                 // updating progress
                                 dispatch({
@@ -396,7 +409,8 @@ const uploadIndividualFile = async (dispatch, mode, file, totalFiles, user = nul
                                     fileName: storageFileName.split(DB_CONST.STORAGE_FILE_NAME_ID_SPLIT)[1],
                                     readableSize: file.file.sizeReadable,
                                     downloadURL: fileDownloadURL,
-                                    storageID: storageID
+                                    storageID: storageID,
+                                    description: file.description || ''
                                 };
                                 // updating progress
                                 dispatch({

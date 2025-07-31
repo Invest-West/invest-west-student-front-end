@@ -5,7 +5,8 @@ import {
     IconButton,
     List,
     ListItem,
-    Typography
+    Typography,
+    TextField
 } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
 import DescriptionIcon from '@material-ui/icons/Description';
@@ -22,6 +23,12 @@ export default class LegalDocuments extends Component {
         this.props.onDeleteDocument(index);
     };
 
+    onDescriptionChange = (index, description) => {
+        if (this.props.onDescriptionChange) {
+            this.props.onDescriptionChange(index, description);
+        }
+    };
+
     render() {
 
         /**
@@ -32,6 +39,7 @@ export default class LegalDocuments extends Component {
          * {
          *      file: File (obtained when uploading)
          *      preview: preview obtained using FileReader
+         *      description: string (optional description for the document)
          * }
          */
         const {
@@ -47,26 +55,41 @@ export default class LegalDocuments extends Component {
                 <List>
                     {
                         documents.map((document, index) => (
-                            <FlexView key={index} vAlignContent="center">
-                                <ListItem button style={{ padding: 7 }} >
-                                    <DescriptionIcon style={{ color: '#4caf50', fontSize: 40, marginRight: 8 }} />
-                                    <FlexView column hAlignContent="left" >
-                                        <Typography variant="body2" className={css(styles.black_text)} align="left" >{document.file.name}</Typography>
-                                        <Typography variant="body2" color="textSecondary" align="left">{document.file.sizeReadable}</Typography>
-                                    </FlexView>
-                                </ListItem>
+                            <FlexView key={index} column marginBottom={16}>
+                                <FlexView vAlignContent="center">
+                                    <ListItem button style={{ padding: 7 }} >
+                                        <DescriptionIcon style={{ color: '#4caf50', fontSize: 40, marginRight: 8 }} />
+                                        <FlexView column hAlignContent="left" >
+                                            <Typography variant="body2" className={css(styles.black_text)} align="left" >{document.file.name}</Typography>
+                                            <Typography variant="body2" color="textSecondary" align="left">{document.file.sizeReadable}</Typography>
+                                        </FlexView>
+                                    </ListItem>
 
-                                <OverlayTrigger
-                                    trigger={['hover', 'focus']}
-                                    flip
-                                    placement="bottom"
-                                    overlay={
-                                        <Tooltip id={`tooltip-bottom`} > Remove </Tooltip>
-                                    }>
-                                    <IconButton style={{ width: 44, height: 44 }} onClick={() => this.onDeleteDocument(index)}>
-                                        <CloseIcon fontSize="small"/>
-                                    </IconButton>
-                                </OverlayTrigger>
+                                    <OverlayTrigger
+                                        trigger={['hover', 'focus']}
+                                        flip
+                                        placement="bottom"
+                                        overlay={
+                                            <Tooltip id={`tooltip-bottom`} > Remove </Tooltip>
+                                        }>
+                                        <IconButton style={{ width: 44, height: 44 }} onClick={() => this.onDeleteDocument(index)}>
+                                            <CloseIcon fontSize="small"/>
+                                        </IconButton>
+                                    </OverlayTrigger>
+                                </FlexView>
+                                
+                                <FlexView marginLeft={56} marginTop={8}>
+                                    <TextField
+                                        fullWidth
+                                        variant="outlined"
+                                        size="small"
+                                        placeholder="Add a description for this document (optional)"
+                                        value={document.description || ''}
+                                        onChange={(e) => this.onDescriptionChange(index, e.target.value)}
+                                        multiline
+                                        rows={2}
+                                    />
+                                </FlexView>
                             </FlexView>
                         ))
                     }

@@ -22,6 +22,8 @@ import {
 import Add from "@material-ui/icons/Add";
 import SearchIcon from "@material-ui/icons/Search";
 import CloseIcon from "@material-ui/icons/Close";
+import ArrowUpwardIcon from "@material-ui/icons/ArrowUpward";
+import ArrowDownwardIcon from "@material-ui/icons/ArrowDownward";
 import {Col, Row} from "react-bootstrap";
 import FlexView from "react-flexview";
 import {HashLoader} from "react-spinners";
@@ -36,6 +38,9 @@ import * as DB_CONST from "../../../firebase/databaseConsts";
 import * as ROUTES from "../../../router/routes";
 import * as myUtils from "../../../utils/utils";
 import * as colors from "../../../values/colors";
+import OfferRepository, {FetchProjectsOrderByOptions} from "../../../api/repositories/OfferRepository";
+import firebase from "../../../firebase/firebaseApp";
+import UserRepository from "../../../api/repositories/UserRepository";
 
 export const FILTER_REGISTRATION_STATUS_ALL = -1;
 
@@ -93,6 +98,21 @@ const mapDispatchToProps = dispatch => {
 
 class InvitedUsers extends Component {
 
+    constructor(props) {
+        super(props);
+        this.state = {
+            userProjectCounts: {}, // Map of userID -> project count
+            loadingProjectCounts: false,
+            userLastLoginDates: {}, // Map of userID -> last login date
+            loadingLastLoginDates: false,
+            // Sorting state
+            sortColumn: 'lastLogin', // default to sorting by last logged in
+            sortDirection: 'desc' // 'desc' to show most recent logins first
+        };
+        this.offerRepository = new OfferRepository();
+        this.userRepository = new UserRepository();
+    }
+
     componentDidMount() {
         const {
             invitedUsers,
@@ -114,6 +134,7 @@ class InvitedUsers extends Component {
             invitedUsers,
             invitedUsersLoaded,
             invitedUsersBeingLoaded,
+            matchedInvitedUsers,
 
             loadInvitedUsers
         } = this.props;
@@ -123,7 +144,158 @@ class InvitedUsers extends Component {
         }
 
         this.addListener();
+        
+        // Load project counts when users are loaded and we haven't loaded them yet
+        if (invitedUsersLoaded && !prevProps.invitedUsersLoaded && !this.state.loadingProjectCounts && Object.keys(this.state.userProjectCounts).length === 0) {
+            this.loadProjectCounts();
+        }
+        
+        // Load last login dates when users are loaded
+        if (invitedUsersLoaded && (!prevProps.invitedUsersLoaded || prevProps.matchedInvitedUsers !== matchedInvitedUsers) && !this.state.loadingLastLoginDates) {
+            this.loadLastLoginDates();
+        }
     }
+
+    /**
+     * Load project counts for all users
+     */
+    loadProjectCounts = async () => {
+        const { invitedUsers, matchedInvitedUsers } = this.props;
+        
+        if (!invitedUsers || invitedUsers.length === 0) {
+            return;
+        }
+
+        this.setState({ loadingProjectCounts: true });
+
+        try {
+            const projectCounts = {};
+            
+            // Get unique user IDs from matched users (displayed users)
+            const usersToCount = matchedInvitedUsers || invitedUsers;
+
+            // Process each user individually to handle both invited user ID and official user ID
+            for (const user of usersToCount) {
+                try {
+                    // Use officialUserID for registered users, fall back to id for unregistered users
+                    const userIdToQuery = user.officialUserID || user.id;
+                    
+                    
+                    const response = await this.offerRepository.fetchOffers({
+                        issuer: userIdToQuery,
+                        phase: "all", // Include all phases (approved, expired, etc.)
+                        orderBy: FetchProjectsOrderByOptions.Issuer
+                    });
+                    
+                    const projectCount = response.data ? response.data.length : 0;
+                    
+                    // Store the count using the invited user's ID (for display purposes)
+                    projectCounts[user.id] = projectCount;
+                } catch (error) {
+                    projectCounts[user.id] = 0;
+                }
+            }
+
+            this.setState({ 
+                userProjectCounts: projectCounts,
+                loadingProjectCounts: false 
+            });
+        } catch (error) {
+            console.error("Error loading project counts:", error);
+            this.setState({ loadingProjectCounts: false });
+        }
+    };
+
+    /**
+     * Load last login dates for all users
+     */
+    loadLastLoginDates = async () => {
+        const { invitedUsers, matchedInvitedUsers } = this.props;
+        
+        if (!invitedUsers || invitedUsers.length === 0) {
+            return;
+        }
+
+        this.setState({ loadingLastLoginDates: true });
+
+        try {
+            const lastLoginDates = {};
+            
+            // Get users to process
+            const usersToProcess = matchedInvitedUsers || invitedUsers;
+
+            // Fetch last login dates for registered users
+            for (const user of usersToProcess) {
+                try {
+                    // Only fetch for users who have registered (have officialUserID)
+                    if (user.officialUserID) {
+                        
+                        const response = await this.userRepository.retrieveUser(user.officialUserID);
+                        
+                        const userProfile = response.data;
+                        
+                        if (userProfile && userProfile.lastLoginDate) {
+                            lastLoginDates[user.id] = userProfile.lastLoginDate;
+                        } else {
+                            console.log(`FETCH LOGIN: No lastLoginDate field found for ${user.email}. Available fields:`, Object.keys(userProfile || {}));
+                        }
+                    } else {
+                        console.log(`FETCH LOGIN: User ${user.email} has not registered yet (no officialUserID)`);
+                    }
+                } catch (error) {
+                    console.warn(`Failed to fetch last login date for user ${user.email}:`, error);
+                }
+            }
+
+            this.setState({ 
+                userLastLoginDates: lastLoginDates,
+                loadingLastLoginDates: false 
+            });
+        } catch (error) {
+            console.error("Error loading last login dates:", error);
+            this.setState({ loadingLastLoginDates: false });
+        }
+    };
+
+    /**
+     * Refresh login dates manually
+     */
+    refreshLoginDates = () => {
+        this.setState({ 
+            userLastLoginDates: {},  // Clear existing data
+            loadingLastLoginDates: false 
+        }, () => {
+            this.loadLastLoginDates();
+        });
+    };
+
+    /**
+     * Test login date update for a specific user (for debugging)
+     */
+    testUpdateLoginDate = async (userId) => {
+        try {            
+            // First, retrieve the current user profile
+            const retrieveResponse = await this.userRepository.retrieveUser(userId);
+            
+            // Update with current timestamp
+            const currentTimestamp = Date.now();
+            const updatedUser = { ...retrieveResponse.data, lastLoginDate: currentTimestamp };
+            
+            
+            const updateResponse = await this.userRepository.updateUser({
+                updatedUser: updatedUser
+            });
+            
+            
+            // Verify the update by retrieving the user again
+            const verifyResponse = await this.userRepository.retrieveUser(userId);
+            
+            return verifyResponse.data;
+        } catch (error) {
+            console.error(`TEST UPDATE: Error during test:`, error);
+            return null;
+        }
+    };
 
     /**
      * Add listener
@@ -139,6 +311,99 @@ class InvitedUsers extends Component {
         if (invitedUsers && invitedUsersLoaded) {
             startListeningForInvitedUsersChanged();
         }
+    };
+
+    /**
+     * Handle column header click for sorting
+     */
+    handleSort = (column) => {
+        const { sortColumn, sortDirection } = this.state;
+        
+        let newDirection = 'asc';
+        if (sortColumn === column && sortDirection === 'asc') {
+            newDirection = 'desc';
+        }
+        
+        this.setState({
+            sortColumn: column,
+            sortDirection: newDirection
+        });
+    };
+
+    /**
+     * Sort users based on current sort column and direction
+     */
+    sortUsers = (users) => {
+        const { sortColumn, sortDirection } = this.state;
+        
+        if (!sortColumn) {
+            return users;
+        }
+        
+        const sortedUsers = [...users].sort((a, b) => {
+            let aValue, bValue;
+            
+            switch (sortColumn) {
+                case 'name':
+                    aValue = a.officialUser ? `${a.officialUser.firstName} ${a.officialUser.lastName}`.toLowerCase() : '';
+                    bValue = b.officialUser ? `${b.officialUser.firstName} ${b.officialUser.lastName}`.toLowerCase() : '';
+                    break;
+                case 'email':
+                    aValue = a.email.toLowerCase();
+                    bValue = b.email.toLowerCase();
+                    break;
+                case 'userType':
+                    aValue = a.type === DB_CONST.TYPE_ISSUER ? 'student' : 'project viewer';
+                    bValue = b.type === DB_CONST.TYPE_ISSUER ? 'student' : 'project viewer';
+                    break;
+                case 'projectsCreated':
+                    aValue = this.state.userProjectCounts[a.id] || 0;
+                    bValue = this.state.userProjectCounts[b.id] || 0;
+                    break;
+                case 'registrationStatus':
+                    aValue = a.status;
+                    bValue = b.status;
+                    break;
+                case 'lastLogin':
+                    aValue = this.state.userLastLoginDates[a.id] || 0;
+                    bValue = this.state.userLastLoginDates[b.id] || 0;
+                    break;
+                default:
+                    return 0;
+            }
+            
+            // Handle string comparison
+            if (typeof aValue === 'string' && typeof bValue === 'string') {
+                const comparison = aValue.localeCompare(bValue);
+                return sortDirection === 'asc' ? comparison : -comparison;
+            }
+            
+            // Handle numeric comparison
+            if (aValue < bValue) {
+                return sortDirection === 'asc' ? -1 : 1;
+            }
+            if (aValue > bValue) {
+                return sortDirection === 'asc' ? 1 : -1;
+            }
+            return 0;
+        });
+        
+        return sortedUsers;
+    };
+
+    /**
+     * Render sort icon for table headers
+     */
+    renderSortIcon = (column) => {
+        const { sortColumn, sortDirection } = this.state;
+        
+        if (sortColumn !== column) {
+            return null;
+        }
+        
+        return sortDirection === 'asc' ? 
+            <ArrowUpwardIcon fontSize="small" style={{ marginLeft: 4 }} /> : 
+            <ArrowDownwardIcon fontSize="small" style={{ marginLeft: 4 }} />;
     };
 
     render() {
@@ -249,7 +514,7 @@ class InvitedUsers extends Component {
                                         <InfoOverlay
                                             placement="right"
                                             message={
-                                                "Home members are the students that registered through this course. Platform members are existing users of Student Invest West who requested access to this course."
+                                                "Home members are the students that registered through this course. Platform members are existing users of Student Showcase who requested access to this course."
                                             }
                                         />
                                     </FlexView>
@@ -383,6 +648,17 @@ class InvitedUsers extends Component {
                                 }
                             </Button>
 
+                            <Button variant="outlined" className={css(sharedStyles.no_text_transform)} onClick={this.refreshLoginDates} style={{marginRight: 10}}
+                            >
+                                {
+                                    this.state.loadingLastLoginDates
+                                        ?
+                                        "Refreshing ..."
+                                        :
+                                        "Refresh Login Dates"
+                                }
+                            </Button>
+
                             <InfoOverlay placement="right"
                                 message={
                                     admin.superAdmin
@@ -425,11 +701,17 @@ class InvitedUsers extends Component {
                 <Table>
                     <TableHead>
                         <TableRow>
-                            <TableCell colSpan={2}>
-                                <Typography align="left" variant="body2"><b>Name</b></Typography>
+                            <TableCell colSpan={2} style={{ cursor: 'pointer' }} onClick={() => this.handleSort('name')}>
+                                <FlexView vAlignContent="center">
+                                    <Typography align="left" variant="body2"><b>Name</b></Typography>
+                                    {this.renderSortIcon('name')}
+                                </FlexView>
                             </TableCell>
-                            <TableCell colSpan={2}>
-                                <Typography align="left" variant="body2"><b>Email</b></Typography>
+                            <TableCell colSpan={2} style={{ cursor: 'pointer' }} onClick={() => this.handleSort('email')}>
+                                <FlexView vAlignContent="center">
+                                    <Typography align="left" variant="body2"><b>Email</b></Typography>
+                                    {this.renderSortIcon('email')}
+                                </FlexView>
                             </TableCell>
                             {
                                 !admin.superAdmin
@@ -440,17 +722,29 @@ class InvitedUsers extends Component {
                                         <Typography align="left" variant="body2"><b>Group</b></Typography>
                                     </TableCell>
                             }
-                            <TableCell colSpan={1}>
-                                <Typography align="left" variant="body2"><b>User type</b></Typography>
+                            <TableCell colSpan={1} style={{ cursor: 'pointer' }} onClick={() => this.handleSort('userType')}>
+                                <FlexView vAlignContent="center">
+                                    <Typography align="left" variant="body2"><b>User type</b></Typography>
+                                    {this.renderSortIcon('userType')}
+                                </FlexView>
                             </TableCell>
-                            <TableCell colSpan={2}>
-                                <Typography align="left" variant="body2"><b>Invited/requested to join date</b></Typography>
+                            <TableCell colSpan={2} style={{ cursor: 'pointer' }} onClick={() => this.handleSort('projectsCreated')}>
+                                <FlexView vAlignContent="center">
+                                    <Typography align="left" variant="body2"><b>Projects Created</b></Typography>
+                                    {this.renderSortIcon('projectsCreated')}
+                                </FlexView>
                             </TableCell>
-                            <TableCell colSpan={1}>
-                                <Typography align="left" variant="body2"><b>Registration status</b></Typography>
+                            <TableCell colSpan={1} style={{ cursor: 'pointer' }} onClick={() => this.handleSort('registrationStatus')}>
+                                <FlexView vAlignContent="center">
+                                    <Typography align="left" variant="body2"><b>Registration status</b></Typography>
+                                    {this.renderSortIcon('registrationStatus')}
+                                </FlexView>
                             </TableCell>
-                            <TableCell colSpan={2}>
-                                <Typography align="left" variant="body2" ><b>Registered/joined date</b></Typography>
+                            <TableCell colSpan={2} style={{ cursor: 'pointer' }} onClick={() => this.handleSort('lastLogin')}>
+                                <FlexView vAlignContent="center">
+                                    <Typography align="left" variant="body2"><b>Last logged in</b></Typography>
+                                    {this.renderSortIcon('lastLogin')}
+                                </FlexView>
                             </TableCell>
                         </TableRow>
                     </TableHead>
@@ -558,6 +852,9 @@ class InvitedUsers extends Component {
         } else {
             renderedInvitedUsers = [...matchedUsersInvitedByTheGroup, ...matchedUsersRequestedToJoin];
         }
+
+        // Apply sorting if a sort column is selected
+        renderedInvitedUsers = this.sortUsers(renderedInvitedUsers);
 
         return (
             !renderedInvitedUsers
@@ -712,23 +1009,19 @@ class InvitedUsers extends Component {
                                 </Typography>
                             </TableCell>
 
-                            {/** Date invited / requested to join / registered via public link */}
+                            {/** Projects Created */}
                             <TableCell colSpan={2}>
                                 <Typography align="left" variant="body2">
                                     {
-                                        invitedUser.invitedDate !== "none"
-                                        && (
-                                            invitedUser.hasOwnProperty('requestedToJoinDate')
-                                            && invitedUser.requestedToJoinDate !== "none"
-                                        )
+                                        this.state.loadingProjectCounts
                                             ?
-                                            `Registered via public link on ${myUtils.dateInReadableFormat(invitedUser.invitedDate)}`
+                                            "Loading..."
                                             :
-                                            invitedUser.invitedDate !== "none"
+                                            this.state.userProjectCounts.hasOwnProperty(invitedUser.id)
                                                 ?
-                                                `Invited on ${myUtils.dateInReadableFormat(invitedUser.invitedDate)}`
+                                                this.state.userProjectCounts[invitedUser.id]
                                                 :
-                                                `Requested to join on ${myUtils.dateInReadableFormat(invitedUser.requestedToJoinDate)}`
+                                                "0"
                                     }
                                 </Typography>
                             </TableCell>
@@ -736,19 +1029,23 @@ class InvitedUsers extends Component {
                             {/** Registration status */}
                             <TableCell colSpan={1}>{this.renderInvitedUserRegistrationStatus(invitedUser)}</TableCell>
 
-                            {/** Date registered/joined */}
+                            {/** Last logged in */}
                             <TableCell colSpan={2}>
                                 <Typography align="left" variant="body2">
                                     {
-                                        !invitedUser.hasOwnProperty('joinedDate')
+                                        this.state.loadingLastLoginDates
                                             ?
-                                            null
+                                            "Loading..."
                                             :
-                                            !invitedUser.requestedToJoin
+                                            this.state.userLastLoginDates.hasOwnProperty(invitedUser.id)
                                                 ?
-                                                `Registered on ${myUtils.dateInReadableFormat(invitedUser.joinedDate)}`
+                                                myUtils.dateInReadableFormat(this.state.userLastLoginDates[invitedUser.id])
                                                 :
-                                                `Joined on ${myUtils.dateInReadableFormat(invitedUser.joinedDate)}`
+                                                invitedUser.status === DB_CONST.INVITED_USER_STATUS_ACTIVE
+                                                    ?
+                                                    "Never logged in"
+                                                    :
+                                                    "Not registered"
                                     }
                                 </Typography>
                             </TableCell>

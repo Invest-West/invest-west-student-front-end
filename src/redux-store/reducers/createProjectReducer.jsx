@@ -1,5 +1,6 @@
 import * as createProjectActions from '../actions/createProjectActions';
 import * as authActions from '../actions/authActions';
+import * as utils from '../../utils/utils';
 import {
     STEP_PITCH_GENERAL_INFORMATION,
     PITCH_PUBLISH_CHECK_NONE,
@@ -28,12 +29,14 @@ const initState = {
 
         // project sector
         pitchSector: '-',
+        // project course
+        pitchCourse: '-',
         // project project name
         pitchProjectName: '',
         pitchProjectDescription: '',
-        pitchExpiredDate: null,
+        pitchExpiredDate: utils.getDateWithDaysFurtherThanToday(365), // Default to 1 year from now
 
-        pitchInvestorsCommitted: '',
+        //pitchInvestorsCommitted: '',
 
         // project cover (image or video) --- 1 file
         pitchCover: [],
@@ -113,11 +116,19 @@ const createProjectReducer = (state = initState, action) => {
                                 ...state.createNewPitch,
                                 // project sector
                                 pitchSector:
-                                    project.hasOwnProperty('sector')
+                                    project.hasOwnProperty('sector') && project.sector && project.sector.trim() !== ""
                                         ?
                                         project.sector
                                         :
-                                        ''
+                                        '-'
+                                ,
+                                // project course
+                                pitchCourse:
+                                    project.hasOwnProperty('course') && project.course && project.course.trim() !== ""
+                                        ?
+                                        project.course
+                                        :
+                                        '-'
                                 ,
                                 // project project name
                                 pitchProjectName:
@@ -141,13 +152,13 @@ const createProjectReducer = (state = initState, action) => {
                                         :
                                         null
                                 ,
-                                pitchInvestorsCommitted:
-                                    project.Pitch.hasOwnProperty('investorsCommitted')
-                                        ?
-                                        project.Pitch.investorsCommitted
-                                        :
-                                        ''
-                                ,
+                                // pitchInvestorsCommitted:
+                                //     project.Pitch.hasOwnProperty('investorsCommitted')
+                                //         ?
+                                //         project.Pitch.investorsCommitted
+                                //         :
+                                //         ''
+                                // ,
 
                                 pitchPresentationText:
                                     !project.Pitch.presentationText

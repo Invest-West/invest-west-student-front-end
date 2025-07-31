@@ -69,6 +69,7 @@ import {
     isProjectWaitingToGoLive
 } from "../../models/project";
 import DocumentsDownload from "../../shared-components/documents-download/DocumentsDownload";
+import InlinePdfViewer from "../../shared-components/pdf-viewer/InlinePdfViewer";
 import RiskWarning from "../../shared-components/risk-warning/RiskWarning";
 import {toggleContactPitchOwnerDialog} from "./components/contact-pitch-owner-dialog/ContactPitchOwnerDialogActions";
 import ContactPitchOwnerDialog from "./components/contact-pitch-owner-dialog/ContactPitchOwnerDialog";
@@ -2782,7 +2783,7 @@ class ProjectDetails extends Component {
                                 {/*}*/}
                                 <Tab value={MAIN_BODY_CAMPAIGN} className={css(sharedStyles.tab_title)} fullWidth label="Project"/>
                                 <Tab value={MAIN_BODY_DOCUMENTS} className={css(sharedStyles.tab_title)} fullWidth label="Documents"/>
-                                <Tab value={MAIN_BODY_COMMENTS} className={css(sharedStyles.tab_title)} fullWidth label="Student comments"/>
+                                {/* <Tab value={MAIN_BODY_COMMENTS} className={css(sharedStyles.tab_title)} fullWidth label="Student comments"/> */}
                                 <Tab value={MAIN_BODY_NOTES} className={css(sharedStyles.tab_title)} fullWidth label="Extra information"/>
                             </Tabs>
                         </FlexView>
@@ -3355,7 +3356,7 @@ class ProjectDetails extends Component {
                                                                     ?
                                                                     "This offer will be opened again."
                                                                     :
-                                                                    "This offer will be closed temporarily and it will no longer be visible to any investors until you open it again."
+                                                                    "This project will be closed temporarily, and it will no longer be visible until you open it again."
                                                             }
                                                         </Typography>
                                                     </FlexView>
@@ -3411,7 +3412,7 @@ class ProjectDetails extends Component {
                                             :
                                             <FlexView column marginTop={30}>
                                                 <Typography variant="h5">Project deck</Typography>
-                                                <DocumentsDownload documents={project.Pitch.presentationDocument} shouldShowRiskWarningOnDownload={true}/>
+                                                <InlinePdfViewer documents={project.Pitch.presentationDocument} shouldShowRiskWarningOnDownload={true}/>
                                                 <Divider style={{marginTop: 10}}/>
                                             </FlexView>
                                     }
@@ -3880,7 +3881,7 @@ class ProjectDetails extends Component {
                                     {
                                         project.Pitch.supportingDocuments && project.Pitch.supportingDocuments.findIndex(document => !document.hasOwnProperty('removed')) !== -1
                                             ?
-                                            <DocumentsDownload documents={project.Pitch.supportingDocuments} shouldShowRiskWarningOnDownload={true}/>
+                                            <InlinePdfViewer documents={project.Pitch.supportingDocuments} shouldShowRiskWarningOnDownload={true}/>
                                             :
                                             <Typography variant="body1" color="textSecondary" style={{marginTop: 35}}>No supporting documents uploaded.</Typography>
                                     }
@@ -3924,9 +3925,31 @@ class ProjectDetails extends Component {
                                 <Col xs={12} sm={12} md={12} lg={{span: 6, offset: 3}} style={{marginTop: 30}}>
                                     <Typography variant="h5" color="inherit">Extra information</Typography>
 
+                                    {/** Sector */}
+                                    {
+                                        project.sector
+                                            ?
+                                            <FlexView className={css(styles.border_box)} style={{backgroundColor: colors.kick_starter_background_color}} column marginTop={30} vAlignContent="center">
+                                                <Typography variant="body1" align="left">Sector: <b>{project.sector}</b></Typography>
+                                            </FlexView>
+                                            :
+                                            null
+                                    }
+
+                                    {/** Course */}
+                                    {
+                                        project.course
+                                            ?
+                                            <FlexView className={css(styles.border_box)} style={{backgroundColor: colors.kick_starter_background_color}} column marginTop={30} vAlignContent="center">
+                                                <Typography variant="body1" align="left">Course: <b>{project.course}</b></Typography>
+                                            </FlexView>
+                                            :
+                                            null
+                                    }
+
                                     {/** Financial round */}
                                     {
-                                        !project.Pitch.hasOwnProperty('financialRound')
+                                        /**!project.Pitch.hasOwnProperty('financialRound')
                                             ?
                                             null
                                             :
@@ -3936,7 +3959,7 @@ class ProjectDetails extends Component {
                                                         {project.Pitch.financialRound}
                                                     </b>
                                                 </Typography>
-                                            </FlexView>
+                                            </FlexView>*/
                                     }
 
 

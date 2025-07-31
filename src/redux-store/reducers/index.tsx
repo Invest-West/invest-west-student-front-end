@@ -49,6 +49,7 @@ import contactPitchOwnerDialogReducer, {ContactPitchOwnerDialogState} from "../.
 import profileReducer, {ProfileState} from "../../shared-components/profile/ProfileReducer";
 import signUpReducer, {SignUpState} from "../../pages/signup/SignUpReducer";
 import manageSectorsReducer, {ManageSectorsState} from "../../pages/admin/components/manage-sectors/ManageSectorsReducer";
+import manageCoursesReducer, {ManageCoursesState} from "../../pages/admin/components/manage-courses/ManageCoursesReducer";
 
 export interface AppState {
     MediaQueryState: MediaQueryState;
@@ -71,6 +72,7 @@ export interface AppState {
     ContactPitchOwnerDialogLocalState: ContactPitchOwnerDialogState;
 
     ManageSectorsLocalState: ManageSectorsState;
+    ManageCoursesLocalState: ManageCoursesState;
 
     ProfileLocalState: ProfileState;
 
@@ -99,6 +101,7 @@ const rootReducer = combineReducers<AppState>({
     ContactPitchOwnerDialogLocalState: contactPitchOwnerDialogReducer,
 
     ManageSectorsLocalState: manageSectorsReducer,
+    ManageCoursesLocalState: manageCoursesReducer,
 
     ProfileLocalState: profileReducer,
 

@@ -76,7 +76,7 @@ class Resources extends Component<ResourcesProps & Readonly<RouteComponentProps<
                 <Col xs={12} sm={12} md={{span: 8, offset: 2}} lg={{span: 4, offset: 4}}>
                     <Card elevation={0}>
                         <Box display="flex" flexDirection="column" alignItems="center" bgcolor={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main} color="white" paddingY="28px">
-                            <Typography variant="h6" align="center">Resources on Invest West</Typography>
+                            <Typography variant="h6" align="center">Resources on Student Showcase</Typography>
                         </Box>
                     </Card>
                 </Col>

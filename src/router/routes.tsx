@@ -120,7 +120,6 @@ export default class Routes {
         return route === Routes.nonGroupAdminDashboard
             || route === Routes.nonGroupViewUserProfile
             || route === Routes.nonGroupEditUserProfile
-            || route === Routes.nonGroupCreateOffer
             || route === Routes.nonGroupViewOffer
             || route === Routes.nonGroupViewPledge
             || route === Routes.nonGroupViewGroup;
@@ -151,6 +150,15 @@ export default class Routes {
      */
     public static isInvestorDashboardRoute = (route: string) => {
         return route === Routes.groupInvestorDashboard;
+    }
+
+    /**
+     * Check if a route is a create offer route
+     *
+     * @param route
+     */
+    public static isCreateOfferRoute = (route: string) => {
+        return route === Routes.groupCreateOffer || route === Routes.nonGroupCreateOffer;
     }
 
     /**

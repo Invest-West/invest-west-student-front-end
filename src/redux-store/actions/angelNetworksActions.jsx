@@ -8,7 +8,7 @@ export const loadAngelNetworks = () => {
     return (dispatch, getState) => {
         const admin = getState().auth.user;
 
-        if (!admin || (admin && !admin.superAdmin)) {
+        if (!admin || (admin && !admin.superAdmin && admin.type !== DB_CONST.TYPE_ADMIN)) {
             dispatch({
                 type: FINISHED_LOADING_ANGEL_NETWORKS
             });

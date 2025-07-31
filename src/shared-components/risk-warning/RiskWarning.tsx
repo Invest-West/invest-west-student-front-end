@@ -35,7 +35,7 @@ class RiskWarning extends Component<RiskWarningProps, any> {
             .split("%groupName%")
             .join(ManageGroupUrlState.group
                 ? ManageGroupUrlState.group.displayName
-                : "Default student"
+                : "Student Showcase"
             );
 
         let splits = riskWarningFooter.split("%URL%");

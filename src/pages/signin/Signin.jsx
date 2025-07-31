@@ -570,7 +570,7 @@ class ResetPasswordDialog extends Component {
                 </DialogTitle>
                 <FlexView column hAlignContent="center" >
                     <FlexView column marginRight={60} marginLeft={60} >
-                        <Typography variant="body1" align="center" paragraph>Please provide the email address you used when you signed up for your Invest West account.</Typography>
+                        <Typography variant="body1" align="center" paragraph>Please provide the email address you used when you signed up for your Student Showcase account.</Typography>
                         <Typography variant="body1" align="center" paragraph>We will send you an email with a link to reset your password. <b>Please note that this link will only be valid for up to 3 hours.</b></Typography>
                     </FlexView>
                     <FlexView column width="100%" marginTop={50} className={css(styles.reset_password_actions_layout)}>

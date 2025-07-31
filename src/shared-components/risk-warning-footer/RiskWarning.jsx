@@ -66,7 +66,7 @@ class RiskWarning extends Component {
                     ?
                     groupProperties.displayName
                     :
-                    "Default Student"
+                    "Student Showcase"
             );
 
         let splits = riskWarningFooter.split("%URL%");

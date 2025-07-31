@@ -80,6 +80,7 @@ export const createAccount: ActionCreator<any> = () => {
             userType,
             title,
             discover,
+            course,
             firstName,
             lastName,
             email,
@@ -138,6 +139,7 @@ export const createAccount: ActionCreator<any> = () => {
                 userProfile: {
                     title,
                     discover,
+                    course,
                     firstName,
                     lastName,
                     email,
