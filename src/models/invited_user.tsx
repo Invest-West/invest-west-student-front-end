@@ -88,7 +88,7 @@ export interface InvitedUserWithProfile extends InvitedUser {
 export interface InvitedUserCsv {
     name: string; // user's official profile --> title + first name + last name
     email: string;
-    userType: "student" | "teacher";
+    userType: "student" | "graduate";
     memberType: "home" | "platform";
     homeGroup?: string; // specified only when exporting to csv for super admins
     statusInGroup: "unregistered" | "active"; // this list will be expanded more in the future

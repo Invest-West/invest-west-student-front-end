@@ -375,9 +375,9 @@ class AdminDashboard extends Component {
                                         {
                                             currentUser.superAdmin
                                                 ?
-                                                "Manage all the projects created by all the students and course teachers in the system."
+                                                "Manage all the projects created by all the students and course students in the system."
                                                 :
-                                                "Manage all the projects created by the students and course teachers of this course."
+                                                "Manage all the projects created by the students and course students of this course."
                                         }
                                     </Typography>
                                 </FlexView>

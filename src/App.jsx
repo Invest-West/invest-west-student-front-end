@@ -30,6 +30,8 @@ import {getGroupRouteTheme} from "./redux-store/reducers/manageGroupUrlReducer";
 import IdleTimer from "react-idle-timer";
 import {activeTimeOut} from "./redux-store/reducers/manageSystemIdleTimeReducer";
 import {onIdle} from "./redux-store/actions/manageSystemIdleTimeActions";
+import {CacheMonitor} from "./utils/CacheMonitor";
+import {CacheManager} from "./utils/CacheInvalidation";
 
 // map redux states to props of this component
 const mapStateToProps = state => {
@@ -134,6 +136,14 @@ class App extends Component {
 
             addMediaQueryListeners
         } = this.props;
+
+        // Initialize cache monitoring
+        if (process.env.NODE_ENV === 'development') {
+            CacheMonitor.getInstance().startPeriodicReporting(5); // Log every 5 minutes in dev
+        }
+
+        // Preload common data
+        CacheManager.preload();
 
         // add media query listeners
         addMediaQueryListeners();

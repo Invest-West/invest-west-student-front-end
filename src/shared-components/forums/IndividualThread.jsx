@@ -151,7 +151,7 @@ class IndividualThread extends Component {
                                                     reply.author.superAdmin
                                                         ?
                                                         // super admins
-                                                        "Teacher Super Admin"
+                                                        "Student Super Admin"
                                                         :
                                                         // course admins
                                                         `${reply.author.groupDetails.displayName} Admin`
@@ -335,7 +335,7 @@ class IndividualThread extends Component {
                                                 forumThreadSelected.author.superAdmin
                                                     ?
                                                     // super admins
-                                                    "Teacher Super Admin"
+                                                    "Student Super Admin"
                                                     :
                                                     // course admins
                                                     `${forumThreadSelected.author.groupDetails.displayName} Admin`

@@ -9,6 +9,8 @@ import {AppState} from "../reducers";
 import Routes from "../../router/routes";
 import Firebase from "firebase";
 import UserRepository from "../../api/repositories/UserRepository";
+import {userCache, CacheKeys} from "../../utils/CacheManager";
+import {monitorCacheHit, monitorCacheMiss} from "../../utils/CacheMonitor";
 
 export enum AuthenticationEvents {
     StartAuthenticating = "AuthenticationEvents.StartAuthenticating",
@@ -90,10 +92,22 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
             if (currentFirebaseUser) {
                 const uid: string | undefined = currentFirebaseUser.uid;
 
-                // get current user profile
-                const retrieveUserResponse = await new UserRepository().retrieveUser(uid);
-
-                const currentUser: User | Admin = retrieveUserResponse.data;
+                // Try to get user from cache first
+                const userCacheKey = CacheKeys.user(uid);
+                let currentUser: User | Admin;
+                
+                const cachedUser = userCache.get<User | Admin>(userCacheKey);
+                if (cachedUser) {
+                    console.log('Using cached user data');
+                    monitorCacheHit('user');
+                    currentUser = cachedUser;
+                } else {
+                    // Fetch from API and cache
+                    monitorCacheMiss('user');
+                    const retrieveUserResponse = await new UserRepository().retrieveUser(uid);
+                    currentUser = retrieveUserResponse.data;
+                    userCache.set(userCacheKey, currentUser, 10 * 60 * 1000); // Cache for 10 minutes
+                }
                 const currentAdmin: Admin | null = isAdmin(currentUser);
 
                 // Check:
@@ -126,10 +140,20 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
                 authenticationCompleteAction.currentUser = currentUser;
 
 
-                // get groups of membership for the current user
-                const listGroupsOfMembershipResponse = await new UserRepository().listGroupsOfMembership(uid);
-
-                authenticationCompleteAction.groupsOfMembership = listGroupsOfMembershipResponse.data;
+                // get groups of membership for the current user (with caching)
+                const groupsCacheKey = CacheKeys.groupsOfMembership(uid);
+                
+                const cachedGroups = userCache.get<GroupOfMembership[]>(groupsCacheKey);
+                if (cachedGroups) {
+                    console.log('Using cached groups of membership data');
+                    monitorCacheHit('user');
+                    authenticationCompleteAction.groupsOfMembership = cachedGroups;
+                } else {
+                    monitorCacheMiss('user');
+                    const listGroupsOfMembershipResponse = await new UserRepository().listGroupsOfMembership(uid);
+                    authenticationCompleteAction.groupsOfMembership = listGroupsOfMembershipResponse.data;
+                    userCache.set(groupsCacheKey, listGroupsOfMembershipResponse.data, 15 * 60 * 1000); // Cache for 15 minutes
+                }
 
                 // Update last login date
                 try {

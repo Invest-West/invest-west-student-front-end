@@ -1,4 +1,4 @@
-import React, {Component} from "react";
+import React, {Component, memo} from "react";
 import {connect} from "react-redux";
 import {AppState} from "../../redux-store/reducers";
 import {getGroupRouteTheme, ManageGroupUrlState} from "../../redux-store/reducers/manageGroupUrlReducer";
@@ -208,4 +208,11 @@ class OfferItem extends Component<OfferItemProps, any> {
     }
 }
 
-export default connect(mapStateToProps)(OfferItem);
+const MemoizedOfferItem = memo(OfferItem, (prevProps, nextProps) => {
+    return prevProps.offerInstance.projectDetail.id === nextProps.offerInstance.projectDetail.id && 
+           prevProps.offerInstance.projectDetail.edited === nextProps.offerInstance.projectDetail.edited &&
+           prevProps.ManageGroupUrlState.group?.anid === nextProps.ManageGroupUrlState.group?.anid &&
+           prevProps.AuthenticationState.currentUser?.id === nextProps.AuthenticationState.currentUser?.id;
+});
+
+export default connect(mapStateToProps)(MemoizedOfferItem);

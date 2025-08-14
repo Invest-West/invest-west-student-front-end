@@ -168,6 +168,18 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
     }
 
     componentDidUpdate(prevProps: Readonly<GroupRouteProps & Readonly<RouteComponentProps<RouteParams>>>, prevState: Readonly<GroupRouteState>, snapshot?: any) {
+        // Only run expensive logic if key props have actually changed
+        const hasSignificantPropsChanged = (
+            prevProps.AuthenticationState.currentUser !== this.props.AuthenticationState.currentUser ||
+            prevProps.ManageSystemAttributesState !== this.props.ManageSystemAttributesState ||
+            prevProps.ManageGroupUrlState !== this.props.ManageGroupUrlState ||
+            prevProps.location.pathname !== this.props.location.pathname
+        );
+
+        if (!hasSignificantPropsChanged) {
+            return;
+        }
+
         // Reset navigation state when user logs out (goes from authenticated to null)
         // This allows fresh redirect logic for the next login
         if (prevProps.AuthenticationState.currentUser !== null && this.props.AuthenticationState.currentUser === null) {
