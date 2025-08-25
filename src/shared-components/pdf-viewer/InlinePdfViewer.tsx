@@ -128,13 +128,9 @@ const InlinePdfViewer: React.FC<InlinePdfViewerProps> = ({ documents, shouldShow
                                         <Typography variant="body2" color="textSecondary">
                                             {document.readableSize} • {fileInfo.label}
                                         </Typography>
-                                        {document.description ? (
+                                        {document.description && (
                                             <Typography variant="body2" color="textSecondary" style={{fontStyle: 'italic', marginTop: '4px'}}>
                                                 {document.description}
-                                            </Typography>
-                                        ) : (
-                                            <Typography variant="body2" color="textSecondary" style={{fontStyle: 'italic', marginTop: '4px', opacity: 0.5}}>
-                                                [No description]
                                             </Typography>
                                         )}
                                     </Box>

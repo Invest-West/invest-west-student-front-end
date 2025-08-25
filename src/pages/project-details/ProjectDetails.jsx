@@ -1905,7 +1905,9 @@ class ProjectDetailsMain extends Component {
             return <PageNotFoundWhole/>;
         }
 
-        if (authenticating || !userLoaded || isAuthenticating(AuthenticationState)) {
+        // Only show loading for authentication if we're still initializing auth system
+        // Projects can be viewed by both authenticated and non-authenticated users
+        if (authenticating || (authIsNotInitialized(AuthenticationState) && isAuthenticating(AuthenticationState))) {
             return (
                 <FlexView marginTop={30} hAlignContent="center">
                     <HashLoader

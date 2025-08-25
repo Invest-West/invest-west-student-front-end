@@ -3,6 +3,7 @@ import {
     FinishedValidatingGroupUrlAction,
     ManageGroupUrlAction,
     ManageGroupUrlEvents,
+    ResetGroupUrlStateAction,
     SetGroupUrlAction
 } from "../actions/manageGroupUrlActions";
 import Error from "../../models/error";
@@ -113,6 +114,10 @@ const manageGroupUrlReducer = (state: ManageGroupUrlState = initialState, action
                         )
                         :
                         defaultTheme
+            }
+        case ManageGroupUrlEvents.ResetGroupUrlState:
+            return {
+                ...initialState
             }
         default:
             return state;

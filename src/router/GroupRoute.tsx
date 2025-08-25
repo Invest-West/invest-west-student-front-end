@@ -367,9 +367,12 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
 
         this.updateRouteAndParams();
 
+        // Check if current route is a project viewing route (public access allowed)
+        const isProjectViewRoute = this.routePath === Routes.groupViewOffer || this.routePath === Routes.nonGroupViewOffer;
+        
         if (isLoadingSystemAttributes(ManageSystemAttributesState)
             || isValidatingGroupUrl(ManageGroupUrlState)
-            || (successfullyValidatedGroupUrl(ManageGroupUrlState) && authIsNotInitialized(AuthenticationState))
+            || (successfullyValidatedGroupUrl(ManageGroupUrlState) && authIsNotInitialized(AuthenticationState) && !isProjectViewRoute)
             || ((!Routes.isSignInRoute(this.routePath) && !Routes.isSignUpRoute(this.routePath))
                 && isAuthenticating(AuthenticationState))
         ) {
@@ -462,7 +465,12 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             ManageGroupUrlState
         } = this.props;
 
-        if (successfullyValidatedGroupUrl(ManageGroupUrlState) && !this.authListener) {
+        // Check if current route is a project viewing route (public access allowed)
+        const isProjectViewRoute = this.routePath === Routes.groupViewOffer || this.routePath === Routes.nonGroupViewOffer;
+        
+        // For project viewing routes, attach auth listener immediately to avoid blocking
+        // For other routes, wait for group URL validation to complete
+        if ((successfullyValidatedGroupUrl(ManageGroupUrlState) || isProjectViewRoute) && !this.authListener) {
             this.authListener = firebase.auth().onAuthStateChanged(firebaseUser => {
                 if (firebaseUser) {
                     this.props.signIn();

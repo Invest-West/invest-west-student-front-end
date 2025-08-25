@@ -7,7 +7,8 @@ import GroupRepository from "../../api/repositories/GroupRepository";
 export enum ManageGroupUrlEvents {
     SetGroupUrl = "ManageGroupUrlEvents.SetGroupUrl",
     ValidatingGroupUrl = "ManageGroupUrlEvents.ValidatingGroupUrl",
-    FinishedValidatingGroupUrl = "ManageGroupUrlEvents.FinishedValidatingGroupUrl"
+    FinishedValidatingGroupUrl = "ManageGroupUrlEvents.FinishedValidatingGroupUrl",
+    ResetGroupUrlState = "ManageGroupUrlEvents.ResetGroupUrlState"
 }
 
 export interface ManageGroupUrlAction extends Action {
@@ -30,6 +31,9 @@ export interface FinishedValidatingGroupUrlAction extends ManageGroupUrlAction {
     group: GroupProperties | null;
     validGroupUrl: boolean;
     error?: Error
+}
+
+export interface ResetGroupUrlStateAction extends ManageGroupUrlAction {
 }
 
 export const validateGroupUrl: ActionCreator<any> = (path: string, groupUserName: string | null) => {
@@ -100,5 +104,14 @@ export const validateGroupUrl: ActionCreator<any> = (path: string, groupUserName
                 return dispatch(finishedLoadingGroupUrlAction);
             }
         }
+    }
+}
+
+export const resetGroupUrlState: ActionCreator<any> = () => {
+    return (dispatch: Dispatch) => {
+        const action: ResetGroupUrlStateAction = {
+            type: ManageGroupUrlEvents.ResetGroupUrlState
+        };
+        return dispatch(action);
     }
 }

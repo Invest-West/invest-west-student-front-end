@@ -11,6 +11,7 @@ import Firebase from "firebase";
 import UserRepository from "../../api/repositories/UserRepository";
 import {userCache, CacheKeys} from "../../utils/CacheManager";
 import {monitorCacheHit, monitorCacheMiss} from "../../utils/CacheMonitor";
+import {resetGroupUrlState} from "./manageGroupUrlActions";
 
 export enum AuthenticationEvents {
     StartAuthenticating = "AuthenticationEvents.StartAuthenticating",
@@ -69,9 +70,8 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
             else {
                 if (email === undefined || password === undefined) {
                     authenticationCompleteAction.status = AuthenticationStatus.Unauthenticated;
-                    authenticationCompleteAction.error = {
-                        detail: "Email and password not provided."
-                    }
+                    // Don't set an error for non-authenticated users - this is a normal state
+                    // for users viewing public content like projects
                     return dispatch(authenticationCompleteAction);
                 }
 
@@ -219,6 +219,23 @@ export const signOut: ActionCreator<any> = () => {
         } catch (error) {
             console.log(`Error signing out: ${error.toString()}`);
         }
+        
+        // Clear user cache to prevent showing previous user's data
+        console.log('Clearing user cache on signOut');
+        userCache.clear();
+        
+        // Clear any stored redirect URL to prevent wrong redirection for next user
+        try {
+            localStorage.removeItem('redirectToAfterAuth');
+            console.log('Cleared redirectToAfterAuth from localStorage');
+        } catch (error) {
+            console.log('Error clearing redirectToAfterAuth:', error);
+        }
+        
+        // Reset group URL state to prevent wrong group routing for next user
+        dispatch(resetGroupUrlState());
+        console.log('Reset group URL state on signOut');
+        
         return dispatch({
             type: AuthenticationEvents.SignOut
         });
