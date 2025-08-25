@@ -37,7 +37,7 @@ const initialState: ExploreOffersState = {
     searchFilter: "",
     visibilityFilter: "all",
     sectorFilter: "all",
-    phaseFilter: FetchProjectsPhaseOptions.Any,
+    phaseFilter: FetchProjectsPhaseOptions.Live,
     groupFilter: "all",
     currentPage: 1
 }
