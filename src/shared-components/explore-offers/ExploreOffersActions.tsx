@@ -116,7 +116,10 @@ export const fetchOffers: ActionCreator<any> = () => {
             dispatch({ type: ExploreOffersEvents.FetchingOffers });
 
             const response = await new OfferRepository().fetchOffers(fetchOffersOptions);
-            console.log("Fetching offers with options:", response.data);
+            console.log("API Response:", response);
+            console.log("Response data:", response.data);
+            console.log("Response data type:", typeof response.data);
+            console.log("Response data length:", response.data ? response.data.length : 'no data');
 
             // Cache the response with smart TTL based on filter complexity
             const ttl = searchFilter.trim().length > 0 ? 2 * 60 * 1000 : 5 * 60 * 1000; // 2min for search, 5min for browse

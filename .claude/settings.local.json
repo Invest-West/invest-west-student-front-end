@@ -45,7 +45,9 @@
       "Bash(rm:*)",
       "Bash(timeout 10 npm start:*)",
       "Bash(cp:*)",
-      "Bash(timeout 60 npm run build)"
+      "Bash(timeout 60 npm run build)",
+      "Bash(unzip:*)",
+      "Read(//tmp/server/**)"
     ]
   },
   "enableAllProjectMcpServers": false
