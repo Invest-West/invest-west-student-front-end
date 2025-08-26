@@ -13,6 +13,12 @@
     color: #fff;
   }
   
+  .title {
+    font-family: 'Merriweather', 'Open Sans', serif;
+    margin-bottom: 0 !important;
+    color: #FFF;
+  }
+  
   /* Prevent scrolling when mobile menu is open */
   body.no-scroll {
     overflow: hidden;
@@ -179,6 +185,13 @@
     font-size: 2.5rem;
     margin-bottom: 1rem;
     line-height: 1.2;
+  }
+
+  .title p {
+    margin: 0 auto !important;
+    margin-bottom: 0rem !important;
+    margin-top: 0 !important;
+    color: #fff !important;
   }
 
   .hero p {
@@ -582,7 +595,6 @@
     justify-content: center; 
     text-align: start;
     height: 80vh;
-    padding: 20px;
     max-width: 100vh; 
     margin: 0 auto; 
   }

@@ -219,7 +219,7 @@ class SidebarContent extends Component {
                         }
 
                         {/** Explore courses tab */}
-                        {/* <NavLink
+                        <NavLink
                             to={{
                                 pathname: dashboardProps.match.pathname,
                                 search: `?tab=${EXPLORE_GROUPS_TAB}`
@@ -232,7 +232,7 @@ class SidebarContent extends Component {
                                 </ListItemIcon>
                                 <ListItemText className={css(sharedStyles.black_text)}>{EXPLORE_GROUPS_TAB}</ListItemText>
                             </ListItem>
-                        </NavLink> */}
+                        </NavLink> 
 
                         {/** Resources 
                         <NavLink

@@ -8,6 +8,9 @@ import OfferRepository, {
     FetchProjectsOrderByOptions,
     FetchProjectsPhaseOptions
 } from "../../api/repositories/OfferRepository";
+import {apiCache, CacheKeys} from "../../utils/CacheManager";
+import {CacheInvalidationManager} from "../../utils/CacheInvalidation";
+import {monitorCacheHit, monitorCacheMiss} from "../../utils/CacheMonitor";
 
 export enum ExploreOffersEvents {
     FetchingOffers = "ExploreOffersEvents.FetchingOffers",
@@ -35,10 +38,33 @@ export interface PaginationChangedAction extends ExploreOffersAction {
     page: number;
 }
 
+// Debounce timeout reference
+let searchTimeout: NodeJS.Timeout | null = null;
+
 export const onSearchEnter: ActionCreator<any> = (event: FormEvent) => {
     return (dispatch: Dispatch, getState: () => AppState) => {
         event.preventDefault();
         return dispatch(fetchOffers(FetchProjectsOrderByOptions.Phase))
+    }
+}
+
+export const debouncedSearch: ActionCreator<any> = () => {
+    return (dispatch: Dispatch, getState: () => AppState) => {
+        if (searchTimeout) {
+            clearTimeout(searchTimeout);
+        }
+        
+        searchTimeout = setTimeout(() => {
+            dispatch(fetchOffers(FetchProjectsOrderByOptions.Phase));
+        }, 300); // 300ms debounce
+    }
+}
+
+export const refreshOffers: ActionCreator<any> = () => {
+    return (dispatch: Dispatch, getState: () => AppState) => {
+        // Force refresh by clearing cache first
+        CacheInvalidationManager.invalidateOffersCache('manual refresh');
+        return dispatch(fetchOffers(FetchProjectsOrderByOptions.Phase));
     }
 }
 
@@ -70,11 +96,34 @@ export const fetchOffers: ActionCreator<any> = () => {
             orderBy,
         };
 
-        dispatch({ type: ExploreOffersEvents.FetchingOffers });
-
+        // Use advanced caching system
+        const cacheKey = CacheKeys.offers(fetchOffersOptions);
+        
         try {
+            const cachedOffers = apiCache.get<ProjectInstance[]>(cacheKey);
+            if (cachedOffers) {
+                console.log('Using cached offers data from CacheManager');
+                monitorCacheHit('api');
+                dispatch({
+                    type: ExploreOffersEvents.CompleteFetchingOffers,
+                    offerInstances: cachedOffers,
+                });
+                return;
+            }
+
+            monitorCacheMiss('api');
+
+            dispatch({ type: ExploreOffersEvents.FetchingOffers });
+
             const response = await new OfferRepository().fetchOffers(fetchOffersOptions);
-            console.log("Fetching offers with options:", response.data);
+            console.log("API Response:", response);
+            console.log("Response data:", response.data);
+            console.log("Response data type:", typeof response.data);
+            console.log("Response data length:", response.data ? response.data.length : 'no data');
+
+            // Cache the response with smart TTL based on filter complexity
+            const ttl = searchFilter.trim().length > 0 ? 2 * 60 * 1000 : 5 * 60 * 1000; // 2min for search, 5min for browse
+            apiCache.set(cacheKey, response.data, ttl);
 
             dispatch({
                 type: ExploreOffersEvents.CompleteFetchingOffers,

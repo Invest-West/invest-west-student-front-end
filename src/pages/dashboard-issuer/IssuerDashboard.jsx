@@ -223,10 +223,9 @@ class IssuerDashboard extends Component {
          * EXPLORE GROUPS TAB
          */
         if (params.tab === EXPLORE_GROUPS_TAB) {
-            // return (
-            //     <ExploreGroupsTab/>
-            // );
-            return <ExploreGroups/>;
+            return (
+                <ExploreGroups/>
+            );
         }
 
         /**

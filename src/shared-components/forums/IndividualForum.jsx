@@ -229,7 +229,7 @@ class IndividualForum extends Component {
                                             thread.author.superAdmin
                                                 ?
                                                 // super admins
-                                                "Teacher Super Admin"
+                                                "Student Super Admin"
                                                 :
                                                 // group admins
                                                 `${thread.author.groupDetails.displayName} Admin`

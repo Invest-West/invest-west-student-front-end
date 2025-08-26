@@ -168,6 +168,18 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
     }
 
     componentDidUpdate(prevProps: Readonly<GroupRouteProps & Readonly<RouteComponentProps<RouteParams>>>, prevState: Readonly<GroupRouteState>, snapshot?: any) {
+        // Only run expensive logic if key props have actually changed
+        const hasSignificantPropsChanged = (
+            prevProps.AuthenticationState.currentUser !== this.props.AuthenticationState.currentUser ||
+            prevProps.ManageSystemAttributesState !== this.props.ManageSystemAttributesState ||
+            prevProps.ManageGroupUrlState !== this.props.ManageGroupUrlState ||
+            prevProps.location.pathname !== this.props.location.pathname
+        );
+
+        if (!hasSignificantPropsChanged) {
+            return;
+        }
+
         // Reset navigation state when user logs out (goes from authenticated to null)
         // This allows fresh redirect logic for the next login
         if (prevProps.AuthenticationState.currentUser !== null && this.props.AuthenticationState.currentUser === null) {
@@ -355,9 +367,12 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
 
         this.updateRouteAndParams();
 
+        // Check if current route is a project viewing route (public access allowed)
+        const isProjectViewRoute = this.routePath === Routes.groupViewOffer || this.routePath === Routes.nonGroupViewOffer;
+        
         if (isLoadingSystemAttributes(ManageSystemAttributesState)
             || isValidatingGroupUrl(ManageGroupUrlState)
-            || (successfullyValidatedGroupUrl(ManageGroupUrlState) && authIsNotInitialized(AuthenticationState))
+            || (successfullyValidatedGroupUrl(ManageGroupUrlState) && authIsNotInitialized(AuthenticationState) && !isProjectViewRoute)
             || ((!Routes.isSignInRoute(this.routePath) && !Routes.isSignUpRoute(this.routePath))
                 && isAuthenticating(AuthenticationState))
         ) {
@@ -450,7 +465,12 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             ManageGroupUrlState
         } = this.props;
 
-        if (successfullyValidatedGroupUrl(ManageGroupUrlState) && !this.authListener) {
+        // Check if current route is a project viewing route (public access allowed)
+        const isProjectViewRoute = this.routePath === Routes.groupViewOffer || this.routePath === Routes.nonGroupViewOffer;
+        
+        // For project viewing routes, attach auth listener immediately to avoid blocking
+        // For other routes, wait for group URL validation to complete
+        if ((successfullyValidatedGroupUrl(ManageGroupUrlState) || isProjectViewRoute) && !this.authListener) {
             this.authListener = firebase.auth().onAuthStateChanged(firebaseUser => {
                 if (firebaseUser) {
                     this.props.signIn();

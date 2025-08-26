@@ -74,7 +74,8 @@ import RiskWarning from "../../shared-components/risk-warning/RiskWarning";
 import {toggleContactPitchOwnerDialog} from "./components/contact-pitch-owner-dialog/ContactPitchOwnerDialogActions";
 import ContactPitchOwnerDialog from "./components/contact-pitch-owner-dialog/ContactPitchOwnerDialog";
 import FeedbackSnackbarNew from "../../shared-components/feedback-snackbar/FeedbackSnackbarNew";
-import {hasAuthenticationError, isAuthenticating} from "../../redux-store/reducers/authenticationReducer";
+import {hasAuthenticationError, isAuthenticating, authIsNotInitialized} from "../../redux-store/reducers/authenticationReducer";
+import {apiCache, CacheKeys} from "../../utils/CacheManager";
 
 const ADMIN_OFFER_STATES_PUBLISH_PITCH = 0;
 const ADMIN_OFFER_STATES_MOVE_TO_PLEDGE = 1;
@@ -250,16 +251,36 @@ class ProjectDetailsMain extends Component {
         loadAngelNetwork();
 
         if (groupPropertiesLoaded && shouldLoadOtherData) {
-            if (!userBeingLoaded && userLoaded) {
+            // For project viewing, we don't need to wait for authentication to be fully resolved
+            // Projects can be viewed by both authenticated and unauthenticated users
+            const canLoadProject = !authIsNotInitialized(this.props.AuthenticationState); // Just wait for auth initialization
+            
+            if (canLoadProject) {
+                console.log('🔍 ComponentDidMount - Can load project, checking conditions...');
+                console.log('🔍 !dataBeingLoaded:', !dataBeingLoaded, 'dataBeingLoaded:', dataBeingLoaded);
+                console.log('🔍 !dataLoaded:', !dataLoaded, 'dataLoaded:', dataLoaded);
+                
                 if (!dataBeingLoaded && !dataLoaded) {
-                    // load data if not loaded
+                    console.log('✅ Loading project data (auth initialization complete)');
                     this.loadData();
+                } else {
+                    console.log('❌ NOT loading - conditions not met');
                 }
-
+            } else {
+                console.log('⏳ Waiting for auth initialization...');
             }
         }
-        console.log('Page loaded. Authentication status:', this.props.AuthenticationState.isAuthenticated ? 'Authenticated' : 'Not Authenticated');
-        console.log('Current user on page load:', this.props.AuthenticationState.currentUser);
+        console.log('=== PROJECT DETAILS DEBUG ===');
+        console.log('Authentication status:', this.props.AuthenticationState.status);
+        console.log('Current user:', this.props.AuthenticationState.currentUser);
+        console.log('isAuthenticating:', isAuthenticating(this.props.AuthenticationState));
+        console.log('authIsNotInitialized:', authIsNotInitialized(this.props.AuthenticationState));
+        console.log('Auth resolved:', !isAuthenticating(this.props.AuthenticationState) && !authIsNotInitialized(this.props.AuthenticationState));
+        console.log('groupPropertiesLoaded:', groupPropertiesLoaded);
+        console.log('shouldLoadOtherData:', shouldLoadOtherData);
+        console.log('dataBeingLoaded:', dataBeingLoaded);
+        console.log('dataLoaded:', dataLoaded);
+        console.log('========================');
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
@@ -287,12 +308,22 @@ class ProjectDetailsMain extends Component {
         loadAngelNetwork();
 
         if (groupPropertiesLoaded && shouldLoadOtherData) {
-            if (!userBeingLoaded && userLoaded) {
+            // For project viewing, we don't need to wait for authentication to be fully resolved
+            const canLoadProject = !authIsNotInitialized(this.props.AuthenticationState);
+            
+            console.log('=== componentDidUpdate DEBUG ===');
+            console.log('Auth status:', this.props.AuthenticationState.status);
+            console.log('Can load project:', canLoadProject);
+            console.log('dataBeingLoaded:', dataBeingLoaded);
+            console.log('dataLoaded:', dataLoaded);
+            
+            if (canLoadProject) {
                 if (!dataBeingLoaded && !dataLoaded) {
-                    // load data if not loaded
+                    console.log('🚀 Loading project data from componentDidUpdate...');
                     this.loadData();
                 }
-
+            } else {
+                console.log('⏳ Waiting for auth initialization in componentDidUpdate...');
             }
 
             // attach project changed listener
@@ -346,10 +377,10 @@ class ProjectDetailsMain extends Component {
      * This function is used to load data for the whole page
      */
     loadData = () => {
+        console.log('🚀 LOADDATA CALLED - Starting data load process');
+        
         const {
             user,
-            userLoaded,
-
             selectProjectVisibility_setProject
         } = this.props;
 
@@ -358,9 +389,11 @@ class ProjectDetailsMain extends Component {
             dataBeingLoaded
         } = this.state;
 
-        if (!userLoaded) {
-            return;
-        }
+        console.log('🔍 LoadData state check:', { dataLoaded, dataBeingLoaded });
+        console.log('🔍 Current user:', user);
+
+        // OLD CHECK REMOVED: if (!userLoaded) return;
+        // Projects can be viewed by both authenticated and unauthenticated users
 
         // Disable authentication
         // if (!user) {
@@ -383,9 +416,11 @@ class ProjectDetailsMain extends Component {
 
         // data is being loaded
         if (dataBeingLoaded) {
+            console.log('❌ LoadData: Already being loaded, returning early');
             return;
         }
 
+        console.log('✅ LoadData: Setting loading state...');
         this.setState({
             dataLoaded: false,
             dataBeingLoaded: true
@@ -393,9 +428,41 @@ class ProjectDetailsMain extends Component {
 
         // load the requested project
         const projectID = this.props.match.params.projectID;
+        console.log('🔍 LoadData: Project ID:', projectID);
+        
+        // Try to get project from cache first
+        const cacheKey = CacheKeys.project(projectID);
+        const cachedProject = apiCache.get(cacheKey);
+        
+        if (cachedProject) {
+            console.log('📦 Using cached project data');
+            this.processProjectData(cachedProject);
+            return;
+        }
+        
+        console.log('🌐 No cached data, fetching from Firebase...');
+        
         realtimeDBUtils
             .loadAParticularProject(projectID)
             .then(project => {
+                console.log('✅ Firebase project loaded successfully:', project?.projectName || project?.id);
+                // Cache the project data for 10 minutes
+                apiCache.set(cacheKey, project, 10 * 60 * 1000);
+                console.log('📦 Project cached, calling processProjectData...');
+                this.processProjectData(project);
+            })
+            .catch(error => {
+                console.error("❌ Error loading project:", error);
+                this.setState({
+                    dataLoaded: false,
+                    dataBeingLoaded: false
+                });
+            });
+    }
+    
+    processProjectData = (project) => {
+        console.log('🔄 ProcessProjectData called with project:', project?.projectName || project?.id);
+        const { user, selectProjectVisibility_setProject } = this.props;
                 // track activity for investors only
                 if (user?.type === DB_CONST.TYPE_INVESTOR) {
                     realtimeDBUtils
@@ -445,122 +512,70 @@ class ProjectDetailsMain extends Component {
                                     ADMIN_OFFER_STATES_PUBLISH_PITCH
                 });
 
-                // load votes
-                realtimeDBUtils
-                    .loadVotes(project.id, null, realtimeDBUtils.LOAD_VOTES_ORDER_BY_PROJECT)
-                    .then(votes => {
-
-                        this.setState({
-                            projectDetail: {
-                                ...this.state.projectDetail,
-                                votes: votes,
-                                votesLoaded: true
-                            }
-                        });
-
-                        // load pledges
-                        realtimeDBUtils
-                            .loadPledges(project.id, null, realtimeDBUtils.LOAD_PLEDGES_ORDER_BY_PROJECT)
-                            .then(pledges => {
-
-                                // if the current user is an investor, check if they pledged this project
-                                if (user?.type === DB_CONST.TYPE_INVESTOR) {
-                                    let currentUserPledgeIndex = pledges.findIndex(pledge => pledge.investorID === user?.id && pledge.amount !== '');
-                                    // this investor has pledges this project before
-                                    if (currentUserPledgeIndex !== -1) {
-                                        this.setState({
-                                            investorPledge: pledges[currentUserPledgeIndex]
-                                        });
-                                    }
-                                }
-
-                                this.setState({
-                                    dataLoaded: true,
-                                    dataBeingLoaded: false,
-                                    investorPledgeLoaded: true,
-                                    projectDetail: {
-                                        ...this.state.projectDetail,
-                                        pledges: pledges,
-                                        pledgesLoaded: true
-                                    }
-                                });
-
-                                // load the profile of the Issuer or the Group Admin created this project
-                                // this user can be the issuer who created the offer themselves
-                                // or the group admin who created this offer on behalf of an unknown issuer
-                                // or the issuer who got the group admin create this offer for
-                                realtimeDBUtils
-                                    .getUserBasedOnID(project.issuerID)
-                                    .then(projectIssuer => {
-                                        this.setState({
-                                            projectDetail: {
-                                                ...this.state.projectDetail,
-                                                projectIssuer: projectIssuer,
-                                                projectIssuerLoaded: true
-                                            }
-                                        });
-                                    })
-                                    .catch(error => {
-                                        this.setState({
-                                            dataLoaded: true,
-                                            dataBeingLoaded: false,
-                                            investorPledgeLoaded: true,
-                                            projectDetail: {
-                                                ...this.state.projectDetail,
-                                                projectLoaded: true, // project is null
-                                                projectIssuerLoaded: true, // project issuer is null
-                                                votesLoaded: true,
-                                                pledgesLoaded: true
-                                            }
-                                        });
-                                    });
-                            })
-                            .catch(error => {
-                                this.setState({
-                                    dataLoaded: true,
-                                    dataBeingLoaded: false,
-                                    investorPledgeLoaded: true,
-                                    projectDetail: {
-                                        ...this.state.projectDetail,
-                                        projectLoaded: true, // project is null
-                                        projectIssuerLoaded: true, // project issuer is null
-                                        votesLoaded: true,
-                                        pledgesLoaded: true
-                                    }
-                                });
-                            });
-                    })
-                    .catch(error => {
-                        this.setState({
-                            dataLoaded: true,
-                            dataBeingLoaded: false,
-                            investorPledgeLoaded: true,
-                            projectDetail: {
-                                ...this.state.projectDetail,
-                                projectLoaded: true, // project is null
-                                projectIssuerLoaded: true, // project issuer is null
-                                votesLoaded: true,
-                                pledgesLoaded: true
-                            }
-                        });
+                // Load all related data in parallel for better performance
+                console.log('🔄 ProcessProjectData: Starting Promise.all for votes, pledges, and issuer...');
+                console.log('🔍 Project issuer ID:', project.issuerID);
+                Promise.all([
+                    realtimeDBUtils.loadVotes(project.id, null, realtimeDBUtils.LOAD_VOTES_ORDER_BY_PROJECT),
+                    realtimeDBUtils.loadPledges(project.id, null, realtimeDBUtils.LOAD_PLEDGES_ORDER_BY_PROJECT),
+                    realtimeDBUtils.getUserBasedOnID(project.issuerID)
+                ]).then(([votes, pledges, projectIssuer]) => {
+                    console.log('✅ Promise.all completed successfully!', { 
+                        votesCount: votes?.length, 
+                        pledgesCount: pledges?.length, 
+                        issuerName: projectIssuer?.displayName,
+                        issuerID: projectIssuer?.id,
+                        fullIssuer: projectIssuer
                     });
-            })
-            .catch(error => {
-                // error happens when loading the requested project
-                // we'll stop the loading process for all others
-                this.setState({
-                    dataLoaded: true,
-                    dataBeingLoaded: false,
-                    investorPledgeLoaded: true,
-                    projectDetail: {
-                        ...this.state.projectDetail,
-                        projectLoaded: true, // project is null
-                        projectIssuerLoaded: true, // project issuer is null
-                        votesLoaded: true,
-                        pledgesLoaded: true
+                    // Check if current user has pledged (only for investors)
+                    let investorPledge = null;
+                    if (user?.type === DB_CONST.TYPE_INVESTOR) {
+                        const currentUserPledgeIndex = pledges.findIndex(pledge => pledge.investorID === user?.id && pledge.amount !== '');
+                        if (currentUserPledgeIndex !== -1) {
+                            investorPledge = pledges[currentUserPledgeIndex];
+                        }
                     }
+
+                    // Update state with all loaded data at once
+                    console.log('🎯 Setting final state with all loaded data...');
+                    this.setState({
+                        dataLoaded: true,
+                        dataBeingLoaded: false,
+                        investorPledgeLoaded: true,
+                        investorPledge: investorPledge,
+                        projectDetail: {
+                            ...this.state.projectDetail,
+                            votes: votes,
+                            votesLoaded: true,
+                            pledges: pledges,
+                            pledgesLoaded: true,
+                            projectIssuer: projectIssuer,
+                            projectIssuerLoaded: true
+                        }
+                    }, () => {
+                        console.log('✅ State updated successfully! Component should now render content.');
+                        
+                        // Auto-refresh mechanism: Force a re-render after data loads
+                        setTimeout(() => {
+                            console.log('🔄 Auto-refresh: Forcing component re-render...');
+                            this.forceUpdate();
+                        }, 100);
+                    });
+                }).catch(error => {
+                    console.error("❌ Error loading project related data:", error);
+                    // Set error state but still mark as loaded to prevent infinite loading
+                    this.setState({
+                        dataLoaded: true,
+                        dataBeingLoaded: false,
+                        investorPledgeLoaded: true,
+                        projectDetail: {
+                            ...this.state.projectDetail,
+                            votesLoaded: true,
+                            pledgesLoaded: true,
+                            projectIssuerLoaded: true
+                        }
+                    });
                 });
-            });
     };
 
     /**
@@ -1801,6 +1816,7 @@ class ProjectDetailsMain extends Component {
     }
 
     render() {
+        console.log('🎭 MAIN RENDER METHOD CALLED!');
         const {
             AuthenticationState,
 
@@ -1867,6 +1883,16 @@ class ProjectDetailsMain extends Component {
             projectIssuerLoaded
         } = this.state.projectDetail;
 
+        console.log('🎯 MAIN RENDER: About to call renderPageContent with data:', {
+            hasProject: !!project,
+            projectName: project?.projectName,
+            pledgesLoaded,
+            votesLoaded,
+            investorPledgeLoaded,
+            projectIssuerLoaded,
+            hasProjectIssuer: !!projectIssuer
+        });
+
         if (!groupPropertiesLoaded) {
             return (
                 <FlexView marginTop={30} hAlignContent="center">
@@ -1879,7 +1905,9 @@ class ProjectDetailsMain extends Component {
             return <PageNotFoundWhole/>;
         }
 
-        if (authenticating || !userLoaded || isAuthenticating(AuthenticationState)) {
+        // Only show loading for authentication if we're still initializing auth system
+        // Projects can be viewed by both authenticated and non-authenticated users
+        if (authenticating || (authIsNotInitialized(AuthenticationState) && isAuthenticating(AuthenticationState))) {
             return (
                 <FlexView marginTop={30} hAlignContent="center">
                     <HashLoader
@@ -2139,57 +2167,53 @@ class ProjectDetails extends Component {
     /**
      * Render the page content
      */
-    renderPageContent = () => {
+    renderPageContent = (props) => {
+        console.log('🎬 RENDERPAGE CONTENT CALLED!');
         const {
             AuthenticationState,
-
             groupsUserIsIn,
-
             groupUserName,
             groupProperties,
-
             isMobile,
-
             user,
-
-            mainBody,
-            adminOfferStatesActiveStep,
-
-            comments,
-            commentsLoaded,
-
+            projectVisibilitySetting,
+            createPledgeDialog_toggleDialog,
+            createPledgeDialog_setProject,
+            selectProjectVisibility_setProject,
             project,
-
             pledges,
             pledgesLoaded,
-
+            votes,
             votesLoaded,
-
-            investorPledge,
-            investorPledgeLoaded,
-
             projectIssuer,
             projectIssuerLoaded,
-
+            investorPledge,
+            investorPledgeLoaded,
+            mainBody,
+            adminOfferStatesActiveStep,
+            comments,
+            commentsLoaded,
             currentComment,
             currentCommentText,
-
             replyingToComment,
             replyText,
             replyEdited,
-
             changedPitchExpiryDate,
-
             addingRejectFeedback,
             rejectFeedback,
-            sendingProjectBack,
+            sendingProjectBack
+        } = props;
 
-            projectVisibilitySetting,
-
-            createPledgeDialog_toggleDialog,
-            createPledgeDialog_setProject,
-            selectProjectVisibility_setProject
-        } = this.props;
+        console.log('🔍 RENDER DEBUG: Checking render conditions...', {
+            pledgesLoaded,
+            votesLoaded, 
+            investorPledgeLoaded,
+            projectIssuerLoaded,
+            hasProject: !!project,
+            hasPledges: !!pledges,
+            hasProjectIssuer: !!projectIssuer,
+            projectIssuerDisplayName: projectIssuer?.displayName
+        });
 
         // if the data is being loaded
         // display loading
@@ -2198,6 +2222,12 @@ class ProjectDetails extends Component {
             || !investorPledgeLoaded
             || !projectIssuerLoaded
         ) {
+            console.log('🔄 RENDER: Still loading data...', { 
+                pledgesLoaded, 
+                votesLoaded, 
+                investorPledgeLoaded, 
+                projectIssuerLoaded 
+            });
             return (
                 <Row noGutters>
                     <Col xs={12} md={12} lg={12}>
@@ -2218,9 +2248,9 @@ class ProjectDetails extends Component {
         }
 
         // return Page Not Found for security reason
+        // Note: Removed !projectIssuer check to allow viewing projects even if issuer data is missing
         if (!project
             || !pledges
-            || !projectIssuer
             // the project is private
             // the user is an investor/issuer that is not in the group that owns this project
             || (
@@ -2229,6 +2259,13 @@ class ProjectDetails extends Component {
                 && (groupsUserIsIn !== null && groupsUserIsIn.findIndex(group => group.anid === project.anid) === -1)
             )
         ) {
+            console.log('🚫 RENDER: Page Not Found - missing data or access denied', { 
+                hasProject: !!project, 
+                hasPledges: !!pledges, 
+                hasProjectIssuer: !!projectIssuer,
+                projectVisibility: project?.visibility,
+                userType: user?.type
+            });
             return (
                 <Row noGutters>
                     <Col xs={12} md={12} lg={12}>
@@ -2276,6 +2313,13 @@ class ProjectDetails extends Component {
                 </Row>
             );
         }
+
+        console.log('🎉 RENDER: All checks passed! Rendering project content...', { 
+            projectName: project?.projectName, 
+            projectId: project?.id,
+            pledgesCount: pledges?.length,
+            hasProjectIssuer: !!projectIssuer
+        });
 
         let sortedComments = comments;
         // if the list of comments is not null
@@ -4056,10 +4100,20 @@ class ProjectDetails extends Component {
     }
 
     render() {
+        console.log('🎬 ProjectDetailsMain RENDER: Received props:', {
+            hasProject: !!this.props.project,
+            projectName: this.props.project?.projectName,
+            pledgesLoaded: this.props.pledgesLoaded,
+            votesLoaded: this.props.votesLoaded,
+            investorPledgeLoaded: this.props.investorPledgeLoaded,
+            projectIssuerLoaded: this.props.projectIssuerLoaded,
+            hasProjectIssuer: !!this.props.projectIssuer
+        });
+
         return (
             <Container fluid style={{padding: 0}}>
                 {
-                    this.renderPageContent()
+                    this.renderPageContent(this.props)
                 }
             </Container>
         );

@@ -419,7 +419,7 @@ class ProfilePageViewOnly extends Component {
 
         if (invitedUser.status) {
             if (invitedUser.type === DB_CONST.TYPE_ISSUER) {
-                statusMessage.msg = "Teacher";
+                statusMessage.msg = "Student";
                 statusMessage.color = "primary";
             } else {
                 statusMessage.msg = "Student";

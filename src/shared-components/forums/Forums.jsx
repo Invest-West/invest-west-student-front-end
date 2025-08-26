@@ -628,7 +628,7 @@ class ForumRow extends Component {
                                 forum.author.superAdmin
                                     ?
                                     // super admins
-                                    "Teacher Super Admin"
+                                    "Student Super Admin"
                                     :
                                     // group admins
                                     `${forum.author.groupDetails.displayName} Admin`

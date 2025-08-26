@@ -14,7 +14,7 @@ import Routes from "../../router/routes";
 import "../../shared-js-css-styles/front.css";
 
 import studentLogo from "../../img/student_logo.png"; 
-import linkedIn from "../../img/linkedIn.svg";
+import linkedIn from "../../img/linkedin_logo.png";
 import insta from "../../img/insta.svg";
 import discord from "../../img/discord.svg";
 
@@ -71,6 +71,7 @@ class Contact extends Component<ContactProps & Readonly<RouteComponentProps<Rout
            <header className="navbar transparent">
             <div className="navbar-left">
                 <NavLink to={homeRoute}><img className="logo" src={studentLogo} alt="Logo"/></NavLink>
+                <p className="title">Student Showcase</p>
             </div>
         
             <div className="burger-menu">
@@ -97,14 +98,12 @@ class Contact extends Component<ContactProps & Readonly<RouteComponentProps<Rout
                         <p>Not sure what you need? The team at Student Showcase are on hand to help guide you and suggest the best options to you.</p>
                         <div>
                             <img src="" alt=""/>
-                        <p><a href="mailto:investwestgroupdev@gmail.com">investwestgroupdev@gmail.com</a></p>
+                        <p><a href="mailto:info@studentshowcase.co.uk">info@studentshowcase.co.uk</a></p>
                         </div>
                         <div className="contact-info">
                             <h4>Stay Connected:</h4>
                             <div>
-                                <a><img src="./assets/img/linkedIn.svg" alt="Linkedin"/></a>
-                                <a><img src="./assets/img/insta.svg" alt="Instagram"/></a>  
-                                <a><img src="./assets/img/discord.svg" alt="Discord"/></a>
+                                <a href="https://www.linkedin.com/company/student-showcase25" target="_blank"><img src={linkedIn} alt="Linkedin"/></a>
                             </div>
                         </div>
                     </div>

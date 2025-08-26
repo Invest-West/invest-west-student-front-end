@@ -9,6 +9,9 @@ import {AppState} from "../reducers";
 import Routes from "../../router/routes";
 import Firebase from "firebase";
 import UserRepository from "../../api/repositories/UserRepository";
+import {userCache, CacheKeys} from "../../utils/CacheManager";
+import {monitorCacheHit, monitorCacheMiss} from "../../utils/CacheMonitor";
+import {resetGroupUrlState} from "./manageGroupUrlActions";
 
 export enum AuthenticationEvents {
     StartAuthenticating = "AuthenticationEvents.StartAuthenticating",
@@ -67,9 +70,8 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
             else {
                 if (email === undefined || password === undefined) {
                     authenticationCompleteAction.status = AuthenticationStatus.Unauthenticated;
-                    authenticationCompleteAction.error = {
-                        detail: "Email and password not provided."
-                    }
+                    // Don't set an error for non-authenticated users - this is a normal state
+                    // for users viewing public content like projects
                     return dispatch(authenticationCompleteAction);
                 }
 
@@ -90,10 +92,22 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
             if (currentFirebaseUser) {
                 const uid: string | undefined = currentFirebaseUser.uid;
 
-                // get current user profile
-                const retrieveUserResponse = await new UserRepository().retrieveUser(uid);
-
-                const currentUser: User | Admin = retrieveUserResponse.data;
+                // Try to get user from cache first
+                const userCacheKey = CacheKeys.user(uid);
+                let currentUser: User | Admin;
+                
+                const cachedUser = userCache.get<User | Admin>(userCacheKey);
+                if (cachedUser) {
+                    console.log('Using cached user data');
+                    monitorCacheHit('user');
+                    currentUser = cachedUser;
+                } else {
+                    // Fetch from API and cache
+                    monitorCacheMiss('user');
+                    const retrieveUserResponse = await new UserRepository().retrieveUser(uid);
+                    currentUser = retrieveUserResponse.data;
+                    userCache.set(userCacheKey, currentUser, 10 * 60 * 1000); // Cache for 10 minutes
+                }
                 const currentAdmin: Admin | null = isAdmin(currentUser);
 
                 // Check:
@@ -126,10 +140,20 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
                 authenticationCompleteAction.currentUser = currentUser;
 
 
-                // get groups of membership for the current user
-                const listGroupsOfMembershipResponse = await new UserRepository().listGroupsOfMembership(uid);
-
-                authenticationCompleteAction.groupsOfMembership = listGroupsOfMembershipResponse.data;
+                // get groups of membership for the current user (with caching)
+                const groupsCacheKey = CacheKeys.groupsOfMembership(uid);
+                
+                const cachedGroups = userCache.get<GroupOfMembership[]>(groupsCacheKey);
+                if (cachedGroups) {
+                    console.log('Using cached groups of membership data');
+                    monitorCacheHit('user');
+                    authenticationCompleteAction.groupsOfMembership = cachedGroups;
+                } else {
+                    monitorCacheMiss('user');
+                    const listGroupsOfMembershipResponse = await new UserRepository().listGroupsOfMembership(uid);
+                    authenticationCompleteAction.groupsOfMembership = listGroupsOfMembershipResponse.data;
+                    userCache.set(groupsCacheKey, listGroupsOfMembershipResponse.data, 15 * 60 * 1000); // Cache for 15 minutes
+                }
 
                 // Update last login date
                 try {
@@ -195,6 +219,23 @@ export const signOut: ActionCreator<any> = () => {
         } catch (error) {
             console.log(`Error signing out: ${error.toString()}`);
         }
+        
+        // Clear user cache to prevent showing previous user's data
+        console.log('Clearing user cache on signOut');
+        userCache.clear();
+        
+        // Clear any stored redirect URL to prevent wrong redirection for next user
+        try {
+            localStorage.removeItem('redirectToAfterAuth');
+            console.log('Cleared redirectToAfterAuth from localStorage');
+        } catch (error) {
+            console.log('Error clearing redirectToAfterAuth:', error);
+        }
+        
+        // Reset group URL state to prevent wrong group routing for next user
+        dispatch(resetGroupUrlState());
+        console.log('Reset group URL state on signOut');
+        
         return dispatch({
             type: AuthenticationEvents.SignOut
         });

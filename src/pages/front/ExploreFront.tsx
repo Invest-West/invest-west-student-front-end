@@ -69,6 +69,7 @@ class ExploreFront extends Component<ExploreFrontProps & Readonly<RouteComponent
             <header className="navbar transparent">
                 <div className="navbar-left">
                    <NavLink to={homeRoute}><img className="logo" src={studentLogo} alt="Logo"/></NavLink>
+                   <p className="title">Student Showcase</p>
                 </div>
             
                 <div className="burger-menu">

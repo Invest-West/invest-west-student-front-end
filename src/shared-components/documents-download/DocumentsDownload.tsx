@@ -147,13 +147,9 @@ class DocumentsDownload extends Component<DocumentsDownloadProps, any> {
                                 <Box display="flex" flexDirection="column" marginLeft="12px">
                                     <Typography variant="body2" align="left">{document.fileName}</Typography>
                                     <Typography variant="body2" color="textSecondary" align="left">{document.readableSize}</Typography>
-                                    {document.description ? (
+                                    {document.description && (
                                         <Typography variant="body2" color="textSecondary" align="left" style={{fontStyle: 'italic', marginTop: 4}}>
                                             {document.description}
-                                        </Typography>
-                                    ) : (
-                                        <Typography variant="body2" color="textSecondary" align="left" style={{fontStyle: 'italic', marginTop: 4, opacity: 0.5}}>
-                                            [No description]
                                         </Typography>
                                     )}
                                 </Box>
