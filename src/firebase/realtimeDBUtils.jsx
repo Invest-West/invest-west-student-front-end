@@ -503,11 +503,19 @@ export const loadGroupsUserIsIn = async (userID) => {
  */
 export const loadAngelNetworkBasedOnANID = async (anid) => {
     return new Promise((resolve, reject) => {
+        console.log('[REALTIME-DB DEBUG] Looking for angel network with ANID:', anid);
+
         firebase
             .database()
             .ref(DB_CONST.GROUP_PROPERTIES_CHILD)
             .child(anid)
             .once('value', snapshot => {
+                console.log('[REALTIME-DB DEBUG] Angel network lookup result:', {
+                    anid: anid,
+                    exists: snapshot ? snapshot.exists() : false,
+                    data: snapshot ? snapshot.val() : null
+                });
+
                 if (!snapshot || !snapshot.exists()) {
                     return reject("Angel network not found");
                 }
@@ -528,12 +536,21 @@ export const loadAngelNetworkBasedOnANID = async (anid) => {
  */
 export const loadAngelNetworkBasedOnGroupUserName = async (groupUserName) => {
     return new Promise((resolve, reject) => {
+        console.log('[REALTIME-DB DEBUG] Looking for group with groupUserName:', groupUserName);
+
         firebase
             .database()
             .ref(DB_CONST.GROUP_PROPERTIES_CHILD)
             .orderByChild('groupUserName')
             .equalTo(groupUserName)
             .once('value', snapshots => {
+                console.log('[REALTIME-DB DEBUG] Group lookup by username result:', {
+                    groupUserName: groupUserName,
+                    exists: snapshots ? snapshots.exists() : false,
+                    numChildren: snapshots ? snapshots.numChildren() : 0,
+                    data: snapshots ? snapshots.val() : null
+                });
+
                 if (!snapshots
                     || !snapshots.exists()
                     || (snapshots && (!snapshots.val() || snapshots.numChildren() === 0))
@@ -542,11 +559,77 @@ export const loadAngelNetworkBasedOnGroupUserName = async (groupUserName) => {
                 }
 
                 snapshots.forEach(snapshot => {
+                    console.log('[REALTIME-DB DEBUG] Returning group data:', snapshot.val());
                     return resolve(snapshot.val());
                 });
             });
     });
 };
+
+/**
+ * Load course details from a group
+ *
+ * @param {string} groupUserName - Group username
+ * @param {string} courseUserName - Course username  
+ * @returns {Promise<object>} Course object or null if not found
+ */
+export const loadCourseFromGroup = async (groupUserName, courseUserName) => {
+    return new Promise((resolve, reject) => {
+        // First load the group
+        loadAngelNetworkBasedOnGroupUserName(groupUserName)
+            .then(group => {
+                // Check if the group has the new courses structure
+                if (group.courses && group.courses[courseUserName]) {
+                    resolve({
+                        ...group.courses[courseUserName],
+                        groupData: group
+                    });
+                } 
+                // Fallback: check if courseUserName matches a legacy availableCourses entry
+                else if (group.availableCourses) {
+                    const matchingCourse = group.availableCourses.find(course => {
+                        const convertedName = course.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+                        return convertedName === courseUserName;
+                    });
+                    
+                    if (matchingCourse) {
+                        // Return a synthetic course object for backward compatibility
+                        resolve({
+                            displayName: matchingCourse,
+                            courseUserName: courseUserName,
+                            description: `${matchingCourse} course`,
+                            isDefault: courseUserName === 'student-showcase',
+                            status: 1,
+                            groupData: group
+                        });
+                    } else {
+                        resolve(null);
+                    }
+                } else {
+                    resolve(null);
+                }
+            })
+            .catch(error => reject(error));
+    });
+};
+
+/**
+ * Check if a course exists within a group
+ *
+ * @param {string} groupUserName - Group username
+ * @param {string} courseUserName - Course username
+ * @returns {Promise<boolean>} True if course exists
+ */
+export const courseExistsInGroup = async (groupUserName, courseUserName) => {
+    try {
+        const course = await loadCourseFromGroup(groupUserName, courseUserName);
+        return course !== null;
+    } catch (error) {
+        console.error('Error checking course existence:', error);
+        return false;
+    }
+};
+
 /**
  * ---------------------------------------------------------------------------------------------------------------------
  */
@@ -1676,18 +1759,116 @@ export const fetchProjectsBy = async (
  * @returns {Promise<*>}
  */
 export const loadAParticularProject = async (projectID) => {
+    console.log('[REALTIME-DB DEBUG] ========================================');
+    console.log('[REALTIME-DB DEBUG] loadAParticularProject called with:', projectID);
+    console.log('[REALTIME-DB DEBUG] ========================================');
+
     const db = firebase.database();
     return new Promise((resolve, reject) => {
         db.ref(DB_CONST.PROJECTS_CHILD)
             .child(projectID)
             .once('value', snapshot => {
                 if (!snapshot || !snapshot.exists() || !snapshot.val()) {
+                    console.log('[REALTIME-DB DEBUG] No project found for ID:', projectID);
                     return reject("No project found.");
                 }
 
                 let project = snapshot.val();
+                console.log('[REALTIME-DB DEBUG] Project loaded successfully:', project);
 
-                loadAngelNetworkBasedOnANID(project.anid)
+                console.log('[REALTIME-DB DEBUG] Loading project group:', {
+                    projectID: projectID,
+                    projectAnid: project.anid,
+                    projectData: project
+                });
+
+                console.log('[REALTIME-DB DEBUG] About to call loadAngelNetworkBasedOnANID with ANID:', project.anid);
+
+                // Check if the ANID is actually a groupUserName (like "invest-west") instead of a Firebase key
+                // Firebase keys typically start with "-" and are longer
+                const isFirebaseKey = project.anid && project.anid.startsWith('-') && project.anid.length > 10;
+
+                console.log('[REALTIME-DB DEBUG] ANID analysis:', {
+                    anid: project.anid,
+                    isFirebaseKey: isFirebaseKey,
+                    shouldUseGroupUserName: !isFirebaseKey
+                });
+
+                if (!isFirebaseKey && project.anid) {
+                    // The ANID appears to be a groupUserName, use it directly
+                    console.log('[REALTIME-DB DEBUG] ANID appears to be groupUserName, using loadAngelNetworkBasedOnGroupUserName');
+                    loadAngelNetworkBasedOnGroupUserName(project.anid)
+                        .then(group => {
+                            console.log('[REALTIME-DB DEBUG] Group lookup by username succeeded:', group);
+                            project.group = group;
+
+                            getUserBasedOnID(project.issuerID)
+                                .then(issuer => {
+                                    project.issuer = issuer;
+
+                                    // projects in pitch phase cannot have any pledges
+                                    if (project.status !== DB_CONST.PROJECT_STATUS_PITCH_PHASE) {
+                                        // load pledges
+                                        loadPledges(projectID, null, LOAD_PLEDGES_ORDER_BY_PROJECT)
+                                            .then(pledges => {
+                                                project.pledges = pledges;
+                                                return resolve(project);
+                                            })
+                                            .catch(error => {
+                                                // error in loading pledges
+                                                return reject(error);
+                                            });
+                                    } else {
+                                        return resolve(project);
+                                    }
+                                })
+                                .catch(error => {
+                                    return reject("Couldn't load project issuer");
+                                });
+                        })
+                        .catch(error => {
+                            console.log('[REALTIME-DB DEBUG] Group lookup by username failed, trying invest-west fallback:', error);
+                            // Fallback to invest-west if the groupUserName lookup fails
+                            loadAngelNetworkBasedOnGroupUserName("invest-west")
+                                .then(group => {
+                                    console.log('[REALTIME-DB DEBUG] Invest-west fallback succeeded:', group);
+                                    project.group = group;
+
+                                    getUserBasedOnID(project.issuerID)
+                                        .then(issuer => {
+                                            project.issuer = issuer;
+
+                                            // projects in pitch phase cannot have any pledges
+                                            if (project.status !== DB_CONST.PROJECT_STATUS_PITCH_PHASE) {
+                                                // load pledges
+                                                loadPledges(projectID, null, LOAD_PLEDGES_ORDER_BY_PROJECT)
+                                                    .then(pledges => {
+                                                        project.pledges = pledges;
+                                                        return resolve(project);
+                                                    })
+                                                    .catch(error => {
+                                                        // error in loading pledges
+                                                        return reject(error);
+                                                    });
+                                            } else {
+                                                return resolve(project);
+                                            }
+                                        })
+                                        .catch(error => {
+                                            return reject("Couldn't load project issuer");
+                                        });
+                                })
+                                .catch(fallbackError => {
+                                    console.log('[REALTIME-DB DEBUG] All group loading attempts failed:', {
+                                        originalGroupUserName: project.anid,
+                                        fallbackError: fallbackError
+                                    });
+                                    return reject("Couldn't load group - all attempts failed");
+                                });
+                        });
+                } else {
+                    // Try the original ANID-based lookup
+                    loadAngelNetworkBasedOnANID(project.anid)
                     .then(group => {
                         project.group = group;
 
@@ -1716,8 +1897,61 @@ export const loadAParticularProject = async (projectID) => {
                             });
                     })
                     .catch(error => {
-                        return reject("Couldn't load group");
+                        console.log('[REALTIME-DB DEBUG] ANID lookup failed, trying fallback with invest-west:', {
+                            originalError: error,
+                            projectAnid: project.anid,
+                            projectID: projectID
+                        });
+
+                        // Fallback: try to load group by groupUserName "invest-west"
+                        // This helps with course-based contexts where ANID might not match
+                        console.log('[REALTIME-DB DEBUG] About to call fallback loadAngelNetworkBasedOnGroupUserName("invest-west")');
+
+                        // Special handling for course contexts - always fallback to invest-west
+                        const fallbackPromise = loadAngelNetworkBasedOnGroupUserName("invest-west");
+
+                        fallbackPromise
+                            .then(group => {
+                                console.log('[REALTIME-DB DEBUG] Fallback group lookup succeeded:', group);
+                                project.group = group;
+
+                                getUserBasedOnID(project.issuerID)
+                                    .then(issuer => {
+                                        project.issuer = issuer;
+
+                                        // projects in pitch phase cannot have any pledges
+                                        if (project.status !== DB_CONST.PROJECT_STATUS_PITCH_PHASE) {
+                                            // load pledges
+                                            loadPledges(projectID, null, LOAD_PLEDGES_ORDER_BY_PROJECT)
+                                                .then(pledges => {
+                                                    project.pledges = pledges;
+                                                    return resolve(project);
+                                                })
+                                                .catch(error => {
+                                                    // error in loading pledges
+                                                    return reject(error);
+                                                });
+                                        } else {
+                                            return resolve(project);
+                                        }
+                                    })
+                                    .catch(error => {
+                                        return reject("Couldn't load project issuer");
+                                    });
+                            })
+                            .catch(fallbackError => {
+                                console.log('[REALTIME-DB DEBUG] Both ANID and fallback lookups failed:', {
+                                    originalError: error,
+                                    fallbackError: fallbackError,
+                                    projectAnid: project.anid,
+                                    projectID: projectID,
+                                    fallbackAttempted: 'invest-west'
+                                });
+                                console.error('[REALTIME-DB ERROR] Complete failure in group loading for project', projectID);
+                                return reject("Couldn't load group - both primary and fallback failed");
+                            });
                     });
+                }
             });
     })
 };

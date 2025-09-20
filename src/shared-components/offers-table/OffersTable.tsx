@@ -213,10 +213,10 @@ class OffersTable extends Component<OffersTableProps, any> {
                                             isIssuer(currentUser) || (currentAdmin && tableAdmin && currentAdmin.id === tableAdmin.id)
                                                 // issuer creates offer for themselves
                                                 // course admin creates offer for their own course
-                                                ? Routes.constructCreateProjectRoute(ManageGroupUrlState.groupNameFromUrl ?? null)
+                                                ? Routes.constructCreateProjectRoute(ManageGroupUrlState.groupNameFromUrl ?? null, ManageGroupUrlState.courseNameFromUrl ?? null)
                                                 : (currentAdmin && isIssuer(tableUser))
                                                 // course admin creates offer for an issuer in their course
-                                                ? Routes.constructCreateProjectRoute(ManageGroupUrlState.groupNameFromUrl ?? null, {
+                                                ? Routes.constructCreateProjectRoute(ManageGroupUrlState.groupNameFromUrl ?? null, ManageGroupUrlState.courseNameFromUrl ?? null, {
                                                     admin: currentAdmin.id,
                                                     issuer: tableUser.id
                                                 })
@@ -464,8 +464,8 @@ class OffersTable extends Component<OffersTableProps, any> {
                                                             <CustomLink
                                                                 url={
                                                                     isDraftProject(offerInstance.projectDetail)
-                                                                        ? Routes.constructCreateProjectRoute(ManageGroupUrlState.groupNameFromUrl ?? null, {edit: offerInstance.projectDetail.id})
-                                                                        : Routes.constructProjectDetailRoute(ManageGroupUrlState.groupNameFromUrl ?? null, offerInstance.projectDetail.id)
+                                                                        ? Routes.constructCreateProjectRoute(ManageGroupUrlState.groupNameFromUrl ?? null, ManageGroupUrlState.courseNameFromUrl ?? null, {edit: offerInstance.projectDetail.id})
+                                                                        : Routes.constructProjectDetailRoute(ManageGroupUrlState.groupNameFromUrl ?? null, ManageGroupUrlState.courseNameFromUrl ?? null, offerInstance.projectDetail.id)
                                                                 }
                                                                 target={
                                                                     isDraftProject(offerInstance.projectDetail)
@@ -515,7 +515,7 @@ class OffersTable extends Component<OffersTableProps, any> {
                                                                 : <Box marginTop="18px" >
                                                                     <CustomLink
                                                                         url={
-                                                                            Routes.constructCreateProjectRoute(ManageGroupUrlState.groupNameFromUrl ?? null, {edit: offerInstance.projectDetail.id})
+                                                                            Routes.constructCreateProjectRoute(ManageGroupUrlState.groupNameFromUrl ?? null, ManageGroupUrlState.courseNameFromUrl ?? null, {edit: offerInstance.projectDetail.id})
                                                                         }
                                                                         target="_blank"
                                                                         color="none"

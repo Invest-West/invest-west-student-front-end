@@ -284,7 +284,7 @@ interface ExploreOffersComponentState {
                                                 ? null
                                                 : <Box marginBottom="40px" >
                                                     <CustomLink
-                                                        url={Routes.constructCreateProjectRoute(ManageGroupUrlState.groupNameFromUrl ?? null)}                                                  
+                                                        url={Routes.constructCreateProjectRoute(ManageGroupUrlState.groupNameFromUrl ?? null, ManageGroupUrlState.courseNameFromUrl ?? null)}                                                  
                                                         color="none"
                                                         activeColor="none"
                                                         activeUnderline={false}

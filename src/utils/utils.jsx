@@ -362,17 +362,27 @@ export const getLogoFromGroup = (getLogoType, groupProperties) => {
         case GET_PLAIN_LOGO:
             if (!groupProperties.hasOwnProperty('plainLogo')
                 || (groupProperties.hasOwnProperty('plainLogo') && groupProperties.plainLogo === null)
+                || !Array.isArray(groupProperties.plainLogo)
             ) {
                 return null;
             }
-            return groupProperties.plainLogo[groupProperties.plainLogo.findIndex(logo => !logo.hasOwnProperty('removed'))].url;
+            const plainLogoIndex = groupProperties.plainLogo.findIndex(logo => !logo.hasOwnProperty('removed'));
+            if (plainLogoIndex === -1) {
+                return null;
+            }
+            return groupProperties.plainLogo[plainLogoIndex].url;
         case GET_LOGO_WITH_TEXT:
             if (!groupProperties.hasOwnProperty('logoWithText')
                 || (groupProperties.hasOwnProperty('logoWithText') && groupProperties.logoWithText === null)
+                || !Array.isArray(groupProperties.logoWithText)
             ) {
                 return null;
             }
-            return groupProperties.logoWithText[groupProperties.logoWithText.findIndex(logo => !logo.hasOwnProperty('removed'))].url;
+            const logoWithTextIndex = groupProperties.logoWithText.findIndex(logo => !logo.hasOwnProperty('removed'));
+            if (logoWithTextIndex === -1) {
+                return null;
+            }
+            return groupProperties.logoWithText[logoWithTextIndex].url;
         default:
             return null;
     }

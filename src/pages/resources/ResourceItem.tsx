@@ -41,7 +41,7 @@ class ResourceItem extends Component<ResourceItemProps, any> {
             <Card>
                 <CustomLink
                     url={Routes.constructViewResourceDetailRoute(
-                        ManageGroupUrlState.groupNameFromUrl ?? null, resource.name)}
+                        ManageGroupUrlState.groupNameFromUrl ?? null, ManageGroupUrlState.courseNameFromUrl ?? null, resource.name)}
                     color="black"
                     activeColor="none"
                     activeUnderline={false}

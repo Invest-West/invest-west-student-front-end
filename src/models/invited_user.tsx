@@ -22,6 +22,11 @@ export default interface InvitedUser {
     invitedBy: string;
 
     /**
+     * id of the specific course within the university (optional)
+     */
+    courseId?: string;
+
+    /**
      * can be number (date in milliseconds) or string ("none")
      *
      * --> date (milliseconds):

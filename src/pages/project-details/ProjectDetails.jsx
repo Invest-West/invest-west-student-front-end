@@ -49,6 +49,7 @@ import {TYPE_INVESTOR} from "../../firebase/databaseConsts";
 import * as realtimeDBUtils from "../../firebase/realtimeDBUtils";
 import sharedStyles from "../../shared-js-css-styles/SharedStyles";
 import * as ROUTES from "../../router/routes";
+import Routes from "../../router/routes";
 import {AUTH_SUCCESS} from "../signin/Signin";
 import {KeyboardDatePicker} from "@material-ui/pickers";
 import Api, {ApiRoutes} from "../../api/Api";
@@ -2451,9 +2452,11 @@ class ProjectDetails extends Component {
                                                     to={
                                                         groupUserName
                                                             ?
-                                                            ROUTES.EDIT_OFFER
-                                                                .replace(":groupUserName", groupUserName)
-                                                                .replace(":projectID", project.id)
+                                                            Routes.constructCreateProjectRoute(
+                                                                groupUserName,
+                                                                project.course ? project.course.replace(/\s+/g, '-') : null,
+                                                                {edit: project.id}
+                                                            )
                                                             :
                                                             ROUTES.EDIT_OFFER_INVEST_WEST_SUPER
                                                                 .replace(":projectID", project.id)

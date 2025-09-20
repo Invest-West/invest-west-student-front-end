@@ -54,7 +54,7 @@ class OfferItem extends Component<OfferItemProps, any> {
         // Removed early return check for currentUser
 
         const pitchCover: PitchCover | null = getPitchCover(offerInstance.projectDetail);
-        const projectUrl = Routes.constructProjectDetailRoute(ManageGroupUrlState.groupNameFromUrl ?? null, offerInstance.projectDetail.id);
+        const projectUrl = Routes.constructProjectDetailRoute(ManageGroupUrlState.groupNameFromUrl ?? null, ManageGroupUrlState.courseNameFromUrl ?? null, offerInstance.projectDetail.id);
         
         console.log('OfferItem - Project URL:', projectUrl, 'for project:', offerInstance.projectDetail.projectName);
 

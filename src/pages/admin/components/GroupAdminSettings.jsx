@@ -33,7 +33,6 @@ import * as colors from "../../../values/colors";
 import * as utils from "../../../utils/utils";
 import * as ROUTES from "../../../router/routes";
 import Routes from "../../../router/routes";
-import ManageSectors from "./manage-sectors/ManageSectors";
 import ManageCourses from "./manage-courses/ManageCourses";
 
 const mapStateToProps = state => {
@@ -448,11 +447,6 @@ class GroupAdminSettings extends Component {
                             }}/>
                     </Col>
 
-                    {/** Edit sectors */}
-                    <Col xs={12} sm={12} md={12} lg={12}>
-                        <ManageSectors/>
-                    </Col>
-
                     {/** Divider */}
                     <Col xs={12} sm={12} md={12} lg={12}>
                         <Divider style={{marginTop: 40, marginBottom: 40, height: 4,
@@ -482,22 +476,18 @@ class GroupAdminSettings extends Component {
                             }}/>
                     </Col>
 
-                    {/** Edit create project terms and conditions */}
+                    {/** Divider */}
                     <Col xs={12} sm={12} md={12} lg={12}>
-                        <FlexView column>
-                            <Typography variant="h6" color="primary">Edit create project terms and conditions</Typography>
-
-                            <NavLink to={ROUTES.CREATE_PITCH_TERMS_AND_CONDITIONS} target="_blank" className={css(sharedStyles.nav_link_hover_without_changing_text_color)} style={{marginTop: 30}}>
-                                <Button variant="outlined" color="primary" className={css(sharedStyles.no_text_transform)}>View create project terms and conditions page</Button>
-                            </NavLink>
-
-                            <ReactQuill theme="snow" onChange={this.handleQuillEditorChanged('createPitchTermsAndConditions')} modules={modules} value={clubAttributesEdited && clubAttributesEdited.hasOwnProperty('createPitchTermsAndConditions') ? clubAttributesEdited.createPitchTermsAndConditions : {ops: []}} style={{marginTop: 20}}/>
-
-                            <FlexView marginTop={15} width="100%" hAlignContent="right">
-                                <Button variant="contained" color="primary" onClick={() => saveEditedQuill('createPitchTermsAndConditions')} style={{marginLeft: 12}}>Save</Button>
-                            </FlexView>
-                        </FlexView>
+                        <Divider style={{marginTop: 40, marginBottom: 40, height: 4,
+                                backgroundColor:
+                                    !groupDetails
+                                        ?
+                                        colors.primaryColor
+                                        :
+                                        groupDetails.settings.primaryColor
+                            }}/>
                     </Col>
+
 {/* 
                     <Col xs={12} sm={12} md={12} lg={12}>
                         <FlexView column>

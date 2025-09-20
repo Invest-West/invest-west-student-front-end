@@ -20,6 +20,7 @@ import {
     PITCH_COVER_VIDEO_URL_TYPE_SELECTED
 } from "../../pages/create-project/CreateProject";
 import * as ROUTES from "../../router/routes";
+import Routes from "../../router/routes";
 
 export const CREATE_PROJECT_SET_COMPONENT_PROPS = "CREATE_PROJECT_SET_COMPONENT_PROPS";
 export const setComponentContext = (context) => {
@@ -43,6 +44,7 @@ export const CREATE_PROJECT_MODE_CREATE_NEW = 2;
  */
 export const loadData = async (params) => {
     return (dispatch, getState) => {
+        console.log('⚡ [REDUX DEBUG] loadData action called with params:', params);
         const currentUser = getState().auth.user;
         const groupProperties = getState().manageGroupFromParams.groupProperties;
 
@@ -73,9 +75,12 @@ export const loadData = async (params) => {
 
         // in edit mode
         if (params.edit || projectIDToBeLoadedAfterSavingFirstTime) {
+            const projectIdToLoad = !params.edit ? projectIDToBeLoadedAfterSavingFirstTime : params.edit;
+            console.log('⚡ [REDUX DEBUG] About to load project with ID:', projectIdToLoad);
+
             // load the project
             realtimeDBUtils
-                .loadAParticularProject(!params.edit ? projectIDToBeLoadedAfterSavingFirstTime : params.edit)
+                .loadAParticularProject(projectIdToLoad)
                 .then(project => {
 
                     // allow the group admin to change the visibility of the project
@@ -95,6 +100,9 @@ export const loadData = async (params) => {
                     });
                 })
                 .catch(error => {
+                    alert('⚡ REDUX ERROR CAUGHT! Error: ' + error);
+                    console.error('⚡ [REDUX DEBUG] Error in Redux loadData action:', error);
+                    console.error('⚡ [REDUX DEBUG] Error stack:', new Error().stack);
                     dispatch({
                         type: CREATE_PROJECT_FINISHED_LOADING_DATA,
                         error: error
@@ -135,19 +143,21 @@ export const navigateToTheSamePageWithActiveStepSaved = (activeStep, projectID) 
             groupUserName
         } = getState().manageGroupFromParams;
 
+        // Try to get course information from manageGroupUrl state if available
+        const manageGroupUrlState = getState().manageGroupUrl;
+        const courseUserName = manageGroupUrlState?.courseNameFromUrl;
+
         const componentContext = getState().manageCreateProject.componentContext;
 
         // projectID not null
         // --> still in edit mode
         if (projectID) {
             componentContext.props.history.push({
-                pathname:
-                    groupUserName
-                        ?
-                        ROUTES.CREATE_OFFER
-                            .replace(":groupUserName", groupUserName)
-                        :
-                        ROUTES.CREATE_OFFER_INVEST_WEST_SUPER,
+                pathname: Routes.constructCreateProjectRoute(
+                    groupUserName ?? null,
+                    courseUserName ?? null,
+                    { edit: projectID }
+                ).split('?')[0], // Remove query params since we're setting them separately
                 search: `?edit=${projectID}`,
                 state: {
                     activeStep: activeStep
@@ -157,13 +167,10 @@ export const navigateToTheSamePageWithActiveStepSaved = (activeStep, projectID) 
         // projectID null --> create mode
         else {
             componentContext.props.history.push({
-                pathname:
-                    groupUserName
-                        ?
-                        ROUTES.CREATE_OFFER
-                            .replace(":groupUserName", groupUserName)
-                        :
-                        ROUTES.CREATE_OFFER_INVEST_WEST_SUPER,
+                pathname: Routes.constructCreateProjectRoute(
+                    groupUserName ?? null,
+                    courseUserName ?? null
+                ),
                 state: {
                     activeStep: activeStep
                 }

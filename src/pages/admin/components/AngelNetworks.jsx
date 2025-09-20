@@ -396,7 +396,7 @@ class AngelNetworks extends Component {
             renderedAngelNetworks.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map(angelNetwork => (
                 <TableRow key={angelNetwork.anid} hover>
                     <TableCell colSpan={2}>
-                        <NavLink to={Routes.constructGroupDetailRoute(groupUserName, angelNetwork.groupUserName)} className={css(sharedStyles.nav_link_hover_without_changing_text_color)}>
+                        <NavLink to={Routes.constructGroupDetailRoute(groupUserName, null, angelNetwork.groupUserName)} className={css(sharedStyles.nav_link_hover_without_changing_text_color)}>
                             <Typography color="primary">{angelNetwork.displayName}</Typography>
                         </NavLink>
                     </TableCell>

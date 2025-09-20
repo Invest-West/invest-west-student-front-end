@@ -78,6 +78,11 @@ export const fetchOffers: ActionCreator<any> = () => {
             groupFilter,
         } = getState().ExploreOffersLocalState;
 
+        // Get group and course info from URL
+        const { ManageGroupUrlState } = getState();
+        const groupNameFromUrl = ManageGroupUrlState.groupNameFromUrl;
+        const courseNameFromUrl = ManageGroupUrlState.courseNameFromUrl;
+
         // Determine orderBy based on phaseFilter and potentially other conditions
         let orderBy;
         if (groupFilter === "all") {
@@ -87,10 +92,20 @@ export const fetchOffers: ActionCreator<any> = () => {
             orderBy = phaseFilter === FetchProjectsPhaseOptions.ExpiredPitch ? FetchProjectsOrderByOptions.Group : FetchProjectsOrderByOptions.Phase;
         }
 
+        // Determine group filter: when accessing course-specific URL (not admin), filter by the group
+        let effectiveGroupFilter = groupFilter;
+        const isAdminPage = window.location.pathname.includes('/admin');
+
+        if (effectiveGroupFilter === "all" && courseNameFromUrl && groupNameFromUrl && !isAdminPage) {
+            // Only apply course-based group filtering for non-admin pages
+            // Convert group name from URL to group ID format (typically the anid)
+            effectiveGroupFilter = groupNameFromUrl;
+        }
+
         const fetchOffersOptions: FetchProjectsOptions = {
             search: searchFilter.trim().length === 0 ? undefined : searchFilter,
             visibility: visibilityFilter,
-            group: groupFilter === "all" ? undefined : groupFilter,
+            group: effectiveGroupFilter === "all" ? undefined : effectiveGroupFilter,
             sector: sectorFilter === "all" ? undefined : sectorFilter,
             phase: phaseFilter,
             orderBy,

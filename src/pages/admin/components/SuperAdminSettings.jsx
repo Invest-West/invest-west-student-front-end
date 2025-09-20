@@ -3,12 +3,12 @@ import {Col, Container, Row} from 'react-bootstrap';
 import FlexView from 'react-flexview';
 import {css, StyleSheet} from 'aphrodite';
 import {
+    Accordion,
+    AccordionDetails,
+    AccordionSummary,
     Button,
     Checkbox,
     Divider,
-    ExpansionPanel,
-    ExpansionPanelDetails,
-    ExpansionPanelSummary,
     FormControl,
     FormControlLabel,
     FormHelperText,
@@ -33,6 +33,7 @@ import {connect} from 'react-redux';
 import * as superAdminSettingsActions from '../../../redux-store/actions/superAdminSettingsActions';
 import ManageSectors from "./manage-sectors/ManageSectors";
 import ManageCourses from "./manage-courses/ManageCourses";
+import UpgradeUserToAdmin from "./UpgradeUserToAdmin";
 import FeedbackSnackbarNew from "../../../shared-components/feedback-snackbar/FeedbackSnackbarNew";
 
 const mapStateToProps = state => {
@@ -182,6 +183,16 @@ class SuperAdminSettings extends Component {
                         <Divider style={{marginTop: 40, marginBottom: 40, height: 3, backgroundColor: colors.primaryColor}}/>
                     </Col>
 
+                    {/** Upgrade user to admin */}
+                    <Col xs={12} sm={12} md={12} lg={12}>
+                        <UpgradeUserToAdmin/>
+                    </Col>
+
+                    {/** Divider */}
+                    <Col xs={12} sm={12} md={12} lg={12}>
+                        <Divider style={{marginTop: 40, marginBottom: 40, height: 3, backgroundColor: colors.primaryColor}}/>
+                    </Col>
+
                     {/** Edit FAQs in Pledge Page */}
                     <Col xs={12} sm={12} md={12} lg={12}>
                         <Typography variant="h6" color="primary">Edit FAQs in Pledge Page</Typography>
@@ -224,12 +235,12 @@ class SuperAdminSettings extends Component {
                                     null
                                     :
                                     clubAttributesEdited[DB_CONST.PLEDGE_FAQS_CHILD].map(FAQ => (
-                                        <ExpansionPanel key={FAQ.id} elevation={0} className={css(styles.frequently_asked_question_box)} expanded={(expandedPledgeFAQ && FAQ.id === expandedPledgeFAQ.id) ? true : false} onChange={this.handleExpandPledgeFAQPanel(FAQ)}>
-                                            <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                                        <Accordion key={FAQ.id} elevation={0} className={css(styles.frequently_asked_question_box)} expanded={(expandedPledgeFAQ && FAQ.id === expandedPledgeFAQ.id) ? true : false} onChange={this.handleExpandPledgeFAQPanel(FAQ)}>
+                                            <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                                                 <Typography variant="body2" align="left"><b>{FAQ.question}</b></Typography>
-                                            </ExpansionPanelSummary>
+                                            </AccordionSummary>
 
-                                            <ExpansionPanelDetails>
+                                            <AccordionDetails>
                                                 <FlexView column width="100%">
                                                     <Typography variant="body2" align="left">{FAQ.answer}</Typography>
 
@@ -269,8 +280,8 @@ class SuperAdminSettings extends Component {
                                                             null
                                                     }
                                                 </FlexView>
-                                            </ExpansionPanelDetails>
-                                        </ExpansionPanel>
+                                            </AccordionDetails>
+                                        </Accordion>
                                     ))
                             }
                         </FlexView>

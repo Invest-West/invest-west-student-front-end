@@ -276,4 +276,35 @@ export default class Api {
     public isRequestSuccessful(response: AxiosResponse): boolean {
         return response != null && response.status >= 200 && response.status < 300;
     }
+
+    // Static instance for convenience methods
+    private static instance = new Api();
+
+    /**
+     * Convenience method for GET requests
+     */
+    public static async doGet(endpoint: string, queryParameters?: any): Promise<AxiosResponse> {
+        return Api.instance.request('GET', endpoint, { requestBody: null, queryParameters });
+    }
+
+    /**
+     * Convenience method for POST requests
+     */
+    public static async doPost(endpoint: string, requestBody?: any, queryParameters?: any): Promise<AxiosResponse> {
+        return Api.instance.request('POST', endpoint, { requestBody, queryParameters });
+    }
+
+    /**
+     * Convenience method for PUT requests
+     */
+    public static async doPut(endpoint: string, requestBody?: any, queryParameters?: any): Promise<AxiosResponse> {
+        return Api.instance.request('PUT', endpoint, { requestBody, queryParameters });
+    }
+
+    /**
+     * Convenience method for DELETE requests
+     */
+    public static async doDelete(endpoint: string, queryParameters?: any): Promise<AxiosResponse> {
+        return Api.instance.request('DELETE', endpoint, { requestBody: null, queryParameters });
+    }
 }

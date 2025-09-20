@@ -14,6 +14,7 @@ export enum ManageGroupUrlEvents {
 export interface ManageGroupUrlAction extends Action {
     path?: string;
     groupUserName?: string | null;
+    courseUserName?: string | null;
     group?: GroupProperties | null;
     validGroupUrl?: boolean;
     error?: Error
@@ -22,6 +23,7 @@ export interface ManageGroupUrlAction extends Action {
 export interface SetGroupUrlAction extends ManageGroupUrlAction {
     path: string;
     groupUserName: string | null;
+    courseUserName: string | null;
 }
 
 export interface ValidatingGroupUrlAction extends ManageGroupUrlAction {
@@ -36,11 +38,12 @@ export interface FinishedValidatingGroupUrlAction extends ManageGroupUrlAction {
 export interface ResetGroupUrlStateAction extends ManageGroupUrlAction {
 }
 
-export const validateGroupUrl: ActionCreator<any> = (path: string, groupUserName: string | null) => {
+export const validateGroupUrl: ActionCreator<any> = (path: string, groupUserName: string | null, courseUserName?: string | null) => {
     return async (dispatch: Dispatch, getState: () => AppState) => {
         const {
             routePath,
             groupNameFromUrl,
+            courseNameFromUrl,
             group,
             loadingGroup,
             groupLoaded
@@ -49,7 +52,8 @@ export const validateGroupUrl: ActionCreator<any> = (path: string, groupUserName
         const setGroupUrlAction: SetGroupUrlAction = {
             type: ManageGroupUrlEvents.SetGroupUrl,
             path,
-            groupUserName
+            groupUserName,
+            courseUserName: courseUserName || null
         }
 
         let shouldValidateGroupUrl = false;
@@ -60,7 +64,7 @@ export const validateGroupUrl: ActionCreator<any> = (path: string, groupUserName
         }
         // routePath and groupNameFromUrl have been defined
         else {
-            if (groupNameFromUrl !== groupUserName) {
+            if (groupNameFromUrl !== groupUserName || courseNameFromUrl !== courseUserName) {
                 shouldValidateGroupUrl = true;
             }
         }
@@ -87,6 +91,31 @@ export const validateGroupUrl: ActionCreator<any> = (path: string, groupUserName
 
             // group name is not specified in the url
             if (!groupUserName) {
+                finishedLoadingGroupUrlAction.validGroupUrl = true;
+                return dispatch(finishedLoadingGroupUrlAction);
+            }
+
+            // Handle default "invest-west" group for course-based URLs
+            console.log('[FRONTEND DEBUG] Group validation check - groupUserName:', groupUserName);
+            if (groupUserName === 'invest-west') {
+                console.log('[FRONTEND DEBUG] Validating invest-west group URL');
+                finishedLoadingGroupUrlAction.group = {
+                    anid: '-M2I40dBdzdI89yDCaAn',
+                    dateAdded: Date.now(),
+                    description: 'Default student showcase group',
+                    displayName: 'Student Showcase',
+                    displayNameLower: 'student showcase',
+                    groupUserName: 'invest-west',
+                    isInvestWest: true,
+                    status: 1,
+                    plainLogo: [],
+                    settings: {
+                        primaryColor: '#4F6D7A',
+                        secondaryColor: '#ffffff',
+                        projectVisibility: 1,
+                        makeInvestorsContactDetailsVisibleToIssuers: false
+                    }
+                };
                 finishedLoadingGroupUrlAction.validGroupUrl = true;
                 return dispatch(finishedLoadingGroupUrlAction);
             }

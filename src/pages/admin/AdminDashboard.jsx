@@ -40,6 +40,7 @@ import * as colors from '../../values/colors';
 import * as ROUTES from '../../router/routes';
 import * as DB_CONST from '../../firebase/databaseConsts';
 import sharedStyles from '../../shared-js-css-styles/SharedStyles';
+import { isAdmin } from '../../models/admin';
 
 import {connect} from 'react-redux';
 import * as dashboardSidebarActions from '../../redux-store/actions/dashboardSidebarActions';
@@ -134,12 +135,14 @@ class AdminDashboard extends Component {
             return;
         }
 
+        const currentAdmin = isAdmin(currentUser);
+
         // // set user so that information can be used in the projects table component
         // projectsTable_setUser(currentUser);
 
         // set user so that information can be used in the activities table component
         activitiesTable_setUser(
-            currentUser.superAdmin
+            currentAdmin && (currentAdmin.superAdmin || currentAdmin.superGroupAdmin)
                 ?
                 currentUser
                 :
@@ -175,7 +178,23 @@ class AdminDashboard extends Component {
         }
 
         setGroupUserNameFromParams(match.params.hasOwnProperty('groupUserName') ? match.params.groupUserName : null);
-        setExpectedAndCurrentPathsForChecking(match.params.hasOwnProperty('groupUserName') ? ROUTES.ADMIN : ROUTES.ADMIN_INVEST_WEST_SUPER, match.path);
+        // Determine expected route based on whether this is a course-based route
+        const hasCourseParam = match.params.hasOwnProperty('courseUserName');
+        const hasGroupParam = match.params.hasOwnProperty('groupUserName');
+        
+        let expectedPath;
+        if (hasCourseParam && hasGroupParam) {
+            // Course-based admin route: /groups/:groupUserName/:courseUserName/admin
+            expectedPath = '/groups/:groupUserName/:courseUserName/admin';
+        } else if (hasGroupParam) {
+            // Group-based admin route: /groups/:groupUserName/admin  
+            expectedPath = ROUTES.ADMIN;
+        } else {
+            // Super admin route
+            expectedPath = ROUTES.ADMIN_INVEST_WEST_SUPER;
+        }
+        
+        setExpectedAndCurrentPathsForChecking(expectedPath, match.path);
 
         loadAngelNetwork()
         .catch(error => {
@@ -226,6 +245,7 @@ class AdminDashboard extends Component {
         } = this.props;
 
         const params = queryString.parse(this.props.location.search);
+        const currentAdmin = isAdmin(currentUser);
 
         let projectsAwaitingDecision = 0;
         // only do this if the table user is also set to the current admin
@@ -247,7 +267,7 @@ class AdminDashboard extends Component {
                 <Row noGutters style={{marginBottom: 30}}>
                     {/* Manage courses */}
                     {
-                        !currentUser.superAdmin
+                        !(currentAdmin && (currentAdmin.superAdmin || currentAdmin.superGroupAdmin))
                             ?
                             null
                             :
@@ -255,8 +275,8 @@ class AdminDashboard extends Component {
                                 <Accordion className={css(styles.card_style)}>
                                     <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                                         <FlexView column>
-                                            <Typography paragraph variant="h6" color="primary" align="left">Manage courses</Typography>
-                                            <Typography paragraph variant="body1" align="left">Manage courses that have joined the system.</Typography>
+                                            <Typography paragraph variant="h6" color="primary" align="left">Manage universities</Typography>
+                                            <Typography paragraph variant="body1" align="left">Manage universities that have joined the system.</Typography>
                                         </FlexView>
                                     </AccordionSummary>
                                     <AccordionDetails>
@@ -275,20 +295,20 @@ class AdminDashboard extends Component {
                                 <FlexView column>
                                     <Typography paragraph variant="h6" color="primary" align="left">
                                         {
-                                            currentUser.superAdmin
+                                            currentAdmin && (currentAdmin.superAdmin || currentAdmin.superGroupAdmin)
                                                 ?
                                                 "Manage system students"
                                                 :
-                                                "Manage course students"
+                                                "Manage university students"
                                         }
                                     </Typography>
                                     <Typography paragraph variant="body1" align="left">
                                         {
-                                            currentUser.superAdmin
+                                            currentAdmin && (currentAdmin.superAdmin || currentAdmin.superGroupAdmin)
                                                 ?
                                                 "Manage all the system students including those who have been invited but not yet registered."
                                                 :
-                                                "Manage all the course students including those who have been invited but not yet registered and those who joined this course from another course."
+                                                "Manage all the university students including those who have been invited but not yet registered and those who joined this university from another university."
                                         }
                                     </Typography>
                                 </FlexView>
@@ -301,7 +321,7 @@ class AdminDashboard extends Component {
 
                     {/* Manage access requests */}
                     {
-                        currentUser.superAdmin
+                        currentAdmin && (currentAdmin.superAdmin || currentAdmin.superGroupAdmin)
                             ?
                             null
                             :
@@ -331,9 +351,9 @@ class AdminDashboard extends Component {
                                                 </FlexView>
                                             </FlexView>
                                             <Typography paragraph variant="body1" align="left">
-                                                Manage access requests from other courses' students who would like
+                                                Manage access requests from other universities' students who would like
                                                 to
-                                                join this course.
+                                                join this university.
                                             </Typography>
                                         </FlexView>
                                     </AccordionSummary>
@@ -358,9 +378,9 @@ class AdminDashboard extends Component {
                                                         id={`tooltip-top`}
                                                     >
                                                         {
-                                                            currentUser.superAdmin
+                                                            currentAdmin && (currentAdmin.superAdmin || currentAdmin.superGroupAdmin)
                                                                 ?
-                                                                `${projectsAwaitingDecision} projects are awaiting course admins' review. Select "Awaiting review" from the "Phase" dropdown to see details.`
+                                                                `${projectsAwaitingDecision} projects are awaiting university admins' review. Select "Awaiting review" from the "Phase" dropdown to see details.`
                                                                 :
                                                                 `${projectsAwaitingDecision} projects are awaiting your review. Select "Awaiting review" from the "Phase" dropdown to see details.`
                                                         }
@@ -373,11 +393,11 @@ class AdminDashboard extends Component {
                                     </FlexView>
                                     <Typography paragraph variant="body1" align="left">
                                         {
-                                            currentUser.superAdmin
+                                            currentAdmin && (currentAdmin.superAdmin || currentAdmin.superGroupAdmin)
                                                 ?
-                                                "Manage all the projects created by all the students and course students in the system."
+                                                "Manage all the projects created by all the students and university students in the system."
                                                 :
-                                                "Manage all the projects created by the students and course students of this course."
+                                                "Manage all the projects created by the students and university students of this university."
                                         }
                                     </Typography>
                                 </FlexView>
@@ -393,7 +413,7 @@ class AdminDashboard extends Component {
 
                     {/* Manage courses */}
                     {
-                        currentUser.superAdmin
+                        currentAdmin && (currentAdmin.superAdmin || currentAdmin.superGroupAdmin)
                             ?
                             null
                             :
@@ -401,8 +421,8 @@ class AdminDashboard extends Component {
                                 <Accordion className={css(styles.card_style)}>
                                     <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                                         <FlexView column>
-                                            <Typography paragraph variant="h6" color="primary" align="left">Manage courses</Typography>
-                                            <Typography paragraph variant="body1" align="left">Create and manage courses within your network.</Typography>
+                                            <Typography paragraph variant="h6" color="primary" align="left">Manage universities</Typography>
+                                            <Typography paragraph variant="body1" align="left">Create and manage universities within your network.</Typography>
                                         </FlexView>
                                     </AccordionSummary>
                                     <AccordionDetails>
@@ -416,7 +436,7 @@ class AdminDashboard extends Component {
 
                     {/* Manage group admins */}
                     {
-                        currentUser.superAdmin
+                        currentAdmin && (currentAdmin.superAdmin || currentAdmin.superGroupAdmin)
                             ?
                             null
                             :
@@ -424,8 +444,8 @@ class AdminDashboard extends Component {
                                 <Accordion className={css(styles.card_style)}>
                                     <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                                         <FlexView column>
-                                            <Typography paragraph variant="h6" color="primary" align="left">Manage course admins</Typography>
-                                            <Typography paragraph variant="body1" align="left">Manage course admins. Only super course admin can add a new course
+                                            <Typography paragraph variant="h6" color="primary" align="left">Manage university admins</Typography>
+                                            <Typography paragraph variant="body1" align="left">Manage university admins. Only super university admin can add a new university
                                                 admin.</Typography>
                                         </FlexView>
                                     </AccordionSummary>
@@ -447,7 +467,7 @@ class AdminDashboard extends Component {
          */
         if (params.tab === SETTINGS_TAB) {
             return (
-                currentUser.superAdmin
+                currentAdmin && (currentAdmin.superAdmin || currentAdmin.superGroupAdmin)
                     ?
                     <SuperAdminSettings/>
                     :
@@ -535,6 +555,8 @@ class AdminDashboard extends Component {
             toggleSidebar,
             toggleNotifications
         } = this.props;
+
+        const currentAdmin = isAdmin(currentUser);
 
         if (!groupPropertiesLoaded) {
             return (
@@ -637,15 +659,11 @@ class AdminDashboard extends Component {
                     <Col xs={12} sm={12} md={12} lg={12}>
                         <Typography variant="body1" align="center" style={{paddingTop: 16,paddingBottom: 16}}>
                             {
-                                currentUser.superAdmin
+                                currentAdmin && (currentAdmin.superAdmin || currentAdmin.superGroupAdmin)
                                     ?
                                     "System admin"
                                     :
-                                    currentUser.superGroupAdmin
-                                        ?
-                                        "Super course admin"
-                                        :
-                                        "Course admin"
+                                    "University admin"
                             }
                             : <b>{currentUser.email}</b>
                         </Typography>

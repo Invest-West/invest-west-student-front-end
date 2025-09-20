@@ -1,8 +1,8 @@
 import React, {Component} from 'react';
 import {
-    ExpansionPanel,
-    ExpansionPanelDetails,
-    ExpansionPanelSummary,
+    Accordion,
+    AccordionDetails,
+    AccordionSummary,
     Paper,
     Tab,
     Tabs,
@@ -275,15 +275,15 @@ class HelpPage extends Component {
             <Row noGutters style={{marginBottom: 50}}>
                 <Col xs={12} sm={12} md={{span: 8, offset: 2}} lg={{span: 6, offset: 3}}>
                     {/** 1. Navigating Student Showcase */}
-                    <ExpansionPanel expanded={expandedPanel === 'group_admin_help_navigating_invest_west'} onChange={this.handleExpandPanel('group_admin_help_navigating_invest_west')}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                    <Accordion expanded={expandedPanel === 'group_admin_help_navigating_invest_west'} onChange={this.handleExpandPanel('group_admin_help_navigating_invest_west')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
                                     1. Navigating Student Showcase
                                 </Typography>
                             </FlexView>
-                        </ExpansionPanelSummary>
-                        <ExpansionPanelDetails>
+                        </AccordionSummary>
+                        <AccordionDetails>
                             <FlexView column>
                                 <Typography variant="body1" align="left" paragraph>
                                     Welcome to Student Showcase, we are excited to work with you. Here is a basic
@@ -328,19 +328,19 @@ class HelpPage extends Component {
                                     <Typography variant="body1" align="left">The home page will display all the course management functions, from this page you can manage course members, manage access requests to your course, manage the course’s projects and manage course admins.</Typography>
                                 </FlexView>
                             </FlexView>
-                        </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                        </AccordionDetails>
+                    </Accordion>
 
                     {/** 2. Manage group users */}
-                    <ExpansionPanel expanded={expandedPanel === 'group_admin_help_user_management'} onChange={this.handleExpandPanel('group_admin_help_user_management')}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                    <Accordion expanded={expandedPanel === 'group_admin_help_user_management'} onChange={this.handleExpandPanel('group_admin_help_user_management')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
                                     2. User management
                                 </Typography>
                             </FlexView>
-                        </ExpansionPanelSummary>
-                        <ExpansionPanelDetails>
+                        </AccordionSummary>
+                        <AccordionDetails>
                             <FlexView column>
                                 <Typography variant="body1" align="left">The manage course members tab is used to manage exiting members, invite new users and view details of the course’s users. To access this function, click on the ‘manage course members’ tab from the home page. From this section you can view all user's names, emails, user types, the date invited/requested to join, registration status and the date they registered.</Typography>
                                 <img alt="group_admin_help_user_management" src={require("../../img/group_admin_help_user_management.png").default} className={css(styles.image_style)}/>
@@ -365,54 +365,54 @@ class HelpPage extends Component {
                                     <img alt="group_admin_help_inviting_a_new_user_03" src={require("../../img/group_admin_help_inviting_a_new_user_03.png").default} className={css(styles.image_style)}/>
                                 </FlexView>
                             </FlexView>
-                        </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                        </AccordionDetails>
+                    </Accordion>
 
                     {/** 3. Manage access requests */}
-                    <ExpansionPanel expanded={expandedPanel === 'group_admin_help_manage_access_requests'} onChange={this.handleExpandPanel('group_admin_help_manage_access_requests')}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                    <Accordion expanded={expandedPanel === 'group_admin_help_manage_access_requests'} onChange={this.handleExpandPanel('group_admin_help_manage_access_requests')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
                                     3. Manage access requests
                                 </Typography>
                             </FlexView>
-                        </ExpansionPanelSummary>
-                        <ExpansionPanelDetails>
+                        </AccordionSummary>
+                        <AccordionDetails>
                             <FlexView column>
                                 <Typography variant="body1" align="left" paragraph>The access request tab is used to accept or reject investors from joining your course. Other users on the platform can request to join your course to gain access to your course’s projects. Click on the ‘access requests’ tab and this will show any pending requests, from there you can accept or reject individual requests.</Typography>
                                 <img alt="group_admin_help_manage_access_requests" src={require("../../img/group_admin_help_manage_access_requests.png").default} className={css(styles.image_style)}/>
                             </FlexView>
-                        </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                        </AccordionDetails>
+                    </Accordion>
 
                     {/** 4. Manage group members */}
-                    <ExpansionPanel expanded={expandedPanel === 'group_admin_help_manage_group_requests'} onChange={this.handleExpandPanel('group_admin_help_manage_group_requests')}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                    <Accordion expanded={expandedPanel === 'group_admin_help_manage_group_requests'} onChange={this.handleExpandPanel('group_admin_help_manage_group_requests')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
                                     4. Manage course members
                                 </Typography>
                             </FlexView>
-                        </ExpansionPanelSummary>
-                        <ExpansionPanelDetails>
+                        </AccordionSummary>
+                        <AccordionDetails>
                             <FlexView column>
                                 <Typography variant="body1" align="left" paragraph>To manage all members in your course, click ‘manage course members’ from the home page. The user management page allows you to view and modify course members information; be aware you can only edit the information for invited course members and not external course members who joined the course through an access request.  To view a user’s information/activity or edit their details click on their name in the list or alternatively you can search by email address.</Typography>
                                 <img alt="group_admin_help_manage_group_requests" src={require("../../img/group_admin_help_manage_group_members.png").default} className={css(styles.image_style)}/>
                                 <Typography variant="body1" align="left" paragraph>If a user needs to be blocked or removed from the platform, please contact us support@investwest.online for assistance.</Typography>
                             </FlexView>
-                        </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                        </AccordionDetails>
+                    </Accordion>
 
                     {/** 5. Manage offers */}
-                    <ExpansionPanel expanded={expandedPanel === 'group_admin_help_manage_offers'} onChange={this.handleExpandPanel('group_admin_help_manage_offers')}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                    <Accordion expanded={expandedPanel === 'group_admin_help_manage_offers'} onChange={this.handleExpandPanel('group_admin_help_manage_offers')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
                                     5. Manage projects
                                 </Typography>
                             </FlexView>
-                        </ExpansionPanelSummary>
-                        <ExpansionPanelDetails>
+                        </AccordionSummary>
+                        <AccordionDetails>
                             <FlexView column>
                                 <Typography variant="body1" align="left" paragraph>From the manage projects tab, you can view and edit all your course’s projects. The dropdown will show the projects title, its creator, its fundraising goal, and status.</Typography>
 
@@ -475,89 +475,89 @@ class HelpPage extends Component {
                                     <img alt="group_admin_help_reopening_a_temporarily_closed_offer" src={require("../../img/group_admin_help_reopening_a_temporarily_closed_offer.png").default} className={css(styles.image_style)}/>
                                 </FlexView>
                             </FlexView>
-                        </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                        </AccordionDetails>
+                    </Accordion>
 
                     {/** 6. Manage group admins */}
-                    <ExpansionPanel expanded={expandedPanel === 'group_admin_help_manage_group_admins'} onChange={this.handleExpandPanel('group_admin_help_manage_group_admins')}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                    <Accordion expanded={expandedPanel === 'group_admin_help_manage_group_admins'} onChange={this.handleExpandPanel('group_admin_help_manage_group_admins')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
                                     6. Manage course admins
                                 </Typography>
                             </FlexView>
-                        </ExpansionPanelSummary>
-                        <ExpansionPanelDetails>
+                        </AccordionSummary>
+                        <AccordionDetails>
                             {/** Exploring groups */}
                             <FlexView column>
                                 <Typography variant="body1" align="left">This page allows you to add another Course Admin to the Course. Please be advised, only add course admins if essential as each new admin will have full administer rights to the course. To add a course admin, click on the ‘mange course admins’ tab, then click on the ‘Add new course admin’ button and enter their email address and click the ‘Add’ button.</Typography>
                                 <img alt="group_admin_help_manage_group_admins" src={require("../../img/group_admin_help_manage_group_admins.png").default} className={css(styles.image_style)}/>
                             </FlexView>
-                        </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                        </AccordionDetails>
+                    </Accordion>
 
                     {/** 7. Explore offers */}
-                    <ExpansionPanel expanded={expandedPanel === 'group_admin_help_explore_offers'} onChange={this.handleExpandPanel('group_admin_help_explore_offers')}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                    <Accordion expanded={expandedPanel === 'group_admin_help_explore_offers'} onChange={this.handleExpandPanel('group_admin_help_explore_offers')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
                                     7. Exploring projects
                                 </Typography>
                             </FlexView>
-                        </ExpansionPanelSummary>
-                        <ExpansionPanelDetails>
+                        </AccordionSummary>
+                        <AccordionDetails>
                             <FlexView column>
                                 <Typography variant="body1" align="left">To explore projects made by other issuers click on the “Explore projects” button in the navigation bar. This page provides a view how Investors view projects. This page can also be used to give issuers and course admins an idea of how projects are structured.</Typography>
                                 <img alt="group_admin_help_explore_offers" src={require("../../img/group_admin_help_explore_offers.png").default} className={css(styles.image_style)}/>
                             </FlexView>
-                        </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                        </AccordionDetails>
+                    </Accordion>
 
                     {/** 8. Explore groups */}
-                    <ExpansionPanel expanded={expandedPanel === 'group_admin_help_explore_groups'} onChange={this.handleExpandPanel('group_admin_help_explore_groups')}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                    <Accordion expanded={expandedPanel === 'group_admin_help_explore_groups'} onChange={this.handleExpandPanel('group_admin_help_explore_groups')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
                                     8. Exploring courses
                                 </Typography>
                             </FlexView>
-                        </ExpansionPanelSummary>
-                        <ExpansionPanelDetails>
+                        </AccordionSummary>
+                        <AccordionDetails>
                             <FlexView column>
                                 <Typography variant="body1" align="left">To explore other groups, click on the “Explore courses” button in the navigation bar. </Typography>
                                 <img alt="group_admin_help_explore_groups" src={require("../../img/group_admin_help_explore_groups.png").default} className={css(styles.image_style)}
                                 />
                             </FlexView>
-                        </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                        </AccordionDetails>
+                    </Accordion>
 
                     {/** 9. Resources */}
-                    <ExpansionPanel expanded={expandedPanel === 'group_admin_help_resources'} onChange={this.handleExpandPanel('group_admin_help_resources')}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                    <Accordion expanded={expandedPanel === 'group_admin_help_resources'} onChange={this.handleExpandPanel('group_admin_help_resources')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
                                     9. Resources
                                 </Typography>
                             </FlexView>
-                        </ExpansionPanelSummary>
-                        <ExpansionPanelDetails>
+                        </AccordionSummary>
+                        <AccordionDetails>
                             <FlexView column>
                                 <Typography variant="body1" align="left">To explore resource on Invest West, click on the “Resources” button in the navigation bar. From this page you can view a range of information and services applicable to you and your users.</Typography>
                                 <img alt="group_admin_help_resources" src={require("../../img/group_admin_help_resources.png").default} className={css(styles.image_style)}/>
                             </FlexView>
-                        </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                        </AccordionDetails>
+                    </Accordion>
 
                      {/** 10. Settings */}
-                     <ExpansionPanel expanded={expandedPanel === 'group_admin_help_settings'} onChange={this.handleExpandPanel('group_admin_help_settings')}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                     <Accordion expanded={expandedPanel === 'group_admin_help_settings'} onChange={this.handleExpandPanel('group_admin_help_settings')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
                                     10. Settings
                                 </Typography>
                             </FlexView>
-                        </ExpansionPanelSummary>
-                        <ExpansionPanelDetails>
+                        </AccordionSummary>
+                        <AccordionDetails>
                             <FlexView column>
                                 <Typography variant="body1" align="left">The settings page allows you to configure the courses settings. This page allows you to add a course description, change the course’s website, alter the colour scheme, manage the default visibility of the course, configure issuer settings and edit the courses FAQ’s. This page can be accessed by clicking on the ‘settings’ button in the navigation bar. To view the courses details from the perspective of an external user not in your course click on the ‘View courses public page’ button.</Typography>
                                 <img alt="group_admin_help_settings" src={require("../../img/group_admin_help_settings.png").default} className={css(styles.image_style)}/>
@@ -600,37 +600,37 @@ class HelpPage extends Component {
                                     </FlexView>
                                 </FlexView>
                             </FlexView>
-                        </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                        </AccordionDetails>
+                    </Accordion>
 
                     {/** 11. Audit log */}
-                    <ExpansionPanel expanded={expandedPanel === 'group_admin_help_audit_log'} onChange={this.handleExpandPanel('group_admin_help_audit_log')}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                    <Accordion expanded={expandedPanel === 'group_admin_help_audit_log'} onChange={this.handleExpandPanel('group_admin_help_audit_log')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
                                     11. Audit log
                                 </Typography>
                             </FlexView>
-                        </ExpansionPanelSummary>
-                        <ExpansionPanelDetails>
+                        </AccordionSummary>
+                        <AccordionDetails>
                             <FlexView column>
                                 <Typography variant="body1" align="left">The Audit Log is used to monitor all the activities made by the admins of the course.</Typography>
                                 <img alt="group_admin_help_audit_log" src={require("../../img/group_admin_help_audit_log.png").default} className={css(styles.image_style)}/>
                             </FlexView>
-                        </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                        </AccordionDetails>
+                    </Accordion>
 
 
                     {/** 12. Password */}
-                    <ExpansionPanel expanded={expandedPanel === 'group_admin_help_password'} onChange={this.handleExpandPanel('group_admin_help_password')}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                    <Accordion expanded={expandedPanel === 'group_admin_help_password'} onChange={this.handleExpandPanel('group_admin_help_password')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
                                     12. Password
                                 </Typography>
                             </FlexView>
-                        </ExpansionPanelSummary>
-                        <ExpansionPanelDetails>
+                        </AccordionSummary>
+                        <AccordionDetails>
                             <FlexView column>
                                 <Typography variant="body1" align="left">If you have forgotten your password or cannot login you can reset your password from the login portal, from there you can click the “Forgot your password?” button. Once clicked enter your email address and you will be sent a link to reset your password.</Typography>
                                 <img alt="group_admin_help_password" src={require("../../img/group_admin_help_password.png").default} className={css(styles.image_style)}/>
@@ -647,19 +647,19 @@ class HelpPage extends Component {
                                     <img alt="group_admin_help_change_password" src={require("../../img/group_admin_help_change_password.png").default} className={css(styles.image_style)}/>
                                 </FlexView>
                             </FlexView>
-                        </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                        </AccordionDetails>
+                    </Accordion>
 
                     {/** 13. Logging out */}
-                    <ExpansionPanel expanded={expandedPanel === 'group_admin_help_logging_out'} onChange={this.handleExpandPanel('group_admin_help_logging_out')}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                    <Accordion expanded={expandedPanel === 'group_admin_help_logging_out'} onChange={this.handleExpandPanel('group_admin_help_logging_out')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
                                     13. Logging out
                                 </Typography>
                             </FlexView>
-                        </ExpansionPanelSummary>
-                        <ExpansionPanelDetails>
+                        </AccordionSummary>
+                        <AccordionDetails>
                             {/** Logging out */}
                             <FlexView column>
                                 <Typography variant="body1" align="left">
@@ -667,8 +667,8 @@ class HelpPage extends Component {
                                 </Typography>
                                 <img alt="group_admin_help_logging_out" src={require("../../img/group_admin_help_logging_out.png").default} className={css(styles.image_style)}/>
                             </FlexView>
-                        </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                        </AccordionDetails>
+                    </Accordion>
                 </Col>
             </Row>
             <Row>
@@ -694,15 +694,15 @@ class HelpPage extends Component {
             <Row noGutters style={{marginBottom: 50}}>
                 <Col xs={12} sm={12} md={{span: 8, offset: 2}} lg={{span: 6, offset: 3}}>
                     {/** 1. Navigating Invest West */}
-                    <ExpansionPanel expanded={expandedPanel === 'investor_help_navigating_invest_west'} onChange={this.handleExpandPanel('investor_help_navigating_invest_west')}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                    <Accordion expanded={expandedPanel === 'investor_help_navigating_invest_west'} onChange={this.handleExpandPanel('investor_help_navigating_invest_west')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
                                     1. Navigating Invest West
                                 </Typography>
                             </FlexView>
-                        </ExpansionPanelSummary>
-                        <ExpansionPanelDetails>
+                        </AccordionSummary>
+                        <AccordionDetails>
                             <FlexView column>
                                 <Typography variant="body1" align="left" paragraph>Welcome to Invest West, we are excited to work with you. Here is a basic tutorial showing the key functionalities of the site. </Typography>
 
@@ -733,19 +733,19 @@ class HelpPage extends Component {
                                     <img alt="investor_help_notifications" src={require("../../img/investor_help_notifications.png").default} className={css(styles.image_style)}/>
                                 </FlexView>
                             </FlexView>
-                        </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                        </AccordionDetails>
+                    </Accordion>
 
                     {/** 2. Offers */}
-                    <ExpansionPanel expanded={expandedPanel === 'investor_help_offers'} onChange={this.handleExpandPanel('investor_help_offers')}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                    <Accordion expanded={expandedPanel === 'investor_help_offers'} onChange={this.handleExpandPanel('investor_help_offers')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
                                     2. Projects
                                 </Typography>
                             </FlexView>
-                        </ExpansionPanelSummary>
-                        <ExpansionPanelDetails>
+                        </AccordionSummary>
+                        <AccordionDetails>
                             <FlexView column>
                                 <Typography variant="body1" align="left" paragraph>The home page will display all the projects available to you, and their relevant information.</Typography>
 
@@ -787,55 +787,55 @@ class HelpPage extends Component {
                                     <img alt="investor_help_viewing_offers" src={require("../../img/investor_help_viewing_offers_campaign.png").default} className={css(styles.image_style)}/>
                                 </FlexView>
                             </FlexView>
-                        </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                        </AccordionDetails>
+                    </Accordion>
 
                      {/** 3. Exploring groups */}
-                     <ExpansionPanel expanded={expandedPanel === 'investor_help_exploring_groups'} onChange={this.handleExpandPanel('investor_help_exploring_groups')}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                     <Accordion expanded={expandedPanel === 'investor_help_exploring_groups'} onChange={this.handleExpandPanel('investor_help_exploring_groups')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
                                     3. Exploring courses
                                 </Typography>
                             </FlexView>
-                        </ExpansionPanelSummary>
-                        <ExpansionPanelDetails>
+                        </AccordionSummary>
+                        <AccordionDetails>
                             {/** Exploring groups */}
                             <FlexView column>
                                 <Typography variant="body1" align="left">To explore other courses and request to join them by clicking on the “Explore courses” button in the navigation bar.</Typography>
                                 <img alt="investor_help_exploring_groups" src={require("../../img/investor_help_exploring_groups.png").default} className={css(styles.image_style)}/>
                             </FlexView>
-                        </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                        </AccordionDetails>
+                    </Accordion>
 
                        {/** 4. Resources */}
-                       <ExpansionPanel expanded={expandedPanel === 'investor_help_resources'} onChange={this.handleExpandPanel('investor_help_resources')}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                       <Accordion expanded={expandedPanel === 'investor_help_resources'} onChange={this.handleExpandPanel('investor_help_resources')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
                                     4. Resources
                                 </Typography>
                             </FlexView>
-                        </ExpansionPanelSummary>
-                        <ExpansionPanelDetails>
+                        </AccordionSummary>
+                        <AccordionDetails>
                             {/** Resources */}
                             <FlexView column>
                                 <Typography variant="body1" align="left">To explore useful resources on Invest West, click on the “Resources” button in the navigation bar. From this page you can view a range of content for investors, business owners and entrepreneurs.</Typography>
                                 <img alt="investor_help_resources" src={require("../../img/investor_help_resources.png").default} className={css(styles.image_style)}/>
                             </FlexView>
-                        </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                        </AccordionDetails>
+                    </Accordion>
 
                     {/** 5. Your profile */}
-                    <ExpansionPanel expanded={expandedPanel === 'investor_help_your_profile'} onChange={this.handleExpandPanel('investor_help_your_profile')}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                    <Accordion expanded={expandedPanel === 'investor_help_your_profile'} onChange={this.handleExpandPanel('investor_help_your_profile')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
                                     5. Your profile
                                 </Typography>
                             </FlexView>
-                        </ExpansionPanelSummary>
-                        <ExpansionPanelDetails>
+                        </AccordionSummary>
+                        <AccordionDetails>
                             <FlexView column>
                                 {/** Editing your profile */}
                                 <FlexView column>
@@ -856,19 +856,19 @@ class HelpPage extends Component {
                                     <img alt="investor_help_setting_up_business_profile" src={require("../../img/investor_help_setting_up_business_profile.png").default} className={css(styles.image_style)}/>
                                 </FlexView>
                             </FlexView>
-                        </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                        </AccordionDetails>
+                    </Accordion>
 
                     {/** 6. Password */}
-                    <ExpansionPanel expanded={expandedPanel === 'investor_help_password'} onChange={this.handleExpandPanel('investor_help_password')}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                    <Accordion expanded={expandedPanel === 'investor_help_password'} onChange={this.handleExpandPanel('investor_help_password')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
                                     6. Password
                                 </Typography>
                             </FlexView>
-                        </ExpansionPanelSummary>
-                        <ExpansionPanelDetails>
+                        </AccordionSummary>
+                        <AccordionDetails>
                             <FlexView column>
                                 {/** Reset password */}
                                 <FlexView column>
@@ -890,19 +890,19 @@ class HelpPage extends Component {
                                     />
                                 </FlexView>
                             </FlexView>
-                        </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                        </AccordionDetails>
+                    </Accordion>
 
                    {/** 7. Support */}
-                   <ExpansionPanel expanded={expandedPanel === 'investor_help_support'} onChange={this.handleExpandPanel('investor_help_support')}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                   <Accordion expanded={expandedPanel === 'investor_help_support'} onChange={this.handleExpandPanel('investor_help_support')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
                                     7. Support
                                 </Typography>
                             </FlexView>
-                        </ExpansionPanelSummary>
-                        <ExpansionPanelDetails>
+                        </AccordionSummary>
+                        <AccordionDetails>
                             {/** Support */}
                             <FlexView column>
                                 <Typography variant="body1" align="left">If you have any further questions or problems, you can get in touch with us by clicking on the “contact us” button in the navigation bar.</Typography>
@@ -910,19 +910,19 @@ class HelpPage extends Component {
                                 <Typography variant="body1" align="left">Additionally, you can also contact us from the login page by clicking on the “contact us” button at the top right of the page.</Typography>
                                 <img alt="investor_help_support_02" src={require("../../img/investor_help_support_02.png").default} className={css(styles.image_style)}/>
                             </FlexView>
-                        </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                        </AccordionDetails>
+                    </Accordion>
 
                     {/** 8. Logging out */}
-                    <ExpansionPanel expanded={expandedPanel === 'investor_help_logging_out'} onChange={this.handleExpandPanel('investor_help_logging_out')}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                    <Accordion expanded={expandedPanel === 'investor_help_logging_out'} onChange={this.handleExpandPanel('investor_help_logging_out')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
                                     8. Logging out
                                 </Typography>
                             </FlexView>
-                        </ExpansionPanelSummary>
-                        <ExpansionPanelDetails>
+                        </AccordionSummary>
+                        <AccordionDetails>
                             {/** Logging out */}
                             <FlexView column>
                                 <Typography variant="body1" align="left">
@@ -930,8 +930,8 @@ class HelpPage extends Component {
                                 </Typography>
                                 <img alt="investor_help_log_out" src={require("../../img/investor_help_log_out.png").default} className={css(styles.image_style)}/>
                             </FlexView>
-                        </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                        </AccordionDetails>
+                    </Accordion>
                 </Col>
             </Row>
             
@@ -956,15 +956,15 @@ class HelpPage extends Component {
             >
                 <Col xs={12} sm={12} md={{span: 8, offset: 2}} lg={{span: 6, offset: 3}}>
                     {/** 1. Navigating Invest West */}
-                    <ExpansionPanel expanded={expandedPanel === 'issuer_help_navigating_invest_west'} onChange={this.handleExpandPanel('issuer_help_navigating_invest_west')}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                    <Accordion expanded={expandedPanel === 'issuer_help_navigating_invest_west'} onChange={this.handleExpandPanel('issuer_help_navigating_invest_west')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
                                     1. Navigating Invest West
                                 </Typography>
                             </FlexView>
-                        </ExpansionPanelSummary>
-                        <ExpansionPanelDetails>
+                        </AccordionSummary>
+                        <AccordionDetails>
                             <FlexView column>
                                 {/** My dashboard */}
                                 <FlexView column>
@@ -998,19 +998,19 @@ class HelpPage extends Component {
                                     <img alt="issuer_help_notifications" src={require("../../img/issuer_help_notifications.png").default} className={css(styles.image_style)}/>
                                 </FlexView>
                             </FlexView>
-                        </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                        </AccordionDetails>
+                    </Accordion>
 
                          {/** 2. My projects */}
-                         <ExpansionPanel expanded={expandedPanel === 'issuer_help_my_offers'} onChange={this.handleExpandPanel('issuer_help_my_offers')}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                         <Accordion expanded={expandedPanel === 'issuer_help_my_offers'} onChange={this.handleExpandPanel('issuer_help_my_offers')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
                                     2. My projects
                                 </Typography>
                             </FlexView>
-                        </ExpansionPanelSummary>
-                        <ExpansionPanelDetails>
+                        </AccordionSummary>
+                        <AccordionDetails>
                             <FlexView column>
                                 {/** Creating a new offer */}
                                 <FlexView column>
@@ -1061,55 +1061,55 @@ class HelpPage extends Component {
                                     </FlexView>
                                 </FlexView>
                             </FlexView>
-                        </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                        </AccordionDetails>
+                    </Accordion>
 
                      {/** 3. Exploring groups */}
-                     <ExpansionPanel expanded={expandedPanel === 'issuer_help_exploring_groups'} onChange={this.handleExpandPanel('issuer_help_exploring_groups')}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                     <Accordion expanded={expandedPanel === 'issuer_help_exploring_groups'} onChange={this.handleExpandPanel('issuer_help_exploring_groups')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
                                     3. Exploring groups
                                 </Typography>
                             </FlexView>
-                        </ExpansionPanelSummary>
-                        <ExpansionPanelDetails>
+                        </AccordionSummary>
+                        <AccordionDetails>
                             {/** Exploring groups */}
                             <FlexView column>
                                 <Typography variant="body1" align="left">To explore other courses, click on the “Explore projects” button in the navigation bar. From this page you can click on specific courses to see the courses details.</Typography>
                                 <img alt="issuer_help_exploring_groups" src={require("../../img/issuer_help_exploring_groups.png").default} className={css(styles.image_style)}/>
                             </FlexView>
-                        </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                        </AccordionDetails>
+                    </Accordion>
 
                       {/** 4. Resources */}
-                      <ExpansionPanel expanded={expandedPanel === 'issuer_help_resources'} onChange={this.handleExpandPanel('issuer_help_resources')}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                      <Accordion expanded={expandedPanel === 'issuer_help_resources'} onChange={this.handleExpandPanel('issuer_help_resources')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
                                     4. Resources
                                 </Typography>
                             </FlexView>
-                        </ExpansionPanelSummary>
-                        <ExpansionPanelDetails>
+                        </AccordionSummary>
+                        <AccordionDetails>
                             {/** Resources */}
                             <FlexView column>
                                 <Typography variant="body1" align="left">To explore useful resource on Invest West, click on the “Resources” button in the navigation bar. From this page you can view a range of content for business owners and entrepreneurs.</Typography>
                                 <img alt="issuer_help_resources" src={require("../../img/issuer_help_resources.png").default} className={css(styles.image_style)}/>
                             </FlexView>
-                        </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                        </AccordionDetails>
+                    </Accordion>
 
                       {/** 5. Your profile */}
-                      <ExpansionPanel expanded={expandedPanel === 'issuer_help_your_profile'} onChange={this.handleExpandPanel('issuer_help_your_profile')}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                      <Accordion expanded={expandedPanel === 'issuer_help_your_profile'} onChange={this.handleExpandPanel('issuer_help_your_profile')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
                                     5. Your profile
                                 </Typography>
                             </FlexView>
-                        </ExpansionPanelSummary>
-                        <ExpansionPanelDetails>
+                        </AccordionSummary>
+                        <AccordionDetails>
                             <FlexView column>
                                 {/** Editing your profile */}
                                 <FlexView column>
@@ -1137,20 +1137,20 @@ class HelpPage extends Component {
                                     <img alt="issuer_help_setting_business_profile_02" src={require("../../img/issuer_help_setting_business_profile_02.png").default} className={css(styles.image_style)}/>
                                 </FlexView>
                             </FlexView>
-                        </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                        </AccordionDetails>
+                    </Accordion>
 
 
                     {/** 6. Password */}
-                    <ExpansionPanel expanded={expandedPanel === 'issuer_help_password'} onChange={this.handleExpandPanel('issuer_help_password')}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                    <Accordion expanded={expandedPanel === 'issuer_help_password'} onChange={this.handleExpandPanel('issuer_help_password')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
                                     6. Password
                                 </Typography>
                             </FlexView>
-                        </ExpansionPanelSummary>
-                        <ExpansionPanelDetails>
+                        </AccordionSummary>
+                        <AccordionDetails>
                             <FlexView column>
                                 {/** Reset password */}
                                 <FlexView column>
@@ -1170,20 +1170,20 @@ class HelpPage extends Component {
                                     <img alt="issuer_help_change_password" src={require("../../img/issuer_help_change_password.png").default} className={css(styles.image_style)}/>
                                 </FlexView>
                             </FlexView>
-                        </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                        </AccordionDetails>
+                    </Accordion>
 
 
                     {/** 7. Support */}
-                    <ExpansionPanel expanded={expandedPanel === 'issuer_help_support'} onChange={this.handleExpandPanel('issuer_help_support')}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                    <Accordion expanded={expandedPanel === 'issuer_help_support'} onChange={this.handleExpandPanel('issuer_help_support')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
                                     7. Support
                                 </Typography>
                             </FlexView>
-                        </ExpansionPanelSummary>
-                        <ExpansionPanelDetails>
+                        </AccordionSummary>
+                        <AccordionDetails>
                             {/** Support */}
                             <FlexView column>
                                 <Typography variant="body1" align="left">If you have any further questions or problems, you can get in touch with us by clicking on the “contact us” button in the navigation bar.</Typography>
@@ -1191,27 +1191,27 @@ class HelpPage extends Component {
                                 <Typography variant="body1" align="left">Additionally, you can also contact us from the login page by clicking on the “contact us” button at the top right of the page.</Typography>
                                 <img alt="issuer_help_support_02" src={require("../../img/issuer_help_support_02.png").default} className={css(styles.image_style)}/>
                             </FlexView>
-                        </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                        </AccordionDetails>
+                    </Accordion>
                     
 
                     {/** 8. Logging out */}
-                    <ExpansionPanel expanded={expandedPanel === 'issuer_help_logging_out'} onChange={this.handleExpandPanel('issuer_help_logging_out')}>
-                        <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                    <Accordion expanded={expandedPanel === 'issuer_help_logging_out'} onChange={this.handleExpandPanel('issuer_help_logging_out')}>
+                        <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                             <FlexView column>
                                 <Typography variant="h6" align="left">
                                     8. Logging out
                                 </Typography>
                             </FlexView>
-                        </ExpansionPanelSummary>
-                        <ExpansionPanelDetails>
+                        </AccordionSummary>
+                        <AccordionDetails>
                             {/** Logging out */}
                             <FlexView column>
                                 <Typography variant="body1" align="left">To logout press the “logout” button at the bottom of the navigation bar.</Typography>
                                 <img alt="issuer_help_log_out" src={require("../../img/issuer_help_log_out.png").default} className={css(styles.image_style)}/>
                             </FlexView>
-                        </ExpansionPanelDetails>
-                    </ExpansionPanel>
+                        </AccordionDetails>
+                    </Accordion>
                 </Col>
             </Row>
             

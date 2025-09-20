@@ -391,6 +391,10 @@ export const startListeningForGroupsUserIsIn = () => {
                         userInGroupStatus: invitedUser.status
                     };
 
+                    if (!groupsUserIsIn || !Array.isArray(groupsUserIsIn)) {
+                        return;
+                    }
+
                     const index = groupsUserIsIn.findIndex(group => group.invitedUser.id === groupUserIsIn.invitedUser.id);
                     if (index === -1) {
                         realtimeDBUtils
@@ -417,6 +421,10 @@ export const startListeningForGroupsUserIsIn = () => {
                         anid: invitedUser.invitedBy,
                         userInGroupStatus: invitedUser.status
                     };
+
+                    if (!groupsUserIsIn || !Array.isArray(groupsUserIsIn)) {
+                        return;
+                    }
 
                     const index = groupsUserIsIn.findIndex(group => group.invitedUser.id === groupUserIsIn.invitedUser.id);
                     if (index !== -1) {

@@ -236,11 +236,7 @@ class InvitedUsers extends Component {
                         
                         if (userProfile && userProfile.lastLoginDate) {
                             lastLoginDates[user.id] = userProfile.lastLoginDate;
-                        } else {
-                            console.log(`FETCH LOGIN: No lastLoginDate field found for ${user.email}. Available fields:`, Object.keys(userProfile || {}));
                         }
-                    } else {
-                        console.log(`FETCH LOGIN: User ${user.email} has not registered yet (no officialUserID)`);
                     }
                 } catch (error) {
                     console.warn(`Failed to fetch last login date for user ${user.email}:`, error);
