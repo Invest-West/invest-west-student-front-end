@@ -78,10 +78,24 @@ export const fetchOffers: ActionCreator<any> = () => {
             groupFilter,
         } = getState().ExploreOffersLocalState;
 
+        console.log('[ExploreOffersActions] fetchOffers called with state:', {
+            groupFilter,
+            searchFilter,
+            visibilityFilter,
+            sectorFilter,
+            phaseFilter
+        });
+
         // Get group and course info from URL
         const { ManageGroupUrlState } = getState();
         const groupNameFromUrl = ManageGroupUrlState.groupNameFromUrl;
         const courseNameFromUrl = ManageGroupUrlState.courseNameFromUrl;
+
+        console.log('[ExploreOffersActions] URL info from ManageGroupUrlState:', {
+            groupNameFromUrl,
+            courseNameFromUrl,
+            fullState: ManageGroupUrlState
+        });
 
         // Determine orderBy based on phaseFilter and potentially other conditions
         let orderBy;
@@ -92,14 +106,15 @@ export const fetchOffers: ActionCreator<any> = () => {
             orderBy = phaseFilter === FetchProjectsPhaseOptions.ExpiredPitch ? FetchProjectsOrderByOptions.Group : FetchProjectsOrderByOptions.Phase;
         }
 
-        // Determine group filter: when accessing course-specific URL (not admin), filter by the group
+        // Don't filter by group when on course-based URLs - show all projects
         let effectiveGroupFilter = groupFilter;
-        const isAdminPage = window.location.pathname.includes('/admin');
+        console.log('[ExploreOffersActions] effectiveGroupFilter before logic:', effectiveGroupFilter);
 
-        if (effectiveGroupFilter === "all" && courseNameFromUrl && groupNameFromUrl && !isAdminPage) {
-            // Only apply course-based group filtering for non-admin pages
-            // Convert group name from URL to group ID format (typically the anid)
-            effectiveGroupFilter = groupNameFromUrl;
+        // Check if the groupFilter is a groupUserName that should be undefined for API
+        // The backend now accepts both anid and groupUserName, but we should still log this
+        if (effectiveGroupFilter && effectiveGroupFilter !== "all") {
+            console.log('[ExploreOffersActions] WARNING: Group filter is set to:', effectiveGroupFilter,
+                '- this should be either "all" or a Firebase anid for best compatibility');
         }
 
         const fetchOffersOptions: FetchProjectsOptions = {
@@ -111,13 +126,14 @@ export const fetchOffers: ActionCreator<any> = () => {
             orderBy,
         };
 
+        console.log('[ExploreOffersActions] Final fetchOffersOptions:', JSON.stringify(fetchOffersOptions, null, 2));
+
         // Use advanced caching system
         const cacheKey = CacheKeys.offers(fetchOffersOptions);
         
         try {
             const cachedOffers = apiCache.get<ProjectInstance[]>(cacheKey);
             if (cachedOffers) {
-                console.log('Using cached offers data from CacheManager');
                 monitorCacheHit('api');
                 dispatch({
                     type: ExploreOffersEvents.CompleteFetchingOffers,
@@ -131,10 +147,6 @@ export const fetchOffers: ActionCreator<any> = () => {
             dispatch({ type: ExploreOffersEvents.FetchingOffers });
 
             const response = await new OfferRepository().fetchOffers(fetchOffersOptions);
-            console.log("API Response:", response);
-            console.log("Response data:", response.data);
-            console.log("Response data type:", typeof response.data);
-            console.log("Response data length:", response.data ? response.data.length : 'no data');
 
             // Cache the response with smart TTL based on filter complexity
             const ttl = searchFilter.trim().length > 0 ? 2 * 60 * 1000 : 5 * 60 * 1000; // 2min for search, 5min for browse
@@ -145,7 +157,6 @@ export const fetchOffers: ActionCreator<any> = () => {
                 offerInstances: response.data,
             });
         } catch (error) {
-            console.log("Error fetching offers:", error);
             dispatch({
                 type: ExploreOffersEvents.CompleteFetchingOffers,
                 error: error.toString(),

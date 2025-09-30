@@ -115,8 +115,8 @@ class ManageCourses extends Component<ManageCoursesProps, ManageCoursesLocalStat
     }
 
     getCourseUserName = (courseName: string) => {
-        const { groupProperties } = this.props;
-        return `${groupProperties.groupUserName}-${courseName.toLowerCase().replace(/\s+/g, '-')}`;
+        // Return just the course name formatted, not prefixed with group name
+        return courseName.toLowerCase().replace(/\s+/g, '-');
     }
 
     render() {

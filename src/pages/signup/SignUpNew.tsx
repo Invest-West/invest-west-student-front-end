@@ -23,6 +23,7 @@ import {AuthenticationState, isAuthenticating} from "../../redux-store/reducers/
 import {RouteComponentProps} from "react-router-dom";
 import {RouteParams} from "../../router/router";
 import {createAccount, handleInputFieldChanged, loadInvitedUser} from "./SignUpActions";
+import { findCourseDisplayNameByUrl } from "../../utils/courseUtils";
 import {
     hasErrorCreatingAccount,
     hasErrorLoadingInvitedUser,
@@ -95,6 +96,54 @@ class SignUpNew extends Component<SignUpProps & Readonly<RouteComponentProps<Rou
         this.invitedUserId = this.props.match.params.id;
         if (this.invitedUserId) {
             loadInvitedUser(this.invitedUserId);
+        }
+
+        // Try to set course from URL (will retry in componentDidUpdate if group not loaded yet)
+        this.trySetCourseFromUrl();
+    }
+
+    componentDidUpdate(prevProps: SignUpProps & Readonly<RouteComponentProps<RouteParams>>) {
+        // If group just loaded, try to set course from URL
+        if (!prevProps.ManageGroupUrlState.group && this.props.ManageGroupUrlState.group) {
+            this.trySetCourseFromUrl();
+        }
+    }
+
+    trySetCourseFromUrl = () => {
+        const {
+            handleInputFieldChanged,
+            ManageGroupUrlState,
+            SignUpLocalState
+        } = this.props;
+
+        // Don't override if user has already selected a course
+        if (SignUpLocalState.course !== "-1") {
+            return;
+        }
+
+        const courseFromUrl = this.props.match.params.courseUserName;
+        if (courseFromUrl && ManageGroupUrlState.group?.settings?.availableCourses) {
+            const courseDisplayName = findCourseDisplayNameByUrl(
+                courseFromUrl,
+                ManageGroupUrlState.group.settings.availableCourses
+            );
+
+            if (courseDisplayName) {
+                console.log('[SIGNUP] Auto-selecting course from URL:', courseFromUrl, '->', courseDisplayName);
+                // Simulate an input field change to set the course
+                const mockEvent = {
+                    target: {
+                        name: 'course',
+                        value: courseDisplayName,
+                        type: 'select',
+                        checked: false
+                    }
+                } as React.ChangeEvent<HTMLInputElement>;
+
+                handleInputFieldChanged(mockEvent);
+            } else {
+                console.warn('[SIGNUP] Course from URL not found in available courses:', courseFromUrl);
+            }
         }
     }
 

@@ -394,10 +394,13 @@ class Signup extends Component {
                         firstName: publicRegistrationUser.firstName,
                         lastName: publicRegistrationUser.lastName,
                         title: publicRegistrationUser.title,
-                        type: publicRegistrationType
+                        type: publicRegistrationType,
+                        discover: "none"
                     },
                     password: password,
-                    groupID: groupProperties.anid
+                    groupID: groupProperties.anid,
+                    discover: "none",
+                    acceptMarketingPreferences: marketingPreferencesChecked
                 };
             }
             // register via invitation email
@@ -413,10 +416,13 @@ class Signup extends Component {
                             firstName: invitedUserWithSpecifiedInvitedID.firstName,
                             lastName: invitedUserWithSpecifiedInvitedID.lastName,
                             title: invitedUserWithSpecifiedInvitedID.title,
-                            type: invitedUserWithSpecifiedInvitedID.type
+                            type: invitedUserWithSpecifiedInvitedID.type,
+                            discover: "none"
                         },
                         password: password,
-                        groupID: invitedUserWithSpecifiedInvitedID.Invitor.anid
+                        groupID: invitedUserWithSpecifiedInvitedID.Invitor.anid,
+                        discover: "none",
+                        acceptMarketingPreferences: marketingPreferencesChecked
                     };
                 }
             }

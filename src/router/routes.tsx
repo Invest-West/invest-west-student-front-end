@@ -34,12 +34,12 @@ export default class Routes {
     static groupExploreFront: string = `${Routes.baseGroup}/explore`;
     static courseExploreFront: string = `${Routes.baseCourse}/explore`;
 
-    static nonGroupSignIn: string = "/groups/invest-west/signin";
+    static nonGroupSignIn: string = "/groups/invest-west/student-showcase/signin";
     static groupSignIn: string = `${Routes.baseGroup}/signin`;
     static courseSignIn: string = `${Routes.baseCourse}/signin`;
     static superAdminSignIn: string = "/signin/super-admin";
 
-    static nonGroupSignUp:string = "/groups/invest-west/signup";
+    static nonGroupSignUp:string = "/groups/invest-west/student-showcase/signup";
     static groupSignUp: string = `${Routes.baseGroup}/signup/:id?`;
     static courseSignUp: string = `${Routes.baseCourse}/signup/:id?`;
 
@@ -47,9 +47,11 @@ export default class Routes {
     static groupAdminDashboard: string = `${Routes.baseGroup}/admin`;
     static courseAdminDashboard: string = `${Routes.baseCourse}/admin`;
 
+    static nonGroupIssuerDashboard: string = "/groups/invest-west/student-showcase/dashboard/issuer";
     static groupIssuerDashboard: string = `${Routes.baseGroup}/dashboard/issuer`;
     static courseIssuerDashboard: string = `${Routes.baseCourse}/dashboard/issuer`;
 
+    static nonGroupInvestorDashboard: string = "/groups/invest-west/student-showcase/dashboard/investor";
     static groupInvestorDashboard: string = `${Routes.baseGroup}/dashboard/investor`;
     static courseInvestorDashboard: string = `${Routes.baseCourse}/dashboard/investor`;
 
@@ -169,7 +171,7 @@ export default class Routes {
      * @param route
      */
     public static isIssuerDashboardRoute = (route: string) => {
-        return route === Routes.groupIssuerDashboard || route === Routes.courseIssuerDashboard;
+        return route === Routes.nonGroupIssuerDashboard || route === Routes.groupIssuerDashboard || route === Routes.courseIssuerDashboard;
     }
 
     /**
@@ -178,7 +180,7 @@ export default class Routes {
      * @param route
      */
     public static isInvestorDashboardRoute = (route: string) => {
-        return route === Routes.groupInvestorDashboard || route === Routes.courseInvestorDashboard;
+        return route === Routes.nonGroupInvestorDashboard || route === Routes.groupInvestorDashboard || route === Routes.courseInvestorDashboard;
     }
 
     /**
@@ -268,8 +270,6 @@ export default class Routes {
      */
     public static constructHomeRoute = (routeParams: any, ManageGroupUrlState: ManageGroupUrlState,
                                         AuthenticationState: AuthenticationState) => {
-        console.log('[ROUTING DEBUG] constructHomeRoute called with params:', routeParams);
-        console.log('[ROUTING DEBUG] Current user:', AuthenticationState.currentUser?.email || 'null');
         
         // If no user is authenticated, default to invest-west course-based navigation
         if (!AuthenticationState.currentUser) {
@@ -277,21 +277,18 @@ export default class Routes {
                 const route = Routes.courseFront
                     .replace(":groupUserName", routeParams.groupUserName)
                     .replace(":courseUserName", routeParams.courseUserName);
-                console.log('[ROUTING DEBUG] No user, using route params for course:', route);
                 return route;
             } else if (routeParams.groupUserName) {
                 // Default to a course within the group
                 const route = Routes.courseFront
                     .replace(":groupUserName", routeParams.groupUserName)
                     .replace(":courseUserName", "student-showcase");
-                console.log('[ROUTING DEBUG] No user, using route param group with default course:', route);
                 return route;
             } else {
                 // Default to invest-west with student-showcase course
                 const route = Routes.courseFront
                     .replace(":groupUserName", "invest-west")
                     .replace(":courseUserName", "student-showcase");
-                console.log('[ROUTING DEBUG] No user, defaulting to invest-west/student-showcase:', route);
                 return route;
             }
         }
@@ -376,8 +373,12 @@ export default class Routes {
                 .replace(":groupUserName", routeParams.groupUserName)
                 .replace(":courseUserName", routeParams.courseUserName);
         } else if (routeParams.groupUserName) {
-            return Routes.groupSignIn.replace(":groupUserName", routeParams.groupUserName);
+            // Default to student-showcase course for group-based URLs
+            return Routes.courseSignIn
+                .replace(":groupUserName", routeParams.groupUserName)
+                .replace(":courseUserName", "student-showcase");
         } else {
+            // Default to invest-west/student-showcase course
             return Routes.nonGroupSignIn;
         }
     }
@@ -421,7 +422,6 @@ export default class Routes {
      * Construct HIW route (How It Works) - maintains course parameter
      */
     public static constructHiwRoute = (routeParams: any) => {
-        console.log('[ROUTING DEBUG] constructHiwRoute called with params:', routeParams);
         
         if (routeParams.groupUserName) {
             if (routeParams.courseUserName) {
@@ -429,12 +429,10 @@ export default class Routes {
                 const route = Routes.courseHiw
                     .replace(":groupUserName", routeParams.groupUserName)
                     .replace(":courseUserName", routeParams.courseUserName);
-                console.log('[ROUTING DEBUG] Constructed course HIW route:', route);
                 return route;
             } else {
                 // Group-based URL  
                 const route = Routes.groupHiw.replace(":groupUserName", routeParams.groupUserName);
-                console.log('[ROUTING DEBUG] Constructed group HIW route:', route);
                 return route;
             }
         } else {
@@ -442,7 +440,6 @@ export default class Routes {
             const route = Routes.courseHiw
                 .replace(":groupUserName", "invest-west")
                 .replace(":courseUserName", "student-showcase");
-            console.log('[ROUTING DEBUG] Constructed default course HIW route:', route);
             return route;
         }
     }
@@ -451,7 +448,6 @@ export default class Routes {
      * Construct About route - maintains course parameters in navigation
      */
     public static constructAboutRoute = (routeParams: any) => {
-        console.log('[ROUTING DEBUG] constructAboutRoute called with params:', routeParams);
         
         if (routeParams.groupUserName) {
             if (routeParams.courseUserName) {
@@ -459,12 +455,10 @@ export default class Routes {
                 const route = Routes.courseAbout
                     .replace(":groupUserName", routeParams.groupUserName)
                     .replace(":courseUserName", routeParams.courseUserName);
-                console.log('[ROUTING DEBUG] Constructed course About route:', route);
                 return route;
             } else {
                 // Group-based URL  
                 const route = Routes.groupAbout.replace(":groupUserName", routeParams.groupUserName);
-                console.log('[ROUTING DEBUG] Constructed group About route:', route);
                 return route;
             }
         } else {
@@ -472,7 +466,6 @@ export default class Routes {
             const route = Routes.courseAbout
                 .replace(":groupUserName", "invest-west")
                 .replace(":courseUserName", "student-showcase");
-            console.log('[ROUTING DEBUG] Constructed default course About route:', route);
             return route;
         }
     }
@@ -481,7 +474,6 @@ export default class Routes {
      * Construct Contact route - maintains course parameters in navigation
      */
     public static constructContactRoute = (routeParams: any) => {
-        console.log('[ROUTING DEBUG] constructContactRoute called with params:', routeParams);
         
         if (routeParams.groupUserName) {
             if (routeParams.courseUserName) {
@@ -489,12 +481,10 @@ export default class Routes {
                 const route = Routes.courseContact
                     .replace(":groupUserName", routeParams.groupUserName)
                     .replace(":courseUserName", routeParams.courseUserName);
-                console.log('[ROUTING DEBUG] Constructed course Contact route:', route);
                 return route;
             } else {
                 // Group-based URL  
                 const route = Routes.groupContact.replace(":groupUserName", routeParams.groupUserName);
-                console.log('[ROUTING DEBUG] Constructed group Contact route:', route);
                 return route;
             }
         } else {
@@ -502,7 +492,6 @@ export default class Routes {
             const route = Routes.courseContact
                 .replace(":groupUserName", "invest-west")
                 .replace(":courseUserName", "student-showcase");
-            console.log('[ROUTING DEBUG] Constructed default course Contact route:', route);
             return route;
         }
     }
@@ -511,7 +500,6 @@ export default class Routes {
      * Construct Explore route - maintains course parameters in navigation
      */
     public static constructExploreRoute = (routeParams: any) => {
-        console.log('[ROUTING DEBUG] constructExploreRoute called with params:', routeParams);
         
         if (routeParams.groupUserName) {
             if (routeParams.courseUserName) {
@@ -519,12 +507,10 @@ export default class Routes {
                 const route = Routes.courseExploreFront
                     .replace(":groupUserName", routeParams.groupUserName)
                     .replace(":courseUserName", routeParams.courseUserName);
-                console.log('[ROUTING DEBUG] Constructed course Explore route:', route);
                 return route;
             } else {
                 // Group-based URL  
                 const route = Routes.groupExploreFront.replace(":groupUserName", routeParams.groupUserName);
-                console.log('[ROUTING DEBUG] Constructed group Explore route:', route);
                 return route;
             }
         } else {
@@ -532,7 +518,6 @@ export default class Routes {
             const route = Routes.courseExploreFront
                 .replace(":groupUserName", "invest-west")
                 .replace(":courseUserName", "student-showcase");
-            console.log('[ROUTING DEBUG] Constructed default course Explore route:', route);
             return route;
         }
     }
@@ -622,27 +607,39 @@ export default class Routes {
                 .some(membership => membership.group.groupUserName === routeParams.groupUserName)) {
                 return routeParams.groupUserName;
             }
-            
+
             // Second priority: Look for invest-west group specifically
             const investWestGroup = AuthenticationState.groupsOfMembership
                 .find(membership => membership.group.groupUserName === 'invest-west');
             if (investWestGroup) {
                 return 'invest-west';
             }
-            
+
             // Third priority: Use home group if available
             const homeGroup: GroupOfMembership | null = getHomeGroup(AuthenticationState.groupsOfMembership);
             if (homeGroup) {
                 return homeGroup.group.groupUserName;
             }
-            
+
             // Fourth priority: Use first available group
             if (AuthenticationState.groupsOfMembership.length > 0) {
                 return AuthenticationState.groupsOfMembership[0].group.groupUserName;
             }
-            
+
             // Final fallback: invest-west
             return 'invest-west';
+        };
+
+        // Helper function to get course name with student-showcase fallback
+        const getCourseNameForUser = (): string => {
+            // First priority: Use course from URL if provided
+            if (routeParams.courseUserName) {
+                return routeParams.courseUserName;
+            }
+
+            // TODO: In future, get user's actual assigned course from their profile
+            // For now, fallback to student-showcase
+            return 'student-showcase';
         };
 
         let route: string = "";
@@ -656,29 +653,36 @@ export default class Routes {
             // Group admin → course admin dashboard
             else if (AuthenticationState.groupsOfMembership.length > 0) {
                 const adminGroup: GroupOfMembership = AuthenticationState.groupsOfMembership[0];
+                const courseName = getCourseNameForUser();
                 route = Routes.courseAdminDashboard
                     .replace(":groupUserName", adminGroup.group.groupUserName)
-                    .replace(":courseUserName", "student-showcase");
+                    .replace(":courseUserName", courseName);
+                console.log('[DASHBOARD DEBUG] Constructed admin dashboard route:', route);
             } else {
                 // Fallback for group admin with no groups
+                const courseName = getCourseNameForUser();
                 route = Routes.courseAdminDashboard
                     .replace(":groupUserName", "invest-west")
-                    .replace(":courseUserName", "student-showcase");
+                    .replace(":courseUserName", courseName);
+                console.log('[DASHBOARD DEBUG] Constructed fallback admin dashboard route:', route);
             }
         }
         // Handle regular users (investors/issuers)
         else {
             const groupName = getGroupNameForUser();
-            
+            const courseName = getCourseNameForUser();
+
             if (isInvestor(AuthenticationState.currentUser as User)) {
                 route = Routes.courseInvestorDashboard
                     .replace(":groupUserName", groupName)
-                    .replace(":courseUserName", "student-showcase");
+                    .replace(":courseUserName", courseName);
+                console.log('[DASHBOARD DEBUG] Constructed investor dashboard route:', route);
             } else {
                 // Assume issuer if not investor
                 route = Routes.courseIssuerDashboard
                     .replace(":groupUserName", groupName)
-                    .replace(":courseUserName", "student-showcase");
+                    .replace(":courseUserName", courseName);
+                console.log('[DASHBOARD DEBUG] Constructed issuer dashboard route:', route);
             }
         }
 

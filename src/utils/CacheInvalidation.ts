@@ -12,7 +12,6 @@ export class CacheInvalidationManager {
     static invalidateUserCache(uid: string): void {
         userCache.delete(CacheKeys.user(uid));
         userCache.delete(CacheKeys.groupsOfMembership(uid));
-        console.log(`Invalidated cache for user: ${uid}`);
     }
 
     /**
@@ -20,7 +19,6 @@ export class CacheInvalidationManager {
      */
     static invalidateOffersCache(reason?: string): void {
         const invalidatedCount = apiCache.invalidatePattern(/^offers:/);
-        console.log(`Invalidated ${invalidatedCount} offers cache entries. Reason: ${reason || 'manual'}`);
     }
 
     /**
@@ -30,7 +28,6 @@ export class CacheInvalidationManager {
         apiCache.delete(CacheKeys.project(projectId));
         // Also invalidate offers cache since project changes might affect offer listings
         this.invalidateOffersCache(`project ${projectId} updated`);
-        console.log(`Invalidated cache for project: ${projectId}`);
     }
 
     /**
@@ -40,7 +37,6 @@ export class CacheInvalidationManager {
         staticCache.delete(CacheKeys.group(groupId));
         // Invalidate offers that might be filtered by this group
         this.invalidateOffersCache(`group ${groupId} updated`);
-        console.log(`Invalidated cache for group: ${groupId}`);
     }
 
     /**
@@ -96,7 +92,6 @@ export class CacheInvalidationManager {
         apiCache.clear();
         userCache.clear();
         staticCache.clear();
-        console.log('All caches cleared');
     }
 
     /**
@@ -105,7 +100,6 @@ export class CacheInvalidationManager {
     static async preloadCommonData(): Promise<void> {
         try {
             // This could be called on app startup to preload frequently accessed data
-            console.log('Preloading common data...');
             
             // Example: preload system attributes
             // const systemAttributes = await new SystemRepository().getAttributes();
@@ -129,7 +123,6 @@ export class CacheWarmingManager {
             const groupsCacheKey = CacheKeys.groupsOfMembership(uid);
             
             if (!userCache.has(userCacheKey) || !userCache.has(groupsCacheKey)) {
-                console.log(`Warming cache for user: ${uid}`);
                 // The actual data fetching would happen in the authentication action
                 // This is just a placeholder for the strategy
             }
@@ -152,7 +145,6 @@ export class CacheWarmingManager {
             for (const filters of commonFilters) {
                 const cacheKey = CacheKeys.offers(filters);
                 if (!apiCache.has(cacheKey)) {
-                    console.log('Warming offers cache for filters:', filters);
                     // Would fetch and cache the data
                 }
             }

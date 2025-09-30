@@ -447,45 +447,9 @@ class GroupAdminSettings extends Component {
                             }}/>
                     </Col>
 
-                    {/** Divider */}
-                    <Col xs={12} sm={12} md={12} lg={12}>
-                        <Divider style={{marginTop: 40, marginBottom: 40, height: 4,
-                                backgroundColor:
-                                    !groupDetails
-                                        ?
-                                        colors.primaryColor
-                                        :
-                                        groupDetails.settings.primaryColor
-                            }}/>
-                    </Col>
-
                     {/** Edit courses */}
                     <Col xs={12} sm={12} md={12} lg={12}>
                         <ManageCourses/>
-                    </Col>
-
-                    {/** Divider */}
-                    <Col xs={12} sm={12} md={12} lg={12}>
-                        <Divider style={{marginTop: 40, marginBottom: 40, height: 4,
-                                backgroundColor:
-                                    !groupDetails
-                                        ?
-                                        colors.primaryColor
-                                        :
-                                        groupDetails.settings.primaryColor
-                            }}/>
-                    </Col>
-
-                    {/** Divider */}
-                    <Col xs={12} sm={12} md={12} lg={12}>
-                        <Divider style={{marginTop: 40, marginBottom: 40, height: 4,
-                                backgroundColor:
-                                    !groupDetails
-                                        ?
-                                        colors.primaryColor
-                                        :
-                                        groupDetails.settings.primaryColor
-                            }}/>
                     </Col>
 
 {/* 

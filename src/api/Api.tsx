@@ -71,7 +71,18 @@ export default class Api {
      * @private
      */
     private buildUrl(endPoint: string, queryParameters: any): string {
-        let fullUrl = this.baseUrl + endPoint + Api.buildQueryParameters(queryParameters);
+        const queryString = Api.buildQueryParameters(queryParameters);
+        let fullUrl = this.baseUrl + endPoint + queryString;
+
+        if (endPoint.includes('projects')) {
+            console.log('[API] Building URL for projects endpoint:', {
+                endPoint,
+                queryParameters,
+                queryString,
+                fullUrl
+            });
+        }
+
         return encodeURI(fullUrl);
     }
 

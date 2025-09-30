@@ -192,15 +192,15 @@ const AppRouter = () => (
                        // @ts-ignore
                                                 component={<SignIn {...props}/>}/>}/>
 
-            <Route path={Routes.nonGroupAdminDashboard} exact
-                // @ts-ignore
-                   render={props => <GroupRoute {...props} showHeader={false}
-                                                component={<AdminDashboard {...props}/>}/>}/>
             <Route path={Routes.courseAdminDashboard} exact
                 // @ts-ignore
                    render={props => <GroupRoute {...props} showHeader={false}
                                                 component={<AdminDashboard {...props}/>}/>}/>
             <Route path={Routes.groupAdminDashboard} exact
+                // @ts-ignore
+                   render={props => <GroupRoute {...props} showHeader={false}
+                                                component={<AdminDashboard {...props}/>}/>}/>
+            <Route path={Routes.nonGroupAdminDashboard} exact
                 // @ts-ignore
                    render={props => <GroupRoute {...props} showHeader={false}
                                                 component={<AdminDashboard {...props}/>}/>}/>
@@ -213,12 +213,20 @@ const AppRouter = () => (
                 // @ts-ignore
                    render={props => <GroupRoute {...props} showHeader={false}
                                                 component={<IssuerDashboard {...props}/>}/>}/>
+            <Route path={Routes.nonGroupIssuerDashboard} exact
+                // @ts-ignore
+                   render={props => <GroupRoute {...props} showHeader={false}
+                                                component={<IssuerDashboard {...props}/>}/>}/>
 
             <Route path={Routes.courseInvestorDashboard} exact
                 // @ts-ignore
                    render={props => <GroupRoute {...props} showHeader={false}
                                                 component={<InvestorDashboard {...props}/>}/>}/>
             <Route path={Routes.groupInvestorDashboard} exact
+                // @ts-ignore
+                   render={props => <GroupRoute {...props} showHeader={false}
+                                                component={<InvestorDashboard {...props}/>}/>}/>
+            <Route path={Routes.nonGroupInvestorDashboard} exact
                 // @ts-ignore
                    render={props => <GroupRoute {...props} showHeader={false}
                                                 component={<InvestorDashboard {...props}/>}/>}/>

@@ -19,7 +19,6 @@ const CourseSetup = () => {
         setError('');
 
         try {
-            console.log('Starting course structure setup...');
             
             // Get the invest-west group
             const groupRef = firebase.database().ref(DB_CONST.GROUP_PROPERTIES_CHILD);
@@ -42,7 +41,6 @@ const CourseSetup = () => {
                 throw new Error('Could not retrieve invest-west group data');
             }
             
-            console.log('Found invest-west group:', investWestKey);
             
             // Check if courses already exist
             if (investWestData.courses && investWestData.courses['student-showcase']) {
@@ -53,7 +51,6 @@ const CourseSetup = () => {
             // Convert existing availableCourses to new structure
             const structuredCourses = convertAvailableCoursesToStructured(investWestData.availableCourses || []);
             
-            console.log('Generated course structure:', structuredCourses);
             
             // Update the database
             const updates = {

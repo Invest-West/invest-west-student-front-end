@@ -44,7 +44,6 @@ export const CREATE_PROJECT_MODE_CREATE_NEW = 2;
  */
 export const loadData = async (params) => {
     return (dispatch, getState) => {
-        console.log('⚡ [REDUX DEBUG] loadData action called with params:', params);
         const currentUser = getState().auth.user;
         const groupProperties = getState().manageGroupFromParams.groupProperties;
 
@@ -76,7 +75,6 @@ export const loadData = async (params) => {
         // in edit mode
         if (params.edit || projectIDToBeLoadedAfterSavingFirstTime) {
             const projectIdToLoad = !params.edit ? projectIDToBeLoadedAfterSavingFirstTime : params.edit;
-            console.log('⚡ [REDUX DEBUG] About to load project with ID:', projectIdToLoad);
 
             // load the project
             realtimeDBUtils

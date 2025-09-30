@@ -113,8 +113,27 @@ class InvestorDashboard extends Component {
             history.push(redirectTo);
         }
 
+        console.log('[InvestorDashboard] match.params:', match.params);
+        console.log('[InvestorDashboard] match.path:', match.path);
+
         setGroupUserNameFromParams(match.params.hasOwnProperty('groupUserName') ? match.params.groupUserName : null);
-        setExpectedAndCurrentPathsForChecking(match.params.hasOwnProperty('groupUserName') ? ROUTES.DASHBOARD_INVESTOR : ROUTES.DASHBOARD_INVESTOR_INVEST_WEST_SUPER, match.path);
+        // Determine expected path based on URL structure
+        let expectedPath;
+        if (match.params.hasOwnProperty('courseUserName')) {
+            // Course-based route: /groups/:groupUserName/:courseUserName/dashboard/investor
+            expectedPath = '/groups/:groupUserName/:courseUserName/dashboard/investor';
+            console.log('[InvestorDashboard] Using course-based path');
+        } else if (match.params.hasOwnProperty('groupUserName')) {
+            // Group-based route: /groups/:groupUserName/dashboard/investor
+            expectedPath = ROUTES.DASHBOARD_INVESTOR;
+            console.log('[InvestorDashboard] Using group-based path');
+        } else {
+            // Super admin route
+            expectedPath = ROUTES.DASHBOARD_INVESTOR_INVEST_WEST_SUPER;
+            console.log('[InvestorDashboard] Using super admin path');
+        }
+        console.log('[InvestorDashboard] expectedPath:', expectedPath, 'match.path:', match.path);
+        setExpectedAndCurrentPathsForChecking(expectedPath, match.path);
 
         loadAngelNetwork();
 

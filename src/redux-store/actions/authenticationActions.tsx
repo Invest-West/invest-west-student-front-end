@@ -11,6 +11,8 @@ import Firebase from "firebase";
 import UserRepository from "../../api/repositories/UserRepository";
 import {userCache, CacheKeys} from "../../utils/CacheManager";
 import {monitorCacheHit, monitorCacheMiss} from "../../utils/CacheMonitor";
+import {CacheInvalidationManager} from "../../utils/CacheInvalidation";
+import {fetchOffers} from "../../shared-components/explore-offers/ExploreOffersActions";
 import {resetGroupUrlState} from "./manageGroupUrlActions";
 
 export enum AuthenticationEvents {
@@ -98,7 +100,6 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
                 
                 const cachedUser = userCache.get<User | Admin>(userCacheKey);
                 if (cachedUser) {
-                    console.log('Using cached user data');
                     monitorCacheHit('user');
                     currentUser = cachedUser;
                 } else {
@@ -145,7 +146,6 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
                 
                 const cachedGroups = userCache.get<GroupOfMembership[]>(groupsCacheKey);
                 if (cachedGroups) {
-                    console.log('Using cached groups of membership data');
                     monitorCacheHit('user');
                     authenticationCompleteAction.groupsOfMembership = cachedGroups;
                 } else {
@@ -161,8 +161,6 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
                     
                     if (currentAdmin) {
                         // For Admin users, we'll update the admin object in the future if needed
-                        console.log(`LOGIN TRACKING: Admin login detected for ${currentUser.email} (${currentUser.id})`);
-                        console.log(`LOGIN TRACKING: Admin login tracking not implemented yet`);
                         
                         // For now, just update the local state
                         const updatedAdmin = { ...currentUser, lastLoginDate: currentTimestamp };
@@ -171,16 +169,11 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
                         // For regular User objects, update via UserRepository
                         const updatedUser = { ...currentUser as User, lastLoginDate: currentTimestamp };
                         
-                        console.log(`LOGIN TRACKING: Attempting to update login date for user ${currentUser.email} (${currentUser.id})`);
-                        console.log(`LOGIN TRACKING: Current timestamp: ${currentTimestamp} (${new Date(currentTimestamp).toLocaleString()})`);
-                        console.log(`LOGIN TRACKING: Updated user object:`, updatedUser);
                         
                         const updateResponse = await new UserRepository().updateUser({
                             updatedUser: updatedUser
                         });
                         
-                        console.log(`LOGIN TRACKING: Update response:`, updateResponse);
-                        console.log(`LOGIN TRACKING: Successfully updated last login date for ${currentUser.email}`);
                         
                         // Update the user in the authentication state with the new last login date
                         authenticationCompleteAction.currentUser = updatedUser;
@@ -191,8 +184,17 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
                     // Continue with authentication even if login tracking fails
                 }
 
+                // Clear offers cache on successful authentication
+                // This ensures that private projects become visible immediately
+                CacheInvalidationManager.invalidateOffersCache('user authenticated');
+
                 authenticationCompleteAction.status = AuthenticationStatus.Authenticated;
-                return dispatch(authenticationCompleteAction);
+
+                // Dispatch authentication completion first
+                dispatch(authenticationCompleteAction);
+
+                // Then trigger offers refresh to get updated data with authentication
+                return dispatch(fetchOffers());
             } else {
                 await dispatch(signOut());
                 authenticationCompleteAction.status = AuthenticationStatus.Unauthenticated;
@@ -217,28 +219,31 @@ export const signOut: ActionCreator<any> = () => {
         try {
             await firebase.auth().signOut();
         } catch (error) {
-            console.log(`Error signing out: ${error.toString()}`);
         }
         
         // Clear user cache to prevent showing previous user's data
-        console.log('Clearing user cache on signOut');
         userCache.clear();
-        
+
+        // Clear offers cache on sign out
+        // This ensures that private projects are hidden immediately when user logs out
+        CacheInvalidationManager.invalidateOffersCache('user signed out');
+
         // Clear any stored redirect URL to prevent wrong redirection for next user
         try {
             localStorage.removeItem('redirectToAfterAuth');
-            console.log('Cleared redirectToAfterAuth from localStorage');
         } catch (error) {
-            console.log('Error clearing redirectToAfterAuth:', error);
         }
-        
+
         // Reset group URL state to prevent wrong group routing for next user
         dispatch(resetGroupUrlState());
-        console.log('Reset group URL state on signOut');
-        
-        return dispatch({
+
+        // Dispatch sign out action first
+        dispatch({
             type: AuthenticationEvents.SignOut
         });
+
+        // Then trigger offers refresh to get updated data without authentication
+        return dispatch(fetchOffers());
     }
 }
 

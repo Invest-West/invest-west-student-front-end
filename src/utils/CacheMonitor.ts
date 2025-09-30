@@ -75,13 +75,9 @@ export class CacheMonitor {
     logPerformanceReport(): void {
         const report = this.getPerformanceReport();
         console.group('🚀 Cache Performance Report');
-        console.log(`Uptime: ${report.uptime}s`);
-        console.log(`Overall Hit Rate: ${report.overallHitRate}`);
-        console.log(`Total Requests: ${report.totalRequests} (${report.totalHits} hits, ${report.totalMisses} misses)`);
         
         console.group('📊 By Cache Type:');
         Object.entries(report.byCache).forEach(([type, data]) => {
-            console.log(`${type.toUpperCase()}: ${data.hitRate} hit rate, ${data.stats.entries} entries, ${data.stats.sizeMB}MB`);
         });
         console.groupEnd();
         console.groupEnd();

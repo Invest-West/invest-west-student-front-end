@@ -47,7 +47,6 @@ const AddStudentShowcase = () => {
         setError('');
 
         try {
-            console.log('Adding Student Showcase to availableCourses...');
             
             // Get the invest-west group
             const groupRef = firebase.database().ref(DB_CONST.GROUP_PROPERTIES_CHILD);
@@ -82,8 +81,6 @@ const AddStudentShowcase = () => {
             // Add Student Showcase as the first course (default)
             const updatedCourses = ['Student Showcase', ...currentCourses];
             
-            console.log('Current courses:', currentCourses);
-            console.log('Updated courses:', updatedCourses);
             
             // Update the database
             const updates = {

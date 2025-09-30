@@ -24,6 +24,7 @@ import SearchIcon from "@material-ui/icons/Search";
 import CloseIcon from "@material-ui/icons/Close";
 import ArrowUpwardIcon from "@material-ui/icons/ArrowUpward";
 import ArrowDownwardIcon from "@material-ui/icons/ArrowDownward";
+import FileCopyIcon from "@material-ui/icons/FileCopy";
 import {Col, Row} from "react-bootstrap";
 import FlexView from "react-flexview";
 import {HashLoader} from "react-spinners";
@@ -32,7 +33,6 @@ import {css} from "aphrodite";
 import InfoOverlay from "../../../shared-components/info_overlay/InfoOverlay";
 import {connect} from "react-redux";
 import * as invitedUsersActions from "../../../redux-store/actions/invitedUsersActions";
-import * as invitationDialogActions from "../../../redux-store/actions/invitationDialogActions";
 import sharedStyles from "../../../shared-js-css-styles/SharedStyles";
 import * as DB_CONST from "../../../firebase/databaseConsts";
 import * as ROUTES from "../../../router/routes";
@@ -52,6 +52,10 @@ const mapStateToProps = state => {
     return {
         groupUserName: state.manageGroupFromParams.groupUserName,
         groupProperties: state.manageGroupFromParams.groupProperties,
+
+        // Add group and course URL parameters for signup URL generation
+        groupNameFromUrl: state.ManageGroupUrlState.groupNameFromUrl,
+        courseNameFromUrl: state.ManageGroupUrlState.courseNameFromUrl,
 
         systemGroups: state.manageSystemGroups.systemGroups,
         groupsLoaded: state.manageSystemGroups.groupsLoaded,
@@ -90,9 +94,7 @@ const mapDispatchToProps = dispatch => {
         startListeningForInvitedUsersChanged: () => dispatch(invitedUsersActions.startListeningForInvitedUsersChanged()),
         resendInvite: (invitedUser) => dispatch(invitedUsersActions.resendInvite(invitedUser)),
         exportToCsv: () => dispatch(invitedUsersActions.exportToCsv()),
-        addMembersFromOneGroupToAnotherGroup: (fromGroup, toGroup) => dispatch(invitedUsersActions.addMembersFromOneGroupToAnotherGroup(fromGroup, toGroup)),
-
-        toggleInvitationDialog: () => dispatch(invitationDialogActions.toggleInvitationDialog())
+        addMembersFromOneGroupToAnotherGroup: (fromGroup, toGroup) => dispatch(invitedUsersActions.addMembersFromOneGroupToAnotherGroup(fromGroup, toGroup))
     }
 };
 
@@ -294,6 +296,44 @@ class InvitedUsers extends Component {
     };
 
     /**
+     * Generate and copy signup URL to clipboard
+     */
+    copySignupUrl = () => {
+        const { groupNameFromUrl, courseNameFromUrl } = this.props;
+
+        // Build the signup URL based on current group and course
+        let signupUrl = `${window.location.origin}/groups`;
+
+        if (groupNameFromUrl) {
+            signupUrl += `/${groupNameFromUrl}`;
+
+            if (courseNameFromUrl) {
+                signupUrl += `/${courseNameFromUrl}`;
+            }
+
+            signupUrl += '/signup';
+        } else {
+            // Fallback to default URL structure
+            signupUrl += '/invest-west/student-showcase/signup';
+        }
+
+        // Copy to clipboard
+        navigator.clipboard.writeText(signupUrl).then(() => {
+            // You could add a success notification here if needed
+            console.log('Signup URL copied to clipboard:', signupUrl);
+        }).catch((error) => {
+            console.error('Failed to copy to clipboard:', error);
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = signupUrl;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+        });
+    };
+
+    /**
      * Add listener
      */
     addListener = () => {
@@ -418,7 +458,6 @@ class InvitedUsers extends Component {
             requestingCsv,
             addingMembersFromOneGroupToAnotherGroup,
 
-            toggleInvitationDialog,
             toggleSearchMode,
             handleInputChanged,
             exportToCsv,
@@ -437,8 +476,8 @@ class InvitedUsers extends Component {
                         :
                         <Row style={{marginBottom: 30}}>
                             <Col xs={12} md={5} lg={12}>
-                                <Button color="primary" variant="outlined" className={css(sharedStyles.no_text_transform)} onClick={toggleInvitationDialog}>
-                                    <Add style={{ marginRight: 10, width: 20, height: "auto"}}/>Invite new group member</Button>
+                                <Button color="primary" variant="outlined" className={css(sharedStyles.no_text_transform)} onClick={this.copySignupUrl}>
+                                    <FileCopyIcon style={{ marginRight: 10, width: 20, height: "auto"}}/>Copy signup URL</Button>
                             </Col>
                         </Row>
                 }

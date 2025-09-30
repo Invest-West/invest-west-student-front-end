@@ -1,6 +1,8 @@
 import firebase from '../../firebase/firebaseApp';
 import * as realtimeDBUtils from '../../firebase/realtimeDBUtils';
 import * as DB_CONST from '../../firebase/databaseConsts';
+import {CacheInvalidationManager} from '../../utils/CacheInvalidation';
+import {fetchOffers} from '../../shared-components/explore-offers/ExploreOffersActions';
 import {
     INVALID_AUTH_USER_NOT_EXIST,
     INVALID_AUTH_USER_DECLINED_TO_REGISTER,
@@ -126,10 +128,16 @@ export const getUserProfileAndValidateUser = uid => {
                         if (groupProperties) {
                             // check if the admin is from an angel network and if the admin's anid is equal to the anid specified in the URL
                             if (!user.isInvestWest && !user.superAdmin && user.anid === groupProperties.anid) {
+                                // Clear offers cache when user is automatically authenticated
+                                CacheInvalidationManager.invalidateOffersCache('user auto-authenticated');
+
                                 dispatch({
                                     type: FINISHED_AUTHENTICATING,
                                     authStatus: AUTH_SUCCESS
                                 });
+
+                                // Trigger offers refresh to get updated data with authentication
+                                dispatch(fetchOffers());
                             } else {
                                 dispatch({
                                     type: FINISHED_AUTHENTICATING,
@@ -146,10 +154,16 @@ export const getUserProfileAndValidateUser = uid => {
                     else {
                         // admins are from Student Showcase
                         if (user.isInvestWest || user.superAdmin) {
+                            // Clear offers cache when user is automatically authenticated
+                            CacheInvalidationManager.invalidateOffersCache('user auto-authenticated');
+
                             dispatch({
                                 type: FINISHED_AUTHENTICATING,
                                 authStatus: AUTH_SUCCESS
                             });
+
+                            // Trigger offers refresh to get updated data with authentication
+                            dispatch(fetchOffers());
                         } else {
                             dispatch({
                                 type: FINISHED_AUTHENTICATING,
@@ -213,10 +227,16 @@ export const getUserProfileAndValidateUser = uid => {
                             if (groupProperties) {
                                 if (groupFound) {
                                     if (groupFound.userInGroupStatus === DB_CONST.INVITED_USER_STATUS_ACTIVE) {
+                                        // Clear offers cache when user is automatically authenticated
+                                        CacheInvalidationManager.invalidateOffersCache('user auto-authenticated');
+
                                         dispatch({
                                             type: FINISHED_AUTHENTICATING,
                                             authStatus: AUTH_SUCCESS
                                         });
+
+                                        // Trigger offers refresh to get updated data with authentication
+                                        dispatch(fetchOffers());
                                     } else {
                                         dispatch({
                                             type: FINISHED_AUTHENTICATING,
@@ -294,9 +314,15 @@ export const logOutWithIndirectDispatch = (dispatch) => {
         .auth()
         .signOut()
         .then(() => {
+            // Clear offers cache on logout
+            CacheInvalidationManager.invalidateOffersCache('user logged out');
+
             dispatch({
                 type: LOG_OUT
             });
+
+            // Trigger offers refresh to get updated data without authentication
+            dispatch(fetchOffers());
         });
 };
 

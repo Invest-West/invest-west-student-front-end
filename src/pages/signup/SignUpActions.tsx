@@ -91,7 +91,8 @@ export const createAccount: ActionCreator<any> = () => {
         } = getState().SignUpLocalState;
 
         const {
-            group
+            group,
+            courseUserName
         } = getState().ManageGroupUrlState;
 
         const completeAction: CompleteCreatingAccountAction = {
@@ -139,7 +140,7 @@ export const createAccount: ActionCreator<any> = () => {
                 userProfile: {
                     title,
                     discover,
-                    course,
+                    course, // This contains the selected course display name
                     firstName,
                     lastName,
                     email,
@@ -147,7 +148,9 @@ export const createAccount: ActionCreator<any> = () => {
                 },
                 password,
                 groupID: invitedUser ? invitedUser.invitedBy : group?.anid ?? "",
+                discover,
                 acceptMarketingPreferences: acceptMarketingPreferences,
+                courseUserName: courseUserName ?? undefined, // Pass course information from URL for course assignment
             });
 
             dispatch(completeAction);

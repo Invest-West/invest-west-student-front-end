@@ -196,7 +196,7 @@ class SignInNew extends Component<SignInProps & Readonly<RouteComponentProps<Rou
                                     <Box display="flex" marginTop="25px" justifyContent="center" >
                                         <Typography variant="body1" >
                                             Don't have an Student account? &nbsp;
-                                            <CustomLink url={Routes.constructSignUpRoute(ManageGroupUrlState.groupNameFromUrl ?? "")} color={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main} activeColor="none" activeUnderline component="nav-link" childComponent={ "Sign up" } />
+                                            <CustomLink url={Routes.constructSignUpRoute(ManageGroupUrlState.groupNameFromUrl ?? "", undefined, this.props.match.params.courseUserName ?? "student-showcase")} color={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main} activeColor="none" activeUnderline component="nav-link" childComponent={ "Sign up" } />
                                         </Typography>
                                     </Box>
 

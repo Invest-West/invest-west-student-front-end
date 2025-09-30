@@ -253,14 +253,12 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
             const groupFilter = (currentAdmin?.superAdmin || currentAdmin?.superGroupAdmin) ? null : currentAdmin?.anid;
             const invitedUsers = await realtimeDBUtils.loadInvitedUsers(groupFilter);
             
-            console.log(`Loaded ${invitedUsers.length} invited users with filter:`, groupFilter);
             
             // Filter users by email (case-insensitive partial match)
             let matchingUsers = invitedUsers.filter((user: InvitedUser) => 
                 user.email.toLowerCase().includes(email.toLowerCase())
             );
             
-            console.log(`Found ${matchingUsers.length} matching invited users:`, matchingUsers);
 
             // Also check admin users to see if any match the email
             // IMPORTANT: We need to check ALL groups to find if the user is an admin somewhere
@@ -270,12 +268,10 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
             const groupsToCheck = systemGroups && systemGroups.length > 0 ? systemGroups : 
                                   (this.props.currentGroup ? [this.props.currentGroup] : []);
             
-            console.log(`Checking admin status across ${groupsToCheck.length} groups:`, groupsToCheck.map(g => g.displayName));
             
             for (const group of groupsToCheck) {
                 try {
                     const groupAdmins = await realtimeDBUtils.loadGroupAdminsBasedOnGroupID(group.anid) as any[];
-                    console.log(`Checking admins for group ${group.displayName} (${group.anid}):`, groupAdmins);
                     
                     const adminMatches = groupAdmins.filter((admin: any) => 
                         admin.email && admin.email.toLowerCase().includes(email.toLowerCase())
@@ -287,12 +283,10 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
                         admin.adminOfGroup = group;
                         admin.type = 'Admin';
                         admin.status = 1; // Admins are always active
-                        console.log(`Found admin match:`, {
-                            email: admin.email,
-                            group: group.displayName,
-                            anid: group.anid,
-                            isCurrentGroup: group.anid === currentAdmin?.anid
-                        });
+                        admin.email = admin.email;
+                        admin.group = group.displayName;
+                        admin.anid = group.anid;
+                        admin.isCurrentGroup = group.anid === currentAdmin?.anid;
                     });
                     allAdminUsers.push(...adminMatches);
                 } catch (error) {
@@ -413,27 +407,6 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
         });
 
         try {
-            // Log the request details for debugging
-            console.log('Attempting to upgrade user to admin:', {
-                selectedUser: {
-                    email: selectedUser.email,
-                    isAdmin: selectedUser.isAdmin,
-                    adminOfGroup: selectedUser.adminOfGroup,
-                    currentGroup: selectedUser.Invitor
-                },
-                targetCourse: {
-                    anid: targetCourseProperties.anid,
-                    displayName: targetCourseProperties.displayName
-                },
-                targetUniversity: targetUniversityProperties ? {
-                    anid: targetUniversityProperties.anid,
-                    displayName: targetUniversityProperties.displayName
-                } : null,
-                currentAdmin: {
-                    email: currentAdmin?.email,
-                    anid: currentAdmin?.anid
-                }
-            });
 
             // Check if user is already admin of the specific target course/university combination
             const isAlreadyAdminOfTargetCourse = selectedUser.isAdmin && 
@@ -474,7 +447,6 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
                     );
                     
                     if (existingAdmin) {
-                        console.log('User is already a university admin - found in university admin list:', existingAdmin);
                         this.setState({
                             upgradeStatus: UPGRADE_USER_STATUS_ALREADY_ADMIN,
                             statusMessage: `${selectedUser.email} is already an admin of ${targetUniversityProperties.displayName}. They may already have access to ${targetCourseProperties.displayName}.`
@@ -489,7 +461,6 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
                     );
                     
                     if (existingAdmin) {
-                        console.log('User is already an admin - found in current course admin list:', existingAdmin);
                         this.setState({
                             upgradeStatus: UPGRADE_USER_STATUS_ALREADY_ADMIN,
                             statusMessage: `${selectedUser.email} is already an admin of ${targetCourseProperties.displayName}.`
@@ -505,7 +476,6 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
             if (isVirtualCourse) {
                 // For virtual courses, add user as admin to the university
                 // The course assignment will be handled through the university's course management
-                console.log('Adding user as admin to university for virtual course:', targetUniversityProperties.displayName, '- Course:', targetCourseProperties.displayName);
                 await this.api.request(
                     "post",
                     ApiRoutes.addGroupAdminRoute,
@@ -531,7 +501,6 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
             } else {
                 // Step 1: Add user to university (if not already a member and if it's different from course)
                 if (targetUniversityProperties && targetUniversityId !== targetCourseId) {
-                    console.log('Adding user to university first:', targetUniversityProperties.displayName);
                     try {
                         await this.api.request(
                             "post",
@@ -553,7 +522,6 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
                                 }
                             }
                         );
-                        console.log('User successfully added to university');
                     } catch (universityError) {
                         console.warn('Error adding user to university (might already be a member):', universityError);
                         // Continue with course assignment even if university assignment fails
@@ -561,7 +529,6 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
                 }
 
                 // Step 2: Add user as admin to the specific course
-                console.log('Adding user as admin to course:', targetCourseProperties.displayName);
                 await this.api.request(
                     "post",
                     ApiRoutes.addGroupAdminRoute,
@@ -600,7 +567,6 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
             // Refresh course statistics after successful upgrade
             try {
                 this.props.loadCourseStatistics();
-                console.log('Course statistics refreshed after user upgrade');
             } catch (statsError) {
                 console.warn('Failed to refresh course statistics:', statsError);
                 // Don't fail the upgrade process if statistics refresh fails
@@ -610,10 +576,8 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
             try {
                 const userUid = selectedUser.officialUserID || selectedUser.id;
                 if (userUid) {
-                    console.log('Clearing cache for upgraded user:', selectedUser.email);
                     userCache.delete(`user:${userUid}`);
                     userCache.delete(`user:${userUid}:groups`);
-                    console.log('Cache cleared successfully for upgraded user');
                 }
             } catch (cacheError) {
                 console.warn('Error clearing cache for upgraded user:', cacheError);

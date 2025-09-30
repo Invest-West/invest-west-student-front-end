@@ -102,7 +102,6 @@ export const toggleResetPasswordDialog: ActionCreator<any> = () => {
 
 export const onSendResetPasswordClick: ActionCreator<any> = (email: string) => {
     return async (dispatch: Dispatch) => {
-        console.log("onSendResetPasswordClick");
         dispatch({
             type: SignInEvents.ProcessingResetPasswordRequest
         });

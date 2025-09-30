@@ -99,17 +99,14 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
      * Construct a simple post-login redirect route that directly matches user types to their dashboards
      */
     constructPostLoginRoute = (): string => {
-        console.log('[ROUTING DEBUG] constructPostLoginRoute called');
         const { AuthenticationState } = this.props;
         const currentUser = AuthenticationState.currentUser;
         const groupsOfMembership = AuthenticationState.groupsOfMembership || [];
-        
-        console.log('[ROUTING DEBUG] Current user:', currentUser?.email || 'null');
-        console.log('[ROUTING DEBUG] Groups of membership:', groupsOfMembership.map(g => g.group.groupUserName));
-        console.log('[ROUTING DEBUG] Route params:', this.routeParams);
-        
+
+        // Get course from URL, fallback to student-showcase
+        const courseFromUrl = this.routeParams.courseUserName || "student-showcase";
+
         if (!currentUser) {
-            console.log('[ROUTING DEBUG] No current user, calling constructHomeRoute');
             return Routes.constructHomeRoute(this.routeParams, this.props.ManageGroupUrlState, this.props.AuthenticationState);
         }
 
@@ -144,41 +141,35 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
 
         // Get the group name to use
         const groupName = getGroupForUser();
-        console.log('[ROUTING DEBUG] Selected group name:', groupName);
         
         // Check if user is admin
         const currentAdmin: Admin | null = isAdmin(currentUser);
         
         if (currentAdmin) {
-            console.log('[ROUTING DEBUG] User is admin, superAdmin:', currentAdmin.superAdmin);
             
             // Super admin → system admin dashboard
             if (currentAdmin.superAdmin) {
-                console.log('[ROUTING DEBUG] Redirecting to super admin dashboard');
                 return Routes.nonGroupAdminDashboard;
             }
             
-            // Group admin → course admin dashboard with invest-west/student-showcase
+            // Group admin → course admin dashboard with actual course from URL
             const adminRoute = Routes.courseAdminDashboard
                 .replace(":groupUserName", groupName)
-                .replace(":courseUserName", "student-showcase") + "?tab=Home";
-            console.log('[ROUTING DEBUG] Redirecting to course admin dashboard:', adminRoute);
+                .replace(":courseUserName", courseFromUrl) + "?tab=Home";
             return adminRoute;
         }
-        
+
         // Regular users (investors/issuers)
         if (isInvestor(currentUser as User)) {
             const investorRoute = Routes.courseInvestorDashboard
                 .replace(":groupUserName", groupName)
-                .replace(":courseUserName", "student-showcase") + "?tab=Home";
-            console.log('[ROUTING DEBUG] Redirecting to course investor dashboard:', investorRoute);
+                .replace(":courseUserName", courseFromUrl) + "?tab=Home";
             return investorRoute;
         } else {
             // Assume issuer if not investor
             const issuerRoute = Routes.courseIssuerDashboard
                 .replace(":groupUserName", groupName)
-                .replace(":courseUserName", "student-showcase") + "?tab=Home";
-            console.log('[ROUTING DEBUG] Redirecting to course issuer dashboard:', issuerRoute);
+                .replace(":courseUserName", courseFromUrl) + "?tab=Home";
             return issuerRoute;
         }
     };
@@ -188,9 +179,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
     }
 
     componentDidUpdate(prevProps: Readonly<GroupRouteProps & Readonly<RouteComponentProps<RouteParams>>>, prevState: Readonly<GroupRouteState>, snapshot?: any) {
-        console.log('[ROUTING DEBUG] componentDidUpdate called');
-        console.log('[ROUTING DEBUG] Current location:', this.props.location.pathname);
-        console.log('[ROUTING DEBUG] Previous location:', prevProps.location.pathname);
         
         // Only run expensive logic if key props have actually changed
         const hasSignificantPropsChanged = (
@@ -200,10 +188,8 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             prevProps.location.pathname !== this.props.location.pathname
         );
 
-        console.log('[ROUTING DEBUG] hasSignificantPropsChanged:', hasSignificantPropsChanged);
 
         if (!hasSignificantPropsChanged) {
-            console.log('[ROUTING DEBUG] No significant props changed, skipping update');
             return;
         }
 
@@ -239,16 +225,17 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             isSignInRoute: Routes.isSignInRoute(this.routePath),
             isSignUpRoute: Routes.isSignUpRoute(this.routePath),
             routePath: this.routePath,
-            ManageGroupUrlState: this.props.ManageGroupUrlState
+            ManageGroupUrlState: this.props.ManageGroupUrlState,
+            hasValidationError: this.props.ManageGroupUrlState.error
         });
-        
+
         // Allow invest-west group to bypass validation issues temporarily for debugging
         const isInvestWestRoute = this.routeParams.groupUserName === 'invest-west';
-        
+
         // Allow admin routes to bypass group validation issues more gracefully
         const isAdminRoute = Routes.isGroupAdminRoute(this.routePath);
         const isProtectedAdminRoute = Routes.isProtectedRoute(this.routePath) && isAdminRoute;
-        
+
         console.log('[ROUTING DEBUG] Route validation check:', {
             isInvestWestRoute,
             isAdminRoute,
@@ -256,22 +243,42 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             routePath: this.routePath,
             successfullyValidatedGroupUrl: successfullyValidatedGroupUrl(this.props.ManageGroupUrlState)
         });
-        
+
         // Check if this is a create-offer route that should be excluded from 404 redirect
         const isCreateOfferRoute = Routes.isCreateOfferRoute(this.routePath);
+
+        // Check if this is a course-based dashboard route that should be excluded from 404 redirect
+        const isCourseDashboardRoute = Routes.isIssuerDashboardRoute(this.routePath) ||
+                                     Routes.isInvestorDashboardRoute(this.routePath) ||
+                                     Routes.isGroupAdminRoute(this.routePath);
+
+        // Check if we have a specific course validation error
+        const hasCourseValidationError = this.props.ManageGroupUrlState.error?.detail?.includes('Course "');
 
         console.log('[ROUTING DEBUG] Pre-404 check:', {
             groupUrlValidated: successfullyValidatedGroupUrl(this.props.ManageGroupUrlState),
             routePath: this.routePath,
             isCreateOfferRoute: isCreateOfferRoute,
+            isCourseDashboardRoute: isCourseDashboardRoute,
             isSignInRoute: Routes.isSignInRoute(this.routePath),
             isSignUpRoute: Routes.isSignUpRoute(this.routePath),
             isGroupViewOffer: this.routePath === Routes.groupViewOffer,
             isInvestWestRoute: isInvestWestRoute,
             isProtectedAdminRoute: isProtectedAdminRoute,
             navigatingToError: this.state.navigatingToError,
-            navigatingFromSignIn: this.state.navigatingFromSignInOrSignUpToDashboard
+            navigatingFromSignIn: this.state.navigatingFromSignInOrSignUpToDashboard,
+            hasCourseValidationError: hasCourseValidationError
         });
+
+        // If we have a course validation error, redirect to 404
+        if (hasCourseValidationError && !this.state.navigatingToError) {
+            console.log('[ROUTING DEBUG] Course validation error detected, redirecting to 404:', this.props.ManageGroupUrlState.error?.detail);
+            this.setState({
+                navigatingToError: true
+            });
+            this.props.history.push(Routes.error404);
+            return;
+        }
 
         if (!successfullyValidatedGroupUrl(this.props.ManageGroupUrlState)
             && !this.state.navigatingToError
@@ -280,9 +287,9 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             && !Routes.isSignUpRoute(this.routePath)
             && this.routePath !== Routes.groupViewOffer
             && !isCreateOfferRoute  // Add exclusion for create-offer routes
+            && !isCourseDashboardRoute  // Add exclusion for course-based dashboard routes
             && !isInvestWestRoute
             && !isProtectedAdminRoute) {  // Don't redirect admin routes to 404 - let auth handle it
-            console.log('[ROUTING DEBUG] Group URL validation failed, redirecting to 404');
             this.setState({
                 navigatingToError: true
             });
@@ -313,24 +320,19 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             && successfullyAuthenticated(this.props.AuthenticationState)
             && !this.state.navigatingFromSignInOrSignUpToDashboard
         ) {
-            console.log('[ROUTING DEBUG] User authenticated on sign-in/sign-up route, initiating redirect');
-            console.log('[ROUTING DEBUG] Current route path:', this.routePath);
             
             // Check for stored redirect URL first
             const storedRedirectUrl = safeGetItem('redirectToAfterAuth');
             let redirectRoute: string;
             
             if (storedRedirectUrl) {
-                console.log('[ROUTING DEBUG] Found stored redirect URL:', storedRedirectUrl);
                 redirectRoute = storedRedirectUrl;
                 safeRemoveItem('redirectToAfterAuth');
             } else {
                 // Construct redirect route with robust fallback logic
-                console.log('[ROUTING DEBUG] No stored redirect, constructing route');
                 redirectRoute = this.constructPostLoginRoute();
             }
             
-            console.log('[ROUTING DEBUG] Final redirect route:', redirectRoute);
             
             // Validate the route before redirecting
             if (!redirectRoute || redirectRoute === '') {
@@ -348,24 +350,20 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                 navigatingFromSignInOrSignUpToDashboard: true
             });
             
-            console.log('[ROUTING DEBUG] Executing history.push to:', redirectRoute);
             this.props.history.push(redirectRoute);
             return; // Exit early to prevent other redirect logic from running
         }
 
         // redirect the user to 404 page if they are trying to access routes that are not meant for them
         if (successfullyAuthenticated(this.props.AuthenticationState) && !this.state.navigatingFromSignInOrSignUpToDashboard) {
+            console.log('[ROUTING DEBUG] Checking user access permissions');
             const currentUser: User | Admin | null = this.props.AuthenticationState.currentUser;
-            console.log('[ROUTING DEBUG] Checking user permissions for route access');
-            console.log('[ROUTING DEBUG] Current user:', currentUser?.email || 'null');
-            console.log('[ROUTING DEBUG] Route path:', this.routePath);
-            
+
             if (currentUser) {
+                console.log('[ROUTING DEBUG] Current user found:', currentUser.id);
                 const currentAdmin: Admin | null = isAdmin(currentUser);
                 let shouldRedirectToError: boolean = false;
                 
-                console.log('[ROUTING DEBUG] User is admin:', !!currentAdmin, currentAdmin?.superAdmin ? 'super' : 'regular');
-
                 if (Routes.isRouteReservedForSuperAdmin(this.routePath)) {
                     if (!currentAdmin || (currentAdmin && !currentAdmin.superAdmin)) {
                         shouldRedirectToError = true;
@@ -382,6 +380,19 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                 } else if (Routes.isIssuerDashboardRoute(this.routePath)) {
                     if (!isIssuer(currentUser)) {
                         shouldRedirectToError = true;
+                    } else if (this.routeParams.courseUserName) {
+                        // For course-based routes, check if it's the invest-west group
+                        // invest-west with courses doesn't require membership check
+                        if (this.routeParams.groupUserName !== 'invest-west') {
+                            // For non-invest-west course routes, still check membership
+                            if (this.props.AuthenticationState.groupsOfMembership
+                                .filter(groupOfMembership =>
+                                    groupOfMembership.group.groupUserName === this.routeParams.groupUserName).length === 0
+                            ) {
+                                shouldRedirectToError = true;
+                            }
+                        }
+                        // invest-west course routes are allowed for all issuers
                     } else if (this.props.AuthenticationState.groupsOfMembership
                         .filter(groupOfMembership =>
                             groupOfMembership.group.groupUserName === this.routeParams.groupUserName).length === 0
@@ -389,13 +400,62 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                         shouldRedirectToError = true;
                     }
                 } else if (Routes.isInvestorDashboardRoute(this.routePath)) {
+                    console.log('[ROUTING DEBUG] Checking investor dashboard access:', {
+                        isInvestor: isInvestor(currentUser),
+                        routeParams: this.routeParams,
+                        groupsOfMembership: this.props.AuthenticationState.groupsOfMembership,
+                        routePath: this.routePath,
+                        hasCourseParam: !!this.routeParams.courseUserName,
+                        groupUserName: this.routeParams.groupUserName,
+                        courseUserName: this.routeParams.courseUserName
+                    });
+
                     if (!isInvestor(currentUser)) {
+                        console.log('[ROUTING DEBUG] User is not an investor, redirecting to 404');
                         shouldRedirectToError = true;
-                    } else if (this.props.AuthenticationState.groupsOfMembership
-                        .filter(groupOfMembership =>
-                            groupOfMembership.group.groupUserName === this.routeParams.groupUserName).length === 0
-                    ) {
-                        shouldRedirectToError = true;
+                    } else if (this.routeParams.courseUserName) {
+                        // For course-based routes, check if it's the invest-west group
+                        console.log('[ROUTING DEBUG] Course-based investor route detected:', {
+                            groupUserName: this.routeParams.groupUserName,
+                            courseUserName: this.routeParams.courseUserName,
+                            isInvestWest: this.routeParams.groupUserName === 'invest-west'
+                        });
+
+                        // invest-west with courses doesn't require membership check
+                        if (this.routeParams.groupUserName === 'invest-west') {
+                            console.log('[ROUTING DEBUG] invest-west course route - allowing access without membership check');
+                            shouldRedirectToError = false;
+                        } else {
+                            // For non-invest-west course routes, still check membership
+                            const membershipCount = this.props.AuthenticationState.groupsOfMembership
+                                .filter(groupOfMembership =>
+                                    groupOfMembership.group.groupUserName === this.routeParams.groupUserName).length;
+
+                            console.log('[ROUTING DEBUG] Non-invest-west course route membership check:', {
+                                groupUserName: this.routeParams.groupUserName,
+                                membershipCount: membershipCount
+                            });
+
+                            if (membershipCount === 0) {
+                                console.log('[ROUTING DEBUG] User is not a member of group:', this.routeParams.groupUserName, ', redirecting to 404');
+                                shouldRedirectToError = true;
+                            }
+                        }
+                    } else {
+                        // Non-course routes - standard group membership check
+                        const membershipCount = this.props.AuthenticationState.groupsOfMembership
+                            .filter(groupOfMembership =>
+                                groupOfMembership.group.groupUserName === this.routeParams.groupUserName).length;
+
+                        console.log('[ROUTING DEBUG] Standard group route membership check:', {
+                            groupUserName: this.routeParams.groupUserName,
+                            membershipCount: membershipCount
+                        });
+
+                        if (membershipCount === 0) {
+                            console.log('[ROUTING DEBUG] User is not a member of group:', this.routeParams.groupUserName, ', redirecting to 404');
+                            shouldRedirectToError = true;
+                        }
                     }
                 } else if (Routes.isCreateOfferRoute(this.routePath)) {
                     // Allow issuers, investors, and admins to access create offer routes
@@ -410,7 +470,16 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                     }
                 }
 
+                console.log('[ROUTING DEBUG] Final redirect decision:', {
+                    shouldRedirectToError,
+                    navigatingToError: this.state.navigatingToError,
+                    willRedirect: shouldRedirectToError && !this.state.navigatingToError,
+                    routePath: this.routePath,
+                    routeParams: this.routeParams
+                });
+
                 if (shouldRedirectToError && !this.state.navigatingToError) {
+                    console.log('[ROUTING DEBUG] ⛔ REDIRECTING TO 404 PAGE ⛔');
                     this.setState({
                         navigatingToError: true
                     });
@@ -452,11 +521,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             backgroundColor
         } = this.props;
 
-        console.log('[ROUTING DEBUG] render() called for path:', this.props.location.pathname);
-        console.log('[ROUTING DEBUG] ManageSystemAttributesState:', ManageSystemAttributesState);
-        console.log('[ROUTING DEBUG] ManageGroupUrlState:', ManageGroupUrlState);
-        console.log('[ROUTING DEBUG] AuthenticationState.currentUser:', AuthenticationState.currentUser?.email || 'null');
-
         this.updateRouteAndParams();
 
         // Check if current route is a project viewing route (public access allowed)
@@ -490,7 +554,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             || ((!Routes.isSignInRoute(this.routePath) && !Routes.isSignUpRoute(this.routePath))
                 && isAuthenticatingUser)
         ) {
-            console.log('[ROUTING DEBUG] Showing loading spinner due to loading states');
             return (
                 <Box>
                     <BarLoader
@@ -503,8 +566,7 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
         }
 
         if (successfullyValidatedGroupUrl(ManageGroupUrlState)) {
-            console.log('[ROUTING DEBUG] Group URL successfully validated, rendering component');
-            console.log('[ROUTING DEBUG] Component to render:', typeof this.props.component);
+            console.log('[ROUTING DEBUG] Rendering component for validated group URL');
             return (
                 <Container
                     fluid
@@ -553,7 +615,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             );
         }
 
-        console.log('[ROUTING DEBUG] Neither loading nor validated - returning null');
         console.log('[ROUTING DEBUG] Final state check:', {
             successfullyValidated: successfullyValidatedGroupUrl(ManageGroupUrlState),
             ManageGroupUrlState,
