@@ -7,7 +7,7 @@ import {css} from "aphrodite";
 import sharedStyles from "../../../../shared-js-css-styles/SharedStyles";
 import {ContactPitchOwnerDialogState, isSendingContactEmail} from "./ContactPitchOwnerDialogReducer";
 import {AnyAction} from "redux";
-import {sendContactEmail, toggleContactPitchOwnerDialog, updateSenderEmail, updateSenderName} from "./ContactPitchOwnerDialogActions";
+import {sendContactEmail, toggleContactPitchOwnerDialog, updateSenderEmail, updateSenderName, updateCompanyName, updateCompanyPosition, updateCompanyEmail, updateMessage} from "./ContactPitchOwnerDialogActions";
 
 interface ContactPitchOwnerDialogProps {
     ContactPitchOwnerDialogLocalState: ContactPitchOwnerDialogState;
@@ -15,6 +15,10 @@ interface ContactPitchOwnerDialogProps {
     sendContactEmail: () => any;
     updateSenderEmail: (email: string) => any;
     updateSenderName: (name: string) => any;
+    updateCompanyName: (name: string) => any;
+    updateCompanyPosition: (position: string) => any;
+    updateCompanyEmail: (email: string) => any;
+    updateMessage: (message: string) => any;
 }
 
 const mapStateToProps = (state: AppState) => {
@@ -28,7 +32,11 @@ const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
         toggleContactDialog: () => dispatch(toggleContactPitchOwnerDialog()),
         sendContactEmail: () => dispatch(sendContactEmail()),
         updateSenderEmail: (email: string) => dispatch(updateSenderEmail(email)),
-        updateSenderName: (name: string) => dispatch(updateSenderName(name))
+        updateSenderName: (name: string) => dispatch(updateSenderName(name)),
+        updateCompanyName: (name: string) => dispatch(updateCompanyName(name)),
+        updateCompanyPosition: (position: string) => dispatch(updateCompanyPosition(position)),
+        updateCompanyEmail: (email: string) => dispatch(updateCompanyEmail(email)),
+        updateMessage: (message: string) => dispatch(updateMessage(message))
     }
 }
 
@@ -38,8 +46,11 @@ class ContactPitchOwnerDialog extends Component<ContactPitchOwnerDialogProps, an
             ContactPitchOwnerDialogLocalState,
             toggleContactDialog,
             sendContactEmail,
-            updateSenderEmail,
-            updateSenderName
+            updateSenderName,
+            updateCompanyName,
+            updateCompanyPosition,
+            updateCompanyEmail,
+            updateMessage
         } = this.props;
 
         return <Dialog
@@ -51,7 +62,7 @@ class ContactPitchOwnerDialog extends Component<ContactPitchOwnerDialogProps, an
                     <Typography variant="body1" align="left">{`We will let the project owner know that you would like to find out more.`}</Typography>
                     <Box height="20px"/>
                     <TextField
-                        label="Your Name"
+                        label="Name"
                         type="text"
                         value={ContactPitchOwnerDialogLocalState.senderName}
                         onChange={(e) => updateSenderName(e.target.value)}
@@ -63,13 +74,51 @@ class ContactPitchOwnerDialog extends Component<ContactPitchOwnerDialogProps, an
                     />
                     <Box height="10px"/>
                     <TextField
-                        label="Your Email"
-                        type="email"
-                        value={ContactPitchOwnerDialogLocalState.senderEmail}
-                        onChange={(e) => updateSenderEmail(e.target.value)}
+                        label="Company Name"
+                        type="text"
+                        value={ContactPitchOwnerDialogLocalState.companyName}
+                        onChange={(e) => updateCompanyName(e.target.value)}
                         variant="outlined"
                         fullWidth
                         size="small"
+                        disabled={isSendingContactEmail(ContactPitchOwnerDialogLocalState)}
+                        required
+                    />
+                    <Box height="10px"/>
+                    <TextField
+                        label="Company Position"
+                        type="text"
+                        value={ContactPitchOwnerDialogLocalState.companyPosition}
+                        onChange={(e) => updateCompanyPosition(e.target.value)}
+                        variant="outlined"
+                        fullWidth
+                        size="small"
+                        disabled={isSendingContactEmail(ContactPitchOwnerDialogLocalState)}
+                        required
+                    />
+                    <Box height="10px"/>
+                    <TextField
+                        label="Company Email"
+                        type="email"
+                        value={ContactPitchOwnerDialogLocalState.companyEmail}
+                        onChange={(e) => updateCompanyEmail(e.target.value)}
+                        variant="outlined"
+                        fullWidth
+                        size="small"
+                        disabled={isSendingContactEmail(ContactPitchOwnerDialogLocalState)}
+                        required
+                    />
+                    <Box height="10px"/>
+                    <TextField
+                        label="Message"
+                        type="text"
+                        value={ContactPitchOwnerDialogLocalState.message}
+                        onChange={(e) => updateMessage(e.target.value)}
+                        variant="outlined"
+                        fullWidth
+                        size="small"
+                        multiline
+                        rows={4}
                         disabled={isSendingContactEmail(ContactPitchOwnerDialogLocalState)}
                         required
                     />
@@ -86,7 +135,20 @@ class ContactPitchOwnerDialog extends Component<ContactPitchOwnerDialogProps, an
                             className={css(sharedStyles.no_text_transform)}
                         >Cancel</Button>
                 }
-                <Button color="primary" variant="contained" className={css(sharedStyles.no_text_transform)} disabled={isSendingContactEmail(ContactPitchOwnerDialogLocalState) || !ContactPitchOwnerDialogLocalState.senderEmail || !ContactPitchOwnerDialogLocalState.senderName} onClick={() => sendContactEmail()}>
+                <Button
+                    color="primary"
+                    variant="contained"
+                    className={css(sharedStyles.no_text_transform)}
+                    disabled={
+                        isSendingContactEmail(ContactPitchOwnerDialogLocalState)
+                        || !ContactPitchOwnerDialogLocalState.senderName
+                        || !ContactPitchOwnerDialogLocalState.companyName
+                        || !ContactPitchOwnerDialogLocalState.companyPosition
+                        || !ContactPitchOwnerDialogLocalState.companyEmail
+                        || !ContactPitchOwnerDialogLocalState.message
+                    }
+                    onClick={() => sendContactEmail()}
+                >
                     {
                         isSendingContactEmail(ContactPitchOwnerDialogLocalState)
                             ? `Sending email to ${ContactPitchOwnerDialogLocalState.projectOwnerEmail} ...`

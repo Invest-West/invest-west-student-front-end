@@ -14,7 +14,11 @@ export enum ContactPitchOwnerDialogEvents {
     SendingContactEmail = "ContactPitchOwnerDialogEvents.SendingContactEmail",
     CompleteSendingContactEmail = "ContactPitchOwnerDialogEvents.CompleteSendingContactEmail",
     UpdateSenderEmail = "ContactPitchOwnerDialogEvents.UpdateSenderEmail",
-    UpdateSenderName = "ContactPitchOwnerDialogEvents.UpdateSenderName"
+    UpdateSenderName = "ContactPitchOwnerDialogEvents.UpdateSenderName",
+    UpdateCompanyName = "ContactPitchOwnerDialogEvents.UpdateCompanyName",
+    UpdateCompanyPosition = "ContactPitchOwnerDialogEvents.UpdateCompanyPosition",
+    UpdateCompanyEmail = "ContactPitchOwnerDialogEvents.UpdateCompanyEmail",
+    UpdateMessage = "ContactPitchOwnerDialogEvents.UpdateMessage"
 }
 
 export interface ContactPitchOwnerDialogAction extends Action {
@@ -38,6 +42,22 @@ export interface UpdateSenderNameAction extends ContactPitchOwnerDialogAction {
     senderName: string;
 }
 
+export interface UpdateCompanyNameAction extends ContactPitchOwnerDialogAction {
+    companyName: string;
+}
+
+export interface UpdateCompanyPositionAction extends ContactPitchOwnerDialogAction {
+    companyPosition: string;
+}
+
+export interface UpdateCompanyEmailAction extends ContactPitchOwnerDialogAction {
+    companyEmail: string;
+}
+
+export interface UpdateMessageAction extends ContactPitchOwnerDialogAction {
+    message: string;
+}
+
 export const toggleContactPitchOwnerDialog: ActionCreator<any> = (projectName?: string, projectOwnerEmail?: string) => {
     return (dispatch: Dispatch, getState: () => AppState) => {
         const { currentUser } = getState().AuthenticationState;
@@ -47,26 +67,50 @@ export const toggleContactPitchOwnerDialog: ActionCreator<any> = (projectName?: 
             projectOwnerEmail: projectOwnerEmail ?? null
         };
         
-        // Initialize sender email and name when opening dialog
+        // Initialize fields when opening dialog
         if (projectName && projectOwnerEmail) {
             if (currentUser) {
-                dispatch({
-                    type: ContactPitchOwnerDialogEvents.UpdateSenderEmail,
-                    senderEmail: currentUser.email
-                });
                 dispatch({
                     type: ContactPitchOwnerDialogEvents.UpdateSenderName,
                     senderName: `${(currentUser as User).firstName} ${(currentUser as User).lastName}`
                 });
+                dispatch({
+                    type: ContactPitchOwnerDialogEvents.UpdateCompanyEmail,
+                    companyEmail: currentUser.email
+                });
+                dispatch({
+                    type: ContactPitchOwnerDialogEvents.UpdateCompanyName,
+                    companyName: ''
+                });
+                dispatch({
+                    type: ContactPitchOwnerDialogEvents.UpdateCompanyPosition,
+                    companyPosition: ''
+                });
+                dispatch({
+                    type: ContactPitchOwnerDialogEvents.UpdateMessage,
+                    message: ''
+                });
             } else {
                 // Clear fields for non-logged-in users
                 dispatch({
-                    type: ContactPitchOwnerDialogEvents.UpdateSenderEmail,
-                    senderEmail: ''
-                });
-                dispatch({
                     type: ContactPitchOwnerDialogEvents.UpdateSenderName,
                     senderName: ''
+                });
+                dispatch({
+                    type: ContactPitchOwnerDialogEvents.UpdateCompanyEmail,
+                    companyEmail: ''
+                });
+                dispatch({
+                    type: ContactPitchOwnerDialogEvents.UpdateCompanyName,
+                    companyName: ''
+                });
+                dispatch({
+                    type: ContactPitchOwnerDialogEvents.UpdateCompanyPosition,
+                    companyPosition: ''
+                });
+                dispatch({
+                    type: ContactPitchOwnerDialogEvents.UpdateMessage,
+                    message: ''
                 });
             }
         }
@@ -95,10 +139,10 @@ export const sendContactEmail: ActionCreator<any> = () => {
             currentUser
         } = getState().AuthenticationState;
 
-        const { senderEmail, senderName } = getState().ContactPitchOwnerDialogLocalState;
-        
+        const { senderName, companyName, companyPosition, companyEmail, message } = getState().ContactPitchOwnerDialogLocalState;
+
         // Validate required fields
-        if (!senderEmail || !senderName) {
+        if (!senderName || !companyName || !companyPosition || !companyEmail || !message) {
             return;
         }
 
@@ -116,9 +160,12 @@ export const sendContactEmail: ActionCreator<any> = () => {
         
         const emailData = {
             receiver: projectOwnerEmail,
-            sender: senderEmail,
+            sender: companyEmail,
             userName: senderName,
-            projectName: projectName
+            companyName: companyName,
+            companyPosition: companyPosition,
+            projectName: projectName,
+            message: message
         };
 
         try {
@@ -153,12 +200,12 @@ export const sendContactEmail: ActionCreator<any> = () => {
                 // Fallback to EMAIL_ENQUIRY format (like ContactUs)
                 emailTypeToUse = emailUtils.EMAIL_ENQUIRY;
                 emailDataToUse = {
-                    sender: senderEmail,
+                    sender: companyEmail,
                     receiver: projectOwnerEmail,
-                    subject: `Contact request about project: ${projectName}`,
-                    description: `${senderName} would like to know more about your project "${projectName}". Please contact them at ${senderEmail}.`,
                     senderName: senderName,
-                    senderPhone: '' // Not required for this use case
+                    companyName: companyName,
+                    companyPosition: companyPosition,
+                    message: `${senderName} from ${companyName} (${companyPosition}) would like to know more about your project "${projectName}".\n\nMessage: ${message}\n\nPlease contact them at ${companyEmail}.`
                 } as any; // Cast to any to avoid type conflicts
                 
                 console.log('Retrying with EMAIL_ENQUIRY format:', {
@@ -231,6 +278,46 @@ export const updateSenderName: ActionCreator<any> = (senderName: string) => {
         const action: UpdateSenderNameAction = {
             type: ContactPitchOwnerDialogEvents.UpdateSenderName,
             senderName: senderName
+        };
+        return dispatch(action);
+    }
+}
+
+export const updateCompanyName: ActionCreator<any> = (companyName: string) => {
+    return (dispatch: Dispatch) => {
+        const action: UpdateCompanyNameAction = {
+            type: ContactPitchOwnerDialogEvents.UpdateCompanyName,
+            companyName: companyName
+        };
+        return dispatch(action);
+    }
+}
+
+export const updateCompanyPosition: ActionCreator<any> = (companyPosition: string) => {
+    return (dispatch: Dispatch) => {
+        const action: UpdateCompanyPositionAction = {
+            type: ContactPitchOwnerDialogEvents.UpdateCompanyPosition,
+            companyPosition: companyPosition
+        };
+        return dispatch(action);
+    }
+}
+
+export const updateCompanyEmail: ActionCreator<any> = (companyEmail: string) => {
+    return (dispatch: Dispatch) => {
+        const action: UpdateCompanyEmailAction = {
+            type: ContactPitchOwnerDialogEvents.UpdateCompanyEmail,
+            companyEmail: companyEmail
+        };
+        return dispatch(action);
+    }
+}
+
+export const updateMessage: ActionCreator<any> = (message: string) => {
+    return (dispatch: Dispatch) => {
+        const action: UpdateMessageAction = {
+            type: ContactPitchOwnerDialogEvents.UpdateMessage,
+            message: message
         };
         return dispatch(action);
     }

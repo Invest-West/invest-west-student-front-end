@@ -129,13 +129,19 @@ class Contact extends Component<ContactProps & Readonly<RouteComponentProps<Rout
                     </div>
                     <div className="contact-form">
                         <form action="#" method="POST">
-                            <label ></label>
-                            <input type="text" id="name" name="name" placeholder="Full Name" required/>
+                            <label>Name:</label>
+                            <input type="text" id="name" name="name" placeholder="Your Name" required/>
 
-                            <label></label>
-                            <input type="email" id="email" name="email" placeholder="Email" required/>
+                            <label>Company Name:</label>
+                            <input type="text" id="companyName" name="companyName" placeholder="Company Name" required/>
 
-                            <label></label>
+                            <label>Company Position:</label>
+                            <input type="text" id="companyPosition" name="companyPosition" placeholder="Your Position" required/>
+
+                            <label>Company Email:</label>
+                            <input type="email" id="companyEmail" name="companyEmail" placeholder="Company Email" required/>
+
+                            <label>Message:</label>
                             <textarea id="message" name="message" placeholder="Write your message here" required></textarea>
 
                             <button type="submit">Send</button>

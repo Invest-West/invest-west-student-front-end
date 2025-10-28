@@ -297,7 +297,7 @@ class AdminDashboard extends Component {
                                         {
                                             currentAdmin && (currentAdmin.superAdmin || currentAdmin.superGroupAdmin)
                                                 ?
-                                                "Manage system students"
+                                                "Manage students"
                                                 :
                                                 "Manage university students"
                                         }
@@ -421,8 +421,8 @@ class AdminDashboard extends Component {
                                 <Accordion className={css(styles.card_style)}>
                                     <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                                         <FlexView column>
-                                            <Typography paragraph variant="h6" color="primary" align="left">Manage universities</Typography>
-                                            <Typography paragraph variant="body1" align="left">Create and manage universities within your network.</Typography>
+                                            <Typography paragraph variant="h6" color="primary" align="left">Manage courses</Typography>
+                                            <Typography paragraph variant="body1" align="left">View your university and request new courses to be added by the super admin.</Typography>
                                         </FlexView>
                                     </AccordionSummary>
                                     <AccordionDetails>
@@ -435,28 +435,22 @@ class AdminDashboard extends Component {
                     }
 
                     {/* Manage group admins */}
-                    {
-                        currentAdmin && (currentAdmin.superAdmin || currentAdmin.superGroupAdmin)
-                            ?
-                            null
-                            :
-                            <Col xs={12} md={12} lg={12}>
-                                <Accordion className={css(styles.card_style)}>
-                                    <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
-                                        <FlexView column>
-                                            <Typography paragraph variant="h6" color="primary" align="left">Manage university admins</Typography>
-                                            <Typography paragraph variant="body1" align="left">Manage university admins. Only super university admin can add a new university
-                                                admin.</Typography>
-                                        </FlexView>
-                                    </AccordionSummary>
-                                    <AccordionDetails>
-                                        <FlexView column width="100%">
-                                            <GroupAdminsTable/>
-                                        </FlexView>
-                                    </AccordionDetails>
-                                </Accordion>
-                            </Col>
-                    }
+                    <Col xs={12} md={12} lg={12}>
+                        <Accordion className={css(styles.card_style)}>
+                            <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
+                                <FlexView column>
+                                    <Typography paragraph variant="h6" color="primary" align="left">Manage university admins</Typography>
+                                    <Typography paragraph variant="body1" align="left">Manage university admins. Only super university admin can add a new university
+                                        admin.</Typography>
+                                </FlexView>
+                            </AccordionSummary>
+                            <AccordionDetails>
+                                <FlexView column width="100%">
+                                    <GroupAdminsTable/>
+                                </FlexView>
+                            </AccordionDetails>
+                        </Accordion>
+                    </Col>
 
                 </Row>
             )

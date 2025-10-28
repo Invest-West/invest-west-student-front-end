@@ -70,7 +70,7 @@ export const loadData: ActionCreator<any> = (groupUserName: string) => {
             const groupResponse = await new GroupRepository().getGroup(groupUserName);
             const group: GroupProperties = groupResponse.data;
 
-            const membersResponse = await new GroupRepository().fetchGroupMembers(group.anid);
+            const membersResponse = await new GroupRepository().fetchGroupMembers(group.groupUserName);
             const members: InvitedUserWithProfile[] = membersResponse.data;
 
             const offersResponse = await new OfferRepository().fetchOffers({

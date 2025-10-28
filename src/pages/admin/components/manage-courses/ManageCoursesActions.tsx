@@ -126,7 +126,8 @@ export const saveCoursesChanges: ActionCreator<any> = () => {
         if (!groupProperties || !groupProperties.settings) {
             return;
         }
-        const courses: string[] = [...getState().ManageCoursesLocalState.courses];
+        const newCourses: string[] = [...getState().ManageCoursesLocalState.courses];
+        const oldCourses: string[] = groupProperties.settings.availableCourses || [];
         const completeAction: CompletedSavingCoursesChangesAction = {
             type: ManageCoursesEvents.CompletedSavingCoursesChanges
         };
@@ -134,7 +135,78 @@ export const saveCoursesChanges: ActionCreator<any> = () => {
             dispatch({
                 type: ManageCoursesEvents.SavingCoursesChanges
             });
-            
+
+            // Find courses to add and remove
+            const coursesToAdd = newCourses.filter(course => !oldCourses.includes(course));
+            const coursesToRemove = oldCourses.filter(course => !newCourses.includes(course));
+
+            // Create group entities for new courses
+            for (const courseName of coursesToAdd) {
+                const courseId = firebase
+                    .database()
+                    .ref(DB_CONST.GROUP_PROPERTIES_CHILD)
+                    .push()
+                    .key;
+
+                if (!courseId) continue;
+
+                const courseUserName = `${groupProperties.groupUserName}-${courseName.toLowerCase().replace(/\s+/g, '-')}`;
+
+                // Create the course group properties
+                const courseGroupProperties: GroupProperties = {
+                    anid: courseId,
+                    displayName: courseName,
+                    displayNameLower: courseName.toLowerCase(),
+                    groupUserName: courseUserName,
+                    description: `${courseName} - Part of ${groupProperties.displayName}`,
+                    website: groupProperties.website || '',
+                    dateAdded: Date.now(),
+                    status: DB_CONST.GROUP_STATUS_ACTIVE,
+                    isInvestWest: false,
+                    plainLogo: groupProperties.plainLogo || [],
+                    logoWithText: groupProperties.logoWithText,
+                    settings: {
+                        primaryColor: groupProperties.settings.primaryColor,
+                        secondaryColor: groupProperties.settings.secondaryColor,
+                        projectVisibility: groupProperties.settings.projectVisibility,
+                        makeInvestorsContactDetailsVisibleToIssuers: groupProperties.settings.makeInvestorsContactDetailsVisibleToIssuers
+                    },
+                    groupType: 'course' as any,
+                    parentGroupId: groupProperties.anid
+                };
+
+                // Save the course group to Firebase
+                await firebase
+                    .database()
+                    .ref(DB_CONST.GROUP_PROPERTIES_CHILD)
+                    .child(courseId)
+                    .set(courseGroupProperties);
+            }
+
+            // Delete group entities for removed courses
+            for (const courseName of coursesToRemove) {
+                // Find the course group by matching parentGroupId and displayName
+                const coursesSnapshot = await firebase
+                    .database()
+                    .ref(DB_CONST.GROUP_PROPERTIES_CHILD)
+                    .orderByChild('parentGroupId')
+                    .equalTo(groupProperties.anid)
+                    .once('value');
+
+                if (coursesSnapshot.exists()) {
+                    const courses = coursesSnapshot.val();
+                    for (const courseId in courses) {
+                        if (courses[courseId].displayName === courseName) {
+                            await firebase
+                                .database()
+                                .ref(DB_CONST.GROUP_PROPERTIES_CHILD)
+                                .child(courseId)
+                                .remove();
+                        }
+                    }
+                }
+            }
+
             // Update the availableCourses in the group's settings using Firebase
             await firebase
                 .database()
@@ -142,28 +214,28 @@ export const saveCoursesChanges: ActionCreator<any> = () => {
                 .child(groupProperties.anid)
                 .child('settings')
                 .child('availableCourses')
-                .set(courses);
-            
+                .set(newCourses);
+
             // Update the local group properties state to reflect the changes
             const updatedGroupProperties = {
                 ...groupProperties,
                 settings: {
                     ...groupProperties.settings,
-                    availableCourses: courses
+                    availableCourses: newCourses
                 }
             };
-            
+
             dispatch({
                 type: ANGEL_NETWORK_LOADED,
                 angelNetwork: updatedGroupProperties,
                 shouldLoadOtherData: true
             });
-            
+
             dispatch(openFeedbackSnackbar(FeedbackSnackbarTypes.Success, 'Courses updated successfully!'));
-            
+
             // Reload course statistics after saving changes
             dispatch(loadCourseStatistics());
-            
+
             return dispatch(completeAction);
         } catch (error) {
             completeAction.error = error.toString();

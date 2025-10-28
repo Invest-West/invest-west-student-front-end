@@ -33,7 +33,6 @@ import {connect} from 'react-redux';
 import * as superAdminSettingsActions from '../../../redux-store/actions/superAdminSettingsActions';
 import ManageSectors from "./manage-sectors/ManageSectors";
 import ManageCourses from "./manage-courses/ManageCourses";
-import UpgradeUserToAdmin from "./UpgradeUserToAdmin";
 import FeedbackSnackbarNew from "../../../shared-components/feedback-snackbar/FeedbackSnackbarNew";
 
 const mapStateToProps = state => {
@@ -176,16 +175,6 @@ class SuperAdminSettings extends Component {
                     {/** Edit courses */}
                     <Col xs={12} sm={12} md={12} lg={12}>
                         <ManageCourses/>
-                    </Col>
-
-                    {/** Divider */}
-                    <Col xs={12} sm={12} md={12} lg={12}>
-                        <Divider style={{marginTop: 40, marginBottom: 40, height: 3, backgroundColor: colors.primaryColor}}/>
-                    </Col>
-
-                    {/** Upgrade user to admin */}
-                    <Col xs={12} sm={12} md={12} lg={12}>
-                        <UpgradeUserToAdmin/>
                     </Col>
 
                     {/** Divider */}

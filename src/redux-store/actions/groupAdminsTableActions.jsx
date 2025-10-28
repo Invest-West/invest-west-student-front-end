@@ -37,7 +37,7 @@ export const setGroup = newGroup => {
 export const GROUP_ADMINS_TABLE_LOADING_GROUP_ADMINS = 'GROUP_ADMINS_TABLE_LOADING_GROUP_ADMINS';
 export const GROUP_ADMINS_TABLE_FINISHED_LOADING_GROUP_ADMINS = 'GROUP_ADMINS_TABLE_FINISHED_LOADING_GROUP_ADMINS';
 export const loadGroupAdmins = () => {
-    return (dispatch, getState) => {
+    return async (dispatch, getState) => {
         const currentUser = getState().auth.user;
         const tableGroup = getState().manageGroupAdminsTable.tableGroup;
 
@@ -49,35 +49,43 @@ export const loadGroupAdmins = () => {
             return;
         }
 
-        if (!currentUser.superAdmin) {
-            if (currentUser.anid !== tableGroup.anid) {
-                dispatch({
-                    type: GROUP_ADMINS_TABLE_FINISHED_LOADING_GROUP_ADMINS,
-                    groupAdmins: []
-                });
-                return;
-            }
-        }
-
         dispatch({
             type: GROUP_ADMINS_TABLE_LOADING_GROUP_ADMINS
         });
 
-        realtimeDBUtils
-        .loadGroupAdminsBasedOnGroupID(tableGroup.anid)
-        .then(groupAdmins => {
+        try {
+            let groupAdmins = [];
+
+            // Super admins OR super group admins see ALL admins
+            const isSuperUser = currentUser.superAdmin || currentUser.superGroupAdmin;
+
+            if (isSuperUser) {
+                // Super users see ALL admins from all universities
+                const snapshot = await firebase
+                    .database()
+                    .ref(DB_CONST.ADMINISTRATORS_CHILD)
+                    .once('value');
+
+                if (snapshot.exists()) {
+                    const adminsObject = snapshot.val();
+                    groupAdmins = Object.keys(adminsObject).map(key => adminsObject[key]);
+                }
+            } else {
+                // Regular group admins only see admins from their university
+                groupAdmins = await realtimeDBUtils.loadGroupAdminsBasedOnGroupID(currentUser.anid);
+            }
+
             dispatch({
                 type: GROUP_ADMINS_TABLE_FINISHED_LOADING_GROUP_ADMINS,
                 groupAdmins: [...groupAdmins]
             });
-        })
-        .catch(error => {
+        } catch (error) {
             console.error('Error loading group admins:', error);
             dispatch({
                 type: GROUP_ADMINS_TABLE_FINISHED_LOADING_GROUP_ADMINS,
                 groupAdmins: []
             });
-        });
+        }
     }
 };
 
@@ -224,13 +232,8 @@ export const startListeningForGroupAdminsChanged = () => {
         }
 
         const currentUser = getState().auth.user;
-        const tableGroup = getState().manageGroupAdminsTable.tableGroup;
 
         if (currentUser.type !== DB_CONST.TYPE_ADMIN) {
-            return;
-        }
-
-        if (!currentUser.superAdmin && currentUser.anid !== tableGroup.anid) {
             return;
         }
 
@@ -245,8 +248,9 @@ export const startListeningForGroupAdminsChanged = () => {
 
                 const index = groupAdmins.findIndex(existingGroupAdmin => existingGroupAdmin.id === groupAdmin.id);
                 if (index === -1) {
-
-                    if (groupAdmin.anid === tableGroup.anid) {
+                    // Super users (superAdmin OR superGroupAdmin) see all admins, regular group admins only see their own university's admins
+                    const isSuperUser = currentUser.superAdmin || currentUser.superGroupAdmin;
+                    if (isSuperUser || groupAdmin.anid === currentUser.anid) {
                         dispatch({
                             type: GROUP_ADMINS_TABLE_CHANGED,
                             groupAdmins: [...groupAdmins, groupAdmin]
@@ -262,11 +266,15 @@ export const startListeningForGroupAdminsChanged = () => {
 
                 const index = groupAdmins.findIndex(existingGroupAdmin => existingGroupAdmin.id === groupAdmin.id);
                 if (index !== -1) {
-                    groupAdmins[index] = groupAdmin;
-                    dispatch({
-                        type: GROUP_ADMINS_TABLE_CHANGED,
-                        groupAdmins: [...groupAdmins]
-                    });
+                    // Only update if visible to this admin
+                    const isSuperUser = currentUser.superAdmin || currentUser.superGroupAdmin;
+                    if (isSuperUser || groupAdmin.anid === currentUser.anid) {
+                        groupAdmins[index] = groupAdmin;
+                        dispatch({
+                            type: GROUP_ADMINS_TABLE_CHANGED,
+                            groupAdmins: [...groupAdmins]
+                        });
+                    }
                 }
             });
 

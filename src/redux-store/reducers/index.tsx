@@ -18,6 +18,7 @@ import legalDocumentsReducer from './legalDocumentsReducer';
 import invitedUsersReducer from './invitedUsersReducer';
 import invitationDialogReducer from './invitationDialogReducer';
 import addAngelNetworkDialogReducer from './addAngelNetworkDialogReducer';
+import courseRequestDialogReducer from './courseRequestDialogReducer';
 import manageGroupFromParamsReducer from './manageGroupFromParamsReducer';
 import angelNetworksReducer from './angelNetworksReducer';
 import manageJoinRequestsReducer from './manageJoinRequestsReducer';
@@ -124,6 +125,7 @@ const rootReducer = combineReducers<AppState>({
     invitedUsers: invitedUsersReducer,
     manageInvitationDialog: invitationDialogReducer,
     manageAddAngelNetworkDialog: addAngelNetworkDialogReducer,
+    manageCourseRequestDialog: courseRequestDialogReducer,
     manageGroupFromParams: manageGroupFromParamsReducer,
     manageAngelNetworks: angelNetworksReducer,
     manageJoinRequests: manageJoinRequestsReducer,

@@ -41,6 +41,8 @@ import * as colors from "../../../values/colors";
 import OfferRepository, {FetchProjectsOrderByOptions} from "../../../api/repositories/OfferRepository";
 import firebase from "../../../firebase/firebaseApp";
 import UserRepository from "../../../api/repositories/UserRepository";
+import UpgradeUserToAdmin from "./UpgradeUserToAdmin";
+import InviteMultipleUsers from "./InviteMultipleUsers";
 
 export const FILTER_REGISTRATION_STATUS_ALL = -1;
 
@@ -468,19 +470,35 @@ class InvitedUsers extends Component {
             <FlexView column width="100%">
                 <Divider style={{marginBottom: 30}}/>
 
-                {/** Invite new user button - available for group admins only */}
-                {
-                    admin.superAdmin
-                        ?
-                        null
-                        :
-                        <Row style={{marginBottom: 30}}>
-                            <Col xs={12} md={5} lg={12}>
-                                <Button color="primary" variant="outlined" className={css(sharedStyles.no_text_transform)} onClick={this.copySignupUrl}>
-                                    <FileCopyIcon style={{ marginRight: 10, width: 20, height: "auto"}}/>Copy signup URL</Button>
+                {/** Invite/Upgrade users section - different UI for super admins vs regular admins */}
+                <Row style={{marginBottom: 30}}>
+                    {/** For regular admins: Show Copy URL and Invite Multiple Users */}
+                    {
+                        !(admin.superAdmin || admin.superGroupAdmin)
+                            ?
+                            <>
+                                <Col xs={12} md={6} lg={6} style={{marginBottom: 20}}>
+                                    <Button color="primary" variant="outlined" className={css(sharedStyles.no_text_transform)} onClick={this.copySignupUrl}>
+                                        <FileCopyIcon style={{ marginRight: 10, width: 20, height: "auto"}}/>Copy signup URL</Button>
+                                </Col>
+                                <Col xs={12} sm={12} md={12} lg={12}>
+                                    <InviteMultipleUsers/>
+                                </Col>
+                            </>
+                            :
+                            null
+                    }
+                    {/** For super admins and super group admins: Show Upgrade User to Admin */}
+                    {
+                        (admin.superAdmin || admin.superGroupAdmin)
+                            ?
+                            <Col xs={12} sm={12} md={12} lg={12}>
+                                <UpgradeUserToAdmin/>
                             </Col>
-                        </Row>
-                }
+                            :
+                            null
+                    }
+                </Row>
 
                 {/** Filters */}
                 <Row>
@@ -524,7 +542,7 @@ class InvitedUsers extends Component {
 
                     {/** Group members */}
                     {
-                        !admin.superAdmin
+                        !(admin.superAdmin || admin.superGroupAdmin)
                             ?
                             <Col xs={12} sm={12} md={4} lg={3}>
                                 <FlexView vAlignContent="center">
@@ -559,7 +577,7 @@ class InvitedUsers extends Component {
                             <Col xs={12} sm={12} md={4} lg={3}>
                                 <FormControl fullWidth>
                                     <InputLabel>
-                                        <Typography variant="body1" color="primary" align="left">Group</Typography>
+                                        <Typography variant="body1" color="primary" align="left">University</Typography>
                                     </InputLabel>
                                     <Select margin="dense" input={<OutlinedInput labelWidth={0} name="filterGroup" disabled={!groupsLoaded}/>
                                         }
@@ -571,7 +589,7 @@ class InvitedUsers extends Component {
                                             {
                                                 !groupsLoaded
                                                     ?
-                                                    "Loading courses ..."
+                                                    "Loading universities ..."
                                                     :
                                                     "All"
                                             }
@@ -581,9 +599,11 @@ class InvitedUsers extends Component {
                                                 ?
                                                 null
                                                 :
-                                                systemGroups.map(group => (
-                                                    <MenuItem value={group.anid} key={group.anid}>{group.displayName}</MenuItem>
-                                                ))
+                                                systemGroups
+                                                    .filter(group => !group.parentGroupId)
+                                                    .map(group => (
+                                                        <MenuItem value={group.anid} key={group.anid}>{group.displayName}</MenuItem>
+                                                    ))
                                         }
                                     </Select>
                                 </FormControl>
@@ -696,7 +716,7 @@ class InvitedUsers extends Component {
 
                             <InfoOverlay placement="right"
                                 message={
-                                    admin.superAdmin
+                                    (admin.superAdmin || admin.superGroupAdmin)
                                         ?
                                         "Export all the users in the system to a .csv file."
                                         :
@@ -749,12 +769,12 @@ class InvitedUsers extends Component {
                                 </FlexView>
                             </TableCell>
                             {
-                                !admin.superAdmin
+                                !(admin.superAdmin || admin.superGroupAdmin)
                                     ?
                                     null
                                     :
                                     <TableCell colSpan={2}>
-                                        <Typography align="left" variant="body2"><b>Group</b></Typography>
+                                        <Typography align="left" variant="body2"><b>University</b></Typography>
                                     </TableCell>
                             }
                             <TableCell colSpan={1} style={{ cursor: 'pointer' }} onClick={() => this.handleSort('userType')}>
@@ -948,8 +968,8 @@ class InvitedUsers extends Component {
                                             :
                                             // this check to ensure only the group admin that initally invited this
                                             // user can resend the invitation
-                                            admin.superAdmin
-                                            || (!admin.superAdmin
+                                            (admin.superAdmin || admin.superGroupAdmin)
+                                            || (!(admin.superAdmin || admin.superGroupAdmin)
                                                 && groupProperties
                                                 && groupProperties.anid !== invitedUser.invitedBy
                                             )
@@ -963,7 +983,7 @@ class InvitedUsers extends Component {
 
                                     {/** Display home/platform members */}
                                     {
-                                        admin.superAdmin
+                                        (admin.superAdmin || admin.superGroupAdmin)
                                             ?
                                             null
                                             :
@@ -984,10 +1004,10 @@ class InvitedUsers extends Component {
                             {/** Email */}
                             <TableCell colSpan={2}>
                                 <FlexView column>
-                                    <Typography align="left" variant="body2" paragraph={admin.superAdmin}>{invitedUser.email}</Typography>
+                                    <Typography align="left" variant="body2" paragraph={(admin.superAdmin || admin.superGroupAdmin)}>{invitedUser.email}</Typography>
 
                                     {
-                                        admin.superAdmin
+                                        (admin.superAdmin || admin.superGroupAdmin)
                                             ?
                                             <FlexView column>
                                                 <Typography align="left" variant="body2" color="textSecondary"><b><u>Invited ID:</u></b> {invitedUser.id}</Typography>
@@ -1005,9 +1025,9 @@ class InvitedUsers extends Component {
                                 </FlexView>
                             </TableCell>
 
-                            {/** Group the user belongs to - available only for super admins */}
+                            {/** Group the user belongs to - available only for super admins and super group admins */}
                             {
-                                !admin.superAdmin
+                                !(admin.superAdmin || admin.superGroupAdmin)
                                     ?
                                     null
                                     :

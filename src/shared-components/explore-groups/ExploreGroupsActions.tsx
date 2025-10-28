@@ -160,44 +160,107 @@ const filterGroupsByGroupFilter: ActionCreator<any> = () => {
         const AuthenticationState = getState().AuthenticationState;
         const currentUser = AuthenticationState.currentUser;
 
+        console.log('%c=== EXPLORE GROUPS FILTER DEBUG ===', 'background: #333; color: #87CEEB; font-size: 14px');
+        console.log('Current User:', currentUser);
+        console.log('Group Filter:', groupFilter);
+        console.log('Total groups:', groups.length);
+
         if (!currentUser) {
+            console.log('%c❌ No current user - exiting', 'color: red');
             return;
         }
 
         const groupsFiltered: GroupProperties[] = [];
 
+        // Check if user is a super admin or super group admin
+        const admin: Admin | null = isAdmin(currentUser);
+        const isSuperAdmin = admin && (admin.superAdmin || admin.superGroupAdmin);
+
+        console.log('Is Admin?', admin !== null);
+        console.log('Is Super Admin or Super Group Admin?', isSuperAdmin);
+        console.log('Groups of Membership:', AuthenticationState.groupsOfMembership.map(m => ({
+            name: m.group.displayName,
+            anid: m.group.anid,
+            parentGroupId: m.group.parentGroupId
+        })));
+
+        // For normal users (non-super admins), find their university
+        let userUniversityId: string | null = null;
+        if (!isSuperAdmin) {
+            // Find the university the user belongs to by looking at their group memberships
+            for (const membership of AuthenticationState.groupsOfMembership) {
+                const memberGroup = membership.group;
+
+                // If user is directly in a university
+                if (!memberGroup.parentGroupId) {
+                    userUniversityId = memberGroup.anid;
+                    break;
+                }
+
+                // If user is in a course, get the parent university ID
+                if (memberGroup.parentGroupId) {
+                    userUniversityId = memberGroup.parentGroupId;
+                    break;
+                }
+            }
+            console.log('Normal user - University ID:', userUniversityId);
+        }
+
         groups.map(group => {
             let satisfiedFilter = false;
-            switch (groupFilter) {
-                case "all":
-                    const admin: Admin | null = isAdmin(currentUser);
-                    if (admin && admin.superAdmin) {
-                        satisfiedFilter = true;
-                    } else {
+
+            // For normal users, only show their university and its courses
+            if (!isSuperAdmin && userUniversityId) {
+                // Show the user's university
+                if (group.anid === userUniversityId && !group.parentGroupId) {
+                    satisfiedFilter = true;
+                }
+                // Show courses under the user's university
+                else if (group.parentGroupId === userUniversityId) {
+                    satisfiedFilter = true;
+                }
+            } else {
+                // Original filtering logic for super admins
+                switch (groupFilter) {
+                    case "all":
+                        if (isSuperAdmin) {
+                            satisfiedFilter = true;
+                        } else {
+                            satisfiedFilter = AuthenticationState.groupsOfMembership.findIndex(
+                                groupOfMembership => groupOfMembership.group.anid === group.anid) === -1
+                                && accessRequestsInstances !== undefined
+                                && accessRequestsInstances.findIndex(
+                                    accessRequestInstance => accessRequestInstance.group.anid === group.anid) === -1;
+                        }
+                        break;
+                    case "groupsOfMembership":
                         satisfiedFilter = AuthenticationState.groupsOfMembership.findIndex(
-                            groupOfMembership => groupOfMembership.group.anid === group.anid) === -1
-                            && accessRequestsInstances !== undefined
+                            groupOfMembership => groupOfMembership.group.anid === group.anid) !== -1;
+                        break;
+                    case "groupsOfPendingRequest":
+                        satisfiedFilter = accessRequestsInstances !== undefined
                             && accessRequestsInstances.findIndex(
-                                accessRequestInstance => accessRequestInstance.group.anid === group.anid) === -1;
-                    }
-                    break;
-                case "groupsOfMembership":
-                    satisfiedFilter = AuthenticationState.groupsOfMembership.findIndex(
-                        groupOfMembership => groupOfMembership.group.anid === group.anid) !== -1;
-                    break;
-                case "groupsOfPendingRequest":
-                    satisfiedFilter = accessRequestsInstances !== undefined
-                        && accessRequestsInstances.findIndex(
-                            accessRequestInstance => accessRequestInstance.group.anid === group.anid) !== -1;
-                    break;
-                default:
-                    break;
+                                accessRequestInstance => accessRequestInstance.group.anid === group.anid) !== -1;
+                        break;
+                    default:
+                        break;
+                }
             }
+
             if (satisfiedFilter) {
                 groupsFiltered.push(group);
             }
             return null;
         });
+
+        console.log('%c📤 Filtered Groups Result:', 'color: purple; font-weight: bold');
+        console.log('Filtered count:', groupsFiltered.length);
+        console.table(groupsFiltered.map(g => ({
+            name: g.displayName,
+            anid: g.anid,
+            parentGroupId: g.parentGroupId
+        })));
+        console.log('%c===================================', 'background: #333; color: #87CEEB');
 
         const action: FilterGroupsByGroupFilterAction = {
             type: ExploreGroupsEvents.FilterGroupsByGroupFilter,

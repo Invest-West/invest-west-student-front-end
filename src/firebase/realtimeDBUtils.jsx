@@ -283,9 +283,9 @@ export const logContactUsEnquiry = (
         anid = null, // null = Invest West, not null = group
         email,
         name,
-        phone = null,
-        subject,
-        description
+        companyName,
+        companyPosition,
+        message
     }
 ) => {
     return new Promise((resolve, reject) => {
@@ -302,9 +302,9 @@ export const logContactUsEnquiry = (
                 groupContacted: anid,
                 email,
                 name,
-                phone,
-                subject,
-                description,
+                companyName,
+                companyPosition,
+                message,
                 id: enquiryID,
                 time: utils.getCurrentDate()
             })

@@ -46,6 +46,12 @@ export class ApiRoutes {
     static createAccessRequestRoute = ApiRoutes.accessRequestsBaseRoute + "/create";
     static removeAccessRequestRoute = ApiRoutes.createAccessRequestRoute + "/remove";
 
+    static courseRequestsBaseRoute = "/course-requests";
+    static listCourseRequestsRoute = ApiRoutes.courseRequestsBaseRoute + "/list";
+    static createCourseRequestRoute = ApiRoutes.courseRequestsBaseRoute + "/create";
+    static approveCourseRequestRoute = ApiRoutes.courseRequestsBaseRoute + "/approve";
+    static rejectCourseRequestRoute = ApiRoutes.courseRequestsBaseRoute + "/reject";
+
     static fileBaseRoute = "/file";
     static uploadSingleFileRoute = ApiRoutes.fileBaseRoute + "/upload-single";
 
