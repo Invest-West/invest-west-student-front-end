@@ -115,8 +115,9 @@ class ManageCourses extends Component<ManageCoursesProps, ManageCoursesLocalStat
     }
 
     getCourseUserName = (courseName: string) => {
-        // Return just the course name formatted, not prefixed with group name
-        return courseName.toLowerCase().replace(/\s+/g, '-');
+        // Return the full course groupUserName: university-course-name
+        // This matches the format used when creating courses
+        return `${this.props.groupProperties.groupUserName}-${courseName.toLowerCase().replace(/\s+/g, '-')}`;
     }
 
     render() {
@@ -175,9 +176,25 @@ class ManageCourses extends Component<ManageCoursesProps, ManageCoursesLocalStat
                 !ManageCoursesLocalState.addingNewCourse
                     ? null
                     : <Box display="flex" flexDirection="row" alignItems="center" marginTop="10px">
-                        <TextField variant="outlined" margin="dense" onChange={onTextChanged}/>
+                        <TextField
+                            variant="outlined"
+                            margin="dense"
+                            onChange={onTextChanged}
+                            disabled={ManageCoursesLocalState.creatingCourse}
+                            placeholder="Enter course name"
+                            value={ManageCoursesLocalState.newCourse}
+                        />
                         <Box width="15px"/>
-                        <Button className={css(sharedStyles.no_text_transform)} variant="contained" color="primary" onClick={() => addNewCourse()}>Add</Button>
+                        <Button
+                            className={css(sharedStyles.no_text_transform)}
+                            variant="contained"
+                            color="primary"
+                            onClick={() => addNewCourse()}
+                            disabled={ManageCoursesLocalState.creatingCourse || !ManageCoursesLocalState.newCourse.trim()}
+                            startIcon={ManageCoursesLocalState.creatingCourse ? <CircularProgress size={16} color="inherit" /> : null}
+                        >
+                            {ManageCoursesLocalState.creatingCourse ? "Creating..." : "Add"}
+                        </Button>
                       </Box>
             }
 

@@ -132,6 +132,24 @@ export const commitUserProfileChanges = type => {
                             ?
                             userEdited.linkedin
                             :
+                            null,
+                    company:
+                        userEdited.company && userEdited.company.trim().length > 0
+                            ?
+                            userEdited.company
+                            :
+                            null,
+                    companyName:
+                        userEdited.companyName && userEdited.companyName.trim().length > 0
+                            ?
+                            userEdited.companyName
+                            :
+                            null,
+                    description:
+                        userEdited.description && userEdited.description.trim().length > 0
+                            ?
+                            userEdited.description
+                            :
                             null
                 })
                 .then(() => {

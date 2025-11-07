@@ -74,6 +74,8 @@ import {FetchProjectsPhaseOptions} from "../../api/repositories/OfferRepository"
 import {
     PROJECT_STATUS_BEING_CHECKED,
     PROJECT_STATUS_DRAFT,
+    PROJECT_STATUS_REJECTED,
+    PROJECT_STATUS_PITCH_PHASE,
     PROJECT_VISIBILITY_PRIVATE,
     PROJECT_VISIBILITY_PUBLIC,
     PROJECT_VISIBILITY_RESTRICTED
@@ -383,6 +385,8 @@ class OffersTable extends Component<OffersTableProps, any> {
                                             <MenuItem key={FetchProjectsPhaseOptions.TemporarilyClosed} value={FetchProjectsPhaseOptions.TemporarilyClosed}>Temporarily closed</MenuItem>
                                             <MenuItem key={FetchProjectsPhaseOptions.ExpiredPitch} value={FetchProjectsPhaseOptions.ExpiredPitch}>Expired</MenuItem>
                                             <MenuItem key={PROJECT_STATUS_DRAFT} value={PROJECT_STATUS_DRAFT} >Draft</MenuItem>
+                                            <MenuItem key={PROJECT_STATUS_PITCH_PHASE} value={PROJECT_STATUS_PITCH_PHASE} >Approved</MenuItem>
+                                            <MenuItem key={PROJECT_STATUS_REJECTED} value={PROJECT_STATUS_REJECTED} >Rejected</MenuItem>
                                         </Select>
                                     </Box>
                                 </Col>
@@ -462,16 +466,8 @@ class OffersTable extends Component<OffersTableProps, any> {
                                                             }
                                                             <Box width="15px" />
                                                             <CustomLink
-                                                                url={
-                                                                    isDraftProject(offerInstance.projectDetail)
-                                                                        ? Routes.constructCreateProjectRoute(ManageGroupUrlState.groupNameFromUrl ?? null, ManageGroupUrlState.courseNameFromUrl ?? null, {edit: offerInstance.projectDetail.id})
-                                                                        : Routes.constructProjectDetailRoute(ManageGroupUrlState.groupNameFromUrl ?? null, ManageGroupUrlState.courseNameFromUrl ?? null, offerInstance.projectDetail.id)
-                                                                }
-                                                                target={
-                                                                    isDraftProject(offerInstance.projectDetail)
-                                                                        ? "_blank"
-                                                                        : ""
-                                                                }
+                                                                url={Routes.constructProjectDetailRoute(ManageGroupUrlState.groupNameFromUrl ?? null, ManageGroupUrlState.courseNameFromUrl ?? null, offerInstance.projectDetail.id)}
+                                                                target=""
                                                                 color="black"
                                                                 activeColor={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main}
                                                                 activeUnderline={false}
@@ -506,11 +502,14 @@ class OffersTable extends Component<OffersTableProps, any> {
                                                                 </Box>
                                                         }
 
-                                                        {/** Edit button (only available for draft project) */}
+                                                        {/** Edit button (only available for draft project AND only for the issuer creator) */}
                                                         {
                                                             isInvestor(currentUser)
                                                                 ? null
                                                                 : !isDraftProject(offerInstance.projectDetail)
+                                                                ? null
+                                                                // Only show edit if current user is an issuer AND they created this project
+                                                                : !(isIssuer(currentUser) && offerInstance.issuer && currentUser.id === offerInstance.issuer.id)
                                                                 ? null
                                                                 : <Box marginTop="18px" >
                                                                     <CustomLink

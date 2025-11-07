@@ -177,7 +177,6 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
                                 >
                                     <MenuItem key="all" value="all">All courses</MenuItem>
                                     <MenuItem key="groupsOfMembership" value="groupsOfMembership">My courses</MenuItem>
-                                    <MenuItem key="groupsOfPendingRequest" value="groupsOfPendingRequest">Pending requests</MenuItem>
                                 </Select>
 
                                 <Box width="15px" />

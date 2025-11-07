@@ -35,6 +35,7 @@ import ChangePasswordPage from '../../shared-components/change-password/ChangePa
 import JoinRequests from './components/JoinRequests';
 import ActivitiesTable from '../../shared-components/activities-components/ActivitiesTable';
 import GroupAdminsTable from './components/GroupAdminsTable';
+import ManageAccessRequests from './ManageAccessRequests';
 
 import * as colors from '../../values/colors';
 import * as ROUTES from '../../router/routes';
@@ -451,6 +452,31 @@ class AdminDashboard extends Component {
                             </AccordionDetails>
                         </Accordion>
                     </Col>
+
+                    {/* Manage admin access requests - Super admins only */}
+                    {
+                        currentAdmin && (currentAdmin.superAdmin || currentAdmin.superGroupAdmin)
+                            ?
+                            <Col xs={12} md={12} lg={12}>
+                                <Accordion className={css(styles.card_style)}>
+                                    <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
+                                        <FlexView column>
+                                            <Typography paragraph variant="h6" color="primary" align="left">Admin Access Requests</Typography>
+                                            <Typography paragraph variant="body1" align="left">
+                                                Review and action requests from group admins to add new admins to their courses.
+                                            </Typography>
+                                        </FlexView>
+                                    </AccordionSummary>
+                                    <AccordionDetails className={css(styles.card_details_expansion)}>
+                                        <FlexView column width="100%">
+                                            <ManageAccessRequests currentUser={currentUser}/>
+                                        </FlexView>
+                                    </AccordionDetails>
+                                </Accordion>
+                            </Col>
+                            :
+                            null
+                    }
 
                 </Row>
             )

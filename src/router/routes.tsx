@@ -3,6 +3,7 @@ import GroupOfMembership, {getHomeGroup} from "../models/group_of_membership";
 import {AuthenticationState} from "../redux-store/reducers/authenticationReducer";
 import {ManageGroupUrlState} from "../redux-store/reducers/manageGroupUrlReducer";
 import User, {isInvestor} from "../models/user";
+import GroupProperties, {isCourse, isUniversity} from "../models/group_properties";
 
 export interface CreateProjectRouteParams {
     edit?: string;
@@ -406,13 +407,23 @@ export default class Routes {
     }
 
     /**
-     * Construct sign in route (navigate to Sign in page)
+     * Construct contact us route (navigate to Contact Us page)
      *
      * @param routeParams
      */
     public static constructContactUsRoute = (routeParams: any) => {
         if (routeParams.groupUserName) {
-            return Routes.groupContactUs.replace(":groupUserName", routeParams.groupUserName);
+            if (routeParams.courseUserName) {
+                // Course-based URL - maintain course parameter
+                const route = Routes.courseContactUs
+                    .replace(":groupUserName", routeParams.groupUserName)
+                    .replace(":courseUserName", routeParams.courseUserName);
+                return route;
+            } else {
+                // Group-based URL
+                const route = Routes.groupContactUs.replace(":groupUserName", routeParams.groupUserName);
+                return route;
+            }
         } else {
             return Routes.nonGroupContactUs;
         }
@@ -599,50 +610,115 @@ export default class Routes {
         }
 
         const currentAdmin: Admin | null = isAdmin(AuthenticationState.currentUser);
-        
-        // Helper function to get group name with invest-west fallback
-        const getGroupNameForUser = (): string => {
-            // First priority: Use group from URL if user is a member
-            if (routeParams.groupUserName && AuthenticationState.groupsOfMembership
-                .some(membership => membership.group.groupUserName === routeParams.groupUserName)) {
-                return routeParams.groupUserName;
+
+        /**
+         * Helper to extract university and course usernames from user's group membership
+         * Returns { universityUserName: string, courseUserName: string }
+         */
+        const getUniversityAndCourseForUser = (): { universityUserName: string, courseUserName: string } => {
+            // First, try to match URL parameters if provided
+            if (routeParams.groupUserName && routeParams.courseUserName) {
+                // Verify user has membership to this university or course
+                const hasUniversityMembership = AuthenticationState.groupsOfMembership
+                    .some(m => m.group.groupUserName === routeParams.groupUserName && isUniversity(m.group));
+                const hasCourseMembership = AuthenticationState.groupsOfMembership
+                    .some(m => m.group.groupUserName === routeParams.courseUserName && isCourse(m.group));
+
+                if (hasUniversityMembership || hasCourseMembership) {
+                    return {
+                        universityUserName: routeParams.groupUserName,
+                        courseUserName: routeParams.courseUserName
+                    };
+                }
             }
 
-            // Second priority: Look for invest-west group specifically
+            // Look through user's memberships to find course or university
+            for (const membership of AuthenticationState.groupsOfMembership) {
+                const group = membership.group;
+
+                // If user is member of a course, extract parent university info
+                if (isCourse(group)) {
+                    // Try to find parent university in memberships
+                    const parentUniversity = AuthenticationState.groupsOfMembership
+                        .find(m => m.group.anid === group.parentGroupId);
+
+                    if (parentUniversity) {
+                        return {
+                            universityUserName: parentUniversity.group.groupUserName,
+                            courseUserName: group.groupUserName
+                        };
+                    }
+
+                    // If parent not in memberships but parentGroup is populated
+                    if (group.parentGroup) {
+                        return {
+                            universityUserName: group.parentGroup.groupUserName,
+                            courseUserName: group.groupUserName
+                        };
+                    }
+
+                    // Fallback: extract university from course username (format: university-course-name)
+                    // This handles legacy data where course username is like "invest-west-digital-media-bsc"
+                    const courseUserName = group.groupUserName;
+                    // Try to extract parent by looking for invest-west prefix
+                    if (courseUserName.startsWith('invest-west-')) {
+                        return {
+                            universityUserName: 'invest-west',
+                            courseUserName: courseUserName
+                        };
+                    }
+                }
+
+                // If user is member of a university, use that with fallback course
+                if (isUniversity(group)) {
+                    const courseUserName = routeParams.courseUserName || 'student-showcase';
+                    return {
+                        universityUserName: group.groupUserName,
+                        courseUserName: courseUserName
+                    };
+                }
+            }
+
+            // Fallback: Look for invest-west specifically
             const investWestGroup = AuthenticationState.groupsOfMembership
-                .find(membership => membership.group.groupUserName === 'invest-west');
+                .find(m => m.group.groupUserName === 'invest-west');
             if (investWestGroup) {
-                return 'invest-west';
+                return {
+                    universityUserName: 'invest-west',
+                    courseUserName: routeParams.courseUserName || 'student-showcase'
+                };
             }
 
-            // Third priority: Use home group if available
-            const homeGroup: GroupOfMembership | null = getHomeGroup(AuthenticationState.groupsOfMembership);
-            if (homeGroup) {
-                return homeGroup.group.groupUserName;
-            }
-
-            // Fourth priority: Use first available group
-            if (AuthenticationState.groupsOfMembership.length > 0) {
-                return AuthenticationState.groupsOfMembership[0].group.groupUserName;
-            }
-
-            // Final fallback: invest-west
-            return 'invest-west';
-        };
-
-        // Helper function to get course name with student-showcase fallback
-        const getCourseNameForUser = (): string => {
-            // First priority: Use course from URL if provided
-            if (routeParams.courseUserName) {
-                return routeParams.courseUserName;
-            }
-
-            // TODO: In future, get user's actual assigned course from their profile
-            // For now, fallback to student-showcase
-            return 'student-showcase';
+            // Ultimate fallback
+            return {
+                universityUserName: 'invest-west',
+                courseUserName: 'student-showcase'
+            };
         };
 
         let route: string = "";
+
+        // Debug: Log current admin and memberships
+        console.log('[DASHBOARD DEBUG] Admin user:', {
+            adminId: currentAdmin?.id,
+            adminAnid: currentAdmin?.anid,
+            groupsOfMembershipCount: AuthenticationState.groupsOfMembership?.length || 0,
+            groups: AuthenticationState.groupsOfMembership?.map(m => ({
+                groupUserName: m.group.groupUserName,
+                displayName: m.group.displayName,
+                anid: m.group.anid,
+                isHomeGroup: m.isHomeGroup
+            }))
+        });
+
+        // Get university and course usernames based on user's membership
+        const { universityUserName, courseUserName } = getUniversityAndCourseForUser();
+
+        console.log('[DASHBOARD DEBUG] Determined university and course:', {
+            universityUserName,
+            courseUserName,
+            routeParams
+        });
 
         // Handle admin users
         if (currentAdmin) {
@@ -651,38 +727,29 @@ export default class Routes {
                 route = Routes.nonGroupAdminDashboard;
             }
             // Group admin → course admin dashboard
-            else if (AuthenticationState.groupsOfMembership.length > 0) {
-                const adminGroup: GroupOfMembership = AuthenticationState.groupsOfMembership[0];
-                const courseName = getCourseNameForUser();
+            else {
                 route = Routes.courseAdminDashboard
-                    .replace(":groupUserName", adminGroup.group.groupUserName)
-                    .replace(":courseUserName", courseName);
-                console.log('[DASHBOARD DEBUG] Constructed admin dashboard route:', route);
-            } else {
-                // Fallback for group admin with no groups
-                const courseName = getCourseNameForUser();
-                route = Routes.courseAdminDashboard
-                    .replace(":groupUserName", "invest-west")
-                    .replace(":courseUserName", courseName);
-                console.log('[DASHBOARD DEBUG] Constructed fallback admin dashboard route:', route);
+                    .replace(":groupUserName", universityUserName)
+                    .replace(":courseUserName", courseUserName);
+                console.log('[DASHBOARD DEBUG] Constructed admin dashboard route:', route,
+                    `(university: ${universityUserName}, course: ${courseUserName})`);
             }
         }
         // Handle regular users (investors/issuers)
         else {
-            const groupName = getGroupNameForUser();
-            const courseName = getCourseNameForUser();
-
             if (isInvestor(AuthenticationState.currentUser as User)) {
                 route = Routes.courseInvestorDashboard
-                    .replace(":groupUserName", groupName)
-                    .replace(":courseUserName", courseName);
-                console.log('[DASHBOARD DEBUG] Constructed investor dashboard route:', route);
+                    .replace(":groupUserName", universityUserName)
+                    .replace(":courseUserName", courseUserName);
+                console.log('[DASHBOARD DEBUG] Constructed investor dashboard route:', route,
+                    `(university: ${universityUserName}, course: ${courseUserName})`);
             } else {
                 // Assume issuer if not investor
                 route = Routes.courseIssuerDashboard
-                    .replace(":groupUserName", groupName)
-                    .replace(":courseUserName", courseName);
-                console.log('[DASHBOARD DEBUG] Constructed issuer dashboard route:', route);
+                    .replace(":groupUserName", universityUserName)
+                    .replace(":courseUserName", courseUserName);
+                console.log('[DASHBOARD DEBUG] Constructed issuer dashboard route:', route,
+                    `(university: ${universityUserName}, course: ${courseUserName})`);
             }
         }
 

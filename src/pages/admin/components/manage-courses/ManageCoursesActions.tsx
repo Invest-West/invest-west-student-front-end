@@ -20,7 +20,9 @@ export enum ManageCoursesEvents {
     LoadCoursesFromGroup = "ManageCoursesEvents.LoadCoursesFromGroup",
     LoadingCourseStatistics = "ManageCoursesEvents.LoadingCourseStatistics",
     SetCourseStatistics = "ManageCoursesEvents.SetCourseStatistics",
-    UpdateCourseStatistic = "ManageCoursesEvents.UpdateCourseStatistic"
+    UpdateCourseStatistic = "ManageCoursesEvents.UpdateCourseStatistic",
+    CreatingCourse = "ManageCoursesEvents.CreatingCourse",
+    CompletedCreatingCourse = "ManageCoursesEvents.CompletedCreatingCourse"
 }
 
 export interface ManageCoursesAction extends Action {
@@ -60,13 +62,41 @@ export const setCourses: ActionCreator<any> = (courses: string[]) => {
 }
 
 export const loadCoursesFromGroup: ActionCreator<any> = () => {
-    return (dispatch: Dispatch, getState: () => AppState) => {
+    return async (dispatch: Dispatch, getState: () => AppState) => {
         const groupProperties: GroupProperties | null = getState().manageGroupFromParams.groupProperties;
-        if (!groupProperties || !groupProperties.settings) {
+        if (!groupProperties) {
             return dispatch(setCourses([]));
         }
-        const availableCourses = groupProperties.settings.availableCourses || [];
-        return dispatch(setCourses([...availableCourses]));
+
+        try {
+            // Query Firebase for courses belonging to this parent group
+            const coursesSnapshot = await firebase
+                .database()
+                .ref(DB_CONST.GROUP_PROPERTIES_CHILD)
+                .orderByChild('parentGroupId')
+                .equalTo(groupProperties.anid)
+                .once('value');
+
+            if (!coursesSnapshot.exists()) {
+                console.log('[ManageCourses] No courses found for parent group:', groupProperties.anid);
+                return dispatch(setCourses([]));
+            }
+
+            const courseNames: string[] = [];
+            coursesSnapshot.forEach((courseSnapshot) => {
+                const courseData = courseSnapshot.val();
+                // Only include active courses with groupType='course'
+                if (courseData.groupType === 'course' && courseData.status === DB_CONST.GROUP_STATUS_ACTIVE) {
+                    courseNames.push(courseData.displayName);
+                }
+            });
+
+            console.log(`[ManageCourses] Loaded ${courseNames.length} courses from Firebase for group: ${groupProperties.displayName}`);
+            return dispatch(setCourses(courseNames));
+        } catch (error) {
+            console.error('[ManageCourses] Error loading courses from Firebase:', error);
+            return dispatch(setCourses([]));
+        }
     }
 }
 
@@ -89,12 +119,92 @@ export const onTextChanged: ActionCreator<any> = (event: React.ChangeEvent<HTMLI
 }
 
 export const addNewCourse: ActionCreator<any> = () => {
-    return (dispatch: Dispatch, getState: () => AppState) => {
-        const courses: string[] = [...getState().ManageCoursesLocalState.courses];
-        const newCourse: string = getState().ManageCoursesLocalState.newCourse;
-        courses.push(newCourse);
-        dispatch(setCourses(courses));
-        return dispatch(toggleAddNewCourse());
+    return async (dispatch: Dispatch, getState: () => AppState) => {
+        const groupProperties: GroupProperties | null = getState().manageGroupFromParams.groupProperties;
+        if (!groupProperties) {
+            dispatch(openFeedbackSnackbar(FeedbackSnackbarTypes.Error, 'Group not found'));
+            return;
+        }
+
+        const newCourse: string = getState().ManageCoursesLocalState.newCourse.trim();
+
+        if (!newCourse) {
+            dispatch(openFeedbackSnackbar(FeedbackSnackbarTypes.Error, 'Please enter a course name'));
+            return;
+        }
+
+        try {
+            // Set creating state
+            dispatch({
+                type: ManageCoursesEvents.CreatingCourse
+            });
+
+            // Create the course in Firebase
+            const courseId = firebase
+                .database()
+                .ref(DB_CONST.GROUP_PROPERTIES_CHILD)
+                .push()
+                .key;
+
+            if (!courseId) {
+                throw new Error('Failed to generate course ID');
+            }
+
+            const courseUserName = `${groupProperties.groupUserName}-${newCourse.toLowerCase().replace(/\s+/g, '-')}`;
+
+            // Create the course group properties
+            const courseGroupProperties: GroupProperties = {
+                anid: courseId,
+                displayName: newCourse,
+                displayNameLower: newCourse.toLowerCase(),
+                groupUserName: courseUserName,
+                description: `${newCourse} - Part of ${groupProperties.displayName}`,
+                website: groupProperties.website || '',
+                dateAdded: Date.now(),
+                status: DB_CONST.GROUP_STATUS_ACTIVE,
+                isInvestWest: false,
+                plainLogo: groupProperties.plainLogo || [],
+                logoWithText: groupProperties.logoWithText,
+                settings: {
+                    primaryColor: groupProperties.settings.primaryColor,
+                    secondaryColor: groupProperties.settings.secondaryColor,
+                    projectVisibility: groupProperties.settings.projectVisibility,
+                    makeInvestorsContactDetailsVisibleToIssuers: groupProperties.settings.makeInvestorsContactDetailsVisibleToIssuers
+                },
+                groupType: 'course' as any,
+                parentGroupId: groupProperties.anid
+            };
+
+            // Save the course group to Firebase
+            await firebase
+                .database()
+                .ref(DB_CONST.GROUP_PROPERTIES_CHILD)
+                .child(courseId)
+                .set(courseGroupProperties);
+
+            // Show success message
+            dispatch(openFeedbackSnackbar(FeedbackSnackbarTypes.Success, `Course "${newCourse}" created successfully!`));
+
+            // Complete creating state
+            dispatch({
+                type: ManageCoursesEvents.CompletedCreatingCourse
+            });
+
+            // Reload courses from Firebase to update the list
+            await dispatch(loadCoursesFromGroup());
+
+            // Reload statistics
+            dispatch(loadCourseStatistics());
+
+        } catch (error) {
+            console.error('Error creating course:', error);
+            dispatch(openFeedbackSnackbar(FeedbackSnackbarTypes.Error, `Failed to create course: ${error.message}`));
+
+            // Complete creating state even on error
+            dispatch({
+                type: ManageCoursesEvents.CompletedCreatingCourse
+            });
+        }
     }
 }
 
@@ -111,23 +221,37 @@ export const deleteCourse: ActionCreator<any> = (course: string) => {
 
 export const cancelCoursesChanges: ActionCreator<any> = () => {
     return (dispatch: Dispatch, getState: () => AppState) => {
-        const groupProperties: GroupProperties | null = getState().manageGroupFromParams.groupProperties;
-        if (!groupProperties || !groupProperties.settings) {
-            return;
-        }
-        const availableCourses = groupProperties.settings.availableCourses || [];
-        return dispatch(setCourses([...availableCourses]));
+        // Reload courses from Firebase to discard local changes
+        return dispatch(loadCoursesFromGroup());
     }
 }
 
 export const saveCoursesChanges: ActionCreator<any> = () => {
     return async (dispatch: Dispatch, getState: () => AppState) => {
         const groupProperties: GroupProperties | null = getState().manageGroupFromParams.groupProperties;
-        if (!groupProperties || !groupProperties.settings) {
+        if (!groupProperties) {
             return;
         }
         const newCourses: string[] = [...getState().ManageCoursesLocalState.courses];
-        const oldCourses: string[] = groupProperties.settings.availableCourses || [];
+
+        // Load existing courses from Firebase instead of availableCourses
+        const coursesSnapshot = await firebase
+            .database()
+            .ref(DB_CONST.GROUP_PROPERTIES_CHILD)
+            .orderByChild('parentGroupId')
+            .equalTo(groupProperties.anid)
+            .once('value');
+
+        const oldCourses: string[] = [];
+        if (coursesSnapshot.exists()) {
+            coursesSnapshot.forEach((courseSnapshot) => {
+                const courseData = courseSnapshot.val();
+                if (courseData.groupType === 'course' && courseData.status === DB_CONST.GROUP_STATUS_ACTIVE) {
+                    oldCourses.push(courseData.displayName);
+                }
+            });
+        }
+
         const completeAction: CompletedSavingCoursesChangesAction = {
             type: ManageCoursesEvents.CompletedSavingCoursesChanges
         };
@@ -207,29 +331,8 @@ export const saveCoursesChanges: ActionCreator<any> = () => {
                 }
             }
 
-            // Update the availableCourses in the group's settings using Firebase
-            await firebase
-                .database()
-                .ref(DB_CONST.GROUP_PROPERTIES_CHILD)
-                .child(groupProperties.anid)
-                .child('settings')
-                .child('availableCourses')
-                .set(newCourses);
-
-            // Update the local group properties state to reflect the changes
-            const updatedGroupProperties = {
-                ...groupProperties,
-                settings: {
-                    ...groupProperties.settings,
-                    availableCourses: newCourses
-                }
-            };
-
-            dispatch({
-                type: ANGEL_NETWORK_LOADED,
-                angelNetwork: updatedGroupProperties,
-                shouldLoadOtherData: true
-            });
+            // No need to update availableCourses - courses are now managed as separate Firebase entities
+            // The group properties don't need to be updated since we're not using availableCourses anymore
 
             dispatch(openFeedbackSnackbar(FeedbackSnackbarTypes.Success, 'Courses updated successfully!'));
 

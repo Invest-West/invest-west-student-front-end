@@ -86,6 +86,8 @@ export const onSignInClick: ActionCreator<any> = (event: FormEvent) => {
             return;
         }
 
+        console.log('[COURSE ADMIN AUTH] 🔑 Sign in button clicked, calling signIn action with email:', email);
+
         return dispatch(signIn(email, password));
     }
 }

@@ -373,13 +373,7 @@ class SidebarContent extends Component {
                                 null
                                 :
                                 <NavLink
-                                    to={
-                                        groupUserName
-                                            ?
-                                            ROUTES.CONTACT_US.replace(':groupUserName', groupUserName)
-                                            :
-                                            ROUTES.CONTACT_US_INVEST_WEST_SUPER
-                                    }
+                                    to={Routes.constructContactUsRoute(dashboardProps.match.params)}
                                     className={css(sharedStyles.nav_link_white_text_hover_without_changing_text_color)}
                                 >
                                     <ListItem button onClick={() => toggleSidebar(false)} >
@@ -392,6 +386,7 @@ class SidebarContent extends Component {
                         }
 
                         {/** Help tab */}
+                        {/* COMMENTED OUT - Help menu removed from all accounts
                         {
                             // don't need to show this tab to super admin
                             user.type === DB_CONST.TYPE_ADMIN
@@ -417,6 +412,7 @@ class SidebarContent extends Component {
                                     </ListItem>
                                 </NavLink>
                         }
+                        */}
 
                         {/** Logout tab */}
                         <ListItem button onClick={this.onLogoutClick} >

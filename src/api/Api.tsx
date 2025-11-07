@@ -52,6 +52,12 @@ export class ApiRoutes {
     static approveCourseRequestRoute = ApiRoutes.courseRequestsBaseRoute + "/approve";
     static rejectCourseRequestRoute = ApiRoutes.courseRequestsBaseRoute + "/reject";
 
+    static adminAccessRequestsBaseRoute = "/admin-access-requests";
+    static listAdminAccessRequestsRoute = ApiRoutes.adminAccessRequestsBaseRoute + "/list";
+    static createAdminAccessRequestRoute = ApiRoutes.adminAccessRequestsBaseRoute + "/create";
+    static approveAdminAccessRequestRoute = ApiRoutes.adminAccessRequestsBaseRoute + "/approve";
+    static rejectAdminAccessRequestRoute = ApiRoutes.adminAccessRequestsBaseRoute + "/reject";
+
     static fileBaseRoute = "/file";
     static uploadSingleFileRoute = ApiRoutes.fileBaseRoute + "/upload-single";
 
@@ -173,7 +179,7 @@ export default class Api {
                 : null
         );
 
-        let currentUser: firebase.default.User | null = await firebase.auth().currentUser;
+        let currentUser: firebase.default.User | null = firebase.auth().currentUser;
 
         try {
             let idToken: string | null = null;

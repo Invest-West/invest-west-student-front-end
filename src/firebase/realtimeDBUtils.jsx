@@ -497,6 +497,7 @@ export const loadGroupsUserIsIn = async (userID) => {
 
 /**
  * Load angel network based on anid
+ * Also checks Courses node if not found in angel networks
  *
  * @param anid
  * @returns {Promise<unknown>}
@@ -517,10 +518,51 @@ export const loadAngelNetworkBasedOnANID = async (anid) => {
                 });
 
                 if (!snapshot || !snapshot.exists()) {
-                    return reject("Angel network not found");
-                }
+                    // Not found in GROUP_PROPERTIES_CHILD, check if it's a course
+                    console.log('[REALTIME-DB DEBUG] Not found in groups, checking Courses node:', anid);
 
-                return resolve(snapshot.val());
+                    firebase
+                        .database()
+                        .ref(DB_CONST.COURSES_CHILD)
+                        .child(anid)
+                        .once('value', courseSnapshot => {
+                            console.log('[REALTIME-DB DEBUG] Course lookup result:', {
+                                anid: anid,
+                                exists: courseSnapshot ? courseSnapshot.exists() : false,
+                                hasCourseData: courseSnapshot ? !!courseSnapshot.val() : false
+                            });
+
+                            if (!courseSnapshot || !courseSnapshot.exists()) {
+                                return reject("Angel network not found");
+                            }
+
+                            const courseData = courseSnapshot.val();
+
+                            // If this is a course with a parent, load the parent university
+                            if (courseData.parentGroupId) {
+                                console.log('[REALTIME-DB DEBUG] Course found, loading parent university:', courseData.parentGroupId);
+                                firebase
+                                    .database()
+                                    .ref(DB_CONST.GROUP_PROPERTIES_CHILD)
+                                    .child(courseData.parentGroupId)
+                                    .once('value', parentSnapshot => {
+                                        if (!parentSnapshot || !parentSnapshot.exists()) {
+                                            console.warn('[REALTIME-DB DEBUG] Parent university not found for course:', courseData.parentGroupId);
+                                            return reject("Parent university not found");
+                                        }
+
+                                        console.log('[REALTIME-DB DEBUG] Returning parent university for course ANID');
+                                        return resolve(parentSnapshot.val());
+                                    });
+                            } else {
+                                // Course without parent - just return the course data
+                                console.log('[REALTIME-DB DEBUG] Returning course data (no parent)');
+                                return resolve(courseData);
+                            }
+                        });
+                } else {
+                    return resolve(snapshot.val());
+                }
             });
     });
 };

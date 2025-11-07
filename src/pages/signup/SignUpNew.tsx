@@ -578,51 +578,6 @@ class SignUpNew extends Component<SignUpProps & Readonly<RouteComponentProps<Rou
                             </FormControl>
                             </Box>
 
-                            {/** Course selection */}
-                            <Box marginTop="28px">
-                            <FormControl
-                                fullWidth
-                                required
-                            >
-                                <InputLabel>
-                                    <Typography variant="body1" color="primary">
-                                        What course are you on?
-                                    </Typography>
-                                </InputLabel>
-                                <Select
-                                    name="course"
-                                    value={SignUpLocalState.course}
-                                    // @ts-ignore
-                                    onChange={handleInputFieldChanged}
-                                    margin="dense"
-                                    style={{
-                                        marginTop: 25
-                                    }}
-                                >
-                                    <MenuItem
-                                        key="-1"
-                                        value="-1"
-                                    >
-                                        Please select
-                                    </MenuItem>
-                                    {
-                                        !this.props.ManageSystemAttributesState.systemAttributes || !this.props.ManageSystemAttributesState.systemAttributes.Courses
-                                            ?
-                                            null
-                                            :
-                                            this.props.ManageSystemAttributesState.systemAttributes.Courses.map((course: string, index: number) => (
-                                                <MenuItem
-                                                    key={index}
-                                                    value={course}
-                                                >
-                                                    {course}
-                                                </MenuItem>
-                                            ))
-                                    }
-                                </Select>
-                            </FormControl>
-                            </Box>
-
                             {/** Marketing preferences checkbox */}
                             <Box
                                 marginTop="28px"
@@ -714,8 +669,6 @@ class SignUpNew extends Component<SignUpProps & Readonly<RouteComponentProps<Rou
                                         || SignUpLocalState.email.trim().length === 0
                                         || SignUpLocalState.confirmedEmail.trim().length === 0
                                         || SignUpLocalState.password.trim().length === 0
-                                        || SignUpLocalState.discover === "-1"
-                                        || SignUpLocalState.course === "-1"
                                         || SignUpLocalState.confirmedPassword.trim().length === 0
                                     }
                                     onClick={() => createAccount()}

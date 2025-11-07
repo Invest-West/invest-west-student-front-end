@@ -322,8 +322,76 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
     };
 
     selectUser = (user: any) => {
+        console.log('[SELECT USER] User selected:', user);
+
+        // Auto-select university and course based on the user's current membership
+        let autoSelectedUniversity = '';
+        let autoSelectedCourse = '';
+        let availableCourses: GroupProperties[] = [];
+
+        // If user is not an admin and has invitedBy field, use it to determine their group
+        if (!user.isAdmin && user.invitedBy) {
+            console.log('[SELECT USER] User is a regular member with invitedBy:', user.invitedBy);
+            const userGroup = this.props.systemGroups.find(g => g.anid === user.invitedBy);
+
+            if (userGroup) {
+                console.log('[SELECT USER] Found user group:', {
+                    displayName: userGroup.displayName,
+                    groupType: userGroup.groupType,
+                    parentGroupId: userGroup.parentGroupId
+                });
+
+                if (isCourse(userGroup)) {
+                    // User belongs to a course - auto-select both course and parent university
+                    autoSelectedCourse = userGroup.anid;
+                    autoSelectedUniversity = userGroup.parentGroupId || '';
+
+                    if (autoSelectedUniversity) {
+                        availableCourses = this.getAvailableCoursesForUniversity(autoSelectedUniversity, this.props.systemGroups);
+                    }
+
+                    console.log('[SELECT USER] Auto-selected course and university:', {
+                        course: userGroup.displayName,
+                        courseId: autoSelectedCourse,
+                        universityId: autoSelectedUniversity
+                    });
+                } else if (isUniversity(userGroup)) {
+                    // User belongs to a university - auto-select university and load courses
+                    autoSelectedUniversity = userGroup.anid;
+                    availableCourses = this.getAvailableCoursesForUniversity(autoSelectedUniversity, this.props.systemGroups);
+
+                    console.log('[SELECT USER] Auto-selected university:', {
+                        university: userGroup.displayName,
+                        universityId: autoSelectedUniversity,
+                        availableCoursesCount: availableCourses.length
+                    });
+                }
+            } else {
+                console.warn('[SELECT USER] Could not find group with anid:', user.invitedBy);
+            }
+        } else if (user.isAdmin && user.adminOfGroup) {
+            // User is already an admin - show their current admin group
+            console.log('[SELECT USER] User is already admin of:', user.adminOfGroup.displayName);
+            const adminGroup = user.adminOfGroup;
+
+            if (isCourse(adminGroup)) {
+                autoSelectedCourse = adminGroup.anid;
+                autoSelectedUniversity = adminGroup.parentGroupId || '';
+
+                if (autoSelectedUniversity) {
+                    availableCourses = this.getAvailableCoursesForUniversity(autoSelectedUniversity, this.props.systemGroups);
+                }
+            } else if (isUniversity(adminGroup)) {
+                autoSelectedUniversity = adminGroup.anid;
+                availableCourses = this.getAvailableCoursesForUniversity(autoSelectedUniversity, this.props.systemGroups);
+            }
+        }
+
         this.setState({
             selectedUser: user,
+            selectedUniversity: autoSelectedUniversity,
+            selectedCourse: autoSelectedCourse,
+            availableCourses: availableCourses,
             upgradeStatus: UPGRADE_USER_STATUS_NONE
         });
     };

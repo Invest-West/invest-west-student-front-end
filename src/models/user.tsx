@@ -19,6 +19,9 @@ export default interface User {
     title: string | "none";
     discover: string | "none";
     course?: string;
+    company?: string; // investor company
+    companyName?: string; // investor company name
+    description?: string; // investor description
     profilePicture?: ProfileImage[];
     BusinessProfile?: BusinessProfile;
     type: number;

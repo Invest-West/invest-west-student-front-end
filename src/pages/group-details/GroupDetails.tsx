@@ -234,7 +234,7 @@ class GroupDetails extends Component<GroupDetailsProps & Readonly<RouteComponent
                                     <Row>
                                         <Col xs={12} sm={12} md={6} lg={6}>
                                             <Box padding="18px">
-                                                <Typography variant="h4" align="left">{GroupDetailsLocalState.members?.length}</Typography>
+                                                <Typography variant="h4" align="left">{GroupDetailsLocalState.members?.length ?? 0}</Typography>
                                                     <Box height="2px"/>
                                                 <Typography variant="body1" align="left">Students</Typography>
                                             </Box>
@@ -247,7 +247,7 @@ class GroupDetails extends Component<GroupDetailsProps & Readonly<RouteComponent
                                                 </Box>
 
                                                 <Box padding="18px">
-                                                    <Typography variant="h4" align="left">{GroupDetailsLocalState.offers?.length}</Typography>
+                                                    <Typography variant="h4" align="left">{GroupDetailsLocalState.offers?.length ?? 0}</Typography>
 
                                                     <Box height="2px"/>
 
@@ -255,6 +255,37 @@ class GroupDetails extends Component<GroupDetailsProps & Readonly<RouteComponent
                                                 </Box>
                                             </Box>
                                         </Col>
+                                    </Row>
+
+                                    <Row>
+                                        <Col xs={12} sm={12} md={6} lg={6}>
+                                            <Box padding="18px" borderTop={`1px solid ${colors.grey["300"]}`}>
+                                                <Typography variant="h4" align="left">{GroupDetailsLocalState.admins?.length ?? 0}</Typography>
+                                                    <Box height="2px"/>
+                                                <Typography variant="body1" align="left">Lecturers / Admins</Typography>
+                                            </Box>
+                                        </Col>
+
+                                        {(GroupDetailsLocalState.group?.subGroups && GroupDetailsLocalState.group.subGroups.length > 0) ||
+                                         (GroupDetailsLocalState.group?.childGroups && GroupDetailsLocalState.group.childGroups.length > 0) ? (
+                                            <Col xs={12} sm={12} md={6} lg={6}>
+                                                <Box display="flex" flexDirection="row">
+                                                    <Box>
+                                                        <Divider orientation="vertical"/>
+                                                    </Box>
+
+                                                    <Box padding="18px" borderTop={`1px solid ${colors.grey["300"]}`}>
+                                                        <Typography variant="h4" align="left">
+                                                            {GroupDetailsLocalState.group?.childGroups?.length ?? GroupDetailsLocalState.group?.subGroups?.length ?? 0}
+                                                        </Typography>
+
+                                                        <Box height="2px"/>
+
+                                                        <Typography variant="body1" align="left">Courses</Typography>
+                                                    </Box>
+                                                </Box>
+                                            </Col>
+                                        ) : null}
                                     </Row>
                                 </Box>
                             </Box>

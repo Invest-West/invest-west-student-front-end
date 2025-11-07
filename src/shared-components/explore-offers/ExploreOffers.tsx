@@ -96,9 +96,9 @@ interface ExploreOffersComponentState {
         if (hasNotFetchedOffers(this.props.ExploreOffersLocalState)) {
           this.props.fetchOffers(FetchProjectsOrderByOptions.Phase);
         }
-        //this.fetchGroups();
+        this.fetchGroups();
       }
-  
+
       fetchGroups = async () => {
         try {
           const response = await new GroupRepository().fetchGroups();
@@ -185,6 +185,31 @@ interface ExploreOffersComponentState {
                     </Paper>
                 </Box>
             </Col>
+
+                {/** University/Group filter */}
+                <Col xs={12} sm={12} md={6} lg={4}>
+                    <Box paddingY="6px">
+                        <Typography variant="body1">University/Group:</Typography>
+                        <Box height="8px" />
+                        <Paper>
+                            <Select
+                                fullWidth
+                                variant="outlined"
+                                name="groupFilter"
+                                value={ExploreOffersLocalState.groupFilter}
+                                onChange={filterChanged}
+                                input={<OutlinedInput />}
+                            >
+                                <MenuItem key="all" value="all">All universities</MenuItem>
+                                {
+                                    this.state.groups.map((group, index) => (
+                                        <MenuItem key={index} value={group.anid}>{group.displayName}</MenuItem>
+                                    ))
+                                }
+                            </Select>
+                        </Paper>
+                    </Box>
+                </Col>
             </Row>
 
             {/** Search bar */}
@@ -276,15 +301,15 @@ interface ExploreOffersComponentState {
                                             </Box>
                                         </Box>
 
-                                        {/** Create offer button (available for issuers and investors) */}
+                                        {/** Create offer button (available for issuers only) */}
                                         {
                                             !AuthenticationState.currentUser
                                                 ? null
-                                                : !isIssuer(AuthenticationState.currentUser) && !isInvestor(AuthenticationState.currentUser)
+                                                : !isIssuer(AuthenticationState.currentUser)
                                                 ? null
                                                 : <Box marginBottom="40px" >
                                                     <CustomLink
-                                                        url={Routes.constructCreateProjectRoute(ManageGroupUrlState.groupNameFromUrl ?? null, ManageGroupUrlState.courseNameFromUrl ?? null)}                                                  
+                                                        url={Routes.constructCreateProjectRoute(ManageGroupUrlState.groupNameFromUrl ?? null, ManageGroupUrlState.courseNameFromUrl ?? null)}
                                                         color="none"
                                                         activeColor="none"
                                                         activeUnderline={false}

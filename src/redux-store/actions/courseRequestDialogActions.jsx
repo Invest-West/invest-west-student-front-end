@@ -24,7 +24,7 @@ export const handleInputChanged = event => {
 export const COURSE_REQUEST_ADD_BUTTON_CLICKED = 'COURSE_REQUEST_ADD_BUTTON_CLICKED';
 export const COURSE_REQUEST_STATUS_CHANGED = 'COURSE_REQUEST_STATUS_CHANGED';
 
-export const submitCourseRequest = () => {
+export const submitCourseRequest = (onSuccessCallback) => {
     return async (dispatch, getState) => {
         const currentUser = getState().auth.user;
         const {courseName} = getState().manageCourseRequestDialog;
@@ -60,6 +60,11 @@ export const submitCourseRequest = () => {
                 type: COURSE_REQUEST_STATUS_CHANGED,
                 status: REQUEST_STATUS_SUCCESS
             });
+
+            // Call the success callback to refresh the course requests list
+            if (onSuccessCallback && typeof onSuccessCallback === 'function') {
+                onSuccessCallback();
+            }
 
             // Close dialog after 2 seconds
             setTimeout(() => {

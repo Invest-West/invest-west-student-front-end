@@ -46,27 +46,88 @@ export const hasAuthenticationError = (state: AuthenticationState) => {
 }
 
 const authenticationReducer = (state = initialState, action: AuthenticationAction) => {
+    const timestamp = new Date().toISOString();
+
     switch (action.type) {
         case AuthenticationEvents.StartAuthenticating:
+            console.log(`[REDUX AUTH] [${timestamp}] StartAuthenticating action received`, {
+                previousState: {
+                    status: state.status,
+                    hasUser: !!state.currentUser,
+                    userId: state.currentUser?.id,
+                    userEmail: state.currentUser?.email
+                },
+                newState: {
+                    status: AuthenticationStatus.Authenticating,
+                    hasUser: false
+                }
+            });
+
             return {
                 ...initialState,
                 status: AuthenticationStatus.Authenticating
             }
+
         case AuthenticationEvents.CompleteAuthentication:
             const completeAuthenticationAction: CompleteAuthenticationAction = (action as CompleteAuthenticationAction);
+
+            console.log(`[REDUX AUTH] [${timestamp}] CompleteAuthentication action received`, {
+                actionStatus: completeAuthenticationAction.status,
+                actionUser: {
+                    id: completeAuthenticationAction.currentUser?.id,
+                    email: completeAuthenticationAction.currentUser?.email,
+                    type: completeAuthenticationAction.currentUser?.type
+                },
+                actionGroupsCount: completeAuthenticationAction.groupsOfMembership?.length,
+                actionHasError: !!completeAuthenticationAction.error,
+                previousState: {
+                    status: state.status,
+                    hasUser: !!state.currentUser,
+                    userId: state.currentUser?.id
+                }
+            });
+
             if (completeAuthenticationAction.status === AuthenticationStatus.Authenticated) {
-                console.log('Successfully logged in!'); // Add this line
-            }          
-            return {
+                console.log(`[REDUX AUTH] [${timestamp}] ✅ Successfully logged in!`, {
+                    userId: completeAuthenticationAction.currentUser?.id,
+                    email: completeAuthenticationAction.currentUser?.email,
+                    type: completeAuthenticationAction.currentUser?.type,
+                    groupsCount: completeAuthenticationAction.groupsOfMembership?.length
+                });
+            }
+
+            const newAuthState = {
                 ...state,
                 status: completeAuthenticationAction.status,
                 currentUser: completeAuthenticationAction.currentUser
                     ? JSON.parse(JSON.stringify(completeAuthenticationAction.currentUser)) : state.currentUser,
                 groupsOfMembership: JSON.parse(JSON.stringify(completeAuthenticationAction.groupsOfMembership)),
                 error: completeAuthenticationAction.error
-            }
+            };
+
+            console.log(`[REDUX AUTH] [${timestamp}] New Redux auth state after CompleteAuthentication:`, {
+                status: newAuthState.status,
+                hasUser: !!newAuthState.currentUser,
+                userId: newAuthState.currentUser?.id,
+                userEmail: newAuthState.currentUser?.email,
+                userType: newAuthState.currentUser?.type,
+                groupsCount: newAuthState.groupsOfMembership?.length
+            });
+
+            return newAuthState;
+
         case AuthenticationEvents.SignOut:
-            return {
+            console.log(`[REDUX AUTH] [${timestamp}] SignOut action received`, {
+                previousState: {
+                    status: state.status,
+                    hasUser: !!state.currentUser,
+                    userId: state.currentUser?.id,
+                    userEmail: state.currentUser?.email
+                },
+                willClearUser: state.status === AuthenticationStatus.NotInitialized || state.status === AuthenticationStatus.Authenticated
+            });
+
+            const signOutState = {
                 ...state,
                 status: state.status === AuthenticationStatus.NotInitialized
                 || state.status === AuthenticationStatus.Authenticated
@@ -84,13 +145,30 @@ const authenticationReducer = (state = initialState, action: AuthenticationActio
                 || state.status === AuthenticationStatus.Authenticated
                     ? undefined
                     : state.error
-            }
+            };
+
+            console.log(`[REDUX AUTH] [${timestamp}] New Redux auth state after SignOut:`, {
+                status: signOutState.status,
+                hasUser: !!signOutState.currentUser,
+                userId: signOutState.currentUser?.id
+            });
+
+            return signOutState;
+
         case AuthenticationEvents.UpdateUserChanges:
             const updateUserChangesAction: UpdateUserChangesAction = action as UpdateUserChangesAction;
+
+            console.log(`[REDUX AUTH] [${timestamp}] UpdateUserChanges action received`, {
+                updatedUserId: updateUserChangesAction.updatedUser?.id,
+                updatedUserEmail: updateUserChangesAction.updatedUser?.email,
+                previousUserId: state.currentUser?.id
+            });
+
             return {
                 ...state,
                 currentUser: updateUserChangesAction.updatedUser
             }
+
         default:
             return state;
     }

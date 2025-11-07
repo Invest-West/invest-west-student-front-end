@@ -86,10 +86,14 @@ class AngelNetworks extends Component {
         super(props);
         this.state = {
             expandedUniversities: {}, // Track which universities are expanded: {universityId: boolean}
+            expandedCourses: {}, // Track which courses are expanded: {courseId: boolean}
+            courseMembers: {}, // Store members for each course: {courseId: members[]}
+            loadingCourseMembers: {}, // Track loading state for course members: {courseId: boolean}
             courseRequests: [], // Store all course requests
             loadingCourseRequests: false,
             approvingRequest: null, // Track which request is being approved
-            rejectingRequest: null // Track which request is being rejected
+            rejectingRequest: null, // Track which request is being rejected
+            hasLoadedCourseMembers: false // Track if we've already loaded all course members
         };
     }
 
@@ -100,6 +104,176 @@ class AngelNetworks extends Component {
                 [universityId]: !prevState.expandedUniversities[universityId]
             }
         }));
+    };
+
+    toggleCourseExpansion = async (courseId, courseGroupUserName) => {
+        const isCurrentlyExpanded = this.state.expandedCourses[courseId];
+
+        // Toggle expansion
+        this.setState(prevState => ({
+            expandedCourses: {
+                ...prevState.expandedCourses,
+                [courseId]: !isCurrentlyExpanded
+            }
+        }));
+
+        // If we're expanding and haven't loaded members yet, fetch them
+        if (!isCurrentlyExpanded && !this.state.courseMembers[courseId]) {
+            await this.loadCourseMembers(courseId, courseGroupUserName);
+        }
+    };
+
+    /**
+     * Load members for a specific course
+     */
+    loadCourseMembers = async (courseId, courseGroupUserName) => {
+        console.log(`🔄 loadCourseMembers called for courseId: ${courseId}, courseGroupUserName: ${courseGroupUserName}`);
+
+        this.setState(prevState => ({
+            loadingCourseMembers: {
+                ...prevState.loadingCourseMembers,
+                [courseId]: true
+            }
+        }));
+
+        try {
+            const realtimeDBUtils = require('../../../firebase/realtimeDBUtils');
+            console.log(`    🌐 Calling loadGroupAdminsBasedOnGroupID with courseId: ${courseId}`);
+
+            const startTime = Date.now();
+            // Use the same method as GroupDetails page - load admins by group ANID
+            const groupAdmins = await realtimeDBUtils.loadGroupAdminsBasedOnGroupID(courseId);
+            const endTime = Date.now();
+
+            console.log(`    ⏱️ API call completed in ${endTime - startTime}ms`);
+            console.log(`    ✅ Response received:`, groupAdmins);
+            console.log(`    📊 Fetched ${groupAdmins?.length || 0} total admins for course ${courseId}`);
+            console.log(`    📋 Raw response data:`, groupAdmins);
+
+            const adminsArray = groupAdmins || [];
+
+            // Debug: Check the structure of the first admin object
+            if (adminsArray.length > 0) {
+                console.log(`    🔍 First admin object structure:`, adminsArray[0]);
+                console.log(`    🔍 Available properties:`, Object.keys(adminsArray[0]));
+            }
+
+            // Fetch user details for admins who are missing firstName/lastName
+            // (happens when users are upgraded to admin without preserving these fields)
+            const adminsWithDetails = await Promise.all(adminsArray.map(async (admin) => {
+                // If firstName and lastName exist, use them
+                if (admin.firstName && admin.lastName) {
+                    console.log(`    ✅ Admin ${admin.email} already has name: ${admin.firstName} ${admin.lastName}`);
+                    return admin;
+                }
+
+                // Otherwise, fetch from Users node
+                try {
+                    console.log(`    🔍 Fetching user details for admin ${admin.email} (${admin.id})`);
+                    const userProfile = await realtimeDBUtils.loadUserBasedOnID(admin.id);
+                    if (userProfile) {
+                        console.log(`    ✅ Found user profile:`, userProfile.firstName, userProfile.lastName);
+                        return {
+                            ...admin,
+                            firstName: userProfile.firstName || undefined,
+                            lastName: userProfile.lastName || undefined,
+                            title: userProfile.title || admin.title || 'Lecturer'
+                        };
+                    }
+                } catch (error) {
+                    console.warn(`    ⚠️ Could not load user profile for ${admin.email}:`, error);
+                }
+
+                // No fallback - leave as undefined to indicate missing data
+                console.log(`    ⚠️ Admin ${admin.email} has no firstName/lastName in database`);
+                return {
+                    ...admin,
+                    firstName: undefined,
+                    lastName: undefined,
+                    title: admin.title || 'Lecturer'
+                };
+            }));
+
+            console.log(`    👨‍🏫 Found ${adminsWithDetails.length} admins/lecturers for course ${courseId}:`,
+                adminsWithDetails.map(m => `${m.firstName} ${m.lastName}`).join(', ')
+            );
+
+            this.setState(prevState => {
+                console.log(`    💾 Storing ${adminsWithDetails.length} members for courseId ${courseId} in state`);
+                return {
+                    courseMembers: {
+                        ...prevState.courseMembers,
+                        [courseId]: adminsWithDetails
+                    },
+                    loadingCourseMembers: {
+                        ...prevState.loadingCourseMembers,
+                        [courseId]: false
+                    }
+                };
+            });
+        } catch (error) {
+            console.error(`❌ Error loading course members for ${courseId}:`, error);
+            console.error(`❌ Error details:`, {
+                message: error.message
+            });
+            this.setState(prevState => ({
+                courseMembers: {
+                    ...prevState.courseMembers,
+                    [courseId]: []
+                },
+                loadingCourseMembers: {
+                    ...prevState.loadingCourseMembers,
+                    [courseId]: false
+                }
+            }));
+        }
+    };
+
+    /**
+     * Load all course members proactively
+     */
+    loadAllCourseMembers = async () => {
+        const {angelNetworks, systemGroups} = this.props;
+
+        // Prevent loading multiple times
+        if (this.state.hasLoadedCourseMembers) {
+            console.log('⏭️ Course members already loaded, skipping...');
+            return;
+        }
+
+        // Mark as loaded immediately to prevent multiple calls
+        this.setState({hasLoadedCourseMembers: true});
+
+        if (!systemGroups || systemGroups.length === 0) {
+            console.log('⚠️ No systemGroups available to load course members from');
+            return;
+        }
+
+        console.log('🔍 DEBUG: systemGroups structure:', systemGroups.length, 'total groups');
+
+        // Courses are stored separately with parentGroupId linking to university
+        const allCourses = systemGroups.filter(g => g.parentGroupId);
+
+        console.log(`📚 Found ${allCourses.length} courses in systemGroups`);
+        allCourses.forEach(course => {
+            console.log(`  Course: ${course.displayName} (${course.anid}) - parent: ${course.parentGroupId}`);
+        });
+
+        if (allCourses.length === 0) {
+            console.log('⚠️ No courses found in systemGroups');
+            return;
+        }
+
+        console.log(`📚 Loading members for ${allCourses.length} courses...`);
+
+        // Load members for all courses in parallel
+        const promises = allCourses.map(course => {
+            console.log(`  → Loading members for course: ${course.groupUserName} (${course.anid})`);
+            return this.loadCourseMembers(course.anid, course.groupUserName);
+        });
+
+        await Promise.all(promises);
+        console.log('✅ All course members loaded');
     };
 
     /**
@@ -187,6 +361,23 @@ class AngelNetworks extends Component {
         this.loadData({inComponentDidMount: true});
         this.addListener();
         this.loadCourseRequests(); // Load pending course requests
+
+        console.log('🎯 componentDidMount - checking if we should load course members');
+        const {angelNetworks, angelNetworksLoaded, systemGroups} = this.props;
+        console.log('  angelNetworksLoaded:', angelNetworksLoaded);
+        console.log('  angelNetworks count:', angelNetworks?.length);
+        console.log('  systemGroups count:', systemGroups?.length);
+
+        // Try to load course members if system groups are available
+        if (systemGroups && systemGroups.length > 0) {
+            console.log('🎓 systemGroups available in componentDidMount, loading course members now...');
+            // Add a small delay to ensure everything is ready
+            setTimeout(() => {
+                this.loadAllCourseMembers();
+            }, 500);
+        } else {
+            console.log('⏳ systemGroups not available yet in componentDidMount, will try in componentDidUpdate');
+        }
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
@@ -194,18 +385,39 @@ class AngelNetworks extends Component {
             shouldLoadOtherData,
 
             admin,
+            angelNetworks,
+            angelNetworksLoaded,
 
             stopListeningForAngelNetworksChanged
         } = this.props;
 
+        console.log('🔍 AngelNetworks componentDidUpdate:', {
+            prevAngel: prevProps.angelNetworks?.length,
+            currentAngel: angelNetworks?.length,
+            prevLoaded: prevProps.angelNetworksLoaded,
+            currentLoaded: angelNetworksLoaded,
+            shouldLoad: !prevProps.angelNetworksLoaded && angelNetworksLoaded && angelNetworks && angelNetworks.length > 0
+        });
+
         // cancel all listeners if user is set to null or user is not an admin with permission
         if (!admin || (admin && !admin.superAdmin && admin.type !== DB_CONST.TYPE_ADMIN) || !shouldLoadOtherData) {
+            console.log('⚠️ Early return from componentDidUpdate - no admin permission or shouldLoadOtherData');
             stopListeningForAngelNetworksChanged();
             return;
         }
 
         this.loadData({inComponentDidMount: false});
         this.addListener();
+
+        // Load all course members when systemGroups becomes available
+        const prevSystemGroups = prevProps.systemGroups;
+        const {systemGroups} = this.props;
+
+        if (!this.state.hasLoadedCourseMembers && systemGroups && systemGroups.length > 0 &&
+            (!prevSystemGroups || prevSystemGroups.length === 0 || prevSystemGroups !== systemGroups)) {
+            console.log('🎓 systemGroups just became available in componentDidUpdate, loading course members...');
+            this.loadAllCourseMembers();
+        }
     }
 
     componentWillUnmount() {
@@ -296,7 +508,7 @@ class AngelNetworks extends Component {
                             // Super admins see "Add New Group" - creates university directly
                             <Button color="primary" variant="outlined" className={css(sharedStyles.no_text_transform)} onClick={toggleAddAngelNetworkDialog}>
                                 <AddIcon style={{marginRight: 10, width: 20, height: "auto"}}/>
-                                Add new group
+                                Add new university
                             </Button>
                         ) : admin && !isSuperUser ? (
                             // Regular group admins see "Add New Course" - creates request
@@ -316,7 +528,7 @@ class AngelNetworks extends Component {
                 }
 
                 {/* Course request dialog for group admins */}
-                <AddCourseRequestDialog />
+                <AddCourseRequestDialog onSuccess={this.loadCourseRequests} />
             </FlexView>
         );
     }
@@ -359,7 +571,7 @@ class AngelNetworks extends Component {
                         <TableRow>
                             <StyledTableCell colSpan={3} cellColor={colors.blue_gray_50}
                                 component={
-                                    <InputBase name="searchText" value={searchText}  onChange={handleAngelNetworksTableInputChanged} fullWidth placeholder="Search group by name" type="text"
+                                    <InputBase name="searchText" value={searchText}  onChange={handleAngelNetworksTableInputChanged} fullWidth placeholder="Search university by name" type="text"
                                         startAdornment={
                                             <InputAdornment position="start">
                                                 <OverlayTrigger trigger={['hover', 'focus']}  flip placement="bottom"
@@ -415,7 +627,7 @@ class AngelNetworks extends Component {
                                 }
                                 textColor={colors.white}
                                 component={
-                                    <Typography variant="body2" className={css(sharedStyles.white_text)}  align="left">Groups</Typography>
+                                    <Typography variant="body2" className={css(sharedStyles.white_text)}  align="left">Universities</Typography>
                                 }/>
                             <StyledTableCell colSpan={1}
                                 cellColor={
@@ -669,40 +881,140 @@ class AngelNetworks extends Component {
                                                 <TableBody>
                                                     {courses.length > 0 ? (
                                                         // Show actual course groups with links
-                                                        courses.map(course => (
-                                                            <TableRow key={course.anid}>
-                                                                <TableCell>
-                                                                    <NavLink
-                                                                        to={Routes.constructGroupDetailRoute(groupUserName, null, course.groupUserName)}
-                                                                        className={css(sharedStyles.nav_link_hover_without_changing_text_color)}
-                                                                    >
-                                                                        <Typography color="primary" variant="body2">
-                                                                            {course.displayName}
-                                                                        </Typography>
-                                                                    </NavLink>
-                                                                </TableCell>
-                                                                <TableCell>
-                                                                    <Typography variant="body2">{course.anid}</Typography>
-                                                                </TableCell>
-                                                                <TableCell>
-                                                                    <Typography variant="body2">
-                                                                        {myUtils.dateTimeInReadableFormat(course.dateAdded)}
-                                                                    </Typography>
-                                                                </TableCell>
-                                                                <TableCell>
-                                                                    <Typography
-                                                                        variant="body2"
-                                                                        color={
-                                                                            course.status === DB_CONST.GROUP_STATUS_ACTIVE
-                                                                                ? "primary"
-                                                                                : "error"
-                                                                        }
-                                                                    >
-                                                                        {course.status === DB_CONST.GROUP_STATUS_ACTIVE ? "Active" : "Suspended"}
-                                                                    </Typography>
-                                                                </TableCell>
-                                                            </TableRow>
-                                                        ))
+                                                        courses.map(course => {
+                                                            const isCourseExpanded = this.state.expandedCourses[course.anid] || false;
+                                                            const courseMembers = this.state.courseMembers[course.anid] || [];
+                                                            const loadingMembers = this.state.loadingCourseMembers[course.anid] || false;
+
+                                                            // Debug logging
+                                                            if (isCourseExpanded) {
+                                                                console.log(`📖 Rendering expanded course ${course.displayName} (${course.anid})`);
+                                                                console.log(`   Members in state:`, courseMembers.length, courseMembers.map(m => `${m.profile?.firstName} ${m.profile?.lastName}`));
+                                                                console.log(`   All course members in state:`, Object.keys(this.state.courseMembers));
+                                                            }
+
+                                                            return (
+                                                                <React.Fragment key={course.anid}>
+                                                                    <TableRow>
+                                                                        <TableCell>
+                                                                            <FlexView vAlignContent="center">
+                                                                                {/* Expand/collapse icon for courses */}
+                                                                                <IconButton
+                                                                                    size="small"
+                                                                                    onClick={() => this.toggleCourseExpansion(course.anid, course.groupUserName)}
+                                                                                    style={{marginRight: 8}}
+                                                                                >
+                                                                                    {isCourseExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+                                                                                </IconButton>
+                                                                                <NavLink
+                                                                                    to={Routes.constructGroupDetailRoute(groupUserName, null, course.groupUserName)}
+                                                                                    className={css(sharedStyles.nav_link_hover_without_changing_text_color)}
+                                                                                >
+                                                                                    <Typography color="primary" variant="body2">
+                                                                                        {course.displayName}
+                                                                                        {courseMembers.length > 0 && courseMembers.some(m => m.firstName && m.lastName) && (
+                                                                                            <span style={{color: colors.gray_600, fontSize: '0.75rem', marginLeft: 8}}>
+                                                                                                ({courseMembers
+                                                                                                    .filter(member => member.firstName && member.lastName)
+                                                                                                    .map(member => `${member.firstName} ${member.lastName}`)
+                                                                                                    .join(', ')})
+                                                                                            </span>
+                                                                                        )}
+                                                                                        {loadingMembers && (
+                                                                                            <span style={{color: colors.gray_600, fontSize: '0.75rem', marginLeft: 8}}>
+                                                                                                (Loading...)
+                                                                                            </span>
+                                                                                        )}
+                                                                                    </Typography>
+                                                                                </NavLink>
+                                                                            </FlexView>
+                                                                        </TableCell>
+                                                                        <TableCell>
+                                                                            <Typography variant="body2">{course.anid}</Typography>
+                                                                        </TableCell>
+                                                                        <TableCell>
+                                                                            <Typography variant="body2">
+                                                                                {myUtils.dateTimeInReadableFormat(course.dateAdded)}
+                                                                            </Typography>
+                                                                        </TableCell>
+                                                                        <TableCell>
+                                                                            <Typography
+                                                                                variant="body2"
+                                                                                color={
+                                                                                    course.status === DB_CONST.GROUP_STATUS_ACTIVE
+                                                                                        ? "primary"
+                                                                                        : "error"
+                                                                                }
+                                                                            >
+                                                                                {course.status === DB_CONST.GROUP_STATUS_ACTIVE ? "Active" : "Suspended"}
+                                                                            </Typography>
+                                                                        </TableCell>
+                                                                    </TableRow>
+
+                                                                    {/* Nested row showing lecturers/admins for this course */}
+                                                                    <TableRow>
+                                                                        <TableCell colSpan={4} style={{paddingBottom: 0, paddingTop: 0, backgroundColor: colors.gray_50}}>
+                                                                            <Collapse in={isCourseExpanded} timeout="auto" unmountOnExit>
+                                                                                <div style={{padding: '12px 0 12px 40px'}}>
+                                                                                    <Typography variant="caption" gutterBottom style={{fontWeight: 'bold', color: colors.primaryColor}}>
+                                                                                        Lecturers/Admins:
+                                                                                    </Typography>
+                                                                                    {loadingMembers ? (
+                                                                                        <FlexView style={{padding: 20}} hAlignContent="center" vAlignContent="center">
+                                                                                            <HashLoader size={30} color={colors.primaryColor} />
+                                                                                        </FlexView>
+                                                                                    ) : courseMembers.length > 0 ? (
+                                                                                        <Table size="small">
+                                                                                            <TableHead>
+                                                                                                <TableRow>
+                                                                                                    <TableCell style={{fontWeight: 'bold', fontSize: '0.75rem'}}>Name</TableCell>
+                                                                                                    <TableCell style={{fontWeight: 'bold', fontSize: '0.75rem'}}>Email</TableCell>
+                                                                                                    <TableCell style={{fontWeight: 'bold', fontSize: '0.75rem'}}>Title</TableCell>
+                                                                                                    <TableCell style={{fontWeight: 'bold', fontSize: '0.75rem'}}>Joined Date</TableCell>
+                                                                                                </TableRow>
+                                                                                            </TableHead>
+                                                                                            <TableBody>
+                                                                                                {courseMembers.map((member, idx) => (
+                                                                                                    <TableRow key={member.id || idx}>
+                                                                                                        <TableCell>
+                                                                                                            <Typography variant="caption">
+                                                                                                                {member.firstName && member.lastName
+                                                                                                                    ? `${member.firstName} ${member.lastName}`
+                                                                                                                    : 'N/A'
+                                                                                                                }
+                                                                                                            </Typography>
+                                                                                                        </TableCell>
+                                                                                                        <TableCell>
+                                                                                                            <Typography variant="caption">
+                                                                                                                {member.email || 'N/A'}
+                                                                                                            </Typography>
+                                                                                                        </TableCell>
+                                                                                                        <TableCell>
+                                                                                                            <Typography variant="caption">
+                                                                                                                {member.title || 'Lecturer'}
+                                                                                                            </Typography>
+                                                                                                        </TableCell>
+                                                                                                        <TableCell>
+                                                                                                            <Typography variant="caption">
+                                                                                                                {member.dateAdded ? myUtils.dateTimeInReadableFormat(member.dateAdded) : 'N/A'}
+                                                                                                            </Typography>
+                                                                                                        </TableCell>
+                                                                                                    </TableRow>
+                                                                                                ))}
+                                                                                            </TableBody>
+                                                                                        </Table>
+                                                                                    ) : (
+                                                                                        <Typography variant="caption" color="textSecondary" style={{fontStyle: 'italic', paddingLeft: 8}}>
+                                                                                            No lecturers/admins assigned to this course yet.
+                                                                                        </Typography>
+                                                                                    )}
+                                                                                </div>
+                                                                            </Collapse>
+                                                                        </TableCell>
+                                                                    </TableRow>
+                                                                </React.Fragment>
+                                                            );
+                                                        })
                                                     ) : (
                                                         // Fallback: show course strings without links
                                                         courseStrings.map((courseName, index) => (
@@ -739,13 +1051,13 @@ class AngelNetworks extends Component {
                                                                         </FlexView>
                                                                     </TableCell>
                                                                     <TableCell>
-                                                                        <Typography variant="body2" color="textSecondary">
-                                                                            {myUtils.dateTimeInReadableFormat(request.requestedDate)}
+                                                                        <Typography variant="body2" style={{color: '#EA580C'}}>
+                                                                            Pending
                                                                         </Typography>
                                                                     </TableCell>
                                                                     <TableCell>
-                                                                        <Typography variant="body2" style={{color: '#EA580C'}}>
-                                                                            Pending
+                                                                        <Typography variant="body2">
+                                                                            {myUtils.dateTimeInReadableFormat(request.requestedDate)}
                                                                         </Typography>
                                                                     </TableCell>
                                                                     <TableCell>
@@ -765,10 +1077,13 @@ class AngelNetworks extends Component {
                                                                                 <Button
                                                                                     size="small"
                                                                                     variant="outlined"
-                                                                                    color="secondary"
                                                                                     onClick={() => this.handleRejectCourseRequest(request.id, request.courseName)}
                                                                                     disabled={isApproving || isRejecting}
-                                                                                    style={{minWidth: 80}}
+                                                                                    style={{
+                                                                                        minWidth: 80,
+                                                                                        borderColor: '#DC2626',
+                                                                                        color: '#DC2626'
+                                                                                    }}
                                                                                 >
                                                                                     {isRejecting ? "Rejecting..." : "Reject"}
                                                                                 </Button>

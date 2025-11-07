@@ -24,6 +24,7 @@ export interface ManageCoursesState {
     savingCourses: boolean;
     errorSavingCourses?: Error;
     loadingStatistics: boolean;
+    creatingCourse: boolean;
 }
 
 const initialState: ManageCoursesState = {
@@ -32,7 +33,8 @@ const initialState: ManageCoursesState = {
     courses: [],
     courseStatistics: [],
     savingCourses: false,
-    loadingStatistics: false
+    loadingStatistics: false,
+    creatingCourse: false
 }
 
 export const isSavingCoursesChanges = (state: ManageCoursesState) => {
@@ -87,7 +89,7 @@ export const manageCoursesReducer = (state = initialState, action: ManageCourses
             }
         case ManageCoursesEvents.UpdateCourseStatistic:
             const updateCourseStatisticAction: UpdateCourseStatisticAction = action as UpdateCourseStatisticAction;
-            const updatedStatistics = state.courseStatistics.map(stat => 
+            const updatedStatistics = state.courseStatistics.map(stat =>
                 stat.courseName === updateCourseStatisticAction.courseName
                     ? {
                         ...stat,
@@ -100,6 +102,18 @@ export const manageCoursesReducer = (state = initialState, action: ManageCourses
             return {
                 ...state,
                 courseStatistics: updatedStatistics
+            }
+        case ManageCoursesEvents.CreatingCourse:
+            return {
+                ...state,
+                creatingCourse: true
+            }
+        case ManageCoursesEvents.CompletedCreatingCourse:
+            return {
+                ...state,
+                creatingCourse: false,
+                addingNewCourse: false,
+                newCourse: ""
             }
         default:
             return state;

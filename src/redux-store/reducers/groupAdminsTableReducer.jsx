@@ -12,6 +12,8 @@ const initState = {
     searchText: '',
     inSearchMode: false,
 
+    filterCourse: 'all', // 'all' or specific course anid
+
     page: 0,
     rowsPerPage: 10,
 

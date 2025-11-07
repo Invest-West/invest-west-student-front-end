@@ -13,6 +13,7 @@ export default interface Admin {
     isInvestWest: boolean;
     dateAdded?: number; // superAdmin doesn't have this field
     lastLoginDate?: number; // timestamp when admin last logged in
+    courseIds?: string[]; // array of course anids this admin manages
 }
 
 /**

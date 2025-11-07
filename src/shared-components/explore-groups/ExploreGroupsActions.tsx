@@ -6,6 +6,8 @@ import AccessRequest, {AccessRequestInstance} from "../../models/access_request"
 import AccessRequestRepository from "../../api/repositories/AccessRequestRepository";
 import Admin, {isAdmin} from "../../models/admin";
 import React from "react";
+import firebase from "../../firebase/firebaseApp";
+import * as DB_CONST from "../../firebase/databaseConsts";
 
 export enum ExploreGroupsEvents {
     FetchingGroups = "ExploreGroupsEvents.FetchingGroups",
@@ -86,10 +88,35 @@ export const fetchGroups: ActionCreator<any> = () => {
         }
 
         try {
+            // Fetch universities from the API
             const groupsResponse = await new GroupRepository().fetchGroups(
                 nameFilter.trim().length === 0 ? undefined : {name: nameFilter}
             );
-            completeAction.groups = groupsResponse.data;
+            const universities = groupsResponse.data;
+
+            // Fetch courses directly from Firebase Courses node
+            const coursesSnapshot = await firebase
+                .database()
+                .ref(DB_CONST.COURSES_CHILD)
+                .once('value');
+
+            let courses: GroupProperties[] = [];
+            if (coursesSnapshot.exists()) {
+                const coursesObject = coursesSnapshot.val();
+                courses = Object.keys(coursesObject).map(key => coursesObject[key]);
+
+                // Filter by name if nameFilter is provided
+                if (nameFilter.trim().length > 0) {
+                    const lowerFilter = nameFilter.toLowerCase();
+                    courses = courses.filter(course =>
+                        course.displayName?.toLowerCase().includes(lowerFilter) ||
+                        course.displayNameLower?.includes(lowerFilter)
+                    );
+                }
+            }
+
+            // Merge universities and courses
+            completeAction.groups = [...universities, ...courses];
 
             const admin: Admin | null = isAdmin(currentUser);
             if (!admin || (admin && !admin.superAdmin)) {
@@ -209,42 +236,32 @@ const filterGroupsByGroupFilter: ActionCreator<any> = () => {
         groups.map(group => {
             let satisfiedFilter = false;
 
-            // For normal users, only show their university and its courses
-            if (!isSuperAdmin && userUniversityId) {
-                // Show the user's university
-                if (group.anid === userUniversityId && !group.parentGroupId) {
-                    satisfiedFilter = true;
-                }
-                // Show courses under the user's university
-                else if (group.parentGroupId === userUniversityId) {
-                    satisfiedFilter = true;
-                }
-            } else {
-                // Original filtering logic for super admins
-                switch (groupFilter) {
-                    case "all":
-                        if (isSuperAdmin) {
-                            satisfiedFilter = true;
-                        } else {
-                            satisfiedFilter = AuthenticationState.groupsOfMembership.findIndex(
-                                groupOfMembership => groupOfMembership.group.anid === group.anid) === -1
-                                && accessRequestsInstances !== undefined
-                                && accessRequestsInstances.findIndex(
-                                    accessRequestInstance => accessRequestInstance.group.anid === group.anid) === -1;
-                        }
-                        break;
-                    case "groupsOfMembership":
-                        satisfiedFilter = AuthenticationState.groupsOfMembership.findIndex(
+            // Filtering logic based on groupFilter
+            switch (groupFilter) {
+                case "all":
+                    // Show all universities (top-level groups without parentGroupId)
+                    // Courses will be shown within their parent university's dropdown
+                    if (!group.parentGroupId) {
+                        satisfiedFilter = true;
+                    }
+                    break;
+                case "groupsOfMembership":
+                    // Show universities where the user has membership in the university itself
+                    // or in any of its courses
+                    if (!group.parentGroupId) {
+                        // Check if user is member of this university
+                        const isMemberOfUniversity = AuthenticationState.groupsOfMembership.findIndex(
                             groupOfMembership => groupOfMembership.group.anid === group.anid) !== -1;
-                        break;
-                    case "groupsOfPendingRequest":
-                        satisfiedFilter = accessRequestsInstances !== undefined
-                            && accessRequestsInstances.findIndex(
-                                accessRequestInstance => accessRequestInstance.group.anid === group.anid) !== -1;
-                        break;
-                    default:
-                        break;
-                }
+
+                        // Check if user is member of any course under this university
+                        const isMemberOfAnyCourse = AuthenticationState.groupsOfMembership.some(
+                            groupOfMembership => groupOfMembership.group.parentGroupId === group.anid);
+
+                        satisfiedFilter = isMemberOfUniversity || isMemberOfAnyCourse;
+                    }
+                    break;
+                default:
+                    break;
             }
 
             if (satisfiedFilter) {

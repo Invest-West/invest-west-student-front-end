@@ -171,9 +171,12 @@ class ContactUs extends Component {
             message
         } = this.state;
 
+        // For issuers, don't require company position
+        const isIssuer = user && user.type === DB_CONST.TYPE_ISSUER;
+
         if (name.trim().length === 0
             || companyName.trim().length === 0
-            || companyPosition.trim().length === 0
+            || (!isIssuer && companyPosition.trim().length === 0)
             || companyEmail.trim().length === 0
             || message.trim().length === 0
         ) {
@@ -198,7 +201,7 @@ class ContactUs extends Component {
                     receiver: groupID,
                     senderName: name,
                     companyName,
-                    companyPosition,
+                    companyPosition: isIssuer ? '' : companyPosition,
                     message
                 }
             })
@@ -220,7 +223,7 @@ class ContactUs extends Component {
                         email: companyEmail.toLowerCase(),
                         name,
                         companyName,
-                        companyPosition,
+                        companyPosition: isIssuer ? '' : companyPosition,
                         message
                     })
                     .then(enquiryID => {
@@ -267,7 +270,8 @@ class ContactUs extends Component {
 
             authenticating,
             userLoaded,
-            clubAttributesLoaded
+            clubAttributesLoaded,
+            user
         } = this.props;
 
         const {
@@ -279,6 +283,9 @@ class ContactUs extends Component {
             submitClick,
             sending
         } = this.state;
+
+        // Check if user is an issuer
+        const isIssuer = user && user.type === DB_CONST.TYPE_ISSUER;
 
         if (!groupPropertiesLoaded) {
             return (
@@ -337,25 +344,27 @@ class ContactUs extends Component {
                                 <FlexView width="100%" marginTop={25}>
                                     <FormControl fullWidth required error={submitClick && companyName.trim().length === 0}>
                                         <FormLabel>
-                                            Company Name
+                                            {isIssuer ? 'University Name' : 'Company Name'}
                                         </FormLabel>
                                         <TextField value={companyName} name="companyName" variant="outlined" margin="dense" onChange={this.onTextChanged} error={submitClick && companyName.trim().length === 0}/>
                                     </FormControl>
                                 </FlexView>
 
-                                <FlexView width="100%" marginTop={25}>
-                                    <FormControl fullWidth required error={submitClick && companyPosition.trim().length === 0}>
-                                        <FormLabel>
-                                            Company Position
-                                        </FormLabel>
-                                        <TextField value={companyPosition} name="companyPosition" variant="outlined" margin="dense" onChange={this.onTextChanged} error={submitClick && companyPosition.trim().length === 0}/>
-                                    </FormControl>
-                                </FlexView>
+                                {!isIssuer && (
+                                    <FlexView width="100%" marginTop={25}>
+                                        <FormControl fullWidth required error={submitClick && companyPosition.trim().length === 0}>
+                                            <FormLabel>
+                                                Company Position
+                                            </FormLabel>
+                                            <TextField value={companyPosition} name="companyPosition" variant="outlined" margin="dense" onChange={this.onTextChanged} error={submitClick && companyPosition.trim().length === 0}/>
+                                        </FormControl>
+                                    </FlexView>
+                                )}
 
                                 <FlexView width="100%" marginTop={25}>
                                     <FormControl fullWidth required error={submitClick && companyEmail.trim().length === 0}>
                                         <FormLabel>
-                                            Company Email
+                                            {isIssuer ? 'University Email' : 'Company Email'}
                                         </FormLabel>
                                         <TextField value={companyEmail} name="companyEmail" variant="outlined" margin="dense" onChange={this.onTextChanged} error={submitClick && companyEmail.trim().length === 0}/>
                                     </FormControl>

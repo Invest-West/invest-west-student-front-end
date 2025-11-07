@@ -489,7 +489,8 @@ class ProjectDetailsMain extends Component {
                     mainBody:
                         user?.type === DB_CONST.TYPE_ADMIN
                             ?
-                            user?.anid === project.anid
+                            // Show control phases for super admins OR course admins who own the project
+                            (user?.superAdmin || user?.anid === project.anid)
                                 ?
                                 MAIN_BODY_ADMIN_OFFER_STATES
                                 :
@@ -2437,8 +2438,8 @@ class ProjectDetails extends Component {
                                 }
                             </Typography>
                             {
-                                user?.type === DB_CONST.TYPE_ADMIN
-                                || (user?.type === DB_CONST.TYPE_ISSUER && user?.id === project.issuerID)
+                                // Only show edit button to the project creator (issuer who owns the project)
+                                (user?.type === DB_CONST.TYPE_ISSUER && user?.id === project.issuerID)
                                     ?
                                     <FlexView width="100%" hAlignContent="center" vAlignContent="center" marginTop={20}>
                                         {
@@ -2582,7 +2583,7 @@ class ProjectDetails extends Component {
                                     }}
                                 />
                                 :
-                                project.Pitch.cover.map((coverItem, index) => (
+                                project.Pitch.cover && Array.isArray(project.Pitch.cover) ? project.Pitch.cover.map((coverItem, index) => (
                                     coverItem.hasOwnProperty('removed')
                                         ?
                                         null
@@ -2603,7 +2604,7 @@ class ProjectDetails extends Component {
                                                 :
                                                 <Image key={index} src={coverItem.url} style={{maxHeight: isMobile ? MAX_COVER_HEIGHT_IN_MOBILE_MODE : MAX_COVER_HEIGHT_IN_BIG_SCREEN_MODE, border: `1px solid ${colors.gray_300}`, width: "100%", objectFit: "scale-down"}}/>
                                         )
-                                ))
+                                )) : null
                         }
                     </Col>
 
@@ -2655,7 +2656,7 @@ class ProjectDetails extends Component {
                                     : <Col xs={12} sm={12} md={{span: 10, offset: 1, order: 5}} lg={{span: 12, offset: 0, order: 7}} style={{marginTop: 15}}>
                                         <FlexView column hAlignContent="left">
                                             <FlexView hAlignContent="center" vAlignContent="center">
-                                                <Button color="primary" variant="contained" className={css(sharedStyles.no_text_transform)} disabled={this.shouldHideInformation() || (user?.type === TYPE_INVESTOR)} onClick={() => this.toggleContactPitchOwnerDialog()}>Contact us</Button>
+                                                <Button color="primary" variant="contained" className={css(sharedStyles.no_text_transform)} disabled={this.shouldHideInformation()} onClick={() => this.toggleContactPitchOwnerDialog()}>Contact us</Button>
                                                 {/*<Button*/}
                                                 {/*    size="medium"*/}
                                                 {/*    variant={getInvestorVote(votes, user) && getInvestorVote(votes, user).voted ? "contained" : "outlined"}*/}
@@ -2729,7 +2730,7 @@ class ProjectDetails extends Component {
                                                         </NavLink>
                                                     </FlexView>
                                                 :
-                                                this.renderInvestorSelfCertifyReminder()
+                                                null
                                         }
                                     </Col>
                             }
@@ -2928,18 +2929,14 @@ class ProjectDetails extends Component {
                                                                             ?
                                                                             null
                                                                             :
-                                                                            isProjectCreatedByGroupAdmin(project)
-                                                                                ?
-                                                                                <Button fullWidth color="primary" variant="contained" className={css(sharedStyles.no_text_transform)} disabled={user?.superAdmin} onClick={() => this.onMakeProjectGoLiveDecision({decision: true, projectVisibilitySetting})}>Publish project</Button>
-                                                                                :
-                                                                                <FlexView>
-                                                                                    <FlexView grow marginRight={10}>
-                                                                                        <Button fullWidth color="primary" variant="contained" className={css(sharedStyles.no_text_transform)} disabled={user?.superAdmin} onClick={() => this.onMakeProjectGoLiveDecision({decision: true, projectVisibilitySetting})}>Publish project</Button>
-                                                                                    </FlexView>
-                                                                                    <FlexView grow marginLeft={10}>
-                                                                                        <Button fullWidth color="secondary" variant="outlined" className={css(sharedStyles.no_text_transform)} disabled={user?.superAdmin} onClick={() => this.toggleRejectFeedback()}>Send back to issuer</Button>
-                                                                                    </FlexView>
+                                                                            <FlexView>
+                                                                                <FlexView grow marginRight={10}>
+                                                                                    <Button fullWidth color="primary" variant="contained" className={css(sharedStyles.no_text_transform)} disabled={user?.superAdmin} onClick={() => this.onMakeProjectGoLiveDecision({decision: true, projectVisibilitySetting})}>Publish project</Button>
                                                                                 </FlexView>
+                                                                                <FlexView grow marginLeft={10}>
+                                                                                    <Button fullWidth color="secondary" variant="outlined" className={css(sharedStyles.no_text_transform)} disabled={user?.superAdmin} onClick={() => this.toggleRejectFeedback()}>Send back to issuer</Button>
+                                                                                </FlexView>
+                                                                            </FlexView>
                                                                     }
 
                                                                     {
@@ -3840,10 +3837,6 @@ class ProjectDetails extends Component {
                                                                                 }
                                                                             >Post a comment</Button>
                                                                         </div>
-
-                                                                        {
-                                                                            this.renderInvestorSelfCertifyReminder()
-                                                                        }
                                                                     </FlexView>
                                                                 </FlexView>
                                                     )
@@ -3994,6 +3987,17 @@ class ProjectDetails extends Component {
                                             null
                                     }
 
+                                    {/** University */}
+                                    {
+                                        projectIssuer && projectIssuer.BusinessProfile && projectIssuer.BusinessProfile.university
+                                            ?
+                                            <FlexView className={css(styles.border_box)} style={{backgroundColor: colors.kick_starter_background_color}} column marginTop={30} vAlignContent="center">
+                                                <Typography variant="body1" align="left">University: <b>{projectIssuer.BusinessProfile.university}</b></Typography>
+                                            </FlexView>
+                                            :
+                                            null
+                                    }
+
                                     {/** Financial round */}
                                     {
                                         /**!project.Pitch.hasOwnProperty('financialRound')
@@ -4063,44 +4067,43 @@ class ProjectDetails extends Component {
     };
 
     /**
-     * Prevent the investors from interacting with the offer if they have not self-certified
-     *
-     * @returns {*}
+     * Self-certification reminder has been removed - investors can now contact project owners directly
+     * This function is no longer used and is kept here for reference only
      */
-    renderInvestorSelfCertifyReminder = () => {
-        const {
-            groupUserName,
-            user,
-            project
-        } = this.props;
+    // renderInvestorSelfCertifyReminder = () => {
+    //     const {
+    //         groupUserName,
+    //         user,
+    //         project
+    //     } = this.props;
 
-        if (user?.type !== DB_CONST.TYPE_INVESTOR) {
-            return null;
-        }
+    //     if (user?.type !== DB_CONST.TYPE_INVESTOR) {
+    //         return null;
+    //     }
 
-        return (
-            utils.isProjectLive(project)
-                ?
-                <FlexView column marginTop={20}>
-                    <NavLink
-                        to={
-                            groupUserName
-                                ?
-                                `${ROUTES.DASHBOARD_INVESTOR.replace(":groupUserName", groupUserName)}?tab=Profile`
-                                :
-                                `${ROUTES.DASHBOARD_INVESTOR_INVEST_WEST_SUPER}?tab=Profile`
-                        }
-                        style={{
-                            marginTop: 4
-                        }}
-                    >
-                        <Typography variant="body2"><u>Self certify</u></Typography>
-                    </NavLink>
-                </FlexView>
-                :
-                null
-        );
-    }
+    //     return (
+    //         utils.isProjectLive(project)
+    //             ?
+    //             <FlexView column marginTop={20}>
+    //                 <NavLink
+    //                     to={
+    //                         groupUserName
+    //                             ?
+    //                             `${ROUTES.DASHBOARD_INVESTOR.replace(":groupUserName", groupUserName)}?tab=Profile`
+    //                             :
+    //                             `${ROUTES.DASHBOARD_INVESTOR_INVEST_WEST_SUPER}?tab=Profile`
+    //                     }
+    //                     style={{
+    //                         marginTop: 4
+    //                     }}
+    //                 >
+    //                     <Typography variant="body2"><u>Self certify</u></Typography>
+    //                 </NavLink>
+    //             </FlexView>
+    //             :
+    //             null
+    //     );
+    // }
 
     render() {
         console.log('🎬 ProjectDetailsMain RENDER: Received props:', {

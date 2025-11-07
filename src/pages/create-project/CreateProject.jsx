@@ -350,12 +350,6 @@ class CreatePitchPageMain extends Component {
      * Load data
      */
     loadData = () => {
-        // IMMEDIATE DEBUG - NO EARLY RETURNS ABOVE THIS
-        alert('🔥 loadData() function called! Check console for details.');
-        console.log('🔥 [CREATE-PROJECT DEBUG] ================================');
-        console.log('🔥 [CREATE-PROJECT DEBUG] loadData function started');
-        console.log('🔥 [CREATE-PROJECT DEBUG] ================================');
-
         const params = queryString.parse(this.props.location.search);
         console.log('[CREATE-PROJECT DEBUG] loadData called:', {
             editParam: params.edit,
@@ -691,9 +685,8 @@ class CreatePitchPageMain extends Component {
                 }
 
                 // if one of the required fields in the General information part is missing, ask the user to fill them
-                // Note: project description and expiry date are now optional
+                // Note: project description, expiry date, and course are now optional
                 if (pitchSector.trim().length === 0
-                    || pitchCourse.trim().length === 0
                     || pitchProjectName.trim().length === 0
                     //|| financialRound.trim().length === 0
                     || (ManageGroupUrlState.groupNameFromUrl === "qib" && qibSpecialNews.trim().length === 0)
@@ -2410,7 +2403,6 @@ class CreatePitchPageMain extends Component {
         if (activeStep === STEP_PITCH_GENERAL_INFORMATION) {
             // check if at least one field is filled
             if (pitchSector.trim().length === 0
-                && pitchCourse.trim().length === 0
                 && pitchProjectName.trim().length === 0
                 && pitchProjectDescription.trim().length === 0
                 && pitchExpiryDate === null
@@ -3065,9 +3057,9 @@ class CreateProject extends Component {
                                     </FlexView>
 
                                     {/**
-                                     * Choosing course
+                                     * Choosing course - REMOVED
                                      */}
-                                    <FlexView marginTop={30}>
+                                    {/*<FlexView marginTop={30}>
                                         <FormControl
                                             fullWidth
                                             required
@@ -3077,18 +3069,18 @@ class CreateProject extends Component {
                                             }
                                         >
                                             <FormLabel>Choose course</FormLabel>
-                                            <Select 
-                                                name="pitchCourse" 
+                                            <Select
+                                                name="pitchCourse"
                                                 value={
-                                                    createProjectState.pitchCourse && 
-                                                    clubAttributes && 
-                                                    clubAttributes.Courses && 
+                                                    createProjectState.pitchCourse &&
+                                                    clubAttributes &&
+                                                    clubAttributes.Courses &&
                                                     (clubAttributes.Courses.includes(createProjectState.pitchCourse) || createProjectState.pitchCourse === "-")
-                                                        ? createProjectState.pitchCourse 
+                                                        ? createProjectState.pitchCourse
                                                         : "-"
-                                                } 
-                                                margin="dense" 
-                                                input={<OutlinedInput/>} 
+                                                }
+                                                margin="dense"
+                                                input={<OutlinedInput/>}
                                                 onChange={this.onInputChanged}
                                             >
                                                 <MenuItem key={-1} value="-">
@@ -3105,7 +3097,7 @@ class CreateProject extends Component {
                                                 }
                                             </Select>
                                         </FormControl>
-                                    </FlexView>
+                                    </FlexView>*/}
 
                                     {
                                         /**

@@ -8,6 +8,7 @@ import OfferRepository, {FetchProjectsOrderByOptions} from "../../api/repositori
 import AccessRequest, {AccessRequestInstance} from "../../models/access_request";
 import Admin, {isAdmin} from "../../models/admin";
 import AccessRequestRepository from "../../api/repositories/AccessRequestRepository";
+import * as realtimeDBUtils from "../../firebase/realtimeDBUtils";
 
 export enum GroupDetailsEvents {
     LoadingData = "GroupDetailsEvents.LoadData",
@@ -27,6 +28,7 @@ export interface CompleteLoadingDataAction extends GroupDetailsAction {
     members?: InvitedUserWithProfile[];
     offers?: ProjectInstance[];
     accessRequestInstances?: AccessRequestInstance[];
+    admins?: any[];
     error?: string;
 }
 
@@ -80,6 +82,15 @@ export const loadData: ActionCreator<any> = (groupUserName: string) => {
             });
             const offers: ProjectInstance[] = offersResponse.data;
 
+            // Load group admins/lecturers (non-blocking - don't fail if this errors)
+            let groupAdmins: any[] = [];
+            try {
+                groupAdmins = await realtimeDBUtils.loadGroupAdminsBasedOnGroupID(group.anid) as any[];
+            } catch (adminError) {
+                console.error("Failed to load group admins:", adminError);
+                // Continue without admins - set to empty array
+            }
+
             const admin: Admin | null = isAdmin(currentUser);
             if (!admin || (admin && !admin.superAdmin)) {
                 // user is an issuer, investor, or group admin
@@ -96,6 +107,7 @@ export const loadData: ActionCreator<any> = (groupUserName: string) => {
             completeAction.group = group;
             completeAction.members = members;
             completeAction.offers = offers;
+            completeAction.admins = groupAdmins;
             return dispatch(completeAction);
         } catch (error) {
             completeAction.error = error.toString();

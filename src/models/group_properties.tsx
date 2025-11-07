@@ -49,7 +49,11 @@ export interface GroupSettings {
     secondaryColor: string;
     projectVisibility: number;
     makeInvestorsContactDetailsVisibleToIssuers: boolean;
-    availableCourses?: string[]; // Group-specific available courses
+    /**
+     * @deprecated Use Firebase course entities instead - query groups with groupType='course' and parentGroupId
+     * This field is kept for backward compatibility only and should not be used in new code
+     */
+    availableCourses?: string[];
     PledgeFAQs?: GroupPledgeFAQ[];
 }
 
@@ -112,14 +116,22 @@ export const getCoursesForUniversity = (groups: GroupProperties[], universityId:
 /**
  * Create a virtual course group from a course name
  */
-const createVirtualCourseGroup = (courseName: string, universityId: string, universityUserName: string): GroupProperties => {
+const createVirtualCourseGroup = (courseName: string, universityId: string, universityUserName: string): GroupProperties | null => {
+    // Validate courseName is not null, undefined, or empty
+    if (!courseName || typeof courseName !== 'string' || courseName.trim() === '') {
+        return null;
+    }
+
+    const courseNameLower = courseName.toLowerCase();
+    const courseSlug = courseNameLower.replace(/\s+/g, '-');
+
     return {
-        anid: `virtual-course-${universityId}-${courseName.toLowerCase().replace(/\s+/g, '-')}`,
+        anid: `virtual-course-${universityId}-${courseSlug}`,
         dateAdded: Date.now(),
         description: `${courseName} course`,
         displayName: courseName,
-        displayNameLower: courseName.toLowerCase(),
-        groupUserName: `${universityUserName}-${courseName.toLowerCase().replace(/\s+/g, '-')}`,
+        displayNameLower: courseNameLower,
+        groupUserName: `${universityUserName}-${courseSlug}`,
         isInvestWest: false,
         status: 1,
         plainLogo: [],
@@ -140,18 +152,18 @@ const createVirtualCourseGroup = (courseName: string, universityId: string, univ
 export const buildHierarchicalGroups = (groups: GroupProperties[]): GroupProperties[] => {
     const universities = getUniversities(groups);
     const groupMap = new Map<string, GroupProperties>();
-    
+
     // Create a map for quick lookups
     groups.forEach(group => groupMap.set(group.anid, group));
-    
+
     // Build the hierarchical structure
     universities.forEach(university => {
         const actualCourses = getCoursesForUniversity(groups, university.anid);
-        
+
         // If there are actual course groups, use them
         if (actualCourses.length > 0) {
             university.childGroups = actualCourses;
-            
+
             // Set parent reference for courses
             actualCourses.forEach(course => {
                 course.parentGroup = university;
@@ -160,11 +172,11 @@ export const buildHierarchicalGroups = (groups: GroupProperties[]): GroupPropert
             // If no actual courses but availableCourses exist, create virtual course groups
             const availableCourses = university.settings?.availableCourses || [];
             if (availableCourses.length > 0) {
-                const virtualCourses = availableCourses.map(courseName => 
-                    createVirtualCourseGroup(courseName, university.anid, university.groupUserName)
-                );
+                const virtualCourses = availableCourses
+                    .map(courseName => createVirtualCourseGroup(courseName, university.anid, university.groupUserName))
+                    .filter((course): course is GroupProperties => course !== null);
                 university.childGroups = virtualCourses;
-                
+
                 // Set parent reference for virtual courses
                 virtualCourses.forEach(course => {
                     course.parentGroup = university;
@@ -174,7 +186,7 @@ export const buildHierarchicalGroups = (groups: GroupProperties[]): GroupPropert
             }
         }
     });
-    
+
     return universities;
 }
 

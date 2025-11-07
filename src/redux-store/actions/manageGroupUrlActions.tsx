@@ -98,7 +98,7 @@ export const validateGroupUrl: ActionCreator<any> = (path: string, groupUserName
 
             // Handle default "invest-west" group for course-based URLs
             if (groupUserName === 'invest-west') {
-                // Create the invest-west group object with availableCourses
+                // Create the invest-west group object
                 const investWestGroup: GroupProperties = {
                     anid: '-M2I40dBdzdI89yDCaAn',
                     dateAdded: Date.now(),
@@ -113,33 +113,50 @@ export const validateGroupUrl: ActionCreator<any> = (path: string, groupUserName
                         primaryColor: '#4F6D7A',
                         secondaryColor: '#ffffff',
                         projectVisibility: 1,
-                        makeInvestorsContactDetailsVisibleToIssuers: false,
-                        availableCourses: [
-                            "History MSc",
-                            "Student Showcase"
-                        ]
+                        makeInvestorsContactDetailsVisibleToIssuers: false
                     }
                 };
 
-                // If courseUserName is provided, validate it exists in available courses
+                // If courseUserName is provided, validate it exists in Firebase as a course entity
                 if (courseUserName) {
-                    const availableCourses = investWestGroup.settings.availableCourses || [];
+                    try {
+                        // Query Firebase for the course by groupUserName
+                        const courseGroup = await new GroupRepository().getCourseByUserName(courseUserName);
 
-                    // Fix for student-showcase course validation
-                    if (courseUserName === "student-showcase" || courseUserName === "Student Showcase") {
-                        // Always allow student-showcase for invest-west group
-                        console.log(`[COURSE VALIDATION] ✅ "student-showcase" course validated for invest-west`);
-                    } else {
-                        // Use normal validation for other courses
-                        const isValidCourse = validateCourseUrlName(courseUserName, availableCourses);
+                        if (!courseGroup) {
+                            console.log(`[COURSE VALIDATION] ⚠️ Course not found in Firebase: ${courseUserName}`);
+                            // Don't fail validation here - the course might exist but we can't read it
+                            // due to Firebase security rules (not authenticated yet)
+                            // Let the authentication and permission checks handle access control
+                            console.log(`[COURSE VALIDATION] ⏭️ Allowing validation to proceed - auth check will verify access`);
+                        } else {
+                            // Verify the course belongs to this parent group
+                            if (courseGroup.parentGroupId !== investWestGroup.anid) {
+                                console.log(`[COURSE VALIDATION] ❌ Course "${courseUserName}" does not belong to parent group "${groupUserName}"`);
+                                finishedLoadingGroupUrlAction.validGroupUrl = false;
+                                finishedLoadingGroupUrlAction.error = {
+                                    detail: `Course "${courseUserName}" is not part of ${investWestGroup.displayName}`
+                                };
+                                return dispatch(finishedLoadingGroupUrlAction);
+                            }
 
-                        if (!isValidCourse) {
-                            console.log(`[COURSE VALIDATION] ❌ Invalid course URL: ${courseUserName}, available courses:`, availableCourses);
-                            finishedLoadingGroupUrlAction.validGroupUrl = false;
-                            finishedLoadingGroupUrlAction.error = {
-                                detail: `Course "${courseUserName}" not found. Available courses: ${availableCourses.join(', ')}`
-                            };
-                            return dispatch(finishedLoadingGroupUrlAction);
+                            console.log(`[COURSE VALIDATION] ✅ Course validated from Firebase: "${courseUserName}"`);
+                        }
+                    } catch (error) {
+                        console.error('[COURSE VALIDATION] Error validating course:', error);
+                        // Check if this is a permission/auth error (PERMISSION_DENIED from Firebase)
+                        const isPermissionError = error.toString().includes('PERMISSION_DENIED') ||
+                                                 error.toString().includes('permission') ||
+                                                 error.code === 'PERMISSION_DENIED';
+
+                        if (isPermissionError) {
+                            console.log(`[COURSE VALIDATION] ⏭️ Permission error - user likely not authenticated. Allowing validation to proceed.`);
+                            // Allow validation to pass - authentication check will handle this
+                        } else {
+                            // For other errors, we might want to fail validation
+                            console.log(`[COURSE VALIDATION] ⚠️ Non-permission error, but allowing validation to proceed: ${error.toString()}`);
+                            // Still allow it to pass - be lenient with course validation
+                            // The auth/permission checks will catch any real issues
                         }
                     }
                 }
@@ -153,22 +170,49 @@ export const validateGroupUrl: ActionCreator<any> = (path: string, groupUserName
                 const response = await new GroupRepository().getGroup(groupUserName);
                 const retrievedGroup: GroupProperties | null = response.data;
 
-                // If group exists and courseUserName is provided, validate the course
+                // If group exists and courseUserName is provided, validate the course from Firebase
                 if (retrievedGroup && courseUserName) {
-                    const availableCourses = retrievedGroup.settings?.availableCourses || [];
-                    const isValidCourse = validateCourseUrlName(courseUserName, availableCourses);
+                    try {
+                        // Query Firebase for the course by groupUserName
+                        const courseGroup = await new GroupRepository().getCourseByUserName(courseUserName);
 
-                    if (!isValidCourse) {
-                        console.log(`[COURSE VALIDATION] Invalid course URL: ${courseUserName} for group: ${groupUserName}, available courses:`, availableCourses);
-                        finishedLoadingGroupUrlAction.group = retrievedGroup;
-                        finishedLoadingGroupUrlAction.validGroupUrl = false;
-                        finishedLoadingGroupUrlAction.error = {
-                            detail: `Course "${courseUserName}" not found in ${retrievedGroup.displayName}. Available courses: ${availableCourses.join(', ')}`
-                        };
-                        return dispatch(finishedLoadingGroupUrlAction);
+                        if (!courseGroup) {
+                            console.log(`[COURSE VALIDATION] ⚠️ Course not found in Firebase: ${courseUserName}`);
+                            // Don't fail validation here - the course might exist but we can't read it
+                            // due to Firebase security rules (not authenticated yet)
+                            // Let the authentication and permission checks handle access control
+                            console.log(`[COURSE VALIDATION] ⏭️ Allowing validation to proceed - auth check will verify access`);
+                        } else {
+                            // Verify the course belongs to this parent group
+                            if (courseGroup.parentGroupId !== retrievedGroup.anid) {
+                                console.log(`[COURSE VALIDATION] ❌ Course "${courseUserName}" does not belong to parent group "${groupUserName}"`);
+                                finishedLoadingGroupUrlAction.group = retrievedGroup;
+                                finishedLoadingGroupUrlAction.validGroupUrl = false;
+                                finishedLoadingGroupUrlAction.error = {
+                                    detail: `Course "${courseUserName}" is not part of ${retrievedGroup.displayName}`
+                                };
+                                return dispatch(finishedLoadingGroupUrlAction);
+                            }
+
+                            console.log(`[COURSE VALIDATION] ✅ Course validated from Firebase: "${courseUserName}" for group "${groupUserName}"`);
+                        }
+                    } catch (error) {
+                        console.error('[COURSE VALIDATION] Error validating course:', error);
+                        // Check if this is a permission/auth error (PERMISSION_DENIED from Firebase)
+                        const isPermissionError = error.toString().includes('PERMISSION_DENIED') ||
+                                                 error.toString().includes('permission') ||
+                                                 error.code === 'PERMISSION_DENIED';
+
+                        if (isPermissionError) {
+                            console.log(`[COURSE VALIDATION] ⏭️ Permission error - user likely not authenticated. Allowing validation to proceed.`);
+                            // Allow validation to pass - authentication check will handle this
+                        } else {
+                            // For other errors, we might want to fail validation
+                            console.log(`[COURSE VALIDATION] ⚠️ Non-permission error, but allowing validation to proceed: ${error.toString()}`);
+                            // Still allow it to pass - be lenient with course validation
+                            // The auth/permission checks will catch any real issues
+                        }
                     }
-
-                    console.log(`[COURSE VALIDATION] Valid course URL: ${courseUserName} for group: ${groupUserName}`);
                 }
 
                 finishedLoadingGroupUrlAction.group = retrievedGroup;

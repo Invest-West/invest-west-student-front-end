@@ -36,7 +36,7 @@ const mapDispatchToProps = dispatch => {
     return {
         toggleDialog: () => dispatch(courseRequestDialogActions.toggleCourseRequestDialog()),
         handleInputChanged: (event) => dispatch(courseRequestDialogActions.handleInputChanged(event)),
-        submitCourseRequest: () => dispatch(courseRequestDialogActions.submitCourseRequest())
+        submitCourseRequest: (onSuccessCallback) => dispatch(courseRequestDialogActions.submitCourseRequest(onSuccessCallback))
     }
 };
 
@@ -53,6 +53,7 @@ class AddCourseRequestDialog extends Component {
             toggleDialog,
             handleInputChanged,
             submitCourseRequest,
+            onSuccess,
             ...other
         } = this.props;
 
@@ -105,7 +106,7 @@ class AddCourseRequestDialog extends Component {
                         <Button
                             variant="outlined"
                             color="primary"
-                            onClick={submitCourseRequest}
+                            onClick={() => submitCourseRequest(onSuccess)}
                             size="large"
                             className={css(sharedStyles.no_text_transform)}
                             disabled={courseName.trim().length === 0 || submitStatus === REQUEST_STATUS_SUBMITTING}

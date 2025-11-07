@@ -9,23 +9,19 @@ import {
     Typography,
     IconButton,
     Divider,
-    Chip,
-    CircularProgress
+    Chip
 } from "@material-ui/core";
-import {ExpandMore, ExpandLess, School, Business, People, SupervisorAccount} from "@material-ui/icons";
-import GroupProperties, {getGroupLogo, isUniversity, GroupType} from "../../models/group_properties";
+import {ExpandMore, ExpandLess, School, Business} from "@material-ui/icons";
+import GroupProperties, {getGroupLogo} from "../../models/group_properties";
 import {Image} from "react-bootstrap";
 import {AuthenticationState} from "../../redux-store/reducers/authenticationReducer";
-import {css} from "aphrodite";
-import sharedStyles from "../../shared-js-css-styles/SharedStyles";
 import {isAdmin} from "../../models/admin";
 import {ExploreGroupsState} from "./ExploreGroupsReducer";
 import GroupOfMembership from "../../models/group_of_membership";
 import {ManageGroupUrlState} from "../../redux-store/reducers/manageGroupUrlReducer";
-import GroupItem from "./GroupItem";
 import * as colors from "../../values/colors";
-import * as realtimeDBUtils from "../../firebase/realtimeDBUtils";
-import InvitedUser from "../../models/invited_user";
+import {NavLink} from "react-router-dom";
+import Routes from "../../router/routes";
 
 interface UniversityGroupItemProps {
     university: GroupProperties;
@@ -39,17 +35,8 @@ interface UniversityGroupItemConnectedProps {
 
 type UniversityGroupItemFullProps = UniversityGroupItemProps & UniversityGroupItemConnectedProps;
 
-interface CourseStatistics {
-    courseName: string;
-    studentCount: number;
-    adminCount: number;
-    loading: boolean;
-}
-
 interface UniversityGroupItemState {
     expanded: boolean;
-    courseStatistics: CourseStatistics[];
-    loadingStatistics: boolean;
 }
 
 const mapStateToProps = (state: AppState) => {
@@ -65,13 +52,11 @@ const mapDispatchToProps = () => {
 }
 
 class UniversityGroupItem extends Component<UniversityGroupItemFullProps, UniversityGroupItemState> {
-    
+
     constructor(props: UniversityGroupItemFullProps) {
         super(props);
         this.state = {
-            expanded: false,
-            courseStatistics: [],
-            loadingStatistics: false
+            expanded: false
         };
     }
 
@@ -80,111 +65,19 @@ class UniversityGroupItem extends Component<UniversityGroupItemFullProps, Univer
         this.setState({
             expanded: !expanded
         });
-        
-        // Load course statistics when expanding
-        if (!expanded) {
-            this.loadCourseStatistics();
-        }
-    }
-
-    loadCourseStatistics = async () => {
-        const { university } = this.props;
-        
-        if (!university.settings?.availableCourses || university.settings.availableCourses.length === 0) {
-            return;
-        }
-
-        const courses = university.settings.availableCourses;
-        
-        this.setState({ loadingStatistics: true });
-
-        try {
-            // Initialize course statistics with loading state
-            const initialStatistics: CourseStatistics[] = courses.map(courseName => ({
-                courseName,
-                studentCount: 0,
-                adminCount: 0,
-                loading: true
-            }));
-            
-            this.setState({ courseStatistics: initialStatistics });
-
-            // Load all invited users for this group
-            const invitedUsers = await realtimeDBUtils.loadInvitedUsers(university.anid) as InvitedUser[];
-            
-            // Load all admins for this group  
-            const groupAdmins = await realtimeDBUtils.loadGroupAdminsBasedOnGroupID(university.anid) as any[];
-
-            // Calculate statistics for each course
-            const updatedStatistics: CourseStatistics[] = courses.map(courseName => {
-                // Count all students (invited users) for this group
-                const totalStudents = invitedUsers.filter(user => user.type === 1).length; // type 1 = student
-                
-                // Count all admins for this group
-                const totalAdmins = groupAdmins.length;
-                
-                // For demonstration, we'll distribute users roughly evenly across courses
-                // In a real implementation, this would be based on actual course assignments
-                const courseIndex = courses.indexOf(courseName);
-                const coursesCount = courses.length;
-                
-                // Simple distribution logic for demo purposes
-                const studentCount = coursesCount > 0 ? Math.floor(totalStudents / coursesCount) + (courseIndex < (totalStudents % coursesCount) ? 1 : 0) : 0;
-                const adminCount = coursesCount > 0 ? Math.floor(totalAdmins / coursesCount) + (courseIndex < (totalAdmins % coursesCount) ? 1 : 0) : 0;
-
-                return {
-                    courseName,
-                    studentCount: Math.max(0, studentCount),
-                    adminCount: Math.max(0, adminCount),
-                    loading: false
-                };
-            });
-
-            this.setState({ 
-                courseStatistics: updatedStatistics,
-                loadingStatistics: false
-            });
-
-        } catch (error) {
-            console.error('Error loading course statistics:', error);
-            
-            // Set error state for all courses
-            const errorStatistics: CourseStatistics[] = courses.map(courseName => ({
-                courseName,
-                studentCount: 0,
-                adminCount: 0,
-                loading: false
-            }));
-            
-            this.setState({ 
-                courseStatistics: errorStatistics,
-                loadingStatistics: false
-            });
-        }
-    }
-
-    getCourseStatistics = (courseName: string) => {
-        const { courseStatistics } = this.state;
-        return courseStatistics.find(stat => stat.courseName === courseName) || {
-            courseName,
-            studentCount: 0,
-            adminCount: 0,
-            loading: true
-        };
     }
 
     render() {
         const {university, AuthenticationState, ManageGroupUrlState, ExploreGroupsLocalState} = this.props;
         const {expanded} = this.state;
-        
+
         const currentUser = AuthenticationState.currentUser;
         const currentAdmin = currentUser ? isAdmin(currentUser) : null;
         const isCurrentUserAdmin = !!currentAdmin;
 
-        // Use available courses from university settings instead of child groups
-        const availableCourses = university.settings?.availableCourses || [];
+        // Use the new course hierarchy from childGroups
         const courses = university.childGroups || [];
-        const courseCount = availableCourses.length > 0 ? availableCourses.length : courses.length;
+        const courseCount = courses.length;
 
         // Check if user is member of university or any of its courses
         const userGroupsOfMembership = AuthenticationState.groupsOfMembership || [];
@@ -277,14 +170,14 @@ class UniversityGroupItem extends Component<UniversityGroupItemFullProps, Univer
                                         </Typography>
                                     )}
                                     {university.website && (
-                                        <Typography 
-                                            variant="body2" 
+                                        <Typography
+                                            variant="body2"
                                             color="primary"
-                                            className={css(sharedStyles.nav_link_hover_without_changing_text_color)}
                                             component="a"
                                             href={university.website}
                                             target="_blank"
                                             rel="noopener noreferrer"
+                                            style={{ textDecoration: 'none', cursor: 'pointer' }}
                                         >
                                             Visit Website
                                         </Typography>
@@ -311,86 +204,79 @@ class UniversityGroupItem extends Component<UniversityGroupItemFullProps, Univer
                             <Business style={{ fontSize: 16, verticalAlign: 'middle', marginRight: 4 }} />
                             Available Courses
                         </Typography>
-                        
-                        {availableCourses.length === 0 ? (
+
+                        {courses.length === 0 ? (
                             <Typography variant="body2" color="textSecondary" style={{ fontStyle: 'italic' }}>
                                 No courses available for this university.
                             </Typography>
                         ) : (
                             <Box>
-                                {availableCourses.map((courseName, index) => {
-                                    const statistics = this.getCourseStatistics(courseName);
+                                {courses.map((course, index) => {
+                                    // Check if user is a member of this specific course
+                                    const isMemberOfCourse = userGroupsOfMembership.some(
+                                        (membership: GroupOfMembership) => membership.group.anid === course.anid
+                                    );
+
+                                    // Construct the route to view the course details page
+                                    const courseRoute = Routes.constructGroupDetailRoute(
+                                        university.groupUserName,
+                                        null,
+                                        course.groupUserName
+                                    );
+
                                     return (
-                                        <Box 
-                                            key={courseName} 
-                                            marginBottom={index < availableCourses.length - 1 ? 2 : 0}
-                                            style={{
-                                                padding: '16px',
-                                                backgroundColor: '#f8f9fa',
-                                                border: '1px solid #e9ecef',
-                                                borderRadius: '8px'
-                                            }}
+                                        <NavLink
+                                            key={course.anid}
+                                            to={courseRoute}
+                                            style={{ textDecoration: 'none' }}
                                         >
-                                            <Box display="flex" alignItems="center" justifyContent="space-between">
-                                                {/* Course Name */}
-                                                <Box display="flex" alignItems="center" flex={1}>
-                                                    <School style={{ fontSize: 18, marginRight: 8, color: colors.primaryColor }} />
-                                                    <Typography variant="subtitle1" style={{ fontWeight: 600, color: '#333' }}>
-                                                        {courseName}
+                                            <Box
+                                                marginBottom={index < courses.length - 1 ? 2 : 0}
+                                                style={{
+                                                    padding: '16px',
+                                                    backgroundColor: isMemberOfCourse ? '#e8f5e9' : '#f8f9fa',
+                                                    border: isMemberOfCourse ? '2px solid #4caf50' : '1px solid #e9ecef',
+                                                    borderRadius: '8px',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s ease-in-out'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
+                                                    e.currentTarget.style.transform = 'translateY(-2px)';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.currentTarget.style.boxShadow = 'none';
+                                                    e.currentTarget.style.transform = 'translateY(0)';
+                                                }}
+                                            >
+                                                <Box display="flex" alignItems="center" justifyContent="space-between">
+                                                    {/* Course Name and Status */}
+                                                    <Box display="flex" alignItems="center" flex={1}>
+                                                        <School style={{ fontSize: 18, marginRight: 8, color: colors.primaryColor }} />
+                                                        <Typography variant="subtitle1" style={{ fontWeight: 600, color: '#333' }}>
+                                                            {course.displayName}
+                                                        </Typography>
+                                                        {isMemberOfCourse && (
+                                                            <Chip
+                                                                label="Member"
+                                                                size="small"
+                                                                color="secondary"
+                                                                style={{ marginLeft: 8 }}
+                                                            />
+                                                        )}
+                                                    </Box>
+                                                </Box>
+
+                                                {/* Course Description */}
+                                                {course.description && (
+                                                    <Typography variant="body2" color="textSecondary" style={{ marginTop: 8, marginLeft: 26 }}>
+                                                        {course.description}
                                                     </Typography>
-                                                </Box>
-
-                                                {/* Statistics */}
-                                                <Box display="flex" alignItems="center" style={{ gap: 8 }}>
-                                                    {/* Student Count */}
-                                                    <Chip
-                                                        icon={statistics.loading ? <CircularProgress size={16} /> : <People />}
-                                                        label={statistics.loading ? "..." : `${statistics.studentCount} Students`}
-                                                        variant="outlined"
-                                                        size="small"
-                                                        style={{ 
-                                                            backgroundColor: '#e3f2fd', 
-                                                            color: '#1976d2',
-                                                            borderColor: '#1976d2',
-                                                            fontWeight: 500
-                                                        }}
-                                                    />
-
-                                                    {/* Admin Count */}
-                                                    <Chip
-                                                        icon={statistics.loading ? <CircularProgress size={16} /> : <SupervisorAccount />}
-                                                        label={statistics.loading ? "..." : `${statistics.adminCount} Lecturers`}
-                                                        variant="outlined"
-                                                        size="small"
-                                                        style={{ 
-                                                            backgroundColor: '#f3e5f5', 
-                                                            color: '#7b1fa2',
-                                                            borderColor: '#7b1fa2',
-                                                            fontWeight: 500
-                                                        }}
-                                                    />
-                                                </Box>
+                                                )}
                                             </Box>
-                                        </Box>
+                                        </NavLink>
                                     );
                                 })}
-                                
-                                {/* Show child groups if they exist and no available courses are defined */}
-                                {courses.length > 0 && availableCourses.length === 0 && (
-                                    <Box marginTop={2}>
-                                        <Typography variant="body2" color="textSecondary" style={{ marginBottom: 16 }}>
-                                            Course Groups:
-                                        </Typography>
-                                        {courses.map((course, index) => (
-                                            <Box key={course.anid} marginBottom={index < courses.length - 1 ? 2 : 0}>
-                                                <GroupItem
-                                                    group={course}
-                                                    isSubGroup={true}
-                                                />
-                                            </Box>
-                                        ))}
-                                    </Box>
-                                )}
                             </Box>
                         )}
                     </CardContent>
