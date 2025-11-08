@@ -86,12 +86,14 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
     private routePath: string;
     private routeParams: any;
     private static readonly LAST_AUTH_TIMESTAMP_KEY = 'lastSuccessfulAuthTimestamp';
+    private hasCompletedInitialAuthCheck: boolean; // ⚡ FIX: Track if Firebase has completed initial auth restoration
 
     constructor(props: GroupRouteProps & Readonly<RouteComponentProps<RouteParams>>) {
         super(props);
         this.authListener = null;
         this.routePath = this.props.match.path;
         this.routeParams = this.props.match.params;
+        this.hasCompletedInitialAuthCheck = false; // ⚡ FIX: Initialize to false
         this.state = {
             ...initialState
         }
@@ -111,6 +113,24 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             sessionStorage.setItem(GroupRoute.LAST_AUTH_TIMESTAMP_KEY, timestamp.toString());
         } catch {
             // Ignore storage errors
+        }
+    }
+
+    /**
+     * ⚡ FIX: Clear stale authentication timestamps
+     * Prevents old timestamps from interfering with auth restoration after page refresh
+     */
+    private clearStaleAuthTimestamp(): void {
+        const lastAuthTimestamp = this.getLastAuthTimestamp();
+        if (lastAuthTimestamp > 0) {
+            const now = Date.now();
+            const timeSinceLastAuth = now - lastAuthTimestamp;
+            const staleThreshold = 30000; // 30 seconds
+
+            if (timeSinceLastAuth > staleThreshold) {
+                console.log(`[COURSE ADMIN AUTH] 🧹 Clearing stale auth timestamp (${timeSinceLastAuth}ms old)`);
+                this.setLastAuthTimestamp(0);
+            }
         }
     }
 
@@ -142,14 +162,14 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                 }))
             });
 
-            // First, try to match URL parameters if provided
+            // First, try to validate and use URL parameters if both university AND course are provided
             if (this.routeParams.groupUserName && this.routeParams.courseUserName) {
                 console.log('[GET UNIVERSITY AND COURSE] Checking route params match:', {
                     groupUserName: this.routeParams.groupUserName,
                     courseUserName: this.routeParams.courseUserName
                 });
 
-                // Verify user has membership to this university or course
+                // Verify user has membership to BOTH the university AND the course
                 const hasUniversityMembership = groupsOfMembership
                     .some(m => m.group.groupUserName === this.routeParams.groupUserName && isUniversity(m.group));
                 const hasCourseMembership = groupsOfMembership
@@ -157,95 +177,97 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
 
                 console.log('[GET UNIVERSITY AND COURSE] Membership check:', {
                     hasUniversityMembership,
-                    hasCourseMembership
+                    hasCourseMembership,
+                    bothMatch: hasUniversityMembership && hasCourseMembership
                 });
 
-                if (hasUniversityMembership || hasCourseMembership) {
-                    console.log('[GET UNIVERSITY AND COURSE] ✅ Using route params directly');
+                // IMPORTANT: User must have access to BOTH university AND course to use route params
+                if (hasUniversityMembership && hasCourseMembership) {
+                    console.log('[GET UNIVERSITY AND COURSE] ✅ User has access to both university and course - using route params');
                     return {
                         universityUserName: this.routeParams.groupUserName,
                         courseUserName: this.routeParams.courseUserName
                     };
+                } else {
+                    console.log('[GET UNIVERSITY AND COURSE] ⚠️ User does NOT have access to requested university/course - will use default or first available course');
                 }
             }
 
-            // IMPORTANT: Prioritize courses over universities
-            // Look for a course membership first
-            for (const membership of groupsOfMembership) {
-                const group = membership.group;
+            // IMPORTANT FIX: Prioritize COURSE memberships over university memberships
+            // Collect all courses first, then check universities
+            const courseMemberships = groupsOfMembership.filter(m => isCourse(m.group));
+            const universityMemberships = groupsOfMembership.filter(m => isUniversity(m.group));
 
-                // If user is member of a course, extract parent university info
-                if (isCourse(group)) {
-                    // Try to find parent university in memberships
-                    const parentUniversity = groupsOfMembership
-                        .find(m => m.group.anid === group.parentGroupId);
+            console.log('[GET UNIVERSITY AND COURSE] Separated memberships:', {
+                courseCount: courseMemberships.length,
+                universityCount: universityMemberships.length,
+                courses: courseMemberships.map(m => m.group.groupUserName),
+                universities: universityMemberships.map(m => m.group.groupUserName)
+            });
 
-                    if (parentUniversity) {
-                        console.log('[GET UNIVERSITY AND COURSE] ✅ Found course with parent university in memberships:', {
-                            courseUserName: group.groupUserName,
-                            universityUserName: parentUniversity.group.groupUserName,
-                            courseName: group.displayName,
-                            universityName: parentUniversity.group.displayName
-                        });
-                        return {
-                            universityUserName: parentUniversity.group.groupUserName,
-                            courseUserName: group.groupUserName
-                        };
-                    }
+            // If user has course membership(s), use the FIRST course found
+            if (courseMemberships.length > 0) {
+                const firstCourse = courseMemberships[0].group;
 
-                    // If parent not in memberships but parentGroup is populated
-                    if (group.parentGroup) {
-                        console.log('[GET UNIVERSITY AND COURSE] ✅ Found course with parentGroup property:', {
-                            courseUserName: group.groupUserName,
-                            universityUserName: group.parentGroup.groupUserName
-                        });
-                        return {
-                            universityUserName: group.parentGroup.groupUserName,
-                            courseUserName: group.groupUserName
-                        };
-                    }
+                // Try to find parent university in memberships
+                const parentUniversity = groupsOfMembership
+                    .find(m => m.group.anid === firstCourse.parentGroupId);
 
-                    // Fallback: extract university from course username (format: university-course-name)
-                    const courseUserName = group.groupUserName;
-                    if (courseUserName.startsWith('invest-west-')) {
-                        console.log('[GET UNIVERSITY AND COURSE] ✅ Found invest-west course (extracting from name):', {
-                            courseUserName: courseUserName,
-                            universityUserName: 'invest-west'
-                        });
-                        return {
-                            universityUserName: 'invest-west',
-                            courseUserName: courseUserName
-                        };
-                    }
-                }
-
-                // If user is member of a university, use that with fallback course
-                if (isUniversity(group)) {
-                    const courseUserName = this.routeParams.courseUserName || 'student-showcase';
-                    console.log('[GET UNIVERSITY AND COURSE] ⚠️ Found university (using fallback course):', {
-                        universityUserName: group.groupUserName,
-                        courseUserName: courseUserName,
-                        hadCourseInParams: !!this.routeParams.courseUserName,
-                        warning: 'This is using a fallback - may not be the intended course'
+                if (parentUniversity) {
+                    console.log('[GET UNIVERSITY AND COURSE] ✅ Found course with parent university in memberships:', {
+                        courseUserName: firstCourse.groupUserName,
+                        universityUserName: parentUniversity.group.groupUserName,
+                        courseName: firstCourse.displayName,
+                        universityName: parentUniversity.group.displayName
                     });
                     return {
-                        universityUserName: group.groupUserName,
+                        universityUserName: parentUniversity.group.groupUserName,
+                        courseUserName: firstCourse.groupUserName
+                    };
+                }
+
+                // If parent not in memberships but parentGroup is populated
+                if (firstCourse.parentGroup) {
+                    console.log('[GET UNIVERSITY AND COURSE] ✅ Found course with parentGroup property:', {
+                        courseUserName: firstCourse.groupUserName,
+                        universityUserName: firstCourse.parentGroup.groupUserName
+                    });
+                    return {
+                        universityUserName: firstCourse.parentGroup.groupUserName,
+                        courseUserName: firstCourse.groupUserName
+                    };
+                }
+
+                // Fallback: extract university from course username (format: university-course-name)
+                const courseUserName = firstCourse.groupUserName;
+                if (courseUserName.startsWith('invest-west-')) {
+                    console.log('[GET UNIVERSITY AND COURSE] ✅ Found invest-west course (extracting from name):', {
+                        courseUserName: courseUserName,
+                        universityUserName: 'invest-west'
+                    });
+                    return {
+                        universityUserName: 'invest-west',
                         courseUserName: courseUserName
                     };
                 }
             }
 
-            // Fallback: Look for invest-west specifically
-            const investWestGroup = groupsOfMembership
-                .find(m => m.group.groupUserName === 'invest-west');
-            if (investWestGroup) {
+            // If user has NO course memberships but has university membership, use DEFAULT course
+            if (universityMemberships.length > 0) {
+                const firstUniversity = universityMemberships[0].group;
+                console.log('[GET UNIVERSITY AND COURSE] ⚠️ User has university membership but NO course memberships - redirecting to DEFAULT course:', {
+                    universityUserName: firstUniversity.groupUserName,
+                    courseUserName: 'student-showcase',
+                    reason: 'No course memberships found for this user'
+                });
                 return {
-                    universityUserName: 'invest-west',
-                    courseUserName: this.routeParams.courseUserName || 'student-showcase'
+                    universityUserName: firstUniversity.groupUserName,
+                    courseUserName: 'student-showcase'
                 };
             }
 
-            // Ultimate fallback
+            // Ultimate fallback: DEFAULT to invest-west/student-showcase
+            console.log('[GET UNIVERSITY AND COURSE] ⚠️ No university or course memberships found - using ultimate fallback');
             return {
                 universityUserName: 'invest-west',
                 courseUserName: 'student-showcase'
@@ -293,6 +315,9 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
     };
 
     componentDidMount() {
+        // ⚡ FIX: Clear any stale auth timestamps before starting auth flow
+        // This prevents old timestamps from interfering with auth restoration
+        this.clearStaleAuthTimestamp();
         this.validateRouteAndAuthentication();
     }
 
@@ -399,6 +424,7 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
         if (!successfullyValidatedGroupUrl(this.props.ManageGroupUrlState)
             && !this.state.navigatingToError
             && !this.state.navigatingFromSignInOrSignUpToDashboard
+            && !isAuthenticating(this.props.AuthenticationState)  // ⚡ FIX: Don't 404 during auth
             && !Routes.isSignInRoute(this.routePath)
             && !Routes.isSignUpRoute(this.routePath)
             && this.routePath !== Routes.groupViewOffer
@@ -458,6 +484,7 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
         if ((Routes.isSignInRoute(this.routePath) || Routes.isSignUpRoute(this.routePath))
             && successfullyAuthenticated(this.props.AuthenticationState)
             && !this.state.navigatingFromSignInOrSignUpToDashboard
+            && this.props.AuthenticationState.groupsOfMembership.length > 0  // ⚡ FIX: Ensure groups are loaded before redirect
         ) {
 
             // Check for stored redirect URL first
@@ -797,6 +824,9 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
         const authNotInitialized = authIsNotInitialized(AuthenticationState);
         const isAuthenticatingUser = isAuthenticating(AuthenticationState);
 
+        // ⚡ FIX: Check if this is a public route that doesn't require auth
+        const isPublicRoute = !Routes.isProtectedRoute(this.routePath);
+
         console.log('[ROUTING DEBUG] Loading states check:', {
             loadingSystemAttrs,
             validatingGroupUrl,
@@ -805,14 +835,17 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             isAuthenticatingUser,
             isProjectViewRoute,
             isAdminRoute,
+            isPublicRoute,
             routePath: this.routePath,
             isSignInRoute: Routes.isSignInRoute(this.routePath),
             isSignUpRoute: Routes.isSignUpRoute(this.routePath)
         });
 
+        // ⚡ FIX: Don't block rendering for public routes
+        // Only require auth initialization for protected routes
         if (loadingSystemAttrs
             || validatingGroupUrl
-            || (groupUrlValidated && authNotInitialized && !isProjectViewRoute && !isAdminRoute)
+            || (groupUrlValidated && authNotInitialized && !isPublicRoute)
             || ((!Routes.isSignInRoute(this.routePath) && !Routes.isSignUpRoute(this.routePath))
                 && isAuthenticatingUser)
         ) {
@@ -976,12 +1009,20 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                 const currentUser = this.props.AuthenticationState.currentUser;
                 const authStatus = this.props.AuthenticationState.status;
 
-                // Grace period: if we just authenticated successfully within the last 5 seconds,
+                // ⚡ FIX: Track if this is the initial auth check
+                // On page refresh, Firebase needs time to restore persisted auth state
+                // Don't trigger signOut on the first callback if user is null
+                const isInitialCheck = !this.hasCompletedInitialAuthCheck;
+                if (isInitialCheck) {
+                    this.hasCompletedInitialAuthCheck = true;
+                }
+
+                // Grace period: if we just authenticated successfully within the last 10 seconds,
                 // don't trigger signOut even if Firebase user becomes null temporarily
                 // Using sessionStorage so timestamp persists across component remounts during navigation
                 const lastAuthTimestamp = this.getLastAuthTimestamp();
                 const timeSinceLastAuth = now - lastAuthTimestamp;
-                const isWithinGracePeriod = timeSinceLastAuth < 5000; // Increased to 5 seconds for navigation safety
+                const isWithinGracePeriod = timeSinceLastAuth < 10000; // ⚡ FIX: Increased to 10 seconds for safer navigation
 
                 console.log(`[COURSE ADMIN AUTH] 🔥 Auth listener triggered at ${timestamp}`, {
                     hasFirebaseUser: !!firebaseUser,
@@ -994,6 +1035,7 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                     isCurrentlyAuthenticating,
                     isAlreadyAuthenticated,
                     isWithinGracePeriod,
+                    isInitialCheck,
                     timeSinceLastAuth,
                     lastAuthTimestamp,
                     routePath: this.routePath
@@ -1004,6 +1046,7 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                         uid: firebaseUser.uid,
                         email: firebaseUser.email,
                         willCallSignIn: true,
+                        isInitialCheck,
                         currentReduxState: {
                             isAuthenticating: isCurrentlyAuthenticating,
                             isAuthenticated: isAlreadyAuthenticated,
@@ -1017,14 +1060,16 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                     // Only sign out if:
                     // 1. We're not currently authenticating, AND
                     // 2. The user is not already successfully authenticated, AND
-                    // 3. We're not within the grace period after a successful auth (5 seconds)
-                    // This prevents premature sign-out during auth process and navigation
-                    const willSignOut = !isCurrentlyAuthenticating && !isAlreadyAuthenticated && !isWithinGracePeriod;
+                    // 3. We're not within the grace period after a successful auth (10 seconds), AND
+                    // 4. This is NOT the initial auth check (give Firebase time to restore auth on page refresh)
+                    // This prevents premature sign-out during auth process, navigation, and page refresh
+                    const willSignOut = !isCurrentlyAuthenticating && !isAlreadyAuthenticated && !isWithinGracePeriod && !isInitialCheck;
 
                     console.log(`[COURSE ADMIN AUTH] 🔥 Auth listener at ${timestamp}: No Firebase user detected`, {
                         isCurrentlyAuthenticating,
                         isAlreadyAuthenticated,
                         isWithinGracePeriod,
+                        isInitialCheck,
                         willSignOut,
                         currentReduxUser: {
                             id: currentUser?.id,
@@ -1044,7 +1089,7 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                         this.setLastAuthTimestamp(0);
                         this.props.signOut();
                     } else {
-                        console.log(`[COURSE ADMIN AUTH] 🔥 Auth listener at ${timestamp}: Skipping signOut (user is authenticating, authenticated, or within grace period)`);
+                        console.log(`[COURSE ADMIN AUTH] 🔥 Auth listener at ${timestamp}: Skipping signOut (user is authenticating, authenticated, within grace period, or initial check)`);
                     }
                 }
             });
@@ -1055,6 +1100,7 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
         if (this.authListener) {
             this.authListener();
             this.authListener = null;
+            this.hasCompletedInitialAuthCheck = false; // ⚡ FIX: Reset flag when detaching listener
         }
     }
 }

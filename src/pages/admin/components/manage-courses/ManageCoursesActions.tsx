@@ -69,29 +69,28 @@ export const loadCoursesFromGroup: ActionCreator<any> = () => {
         }
 
         try {
-            // Query Firebase for courses belonging to this parent group
+            // Load courses from the Courses node (same as systemGroups)
             const coursesSnapshot = await firebase
                 .database()
-                .ref(DB_CONST.GROUP_PROPERTIES_CHILD)
-                .orderByChild('parentGroupId')
-                .equalTo(groupProperties.anid)
+                .ref(DB_CONST.COURSES_CHILD)
                 .once('value');
 
-            if (!coursesSnapshot.exists()) {
-                console.log('[ManageCourses] No courses found for parent group:', groupProperties.anid);
-                return dispatch(setCourses([]));
+            const courseNames: string[] = [];
+
+            if (coursesSnapshot.exists()) {
+                const coursesObject = coursesSnapshot.val();
+                Object.keys(coursesObject).forEach(key => {
+                    const course = coursesObject[key];
+                    // Only include courses that belong to this university/group
+                    if (course.parentGroupId === groupProperties.anid && course.status === DB_CONST.GROUP_STATUS_ACTIVE) {
+                        courseNames.push(course.displayName);
+                    }
+                });
+                console.log(`[ManageCourses] Loaded ${courseNames.length} courses from Courses node for: ${groupProperties.displayName}`);
+            } else {
+                console.log(`[ManageCourses] No courses found in Courses node`);
             }
 
-            const courseNames: string[] = [];
-            coursesSnapshot.forEach((courseSnapshot) => {
-                const courseData = courseSnapshot.val();
-                // Only include active courses with groupType='course'
-                if (courseData.groupType === 'course' && courseData.status === DB_CONST.GROUP_STATUS_ACTIVE) {
-                    courseNames.push(courseData.displayName);
-                }
-            });
-
-            console.log(`[ManageCourses] Loaded ${courseNames.length} courses from Firebase for group: ${groupProperties.displayName}`);
             return dispatch(setCourses(courseNames));
         } catch (error) {
             console.error('[ManageCourses] Error loading courses from Firebase:', error);

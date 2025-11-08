@@ -84,6 +84,10 @@ class AngelNetworks extends Component {
 
     constructor(props) {
         super(props);
+
+        // VERSION MARKER - Confirm new code is loaded
+        console.log('🔥🔥🔥 AngelNetworks v2.0 - 3-SCENARIO LECTURER LOADING ENABLED 🔥🔥🔥');
+
         this.state = {
             expandedUniversities: {}, // Track which universities are expanded: {universityId: boolean}
             expandedCourses: {}, // Track which courses are expanded: {courseId: boolean}
@@ -95,6 +99,7 @@ class AngelNetworks extends Component {
             rejectingRequest: null, // Track which request is being rejected
             hasLoadedCourseMembers: false // Track if we've already loaded all course members
         };
+        this._isMounted = false; // ⚡ Track mount state to prevent memory leaks
     }
 
     toggleUniversityExpansion = (universityId) => {
@@ -127,30 +132,72 @@ class AngelNetworks extends Component {
      * Load members for a specific course
      */
     loadCourseMembers = async (courseId, courseGroupUserName) => {
-        console.log(`🔄 loadCourseMembers called for courseId: ${courseId}, courseGroupUserName: ${courseGroupUserName}`);
+        if (!this._isMounted) return; // ⚡ FIX: Don't start if unmounted
 
-        this.setState(prevState => ({
-            loadingCourseMembers: {
-                ...prevState.loadingCourseMembers,
-                [courseId]: true
-            }
-        }));
+        console.log(`🔄 [AngelNetworks] Loading course members for courseId: ${courseId}, courseGroupUserName: ${courseGroupUserName}`);
+
+        // Special marker for debugging
+        if (courseId === '-Ocef1L3VwMSRKDgT5n5') {
+            console.log('🎯🎯🎯 LOADING LECTURERS FOR YOUR COURSE: -Ocef1L3VwMSRKDgT5n5 🎯🎯🎯');
+        }
+
+        if (this._isMounted) {
+            this.setState(prevState => ({
+                loadingCourseMembers: {
+                    ...prevState.loadingCourseMembers,
+                    [courseId]: true
+                }
+            }));
+        }
 
         try {
             const realtimeDBUtils = require('../../../firebase/realtimeDBUtils');
-            console.log(`    🌐 Calling loadGroupAdminsBasedOnGroupID with courseId: ${courseId}`);
+            const { systemGroups } = this.props;
 
-            const startTime = Date.now();
-            // Use the same method as GroupDetails page - load admins by group ANID
-            const groupAdmins = await realtimeDBUtils.loadGroupAdminsBasedOnGroupID(courseId);
-            const endTime = Date.now();
+            // Find the course to get its parent university
+            const course = systemGroups?.find(g => g.anid === courseId);
+            console.log(`    📚 Course found:`, course?.displayName || course?.groupUserName);
 
-            console.log(`    ⏱️ API call completed in ${endTime - startTime}ms`);
-            console.log(`    ✅ Response received:`, groupAdmins);
-            console.log(`    📊 Fetched ${groupAdmins?.length || 0} total admins for course ${courseId}`);
-            console.log(`    📋 Raw response data:`, groupAdmins);
+            // SCENARIO 1: Load admins where anid = courseId (course-level admins)
+            console.log(`    🌐 Scenario 1: Loading admins with anid = courseId (${courseId})`);
+            const courseAdmins = await realtimeDBUtils.loadGroupAdminsBasedOnGroupID(courseId);
+            console.log(`    ✅ Found ${courseAdmins?.length || 0} course-level admins`);
 
-            const adminsArray = groupAdmins || [];
+            // SCENARIO 2: Load ALL admins and filter for those with courseIds containing this courseId
+            console.log(`    🌐 Scenario 2: Loading all admins to check courseIds arrays`);
+            const firebase = require('../../../firebase/firebaseApp').default;
+            const DB_CONST = require('../../../firebase/databaseConsts');
+
+            const snapshot = await firebase
+                .database()
+                .ref(DB_CONST.ADMINISTRATORS_CHILD)
+                .once('value');
+
+            let adminsWithCourseId = [];
+            if (snapshot.exists()) {
+                const adminsObject = snapshot.val();
+                const allAdmins = Object.keys(adminsObject).map(key => adminsObject[key]);
+                adminsWithCourseId = allAdmins.filter(admin =>
+                    admin.courseIds && Array.isArray(admin.courseIds) && admin.courseIds.includes(courseId)
+                );
+            }
+            console.log(`    ✅ Found ${adminsWithCourseId.length} admins with courseIds containing ${courseId}`);
+
+            if (!this._isMounted) return; // ⚡ FIX: Stop if unmounted during async call
+
+            // Combine course-specific admins and remove duplicates by email
+            // NOTE: We do NOT include university-level admins here - only admins specifically assigned to this course
+            const allCourseAdmins = [...(courseAdmins || []), ...adminsWithCourseId];
+            const uniqueAdmins = allCourseAdmins.reduce((acc, admin) => {
+                if (!acc.find(a => a.email === admin.email)) {
+                    acc.push(admin);
+                }
+                return acc;
+            }, []);
+
+            console.log(`    📊 Total unique admins for THIS COURSE ONLY: ${uniqueAdmins.length}`);
+
+            const adminsArray = uniqueAdmins || [];
 
             // Debug: Check the structure of the first admin object
             if (adminsArray.length > 0) {
@@ -198,34 +245,38 @@ class AngelNetworks extends Component {
                 adminsWithDetails.map(m => `${m.firstName} ${m.lastName}`).join(', ')
             );
 
-            this.setState(prevState => {
-                console.log(`    💾 Storing ${adminsWithDetails.length} members for courseId ${courseId} in state`);
-                return {
-                    courseMembers: {
-                        ...prevState.courseMembers,
-                        [courseId]: adminsWithDetails
-                    },
-                    loadingCourseMembers: {
-                        ...prevState.loadingCourseMembers,
-                        [courseId]: false
-                    }
-                };
-            });
+            if (this._isMounted) { // ⚡ FIX: Only update state if still mounted
+                this.setState(prevState => {
+                    console.log(`    💾 Storing ${adminsWithDetails.length} members for courseId ${courseId} in state`);
+                    return {
+                        courseMembers: {
+                            ...prevState.courseMembers,
+                            [courseId]: adminsWithDetails
+                        },
+                        loadingCourseMembers: {
+                            ...prevState.loadingCourseMembers,
+                            [courseId]: false
+                        }
+                    };
+                });
+            }
         } catch (error) {
             console.error(`❌ Error loading course members for ${courseId}:`, error);
             console.error(`❌ Error details:`, {
                 message: error.message
             });
-            this.setState(prevState => ({
-                courseMembers: {
-                    ...prevState.courseMembers,
-                    [courseId]: []
-                },
-                loadingCourseMembers: {
-                    ...prevState.loadingCourseMembers,
-                    [courseId]: false
-                }
-            }));
+            if (this._isMounted) { // ⚡ FIX: Only update state if still mounted
+                this.setState(prevState => ({
+                    courseMembers: {
+                        ...prevState.courseMembers,
+                        [courseId]: []
+                    },
+                    loadingCourseMembers: {
+                        ...prevState.loadingCourseMembers,
+                        [courseId]: false
+                    }
+                }));
+            }
         }
     };
 
@@ -358,6 +409,8 @@ class AngelNetworks extends Component {
     };
 
     componentDidMount() {
+        this._isMounted = true; // ⚡ Component is now mounted
+
         this.loadData({inComponentDidMount: true});
         this.addListener();
         this.loadCourseRequests(); // Load pending course requests
@@ -421,6 +474,8 @@ class AngelNetworks extends Component {
     }
 
     componentWillUnmount() {
+        this._isMounted = false; // ⚡ Component is unmounting
+
         const {
             stopListeningForAngelNetworksChanged
         } = this.props;

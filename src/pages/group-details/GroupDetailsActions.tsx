@@ -82,10 +82,48 @@ export const loadData: ActionCreator<any> = (groupUserName: string) => {
             });
             const offers: ProjectInstance[] = offersResponse.data;
 
-            // Load group admins/lecturers (non-blocking - don't fail if this errors)
+            // Load group admins/lecturers using 3-scenario approach (non-blocking - don't fail if this errors)
             let groupAdmins: any[] = [];
             try {
-                groupAdmins = await realtimeDBUtils.loadGroupAdminsBasedOnGroupID(group.anid) as any[];
+                console.log(`📊 [GroupDetails] Loading admins for group: ${group.anid} (${group.displayName})`);
+
+                // SCENARIO 1: Load admins where anid = group.anid (course/group-level admins)
+                console.log(`    🌐 Scenario 1: Loading admins with anid = ${group.anid}`);
+                const courseAdmins = await realtimeDBUtils.loadGroupAdminsBasedOnGroupID(group.anid) as any[];
+                console.log(`    ✅ Found ${courseAdmins?.length || 0} course-level admins`);
+
+                // SCENARIO 2: Load ALL admins and filter for those with courseIds containing this group's anid
+                console.log(`    🌐 Scenario 2: Loading all admins to check courseIds arrays`);
+                const firebase = require('../../firebase/firebaseApp').default;
+                const DB_CONST = require('../../firebase/databaseConsts');
+
+                const snapshot = await firebase
+                    .database()
+                    .ref(DB_CONST.ADMINISTRATORS_CHILD)
+                    .once('value');
+
+                let adminsWithCourseId: any[] = [];
+                if (snapshot.exists()) {
+                    const adminsObject = snapshot.val();
+                    const allAdmins = Object.keys(adminsObject).map(key => adminsObject[key]);
+                    adminsWithCourseId = allAdmins.filter((admin: any) =>
+                        admin.courseIds && Array.isArray(admin.courseIds) && admin.courseIds.includes(group.anid)
+                    );
+                }
+                console.log(`    ✅ Found ${adminsWithCourseId.length} admins with courseIds containing ${group.anid}`);
+
+                // Combine course-specific admins and remove duplicates by email
+                // NOTE: We do NOT include university-level admins here - only admins specifically assigned to this course
+                const allCourseAdmins = [...(courseAdmins || []), ...adminsWithCourseId];
+                const uniqueAdmins = allCourseAdmins.reduce((acc: any[], admin: any) => {
+                    if (!acc.find((a: any) => a.email === admin.email)) {
+                        acc.push(admin);
+                    }
+                    return acc;
+                }, []);
+
+                console.log(`    📊 Total unique admins for THIS COURSE ONLY (${group.displayName}): ${uniqueAdmins.length}`);
+                groupAdmins = uniqueAdmins;
             } catch (adminError) {
                 console.error("Failed to load group admins:", adminError);
                 // Continue without admins - set to empty array

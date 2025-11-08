@@ -68,15 +68,26 @@ export default function ManageAccessRequests({currentUser}: ManageAccessRequests
 
     const repository = new AdminAccessRequestRepository();
 
+    // ⚡ FIX: Track mount state to prevent memory leaks
+    const isMountedRef = React.useRef(true);
+
     // Check if current user is super admin
     const currentAdmin = isAdmin(currentUser);
     const isSuperAdmin = !!(currentAdmin && (currentAdmin.superAdmin || currentAdmin.superGroupAdmin));
 
     useEffect(() => {
+        isMountedRef.current = true; // Component mounted
         loadRequests();
+
+        // ⚡ FIX: Cleanup on unmount
+        return () => {
+            isMountedRef.current = false; // Component unmounting
+        };
     }, []);
 
     const loadRequests = async () => {
+        if (!isMountedRef.current) return; // ⚡ FIX: Don't start if unmounted
+
         setLoading(true);
         setError(null);
 
@@ -93,14 +104,20 @@ export default function ManageAccessRequests({currentUser}: ManageAccessRequests
                 repository.fetchAdminAccessRequests({...fetchOptions, status: 'rejected'})
             ]);
 
-            setPendingRequests(pending.data || []);
-            setApprovedRequests(approved.data || []);
-            setRejectedRequests(rejected.data || []);
+            if (isMountedRef.current) { // ⚡ FIX: Only update state if still mounted
+                setPendingRequests(pending.data || []);
+                setApprovedRequests(approved.data || []);
+                setRejectedRequests(rejected.data || []);
+            }
         } catch (err: any) {
             console.error('Error loading admin access requests:', err);
-            setError('Failed to load requests. Please refresh the page.');
+            if (isMountedRef.current) { // ⚡ FIX: Only update state if still mounted
+                setError('Failed to load requests. Please refresh the page.');
+            }
         } finally {
-            setLoading(false);
+            if (isMountedRef.current) { // ⚡ FIX: Only update state if still mounted
+                setLoading(false);
+            }
         }
     };
 

@@ -204,12 +204,12 @@ class GroupAdminsTable extends Component {
         } = this.props;
 
         return (
-            <div>
-                <Paper elevation={1} style={{overflowX: "auto"}}>
+            <div style={{width: "100%"}}>
+                <Paper elevation={1} style={{overflowX: "auto", width: "100%"}}>
                     <Table>
                         <TableHead>
                             <TableRow>
-                                <StyledTableCell colSpan={3} cellColor={colors.blue_gray_50}
+                                <StyledTableCell colSpan={4} cellColor={colors.blue_gray_50}
                                     component={
                                         <InputBase name="searchText" value={searchText} onChange={handleInputChanged} fullWidth placeholder="Search by email" type="text"
                                             startAdornment={
@@ -286,7 +286,7 @@ class GroupAdminsTable extends Component {
                                 />
                             </TableRow>
                             <TableRow>
-                                <StyledTableCell colSpan={5} cellColor={colors.blue_gray_50}
+                                <StyledTableCell colSpan={6} cellColor={colors.blue_gray_50}
                                     component={
                                         <FlexView marginTop={10} marginBottom={10}>
                                             <FormControl style={{minWidth: 200}}>

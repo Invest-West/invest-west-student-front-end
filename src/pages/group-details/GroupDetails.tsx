@@ -10,7 +10,7 @@ import {
     isLoadingData, isRemovingAccessRequest, isSendingAccessRequest,
     successfullyLoadedData
 } from "./GroupDetailsReducer";
-import {Box, Button, colors, Divider, Paper, Typography, Link} from "@material-ui/core";
+import {Box, Button, colors, Divider, Paper, Typography, Link, TextField, IconButton} from "@material-ui/core";
 import {RouteComponentProps} from "react-router-dom";
 import {RouteParams} from "../../router/router";
 import {Col, Image, Row} from "react-bootstrap";
@@ -22,13 +22,17 @@ import {AuthenticationState} from "../../redux-store/reducers/authenticationRedu
 import Admin, {isAdmin} from "../../models/admin";
 import {dateInReadableFormat} from "../../utils/utils";
 import GroupOfMembership, {getHomeGroup} from "../../models/group_of_membership";
-import {CheckCircle} from "@material-ui/icons";
+import {CheckCircle, Edit as EditIcon} from "@material-ui/icons";
 import CustomLink from "../../shared-js-css-styles/CustomLink";
 import * as appColors from "../../values/colors";
 import {MediaQueryState} from "../../redux-store/reducers/mediaQueryReducer";
 import {css} from "aphrodite";
 import sharedStyles from "../../shared-js-css-styles/SharedStyles";
 import Footer from "../../shared-components/footer/Footer";
+import firebase from "../../firebase/firebaseApp";
+import * as DB_CONST from "../../firebase/databaseConsts";
+import {openFeedbackSnackbar} from "../../shared-components/feedback-snackbar/FeedbackSnackbarActions";
+import {FeedbackSnackbarTypes} from "../../shared-components/feedback-snackbar/FeedbackSnackbarReducer";
 
 interface GroupDetailsProps {
     MediaQueryState: MediaQueryState;
@@ -38,6 +42,13 @@ interface GroupDetailsProps {
     loadData: (viewedGroupUserName: string) => any;
     sendAccessRequest: () => any;
     removeAccessRequest: () => any;
+    openFeedbackSnackbar: (type: FeedbackSnackbarTypes, message: string) => any;
+}
+
+interface GroupDetailsLocalComponentState {
+    isEditingDescription: boolean;
+    editedDescription: string;
+    isSavingDescription: boolean;
 }
 
 const mapStateToProps = (state: AppState) => {
@@ -53,16 +64,101 @@ const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
     return {
         loadData: (viewedGroupUserName: string) => dispatch(loadData(viewedGroupUserName)),
         sendAccessRequest: () => dispatch(sendAccessRequest()),
-        removeAccessRequest: () => dispatch(removeAccessRequest())
+        removeAccessRequest: () => dispatch(removeAccessRequest()),
+        openFeedbackSnackbar: (type: FeedbackSnackbarTypes, message: string) => dispatch(openFeedbackSnackbar(type, message))
     }
 }
 
-class GroupDetails extends Component<GroupDetailsProps & Readonly<RouteComponentProps<RouteParams>>, any> {
+class GroupDetails extends Component<GroupDetailsProps & Readonly<RouteComponentProps<RouteParams>>, GroupDetailsLocalComponentState> {
+
+    constructor(props: GroupDetailsProps & Readonly<RouteComponentProps<RouteParams>>) {
+        super(props);
+        this.state = {
+            isEditingDescription: false,
+            editedDescription: '',
+            isSavingDescription: false
+        };
+    }
 
     componentDidMount() {
         const viewedGroupUserName = this.props.match.params.viewedGroupUserName;
         if (viewedGroupUserName) {
             this.props.loadData(viewedGroupUserName);
+        }
+    }
+
+    handleStartEditingDescription = () => {
+        const { GroupDetailsLocalState } = this.props;
+        this.setState({
+            isEditingDescription: true,
+            editedDescription: GroupDetailsLocalState.group?.description || ''
+        });
+    }
+
+    handleCancelEditingDescription = () => {
+        this.setState({
+            isEditingDescription: false,
+            editedDescription: ''
+        });
+    }
+
+    handleDescriptionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        this.setState({
+            editedDescription: event.target.value
+        });
+    }
+
+    handleSaveDescription = async () => {
+        const { GroupDetailsLocalState, openFeedbackSnackbar } = this.props;
+        const { editedDescription } = this.state;
+
+        if (!GroupDetailsLocalState.group) {
+            return;
+        }
+
+        this.setState({ isSavingDescription: true });
+
+        try {
+            // Check if this is a course (in Courses node) or a university (in GroupProperties node)
+            const coursesSnapshot = await firebase
+                .database()
+                .ref(DB_CONST.COURSES_CHILD)
+                .child(GroupDetailsLocalState.group.anid)
+                .once('value');
+
+            if (coursesSnapshot.exists()) {
+                // Update in Courses node
+                await firebase
+                    .database()
+                    .ref(DB_CONST.COURSES_CHILD)
+                    .child(GroupDetailsLocalState.group.anid)
+                    .update({ description: editedDescription });
+            } else {
+                // Update in GroupProperties node
+                await firebase
+                    .database()
+                    .ref(DB_CONST.GROUP_PROPERTIES_CHILD)
+                    .child(GroupDetailsLocalState.group.anid)
+                    .update({ description: editedDescription });
+            }
+
+            openFeedbackSnackbar(FeedbackSnackbarTypes.Success, 'Description updated successfully!');
+
+            this.setState({
+                isEditingDescription: false,
+                isSavingDescription: false,
+                editedDescription: ''
+            });
+
+            // Reload data to reflect changes
+            const viewedGroupUserName = this.props.match.params.viewedGroupUserName;
+            if (viewedGroupUserName) {
+                this.props.loadData(viewedGroupUserName);
+            }
+        } catch (error) {
+            console.error('Error updating description:', error);
+            openFeedbackSnackbar(FeedbackSnackbarTypes.Error, 'Failed to update description');
+            this.setState({ isSavingDescription: false });
         }
     }
 
@@ -196,11 +292,58 @@ class GroupDetails extends Component<GroupDetailsProps & Readonly<RouteComponent
                     <Box marginTop="25px">
                         <Paper>
                             <Box padding="20px">
-                                <Typography variant="h6">About</Typography>
-
-                                <Box marginTop="18px" whiteSpace="pre-line">
-                                    <Typography variant="body1" align="left">{GroupDetailsLocalState.group?.description}</Typography>
+                                <Box display="flex" justifyContent="space-between" alignItems="center">
+                                    <Typography variant="h6">About</Typography>
+                                    {currentAdmin && !this.state.isEditingDescription && (
+                                        <IconButton
+                                            size="small"
+                                            onClick={this.handleStartEditingDescription}
+                                            title="Edit description"
+                                        >
+                                            <EditIcon fontSize="small" />
+                                        </IconButton>
+                                    )}
                                 </Box>
+
+                                {this.state.isEditingDescription ? (
+                                    <>
+                                        <Box marginTop="18px">
+                                            <TextField
+                                                fullWidth
+                                                multiline
+                                                rows={6}
+                                                variant="outlined"
+                                                value={this.state.editedDescription}
+                                                onChange={this.handleDescriptionChange}
+                                                disabled={this.state.isSavingDescription}
+                                            />
+                                        </Box>
+                                        <Box marginTop="18px" display="flex" justifyContent="flex-end">
+                                            <Button
+                                                variant="outlined"
+                                                onClick={this.handleCancelEditingDescription}
+                                                disabled={this.state.isSavingDescription}
+                                                className={css(sharedStyles.no_text_transform)}
+                                                style={{ marginRight: 8 }}
+                                            >
+                                                Cancel
+                                            </Button>
+                                            <Button
+                                                variant="contained"
+                                                color="primary"
+                                                onClick={this.handleSaveDescription}
+                                                disabled={this.state.isSavingDescription || this.state.editedDescription === GroupDetailsLocalState.group?.description}
+                                                className={css(sharedStyles.no_text_transform)}
+                                            >
+                                                {this.state.isSavingDescription ? 'Saving...' : 'Save'}
+                                            </Button>
+                                        </Box>
+                                    </>
+                                ) : (
+                                    <Box marginTop="18px" whiteSpace="pre-line">
+                                        <Typography variant="body1" align="left">{GroupDetailsLocalState.group?.description}</Typography>
+                                    </Box>
+                                )}
 
                                 <Box marginTop="18px">
                                     <Typography variant="body1" align="left">For more information, visit us at:&nbsp;
