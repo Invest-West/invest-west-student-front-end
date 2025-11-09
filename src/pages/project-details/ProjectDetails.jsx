@@ -77,6 +77,7 @@ import ContactPitchOwnerDialog from "./components/contact-pitch-owner-dialog/Con
 import FeedbackSnackbarNew from "../../shared-components/feedback-snackbar/FeedbackSnackbarNew";
 import {hasAuthenticationError, isAuthenticating, authIsNotInitialized} from "../../redux-store/reducers/authenticationReducer";
 import {apiCache, CacheKeys} from "../../utils/CacheManager";
+import RejectFeedbacksList from "../../shared-components/reject-feedbacks-list/RejectFeedbacksList";
 
 const ADMIN_OFFER_STATES_PUBLISH_PITCH = 0;
 const ADMIN_OFFER_STATES_MOVE_TO_PLEDGE = 1;
@@ -205,6 +206,9 @@ class ProjectDetailsMain extends Component {
 
                 votes: [],
                 votesLoaded: false,
+
+                rejectFeedbacks: [],
+                rejectFeedbacksLoaded: false,
 
                 // the issuer object (the issuer who made this pitch)
                 projectIssuer: null,
@@ -490,7 +494,8 @@ class ProjectDetailsMain extends Component {
                         user?.type === DB_CONST.TYPE_ADMIN
                             ?
                             // Show control phases for super admins OR course admins who own the project
-                            (user?.superAdmin || user?.anid === project.anid)
+                            // Only show admin offer states tab if project is not a draft
+                            (user?.superAdmin || user?.anid === project.anid) && !utils.isDraftProject(project)
                                 ?
                                 MAIN_BODY_ADMIN_OFFER_STATES
                                 :
@@ -515,18 +520,20 @@ class ProjectDetailsMain extends Component {
                 });
 
                 // Load all related data in parallel for better performance
-                console.log('🔄 ProcessProjectData: Starting Promise.all for votes, pledges, and issuer...');
+                console.log('🔄 ProcessProjectData: Starting Promise.all for votes, pledges, issuer, and reject feedbacks...');
                 console.log('🔍 Project issuer ID:', project.issuerID);
                 Promise.all([
                     realtimeDBUtils.loadVotes(project.id, null, realtimeDBUtils.LOAD_VOTES_ORDER_BY_PROJECT),
                     realtimeDBUtils.loadPledges(project.id, null, realtimeDBUtils.LOAD_PLEDGES_ORDER_BY_PROJECT),
-                    realtimeDBUtils.getUserBasedOnID(project.issuerID)
-                ]).then(([votes, pledges, projectIssuer]) => {
-                    console.log('✅ Promise.all completed successfully!', { 
-                        votesCount: votes?.length, 
-                        pledgesCount: pledges?.length, 
+                    realtimeDBUtils.getUserBasedOnID(project.issuerID),
+                    realtimeDBUtils.loadProjectRejectFeedbacks(project.id)
+                ]).then(([votes, pledges, projectIssuer, rejectFeedbacks]) => {
+                    console.log('✅ Promise.all completed successfully!', {
+                        votesCount: votes?.length,
+                        pledgesCount: pledges?.length,
                         issuerName: projectIssuer?.displayName,
                         issuerID: projectIssuer?.id,
+                        rejectFeedbacksCount: rejectFeedbacks?.length,
                         fullIssuer: projectIssuer
                     });
                     // Check if current user has pledged (only for investors)
@@ -551,6 +558,8 @@ class ProjectDetailsMain extends Component {
                             votesLoaded: true,
                             pledges: pledges,
                             pledgesLoaded: true,
+                            rejectFeedbacks: rejectFeedbacks,
+                            rejectFeedbacksLoaded: true,
                             projectIssuer: projectIssuer,
                             projectIssuerLoaded: true
                         }
@@ -574,6 +583,7 @@ class ProjectDetailsMain extends Component {
                             ...this.state.projectDetail,
                             votesLoaded: true,
                             pledgesLoaded: true,
+                            rejectFeedbacksLoaded: true,
                             projectIssuerLoaded: true
                         }
                     });
@@ -1145,15 +1155,46 @@ class ProjectDetailsMain extends Component {
 
             this.projectListener
                 .on("value", snapshot => {
+                    const {user} = this.props;
                     const project = snapshot.val();
+
+                    if (!project) {
+                        return;
+                    }
+
                     project.group = this.state.projectDetail.project.group;
                     project.issuer = this.state.projectDetail.project.issuer;
+
+                    console.log('🔄 Project listener fired:', {
+                        projectName: project.projectName,
+                        status: project.status,
+                        isDraft: utils.isDraftProject(project),
+                        userType: user?.type,
+                        isAdmin: user?.type === DB_CONST.TYPE_ADMIN
+                    });
+
+                    // Determine mainBody based on user type and project status
+                    // For draft projects, ALWAYS use CAMPAIGN tab regardless of user type
+                    const isDraft = utils.isDraftProject(project);
+                    const isAdmin = user?.type === DB_CONST.TYPE_ADMIN;
+                    const canSeeAdminTab = isAdmin && (user?.superAdmin || user?.anid === project.anid);
+
+                    const newMainBody = isDraft || !canSeeAdminTab ? MAIN_BODY_CAMPAIGN : MAIN_BODY_ADMIN_OFFER_STATES;
+
+                    console.log('🔄 Setting mainBody to:', {
+                        newMainBody,
+                        isDraft,
+                        isAdmin,
+                        canSeeAdminTab,
+                        currentMainBody: this.state.mainBody
+                    });
 
                     this.setState({
                         projectDetail: {
                             ...this.state.projectDetail,
                             project: project,
                         },
+                        mainBody: newMainBody,
                         adminOfferStatesActiveStep:
                             project.status === DB_CONST.PROJECT_STATUS_BEING_CHECKED
                                 ?
@@ -1818,7 +1859,6 @@ class ProjectDetailsMain extends Component {
     }
 
     render() {
-        console.log('🎭 MAIN RENDER METHOD CALLED!');
         const {
             AuthenticationState,
 
@@ -1881,19 +1921,12 @@ class ProjectDetailsMain extends Component {
             votes,
             votesLoaded,
 
+            rejectFeedbacks,
+            rejectFeedbacksLoaded,
+
             projectIssuer,
             projectIssuerLoaded
         } = this.state.projectDetail;
-
-        console.log('🎯 MAIN RENDER: About to call renderPageContent with data:', {
-            hasProject: !!project,
-            projectName: project?.projectName,
-            pledgesLoaded,
-            votesLoaded,
-            investorPledgeLoaded,
-            projectIssuerLoaded,
-            hasProjectIssuer: !!projectIssuer
-        });
 
         if (!groupPropertiesLoaded) {
             return (
@@ -1959,6 +1992,8 @@ class ProjectDetailsMain extends Component {
                     votesLoaded={votesLoaded}
                     pledges={pledges}
                     pledgesLoaded={pledgesLoaded}
+                    rejectFeedbacks={rejectFeedbacks}
+                    rejectFeedbacksLoaded={rejectFeedbacksLoaded}
                     investorPledge={investorPledge}
                     investorPledgeLoaded={investorPledgeLoaded}
                     projectIssuer={projectIssuer}
@@ -2187,6 +2222,8 @@ class ProjectDetails extends Component {
             pledgesLoaded,
             votes,
             votesLoaded,
+            rejectFeedbacks,
+            rejectFeedbacksLoaded,
             projectIssuer,
             projectIssuerLoaded,
             investorPledge,
@@ -3449,6 +3486,15 @@ class ProjectDetails extends Component {
                                 <Col xs={12} sm={12} md={12} lg={{span: 6, offset: 3}}>
 
                                     {
+                                        // Display reject feedbacks for the issuer (project owner) - not for admins
+                                        user && user.type !== DB_CONST.TYPE_ADMIN && isProjectOwner(user, project) && rejectFeedbacks && rejectFeedbacks.length > 0
+                                            ?
+                                            <RejectFeedbacksList rejectFeedbacks={rejectFeedbacks} />
+                                            :
+                                            null
+                                    }
+
+                                    {
                                         // Project deck
                                         !project.Pitch.presentationDocument
                                             ?
@@ -3976,23 +4022,29 @@ class ProjectDetails extends Component {
                                             null
                                     }
 
-                                    {/** Course */}
-                                    {
-                                        project.course
-                                            ?
-                                            <FlexView className={css(styles.border_box)} style={{backgroundColor: colors.kick_starter_background_color}} column marginTop={30} vAlignContent="center">
-                                                <Typography variant="body1" align="left">Course: <b>{project.course}</b></Typography>
-                                            </FlexView>
-                                            :
-                                            null
-                                    }
-
                                     {/** University */}
                                     {
                                         projectIssuer && projectIssuer.BusinessProfile && projectIssuer.BusinessProfile.university
                                             ?
                                             <FlexView className={css(styles.border_box)} style={{backgroundColor: colors.kick_starter_background_color}} column marginTop={30} vAlignContent="center">
                                                 <Typography variant="body1" align="left">University: <b>{projectIssuer.BusinessProfile.university}</b></Typography>
+                                            </FlexView>
+                                            :
+                                            null
+                                    }
+
+                                    {/** Course - prioritize BusinessProfile.course, fallback to project.course, then user.course */}
+                                    {
+                                        (projectIssuer && projectIssuer.BusinessProfile && projectIssuer.BusinessProfile.course)
+                                        || project.course
+                                        || (projectIssuer && projectIssuer.course)
+                                            ?
+                                            <FlexView className={css(styles.border_box)} style={{backgroundColor: colors.kick_starter_background_color}} column marginTop={30} vAlignContent="center">
+                                                <Typography variant="body1" align="left">Course: <b>{
+                                                    (projectIssuer && projectIssuer.BusinessProfile && projectIssuer.BusinessProfile.course)
+                                                    || project.course
+                                                    || (projectIssuer && projectIssuer.course)
+                                                }</b></Typography>
                                             </FlexView>
                                             :
                                             null
@@ -4106,20 +4158,63 @@ class ProjectDetails extends Component {
     // }
 
     render() {
-        console.log('🎬 ProjectDetailsMain RENDER: Received props:', {
-            hasProject: !!this.props.project,
-            projectName: this.props.project?.projectName,
-            pledgesLoaded: this.props.pledgesLoaded,
-            votesLoaded: this.props.votesLoaded,
-            investorPledgeLoaded: this.props.investorPledgeLoaded,
-            projectIssuerLoaded: this.props.projectIssuerLoaded,
-            hasProjectIssuer: !!this.props.projectIssuer
-        });
+        const {
+            project,
+            pledges,
+            pledgesLoaded,
+            votes,
+            votesLoaded,
+            rejectFeedbacks,
+            rejectFeedbacksLoaded,
+            projectIssuer,
+            projectIssuerLoaded,
+            investorPledge,
+            investorPledgeLoaded,
+            mainBody,
+            adminOfferStatesActiveStep,
+            comments,
+            commentsLoaded,
+            currentComment,
+            currentCommentText,
+            replyingToComment,
+            replyText,
+            replyEdited,
+            changedPitchExpiryDate,
+            addingRejectFeedback,
+            rejectFeedback,
+            sendingProjectBack
+        } = this.props;
 
         return (
             <Container fluid style={{padding: 0}}>
                 {
-                    this.renderPageContent(this.props)
+                    this.renderPageContent({
+                        ...this.props,
+                        project,
+                        pledges,
+                        pledgesLoaded,
+                        votes,
+                        votesLoaded,
+                        rejectFeedbacks,
+                        rejectFeedbacksLoaded,
+                        projectIssuer,
+                        projectIssuerLoaded,
+                        investorPledge,
+                        investorPledgeLoaded,
+                        mainBody,
+                        adminOfferStatesActiveStep,
+                        comments,
+                        commentsLoaded,
+                        currentComment,
+                        currentCommentText,
+                        replyingToComment,
+                        replyText,
+                        replyEdited,
+                        changedPitchExpiryDate,
+                        addingRejectFeedback,
+                        rejectFeedback,
+                        sendingProjectBack
+                    })
                 }
             </Container>
         );

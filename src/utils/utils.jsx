@@ -366,7 +366,8 @@ export const getLogoFromGroup = (getLogoType, groupProperties) => {
             ) {
                 return null;
             }
-            const plainLogoIndex = groupProperties.plainLogo.findIndex(logo => !logo.hasOwnProperty('removed'));
+            // Find logo that is not removed (either removed is undefined or false)
+            const plainLogoIndex = groupProperties.plainLogo.findIndex(logo => logo.removed === undefined || logo.removed === false);
             if (plainLogoIndex === -1) {
                 return null;
             }
@@ -378,7 +379,8 @@ export const getLogoFromGroup = (getLogoType, groupProperties) => {
             ) {
                 return null;
             }
-            const logoWithTextIndex = groupProperties.logoWithText.findIndex(logo => !logo.hasOwnProperty('removed'));
+            // Find logo that is not removed (either removed is undefined or false)
+            const logoWithTextIndex = groupProperties.logoWithText.findIndex(logo => logo.removed === undefined || logo.removed === false);
             if (logoWithTextIndex === -1) {
                 return null;
             }

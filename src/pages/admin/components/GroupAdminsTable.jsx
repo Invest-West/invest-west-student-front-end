@@ -13,11 +13,6 @@ import {
     TablePagination,
     InputAdornment,
     IconButton,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    TextField,
     Select,
     MenuItem,
     FormControl,
@@ -27,15 +22,13 @@ import {
 import CloseIcon from '@material-ui/icons/Close';
 import SearchIcon from '@material-ui/icons/Search';
 import RefreshIcon from '@material-ui/icons/Refresh';
-import AddIcon from '@material-ui/icons/Add';
 import PersonAddIcon from '@material-ui/icons/PersonAdd';
 import {
     OverlayTrigger,
     Tooltip
 } from 'react-bootstrap';
 import {
-    HashLoader,
-    BeatLoader
+    HashLoader
 } from 'react-spinners';
 import {css} from 'aphrodite';
 import FlexView from 'react-flexview';
@@ -47,12 +40,6 @@ import sharedStyles, {StyledTableCell} from '../../../shared-js-css-styles/Share
 import {connect} from 'react-redux';
 import * as groupAdminsTableActions from '../../../redux-store/actions/groupAdminsTableActions';
 import AddAdminAccessRequestDialog from './AddAdminAccessRequestDialog';
-
-export const ADD_NEW_GROUP_ADMIN_STATUS_NONE = 0;
-export const ADD_NEW_GROUP_ADMIN_STATUS_MISSING_EMAIL = 1;
-export const ADD_NEW_GROUP_ADMIN_STATUS_CHECKING = 2;
-export const ADD_NEW_GROUP_ADMIN_STATUS_EMAIL_USED = 3;
-export const ADD_NEW_GROUP_ADMIN_STATUS_SUCCESS = 4;
 
 const mapStateToProps = state => {
     return {
@@ -69,11 +56,7 @@ const mapStateToProps = state => {
         searchText: state.manageGroupAdminsTable.searchText,
         inSearchMode: state.manageGroupAdminsTable.inSearchMode,
         filterCourse: state.manageGroupAdminsTable.filterCourse,
-        systemGroups: state.manageSystemGroups.systemGroups,
-
-        addNewGroupAdminDialogOpen: state.manageGroupAdminsTable.addNewGroupAdminDialogOpen,
-        newGroupAdminEmail: state.manageGroupAdminsTable.newGroupAdminEmail,
-        addNewGroupAdminStatus: state.manageGroupAdminsTable.addNewGroupAdminStatus
+        systemGroups: state.manageSystemGroups.systemGroups
     }
 };
 
@@ -85,10 +68,7 @@ const mapDispatchToProps = dispatch => {
         handleInputChanged: (event) => dispatch(groupAdminsTableActions.handleInputChanged(event)),
         toggleSearchMode: () => dispatch(groupAdminsTableActions.toggleSearchMode()),
         startListeningForGroupAdminsChanged: () => dispatch(groupAdminsTableActions.startListeningForGroupAdminsChanged()),
-        stopListeningForGroupAdminsChanged: () => dispatch(groupAdminsTableActions.stopListeningForGroupAdminsChanged()),
-        handleAddNewGroupAdmin: () => dispatch(groupAdminsTableActions.handleAddNewGroupAdmin()),
-
-        toggleAddNewGroupAdminDialog: () => dispatch(groupAdminsTableActions.toggleAddNewGroupAdminDialog())
+        stopListeningForGroupAdminsChanged: () => dispatch(groupAdminsTableActions.stopListeningForGroupAdminsChanged())
     }
 };
 
@@ -190,17 +170,11 @@ class GroupAdminsTable extends Component {
             inSearchMode,
             filterCourse,
             systemGroups,
-            addNewGroupAdminDialogOpen,
-            newGroupAdminEmail,
-            addNewGroupAdminStatus,
             changePage,
             changeRowsPerPage,
             loadGroupAdmins,
             handleInputChanged,
-            toggleSearchMode,
-            handleAddNewGroupAdmin,
-
-            toggleAddNewGroupAdminDialog
+            toggleSearchMode
         } = this.props;
 
         return (
@@ -244,35 +218,27 @@ class GroupAdminsTable extends Component {
                                 <StyledTableCell colSpan={2} cellColor={colors.blue_gray_50} component={
                                         <FlexView hAlignContent="right" vAlignContent="center">
                                             {
-                                                currentUser.superGroupAdmin
-                                                && tableGroup !== null
-                                                && currentUser.anid === tableGroup.anid
+                                                !currentUser.superAdmin && !currentUser.superGroupAdmin && tableGroup !== null
                                                     ?
-                                                    <Button variant="outlined" color="primary" className={css(sharedStyles.no_text_transform)} onClick={toggleAddNewGroupAdminDialog} style={{ marginRight: 8}}>
-                                                        Add new group admin
-                                                    </Button>
+                                                    <OverlayTrigger trigger={['hover', 'focus']} placement="bottom" flip
+                                                        overlay={
+                                                            <Tooltip id={`tooltip-request-admin`}>
+                                                                Request to add a new admin to your course. A super admin will review your request.
+                                                            </Tooltip>
+                                                        }>
+                                                        <Button
+                                                            variant="outlined"
+                                                            color="primary"
+                                                            className={css(sharedStyles.no_text_transform)}
+                                                            onClick={this.toggleAccessRequestDialog}
+                                                            style={{ marginRight: 8}}
+                                                            startIcon={<PersonAddIcon />}
+                                                        >
+                                                            Request Admin Access
+                                                        </Button>
+                                                    </OverlayTrigger>
                                                     :
-                                                    !currentUser.superAdmin && !currentUser.superGroupAdmin && tableGroup !== null
-                                                        ?
-                                                        <OverlayTrigger trigger={['hover', 'focus']} placement="bottom" flip
-                                                            overlay={
-                                                                <Tooltip id={`tooltip-request-admin`}>
-                                                                    Request to add a new admin to your course. A super admin will review your request.
-                                                                </Tooltip>
-                                                            }>
-                                                            <Button
-                                                                variant="outlined"
-                                                                color="primary"
-                                                                className={css(sharedStyles.no_text_transform)}
-                                                                onClick={this.toggleAccessRequestDialog}
-                                                                style={{ marginRight: 8}}
-                                                                startIcon={<PersonAddIcon />}
-                                                            >
-                                                                Request Admin Access
-                                                            </Button>
-                                                        </OverlayTrigger>
-                                                        :
-                                                        null
+                                                    null
                                             }
                                             <OverlayTrigger trigger={['hover', 'focus']} placement="bottom" flip
                                                 overlay={
@@ -399,16 +365,6 @@ class GroupAdminsTable extends Component {
                         </TableFooter>
                     </Table>
                 </Paper>
-
-                <AddGroupAdminDialog
-                    groupProperties={groupProperties}
-                    addNewGroupAdminDialogOpen={addNewGroupAdminDialogOpen}
-                    newGroupAdminEmail={newGroupAdminEmail}
-                    addNewGroupAdminStatus={addNewGroupAdminStatus}
-                    toggleAddNewGroupAdminDialog={toggleAddNewGroupAdminDialog}
-                    handleInputChanged={handleInputChanged}
-                    handleAddNewGroupAdmin={handleAddNewGroupAdmin}
-                />
 
                 {/* Admin Access Request Dialog for normal admins */}
                 {tableGroup && (
@@ -681,107 +637,3 @@ class GroupAdminsTable extends Component {
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(GroupAdminsTable);
-
-class AddGroupAdminDialog extends Component {
-    render() {
-        const {
-            forwardedRef,
-            addNewGroupAdminDialogOpen,
-            newGroupAdminEmail,
-            toggleAddNewGroupAdminDialog,
-            handleInputChanged,
-            handleAddNewGroupAdmin
-        } = this.props;
-
-        return (
-            <Dialog open={addNewGroupAdminDialogOpen} ref={forwardedRef} fullWidth maxWidth="md" onClose={toggleAddNewGroupAdminDialog}>
-                <DialogTitle disableTypography>
-                    <FlexView vAlignContent="center">
-                        <FlexView grow={4}>
-                            <Typography variant='h6' color='primary' align="left">Add new group admin
-                            </Typography>
-                        </FlexView>
-                        <FlexView grow={1} hAlignContent="right">
-                            <IconButton onClick={toggleAddNewGroupAdminDialog}>
-                                <CloseIcon/>
-                            </IconButton>
-                        </FlexView>
-                    </FlexView>
-                </DialogTitle>
-                <DialogContent>
-                    <TextField
-                        variant="outlined"
-                        label="Email"
-                        name="newGroupAdminEmail"
-                        placeholder="Write email here"
-                        value={newGroupAdminEmail}
-                        onChange={handleInputChanged}
-                        fullWidth
-                        required
-                        style={{ marginTop: 10}}/>
-                </DialogContent>
-                <DialogActions>
-                    <FlexView width="100%" marginRight={25} marginBottom={15} marginTop={20} hAlignContent="right" vAlignContent="center">
-                        {
-                            this.renderStatusMessage()
-                        }
-                        <Button variant="outlined" color="primary" onClick={handleAddNewGroupAdmin} size="medium" className={css(sharedStyles.no_text_transform)} style={{marginLeft: 20}}>Add<AddIcon fontSize="small" style={{ marginLeft: 8}}/>
-                        </Button>
-                    </FlexView>
-                </DialogActions>
-            </Dialog>
-        );
-    }
-
-    /**
-     * Render status message
-     *
-     * @returns {null|*}
-     */
-    renderStatusMessage = () => {
-        const {
-            addNewGroupAdminStatus,
-            groupProperties
-        } = this.props;
-
-        let msg = {
-            text: '',
-            color: ''
-        };
-
-        switch (addNewGroupAdminStatus) {
-            case ADD_NEW_GROUP_ADMIN_STATUS_NONE:
-                return null;
-            case ADD_NEW_GROUP_ADMIN_STATUS_MISSING_EMAIL:
-                msg.tex = "Please fill in the email.";
-                msg.color = "error";
-                break;
-            case ADD_NEW_GROUP_ADMIN_STATUS_CHECKING:
-                return (
-                    <BeatLoader size={10}
-                        color={
-                            !groupProperties
-                                ?
-                                colors.primaryColor
-                                :
-                                groupProperties.settings.primaryColor
-                        }
-                    />
-                );
-            case ADD_NEW_GROUP_ADMIN_STATUS_EMAIL_USED:
-                msg.text = "This email has been used by another account.";
-                msg.color = "error";
-                break;
-            case ADD_NEW_GROUP_ADMIN_STATUS_SUCCESS:
-                return null;
-            default:
-                return null;
-        }
-
-        return (
-            <Typography color={msg.color} variant="body1" align="left">
-                {msg.text}
-            </Typography>
-        );
-    }
-}

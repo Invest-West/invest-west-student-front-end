@@ -26,6 +26,9 @@ export const USERS_CHILD = "Users";
 // Projects node
 export const PROJECTS_CHILD = "Projects";
 
+// Project reject feedbacks node
+export const PROJECT_REJECT_FEEDBACKS_CHILD = "ProjectRejectFeedbacks";
+
 // Activities log node
 export const ACTIVITIES_LOG_CHILD = "ActivitiesLog";
 

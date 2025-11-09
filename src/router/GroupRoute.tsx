@@ -149,52 +149,82 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
         /**
          * Helper to extract university and course usernames from user's group membership
          * Returns { universityUserName: string, courseUserName: string }
+         *
+         * IMPORTANT: During post-login redirect, we should find the user's ACTUAL assigned course,
+         * NOT use the route params from the login URL (e.g., /groups/invest-west/student-showcase/login)
+         *
+         * NOTE: Admins use groupsOfMembership for courses, but Issuers/Investors have course in user.course field
          */
         const getUniversityAndCourseForUser = (): { universityUserName: string, courseUserName: string } => {
+            // Check if user is admin - admins use groupsOfMembership for course assignments
+            const currentAdmin: Admin | null = isAdmin(currentUser);
+
             console.log('[GET UNIVERSITY AND COURSE] Starting with:', {
                 routeParams: this.routeParams,
+                isAdmin: !!currentAdmin,
+                userCourse: !currentAdmin ? (currentUser as User).course : undefined,
+                userCourseType: !currentAdmin ? typeof (currentUser as User).course : undefined,
+                userCourseValue: !currentAdmin ? JSON.stringify((currentUser as User).course) : undefined,
                 groupsOfMembershipCount: groupsOfMembership.length,
                 groupsOfMembership: groupsOfMembership.map(m => ({
                     groupUserName: m.group.groupUserName,
                     displayName: m.group.displayName,
                     groupType: m.group.groupType,
-                    isHomeGroup: m.isHomeGroup
+                    isHomeGroup: m.isHomeGroup,
+                    anid: m.group.anid
                 }))
             });
 
-            // First, try to validate and use URL parameters if both university AND course are provided
-            if (this.routeParams.groupUserName && this.routeParams.courseUserName) {
-                console.log('[GET UNIVERSITY AND COURSE] Checking route params match:', {
-                    groupUserName: this.routeParams.groupUserName,
-                    courseUserName: this.routeParams.courseUserName
-                });
+            // For non-admin users (issuers/investors), check user.course field first
+            // IMPORTANT: Exclude '-1' which is a placeholder/uninitialized value during signup
+            const userCourseField = !currentAdmin ? (currentUser as User).course : undefined;
+            console.log('[GET UNIVERSITY AND COURSE] 🔍 Checking user.course field:', {
+                hasUserCourse: !!userCourseField,
+                userCourseValue: userCourseField,
+                isNotMinusOne: userCourseField !== '-1',
+                willUseCourseField: !!userCourseField && userCourseField !== '-1'
+            });
 
-                // Verify user has membership to BOTH the university AND the course
-                const hasUniversityMembership = groupsOfMembership
-                    .some(m => m.group.groupUserName === this.routeParams.groupUserName && isUniversity(m.group));
-                const hasCourseMembership = groupsOfMembership
-                    .some(m => m.group.groupUserName === this.routeParams.courseUserName && isCourse(m.group));
+            if (!currentAdmin && userCourseField && userCourseField !== '-1') {
+                const userCourse = userCourseField;
 
-                console.log('[GET UNIVERSITY AND COURSE] Membership check:', {
-                    hasUniversityMembership,
-                    hasCourseMembership,
-                    bothMatch: hasUniversityMembership && hasCourseMembership
-                });
+                // Check if userCourse is a course anid (number) or course username (string)
+                // If it's an anid, we need to find the corresponding course in groupsOfMembership
+                const courseMembership = groupsOfMembership.find(m =>
+                    isCourse(m.group) && (m.group.anid === userCourse || m.group.groupUserName === userCourse)
+                );
 
-                // IMPORTANT: User must have access to BOTH university AND course to use route params
-                if (hasUniversityMembership && hasCourseMembership) {
-                    console.log('[GET UNIVERSITY AND COURSE] ✅ User has access to both university and course - using route params');
+                if (courseMembership) {
+                    const parentUniversity = groupsOfMembership.find(m =>
+                        m.group.anid === courseMembership.group.parentGroupId
+                    );
+
+                    console.log('[GET UNIVERSITY AND COURSE] ✅ Found matching course in groupsOfMembership:', {
+                        courseUserName: courseMembership.group.groupUserName,
+                        courseName: courseMembership.group.displayName,
+                        courseAnid: courseMembership.group.anid,
+                        universityUserName: parentUniversity ? parentUniversity.group.groupUserName : 'invest-west',
+                        matchedBy: courseMembership.group.anid === userCourse ? 'anid' : 'groupUserName'
+                    });
+
                     return {
-                        universityUserName: this.routeParams.groupUserName,
-                        courseUserName: this.routeParams.courseUserName
+                        universityUserName: parentUniversity ? parentUniversity.group.groupUserName : 'invest-west',
+                        courseUserName: courseMembership.group.groupUserName
                     };
-                } else {
-                    console.log('[GET UNIVERSITY AND COURSE] ⚠️ User does NOT have access to requested university/course - will use default or first available course');
                 }
+
+                // If no match found in groupsOfMembership, assume userCourse is already a course username
+                console.log('[GET UNIVERSITY AND COURSE] ⚠️ Course not found in groupsOfMembership, using as-is:', {
+                    courseUserName: userCourse,
+                    universityUserName: 'invest-west'
+                });
+                return {
+                    universityUserName: 'invest-west',
+                    courseUserName: userCourse
+                };
             }
 
-            // IMPORTANT FIX: Prioritize COURSE memberships over university memberships
-            // Collect all courses first, then check universities
+            // For admins, find course in groupsOfMembership (prioritize COURSE memberships)
             const courseMemberships = groupsOfMembership.filter(m => isCourse(m.group));
             const universityMemberships = groupsOfMembership.filter(m => isUniversity(m.group));
 
@@ -205,7 +235,7 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                 universities: universityMemberships.map(m => m.group.groupUserName)
             });
 
-            // If user has course membership(s), use the FIRST course found
+            // If user has course membership(s), use the FIRST course found (their assigned course)
             if (courseMemberships.length > 0) {
                 const firstCourse = courseMemberships[0].group;
 
@@ -214,7 +244,7 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                     .find(m => m.group.anid === firstCourse.parentGroupId);
 
                 if (parentUniversity) {
-                    console.log('[GET UNIVERSITY AND COURSE] ✅ Found course with parent university in memberships:', {
+                    console.log('[GET UNIVERSITY AND COURSE] ✅ Found user assigned course with parent university:', {
                         courseUserName: firstCourse.groupUserName,
                         universityUserName: parentUniversity.group.groupUserName,
                         courseName: firstCourse.displayName,
@@ -228,7 +258,7 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
 
                 // If parent not in memberships but parentGroup is populated
                 if (firstCourse.parentGroup) {
-                    console.log('[GET UNIVERSITY AND COURSE] ✅ Found course with parentGroup property:', {
+                    console.log('[GET UNIVERSITY AND COURSE] ✅ Found user assigned course with parentGroup property:', {
                         courseUserName: firstCourse.groupUserName,
                         universityUserName: firstCourse.parentGroup.groupUserName
                     });
@@ -241,7 +271,7 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                 // Fallback: extract university from course username (format: university-course-name)
                 const courseUserName = firstCourse.groupUserName;
                 if (courseUserName.startsWith('invest-west-')) {
-                    console.log('[GET UNIVERSITY AND COURSE] ✅ Found invest-west course (extracting from name):', {
+                    console.log('[GET UNIVERSITY AND COURSE] ✅ Found user assigned invest-west course:', {
                         courseUserName: courseUserName,
                         universityUserName: 'invest-west'
                     });
@@ -255,10 +285,9 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             // If user has NO course memberships but has university membership, use DEFAULT course
             if (universityMemberships.length > 0) {
                 const firstUniversity = universityMemberships[0].group;
-                console.log('[GET UNIVERSITY AND COURSE] ⚠️ User has university membership but NO course memberships - redirecting to DEFAULT course:', {
+                console.log('[GET UNIVERSITY AND COURSE] ⚠️ User has university membership but NO course - using DEFAULT:', {
                     universityUserName: firstUniversity.groupUserName,
-                    courseUserName: 'student-showcase',
-                    reason: 'No course memberships found for this user'
+                    courseUserName: 'student-showcase'
                 });
                 return {
                     universityUserName: firstUniversity.groupUserName,
@@ -267,7 +296,7 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             }
 
             // Ultimate fallback: DEFAULT to invest-west/student-showcase
-            console.log('[GET UNIVERSITY AND COURSE] ⚠️ No university or course memberships found - using ultimate fallback');
+            console.log('[GET UNIVERSITY AND COURSE] ⚠️ No memberships found - using ultimate DEFAULT');
             return {
                 universityUserName: 'invest-west',
                 courseUserName: 'student-showcase'

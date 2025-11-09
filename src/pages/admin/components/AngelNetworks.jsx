@@ -2,11 +2,20 @@ import React, {Component} from 'react';
 import {
     Button,
     Collapse,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
     Divider,
+    FormControl,
     IconButton,
     InputAdornment,
     InputBase,
+    InputLabel,
+    MenuItem,
+    OutlinedInput,
     Paper,
+    Select,
     Table,
     TableBody,
     TableCell,
@@ -14,6 +23,7 @@ import {
     TableHead,
     TablePagination,
     TableRow,
+    TextField,
     Typography
 } from '@material-ui/core';
 import CloseIcon from '@material-ui/icons/Close';
@@ -24,7 +34,7 @@ import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ExpandLessIcon from '@material-ui/icons/ExpandLess';
 import {Col, OverlayTrigger, Row, Tooltip} from 'react-bootstrap';
 import FlexView from 'react-flexview';
-import {HashLoader} from 'react-spinners';
+import {HashLoader, BeatLoader} from 'react-spinners';
 
 import {css} from 'aphrodite';
 import sharedStyles, {StyledTableCell} from '../../../shared-js-css-styles/SharedStyles';
@@ -37,10 +47,18 @@ import {connect} from 'react-redux';
 import * as addAngelNetworkDialogActions from '../../../redux-store/actions/addAngelNetworkDialogActions';
 import * as courseRequestDialogActions from '../../../redux-store/actions/courseRequestDialogActions';
 import * as angelNetworksActions from '../../../redux-store/actions/angelNetworksActions';
+import * as groupAdminsTableActions from '../../../redux-store/actions/groupAdminsTableActions';
 import {NavLink} from "react-router-dom";
 import Routes from "../../../router/routes";
-import {isUniversity} from "../../../models/group_properties";
+import {isUniversity, getUniversities, getCoursesForUniversity} from "../../../models/group_properties";
 import AddCourseRequestDialog from "./AddCourseRequestDialog";
+
+// Status constants for add new group admin dialog
+export const ADD_NEW_GROUP_ADMIN_STATUS_NONE = 0;
+export const ADD_NEW_GROUP_ADMIN_STATUS_MISSING_EMAIL = 1;
+export const ADD_NEW_GROUP_ADMIN_STATUS_CHECKING = 2;
+export const ADD_NEW_GROUP_ADMIN_STATUS_EMAIL_USED = 3;
+export const ADD_NEW_GROUP_ADMIN_STATUS_SUCCESS = 4;
 
 const mapStateToProps = state => {
     return {
@@ -62,7 +80,15 @@ const mapStateToProps = state => {
         matchedAngelNetworks: state.manageAngelNetworks.matchedAngelNetworks,
 
         // Get all groups for course lookup
-        systemGroups: state.manageSystemGroups?.systemGroups || []
+        systemGroups: state.manageSystemGroups?.systemGroups || [],
+
+        // Add new group admin dialog state
+        addNewGroupAdminDialogOpen: state.manageGroupAdminsTable.addNewGroupAdminDialogOpen,
+        newGroupAdminEmail: state.manageGroupAdminsTable.newGroupAdminEmail,
+        selectedUniversity: state.manageGroupAdminsTable.selectedUniversity,
+        selectedCourse: state.manageGroupAdminsTable.selectedCourse,
+        availableCourses: state.manageGroupAdminsTable.availableCourses,
+        addNewGroupAdminStatus: state.manageGroupAdminsTable.addNewGroupAdminStatus
     }
 };
 
@@ -76,7 +102,12 @@ const mapDispatchToProps = dispatch => {
         handleAngelNetworksTableInputChanged: (event) => dispatch(angelNetworksActions.handleAngelNetworksTableInputChanged(event)),
         toggleSearchMode: () => dispatch(angelNetworksActions.toggleSearchMode()),
         startListeningForAngelNetworksChanged: () => dispatch(angelNetworksActions.startListeningForAngelNetworksChanged()),
-        stopListeningForAngelNetworksChanged: () => dispatch(angelNetworksActions.stopListeningForAngelNetworksChanged())
+        stopListeningForAngelNetworksChanged: () => dispatch(angelNetworksActions.stopListeningForAngelNetworksChanged()),
+
+        // Add new group admin actions
+        toggleAddNewGroupAdminDialog: () => dispatch(groupAdminsTableActions.toggleAddNewGroupAdminDialog()),
+        handleInputChanged: (event) => dispatch(groupAdminsTableActions.handleInputChanged(event)),
+        handleAddNewGroupAdmin: () => dispatch(groupAdminsTableActions.handleAddNewGroupAdmin())
     }
 };
 
@@ -537,8 +568,19 @@ class AngelNetworks extends Component {
     render() {
         const {
             admin,
+            groupProperties,
+            systemGroups,
             toggleAddAngelNetworkDialog,
-            toggleCourseRequestDialog
+            toggleCourseRequestDialog,
+            toggleAddNewGroupAdminDialog,
+            addNewGroupAdminDialogOpen,
+            newGroupAdminEmail,
+            selectedUniversity,
+            selectedCourse,
+            availableCourses,
+            addNewGroupAdminStatus,
+            handleInputChanged,
+            handleAddNewGroupAdmin
         } = this.props;
 
         // Check if user is super admin or super group admin
@@ -559,23 +601,39 @@ class AngelNetworks extends Component {
                 <Divider style={{marginBottom: 20}}/>
                 <Row style={{marginBottom: 10}}>
                     <Col xs={12} md={5} lg={12} style={{marginBottom: 40}}>
-                        {admin && isSuperUser ? (
-                            // Super admins see "Add New Group" - creates university directly
-                            <Button color="primary" variant="outlined" className={css(sharedStyles.no_text_transform)} onClick={toggleAddAngelNetworkDialog}>
-                                <AddIcon style={{marginRight: 10, width: 20, height: "auto"}}/>
-                                Add new university
-                            </Button>
-                        ) : admin && !isSuperUser ? (
-                            // Regular group admins see "Add New Course" - creates request
-                            <Button color="primary" variant="outlined" className={css(sharedStyles.no_text_transform)} onClick={toggleCourseRequestDialog}>
-                                <AddIcon style={{marginRight: 10, width: 20, height: "auto"}}/>
-                                Add new course
-                            </Button>
-                        ) : (
-                            <Typography color="error" variant="body2">
-                                No admin user found. Please ensure you're logged in as an admin.
-                            </Typography>
-                        )}
+                        <FlexView hAlignContent="left" vAlignContent="center">
+                            {admin && isSuperUser ? (
+                                <>
+                                    {/* Super admins see "Add New Group" - creates university directly */}
+                                    <Button color="primary" variant="outlined" className={css(sharedStyles.no_text_transform)} onClick={toggleAddAngelNetworkDialog}>
+                                        <AddIcon style={{marginRight: 10, width: 20, height: "auto"}}/>
+                                        Add new university
+                                    </Button>
+                                    {/* Super group admins also see "Add new group admin" button */}
+                                    {admin.superGroupAdmin && (
+                                        <Button
+                                            color="primary"
+                                            variant="outlined"
+                                            className={css(sharedStyles.no_text_transform)}
+                                            onClick={toggleAddNewGroupAdminDialog}
+                                            style={{ marginLeft: 10 }}
+                                        >
+                                            Add new group admin
+                                        </Button>
+                                    )}
+                                </>
+                            ) : admin && !isSuperUser ? (
+                                // Regular group admins see "Add New Course" - creates request
+                                <Button color="primary" variant="outlined" className={css(sharedStyles.no_text_transform)} onClick={toggleCourseRequestDialog}>
+                                    <AddIcon style={{marginRight: 10, width: 20, height: "auto"}}/>
+                                    Add new course
+                                </Button>
+                            ) : (
+                                <Typography color="error" variant="body2">
+                                    No admin user found. Please ensure you're logged in as an admin.
+                                </Typography>
+                            )}
+                        </FlexView>
                     </Col>
                 </Row>
                 {
@@ -584,6 +642,21 @@ class AngelNetworks extends Component {
 
                 {/* Course request dialog for group admins */}
                 <AddCourseRequestDialog onSuccess={this.loadCourseRequests} />
+
+                {/* Add Group Admin Dialog */}
+                <AddGroupAdminDialog
+                    groupProperties={groupProperties}
+                    systemGroups={systemGroups}
+                    addNewGroupAdminDialogOpen={addNewGroupAdminDialogOpen}
+                    newGroupAdminEmail={newGroupAdminEmail}
+                    selectedUniversity={selectedUniversity}
+                    selectedCourse={selectedCourse}
+                    availableCourses={availableCourses}
+                    addNewGroupAdminStatus={addNewGroupAdminStatus}
+                    toggleAddNewGroupAdminDialog={toggleAddNewGroupAdminDialog}
+                    handleInputChanged={handleInputChanged}
+                    handleAddNewGroupAdmin={handleAddNewGroupAdmin}
+                />
             </FlexView>
         );
     }
@@ -1160,6 +1233,181 @@ class AngelNetworks extends Component {
             })
         );
     };
+}
+
+/**
+ * Add Group Admin Dialog Component
+ */
+class AddGroupAdminDialog extends Component {
+    render() {
+        const {
+            groupProperties,
+            systemGroups,
+            addNewGroupAdminDialogOpen,
+            newGroupAdminEmail,
+            selectedUniversity,
+            selectedCourse,
+            availableCourses,
+            addNewGroupAdminStatus,
+            toggleAddNewGroupAdminDialog,
+            handleInputChanged,
+            handleAddNewGroupAdmin
+        } = this.props;
+
+        // Get list of universities
+        const universities = getUniversities(systemGroups || []);
+
+        return (
+            <Dialog open={addNewGroupAdminDialogOpen} fullWidth maxWidth="md" onClose={toggleAddNewGroupAdminDialog}>
+                <DialogTitle disableTypography>
+                    <FlexView vAlignContent="center">
+                        <FlexView grow={4}>
+                            <Typography variant='h6' color='primary' align="left">
+                                Add new group admin
+                            </Typography>
+                        </FlexView>
+                        <FlexView grow={1} hAlignContent="right">
+                            <IconButton onClick={toggleAddNewGroupAdminDialog}>
+                                <CloseIcon/>
+                            </IconButton>
+                        </FlexView>
+                    </FlexView>
+                </DialogTitle>
+                <DialogContent>
+                    <TextField
+                        variant="outlined"
+                        label="Email"
+                        name="newGroupAdminEmail"
+                        placeholder="Write email here"
+                        value={newGroupAdminEmail}
+                        onChange={handleInputChanged}
+                        fullWidth
+                        required
+                        style={{ marginTop: 10, marginBottom: 16}}
+                    />
+
+                    <FormControl fullWidth variant="outlined" style={{ marginBottom: 16 }}>
+                        <InputLabel>University</InputLabel>
+                        <Select
+                            name="selectedUniversity"
+                            value={selectedUniversity}
+                            onChange={handleInputChanged}
+                            input={<OutlinedInput label="University" />}
+                        >
+                            <MenuItem value="">
+                                Select a university
+                            </MenuItem>
+                            {universities.map(university => (
+                                <MenuItem key={university.anid} value={university.anid}>
+                                    {university.displayName}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+
+                    <FormControl fullWidth variant="outlined" style={{ marginBottom: 16 }}>
+                        <InputLabel>Course (Optional)</InputLabel>
+                        <Select
+                            name="selectedCourse"
+                            value={selectedCourse}
+                            onChange={handleInputChanged}
+                            input={<OutlinedInput label="Course (Optional)" />}
+                            disabled={!selectedUniversity}
+                        >
+                            <MenuItem value="">
+                                {!selectedUniversity
+                                    ? "Select a university first"
+                                    : availableCourses.length === 0
+                                        ? "No courses available (will use default)"
+                                        : "No specific course (default)"
+                                }
+                            </MenuItem>
+                            {availableCourses.map(course => (
+                                <MenuItem key={course.anid} value={course.anid}>
+                                    {course.displayName}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
+
+                    <Typography variant="caption" color="textSecondary" style={{ display: 'block', marginTop: 8 }}>
+                        Note: If no course is selected, the invitation will be sent for the default course.
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <FlexView width="100%" marginRight={25} marginBottom={15} marginTop={20} hAlignContent="right" vAlignContent="center">
+                        {
+                            this.renderStatusMessage()
+                        }
+                        <Button
+                            variant="outlined"
+                            color="primary"
+                            onClick={handleAddNewGroupAdmin}
+                            size="medium"
+                            className={css(sharedStyles.no_text_transform)}
+                            style={{marginLeft: 20}}
+                        >
+                            Add
+                            <AddIcon fontSize="small" style={{ marginLeft: 8}}/>
+                        </Button>
+                    </FlexView>
+                </DialogActions>
+            </Dialog>
+        );
+    }
+
+    /**
+     * Render status message
+     *
+     * @returns {null|*}
+     */
+    renderStatusMessage = () => {
+        const {
+            addNewGroupAdminStatus,
+            groupProperties
+        } = this.props;
+
+        let msg = {
+            text: '',
+            color: ''
+        };
+
+        switch (addNewGroupAdminStatus) {
+            case ADD_NEW_GROUP_ADMIN_STATUS_NONE:
+                return null;
+            case ADD_NEW_GROUP_ADMIN_STATUS_MISSING_EMAIL:
+                msg.text = "Please fill in the email.";
+                msg.color = "error";
+                break;
+            case ADD_NEW_GROUP_ADMIN_STATUS_CHECKING:
+                return (
+                    <BeatLoader
+                        size={10}
+                        color={
+                            !groupProperties
+                                ?
+                                colors.primaryColor
+                                :
+                                groupProperties.settings.primaryColor
+                        }
+                    />
+                );
+            case ADD_NEW_GROUP_ADMIN_STATUS_EMAIL_USED:
+                msg.text = "This email has been used by another account.";
+                msg.color = "error";
+                break;
+            case ADD_NEW_GROUP_ADMIN_STATUS_SUCCESS:
+                return null;
+            default:
+                return null;
+        }
+
+        return (
+            <Typography color={msg.color} variant="body1" align="left">
+                {msg.text}
+            </Typography>
+        );
+    }
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(AngelNetworks);

@@ -614,17 +614,20 @@ export default class Routes {
         /**
          * Helper to extract university and course usernames from user's group membership
          * Returns { universityUserName: string, courseUserName: string }
+         *
+         * NOTE: Admins use groupsOfMembership for courses, but Issuers/Investors have course in user.course field
          */
         const getUniversityAndCourseForUser = (): { universityUserName: string, courseUserName: string } => {
             // First, try to match URL parameters if provided
             if (routeParams.groupUserName && routeParams.courseUserName) {
-                // Verify user has membership to this university or course
+                // Verify user has membership to BOTH university AND course
                 const hasUniversityMembership = AuthenticationState.groupsOfMembership
                     .some(m => m.group.groupUserName === routeParams.groupUserName && isUniversity(m.group));
                 const hasCourseMembership = AuthenticationState.groupsOfMembership
                     .some(m => m.group.groupUserName === routeParams.courseUserName && isCourse(m.group));
 
-                if (hasUniversityMembership || hasCourseMembership) {
+                // IMPORTANT: User must have access to BOTH to use route params
+                if (hasUniversityMembership && hasCourseMembership) {
                     return {
                         universityUserName: routeParams.groupUserName,
                         courseUserName: routeParams.courseUserName
@@ -632,64 +635,74 @@ export default class Routes {
                 }
             }
 
-            // Look through user's memberships to find course or university
-            for (const membership of AuthenticationState.groupsOfMembership) {
-                const group = membership.group;
+            // For non-admin users (issuers/investors), check user.course field first
+            // IMPORTANT: Exclude '-1' which is a placeholder/uninitialized value during signup
+            const userCourseField = !currentAdmin ? (AuthenticationState.currentUser as User).course : undefined;
 
-                // If user is member of a course, extract parent university info
-                if (isCourse(group)) {
-                    // Try to find parent university in memberships
-                    const parentUniversity = AuthenticationState.groupsOfMembership
-                        .find(m => m.group.anid === group.parentGroupId);
+            if (!currentAdmin && userCourseField && userCourseField !== '-1') {
+                const userCourse = userCourseField;
 
-                    if (parentUniversity) {
-                        return {
-                            universityUserName: parentUniversity.group.groupUserName,
-                            courseUserName: group.groupUserName
-                        };
-                    }
+                // Check if userCourse is a course anid (number) or course username (string)
+                // If it's an anid, we need to find the corresponding course in groupsOfMembership
+                const courseMembership = AuthenticationState.groupsOfMembership.find(m =>
+                    isCourse(m.group) && (m.group.anid === userCourse || m.group.groupUserName === userCourse)
+                );
 
-                    // If parent not in memberships but parentGroup is populated
-                    if (group.parentGroup) {
-                        return {
-                            universityUserName: group.parentGroup.groupUserName,
-                            courseUserName: group.groupUserName
-                        };
-                    }
+                if (courseMembership) {
+                    const parentUniversity = AuthenticationState.groupsOfMembership.find(m =>
+                        m.group.anid === courseMembership.group.parentGroupId
+                    );
 
-                    // Fallback: extract university from course username (format: university-course-name)
-                    // This handles legacy data where course username is like "invest-west-digital-media-bsc"
-                    const courseUserName = group.groupUserName;
-                    // Try to extract parent by looking for invest-west prefix
-                    if (courseUserName.startsWith('invest-west-')) {
-                        return {
-                            universityUserName: 'invest-west',
-                            courseUserName: courseUserName
-                        };
-                    }
+                    return {
+                        universityUserName: parentUniversity ? parentUniversity.group.groupUserName : 'invest-west',
+                        courseUserName: courseMembership.group.groupUserName
+                    };
                 }
 
-                // If user is member of a university, use that with fallback course
-                if (isUniversity(group)) {
-                    const courseUserName = routeParams.courseUserName || 'student-showcase';
+                // If no match found in groupsOfMembership, assume userCourse is already a course username
+                return {
+                    universityUserName: 'invest-west',
+                    courseUserName: userCourse
+                };
+            }
+
+            // If user doesn't have access to requested URL or no URL was requested,
+            // find the user's ACTUAL assigned course (first course in their memberships)
+            const courseMemberships = AuthenticationState.groupsOfMembership.filter(m => isCourse(m.group));
+
+            if (courseMemberships.length > 0) {
+                const firstCourse = courseMemberships[0].group;
+
+                // Try to find parent university in memberships
+                const parentUniversity = AuthenticationState.groupsOfMembership
+                    .find(m => m.group.anid === firstCourse.parentGroupId);
+
+                if (parentUniversity) {
                     return {
-                        universityUserName: group.groupUserName,
+                        universityUserName: parentUniversity.group.groupUserName,
+                        courseUserName: firstCourse.groupUserName
+                    };
+                }
+
+                // If parent not in memberships but parentGroup is populated
+                if (firstCourse.parentGroup) {
+                    return {
+                        universityUserName: firstCourse.parentGroup.groupUserName,
+                        courseUserName: firstCourse.groupUserName
+                    };
+                }
+
+                // Fallback: extract university from course username
+                const courseUserName = firstCourse.groupUserName;
+                if (courseUserName.startsWith('invest-west-')) {
+                    return {
+                        universityUserName: 'invest-west',
                         courseUserName: courseUserName
                     };
                 }
             }
 
-            // Fallback: Look for invest-west specifically
-            const investWestGroup = AuthenticationState.groupsOfMembership
-                .find(m => m.group.groupUserName === 'invest-west');
-            if (investWestGroup) {
-                return {
-                    universityUserName: 'invest-west',
-                    courseUserName: routeParams.courseUserName || 'student-showcase'
-                };
-            }
-
-            // Ultimate fallback
+            // If user has NO course memberships, use DEFAULT
             return {
                 universityUserName: 'invest-west',
                 courseUserName: 'student-showcase'

@@ -123,4 +123,43 @@ export default class GroupRepository {
                 ApiRoutes.listGroupMembers.replace(":group", groupID)
             );
     }
+
+    /**
+     * Update university/group logo (system admin only)
+     *
+     * @param groupUserName
+     * @param imageUrl
+     */
+    public async updateGroupLogo(groupUserName: string, imageUrl: string) {
+        return await new Api()
+            .request(
+                "put",
+                ApiRoutes.updateGroupLogo.replace(":groupUserName", groupUserName),
+                {
+                    requestBody: { imageUrl },
+                    queryParameters: null
+                }
+            );
+    }
+
+    /**
+     * Update course image (system admin only)
+     *
+     * @param groupUserName - University groupUserName
+     * @param courseUserName - Course groupUserName
+     * @param imageUrl
+     */
+    public async updateCourseImage(groupUserName: string, courseUserName: string, imageUrl: string) {
+        return await new Api()
+            .request(
+                "put",
+                ApiRoutes.updateCourseImage
+                    .replace(":groupUserName", groupUserName)
+                    .replace(":courseUserName", courseUserName),
+                {
+                    requestBody: { imageUrl },
+                    queryParameters: null
+                }
+            );
+    }
 }

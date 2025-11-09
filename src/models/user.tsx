@@ -33,6 +33,8 @@ export interface BusinessProfile {
     companyName: string;
     companyWebsite: string;
     sector: string;
+    university: string;
+    course?: string; // Optional specific course within the university
     logo: ProfileImage[];
     video?: ProfileVideo[];
 }

@@ -1623,6 +1623,21 @@ class CreatePitchPageMain extends Component {
                                                 }
                                                 // a draft offer is published
                                                 else {
+                                                    // Clear any reject feedbacks when the project is resubmitted
+                                                    // This marks the admin feedback as "dealt with"
+                                                    this.firebaseDB
+                                                        .ref(DB_CONST.PROJECT_REJECT_FEEDBACKS_CHILD)
+                                                        .orderByChild("projectID")
+                                                        .equalTo(projectEdited.id)
+                                                        .once('value', snapshots => {
+                                                            snapshots.forEach(snapshot => {
+                                                                snapshot.ref.remove();
+                                                            });
+                                                        })
+                                                        .catch(error => {
+                                                            console.error("Error clearing reject feedbacks:", error);
+                                                        });
+
                                                     // don't need to check for prior TCs acceptance because this is create new mode
                                                     const acceptedTCsObj = {
                                                         issuerID: AuthenticationState.currentUser.id,
@@ -1636,19 +1651,25 @@ class CreatePitchPageMain extends Component {
                                                         .ref(DB_CONST.ACCEPTED_CREATE_PITCH_TERM_AND_CONDITIONS_CHILD)
                                                         .push(acceptedTCsObj)
                                                         .then(async () => {
-                                                            await new Api().request(
-                                                                "post",
-                                                                ApiRoutes.sendEmailRoute,
-                                                                {
-                                                                    queryParameters: null,
-                                                                    requestBody: {
-                                                                        emailType: 3,
-                                                                        emailInfo: {
-                                                                            projectID: projectEdited.id
+                                                            try {
+                                                                await new Api().request(
+                                                                    "post",
+                                                                    ApiRoutes.sendEmailRoute,
+                                                                    {
+                                                                        queryParameters: null,
+                                                                        requestBody: {
+                                                                            emailType: 3,
+                                                                            emailInfo: {
+                                                                                projectID: projectEdited.id
+                                                                            }
                                                                         }
                                                                     }
-                                                                }
-                                                            );
+                                                                );
+                                                            } catch (error) {
+                                                                // Log error but don't block the publish process
+                                                                // The project is already published, email is just a notification
+                                                                console.error("Failed to send pitch published email:", error);
+                                                            }
 
                                                             // track activity for creating a new project from a draft one
                                                             realtimeDBUtils

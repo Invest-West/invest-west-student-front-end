@@ -30,6 +30,8 @@ export class ApiRoutes {
     static groupsBaseRoute = "/groups";
     static listGroups = ApiRoutes.groupsBaseRoute + "/list";
     static retrieveGroup = ApiRoutes.groupsBaseRoute + "/:groupUserName";
+    static updateGroupLogo = ApiRoutes.groupsBaseRoute + "/:groupUserName/update-logo";
+    static updateCourseImage = ApiRoutes.groupsBaseRoute + "/:groupUserName/courses/:courseUserName/update-image";
     static addMembersToGroup = ApiRoutes.groupsBaseRoute + "/:group/add-members";
     static listGroupMembers = ApiRoutes.groupsBaseRoute + "/:group/list-members";
 
@@ -185,7 +187,19 @@ export default class Api {
             let idToken: string | null = null;
 
             if (currentUser) {
-                idToken = await currentUser.getIdToken();
+                try {
+                    // Get ID token - Firebase will auto-refresh if expired
+                    idToken = await currentUser.getIdToken();
+                } catch (tokenError) {
+                    console.error('Failed to get ID token:', tokenError);
+                    // If token retrieval fails, try to force refresh once
+                    try {
+                        idToken = await currentUser.getIdToken(true);
+                    } catch (refreshError) {
+                        console.error('Failed to refresh ID token:', refreshError);
+                        throw new Error('Authentication token could not be retrieved. Please try logging in again.');
+                    }
+                }
             }
 
             let bodyData: any;

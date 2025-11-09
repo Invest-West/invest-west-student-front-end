@@ -20,8 +20,10 @@ import PeopleIcon from "@material-ui/icons/People";
 import SupervisorAccountIcon from "@material-ui/icons/SupervisorAccount";
 import RefreshIcon from "@material-ui/icons/Refresh";
 import SettingsIcon from "@material-ui/icons/Settings";
+import ImageIcon from "@material-ui/icons/Image";
 import CourseMembers from "./CourseMembers";
 import Routes from "../../../../router/routes";
+import EditCourseImageDialog from "../EditCourseImageDialog";
 
 interface ManageCoursesProps {
     groupProperties: GroupProperties;
@@ -53,6 +55,8 @@ const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
 interface ManageCoursesLocalState {
     courseMembersDialogOpen: boolean;
     selectedCourse: string | null;
+    editCourseImageDialogOpen: boolean;
+    selectedCourseForImageEdit: string | null;
 }
 
 class ManageCourses extends Component<ManageCoursesProps, ManageCoursesLocalState> {
@@ -60,7 +64,9 @@ class ManageCourses extends Component<ManageCoursesProps, ManageCoursesLocalStat
         super(props);
         this.state = {
             courseMembersDialogOpen: false,
-            selectedCourse: null
+            selectedCourse: null,
+            editCourseImageDialogOpen: false,
+            selectedCourseForImageEdit: null
         };
     }
 
@@ -103,6 +109,25 @@ class ManageCourses extends Component<ManageCoursesProps, ManageCoursesLocalStat
         // Reload statistics to reflect any changes
         this.props.loadCourseStatistics();
     }
+
+    handleOpenEditCourseImage = (courseName: string) => {
+        this.setState({
+            editCourseImageDialogOpen: true,
+            selectedCourseForImageEdit: courseName
+        });
+    };
+
+    handleCloseEditCourseImage = () => {
+        this.setState({
+            editCourseImageDialogOpen: false,
+            selectedCourseForImageEdit: null
+        });
+    };
+
+    handleCourseImageUpdateSuccess = () => {
+        // Reload the page to show the new image
+        window.location.reload();
+    };
 
     getCourseUserName = (courseName: string) => {
         // Return the full course groupUserName: university-course-name
@@ -218,7 +243,7 @@ class ManageCourses extends Component<ManageCoursesProps, ManageCoursesLocalStat
                                         size="small"
                                         startIcon={<SettingsIcon />}
                                         onClick={() => this.handleOpenCourseMembers(course)}
-                                        style={{ 
+                                        style={{
                                             color: '#1976d2',
                                             borderColor: '#1976d2',
                                             fontWeight: 500,
@@ -229,9 +254,26 @@ class ManageCourses extends Component<ManageCoursesProps, ManageCoursesLocalStat
                                         Manage Members
                                     </Button>
 
+                                    {/* Edit Image Button */}
+                                    <Button
+                                        variant="outlined"
+                                        size="small"
+                                        startIcon={<ImageIcon />}
+                                        onClick={() => this.handleOpenEditCourseImage(course)}
+                                        style={{
+                                            color: '#388e3c',
+                                            borderColor: '#388e3c',
+                                            fontWeight: 500,
+                                            textTransform: 'none',
+                                            marginRight: 8
+                                        }}
+                                    >
+                                        Edit Image
+                                    </Button>
+
                                     {/* Delete Button */}
                                     <Box>
-                                        <IconButton 
+                                        <IconButton
                                             onClick={() => deleteCourse(course)}
                                             size="small"
                                             style={{ color: '#d32f2f' }}
@@ -266,6 +308,17 @@ class ManageCourses extends Component<ManageCoursesProps, ManageCoursesLocalStat
                     courseName={this.state.selectedCourse}
                     groupUserName={groupProperties.groupUserName}
                     courseUserName={this.getCourseUserName(this.state.selectedCourse)}
+                />
+            )}
+
+            {/* Edit Course Image Dialog */}
+            {this.state.selectedCourseForImageEdit && (
+                <EditCourseImageDialog
+                    open={this.state.editCourseImageDialogOpen}
+                    groupUserName={groupProperties.groupUserName}
+                    courseUserName={this.getCourseUserName(this.state.selectedCourseForImageEdit)}
+                    onClose={this.handleCloseEditCourseImage}
+                    onSuccess={this.handleCourseImageUpdateSuccess}
                 />
             )}
         </Box>;

@@ -98,24 +98,33 @@ export const validateGroupUrl: ActionCreator<any> = (path: string, groupUserName
 
             // Handle default "invest-west" group for course-based URLs
             if (groupUserName === 'invest-west') {
-                // Create the invest-west group object
-                const investWestGroup: GroupProperties = {
-                    anid: '-M2I40dBdzdI89yDCaAn',
-                    dateAdded: Date.now(),
-                    description: 'Default student showcase group',
-                    displayName: 'Student Showcase',
-                    displayNameLower: 'student showcase',
-                    groupUserName: 'invest-west',
-                    isInvestWest: true,
-                    status: 1,
-                    plainLogo: [],
-                    settings: {
-                        primaryColor: '#4F6D7A',
-                        secondaryColor: '#ffffff',
-                        projectVisibility: 1,
-                        makeInvestorsContactDetailsVisibleToIssuers: false
-                    }
-                };
+                // Fetch the actual invest-west group from the backend to get the latest data including logo
+                let investWestGroup: GroupProperties;
+                try {
+                    const response = await new GroupRepository().getGroup('invest-west');
+                    investWestGroup = response.data;
+                    console.log('[VALIDATE GROUP] Fetched invest-west group from backend:', investWestGroup);
+                } catch (error) {
+                    console.error('[VALIDATE GROUP] Failed to fetch invest-west group, using fallback:', error);
+                    // Fallback to hardcoded object if fetch fails
+                    investWestGroup = {
+                        anid: '-M2I40dBdzdI89yDCaAn',
+                        dateAdded: Date.now(),
+                        description: 'Default student showcase group',
+                        displayName: 'Student Showcase',
+                        displayNameLower: 'student showcase',
+                        groupUserName: 'invest-west',
+                        isInvestWest: true,
+                        status: 1,
+                        plainLogo: [],
+                        settings: {
+                            primaryColor: '#4F6D7A',
+                            secondaryColor: '#ffffff',
+                            projectVisibility: 1,
+                            makeInvestorsContactDetailsVisibleToIssuers: false
+                        }
+                    };
+                }
 
                 // If courseUserName is provided, validate it exists in Firebase as a course entity
                 if (courseUserName) {

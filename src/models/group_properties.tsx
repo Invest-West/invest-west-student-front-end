@@ -79,10 +79,15 @@ export const getGroupLogo = (group: GroupProperties | null) => {
     if (!group) {
         return null;
     }
-    if (group.plainLogo.length === 0) {
+    if (!group.plainLogo || group.plainLogo.length === 0) {
         return null;
     }
-    return group.plainLogo[group.plainLogo.findIndex(logo => logo.removed === undefined)].url;
+    // Find logo that is not removed (either removed is undefined or false)
+    const activeLogoIndex = group.plainLogo.findIndex(logo => logo.removed === undefined || logo.removed === false);
+    if (activeLogoIndex === -1) {
+        return null;
+    }
+    return group.plainLogo[activeLogoIndex].url;
 }
 
 /**

@@ -2002,6 +2002,66 @@ export const loadAParticularProject = async (projectID) => {
  */
 
 /**
+ * Load all reject feedbacks for a specific project
+ *
+ * @param projectID - The ID of the project to load reject feedbacks for
+ * @returns {Promise<Array>} - Array of reject feedback objects with admin information
+ */
+export const loadProjectRejectFeedbacks = async (projectID) => {
+    const db = firebase.database();
+    let rejectFeedbacks = [];
+
+    return new Promise((resolve, reject) => {
+        db
+            .ref(DB_CONST.PROJECT_REJECT_FEEDBACKS_CHILD)
+            .orderByChild("projectID")
+            .equalTo(projectID)
+            .once('value', snapshots => {
+                if (!snapshots
+                    || !snapshots.exists()
+                    || (snapshots && (!snapshots.val() || snapshots.numChildren() === 0))
+                ) {
+                    return resolve(rejectFeedbacks);
+                }
+
+                snapshots.forEach(snapshot => {
+                    let feedback = snapshot.val();
+                    feedback.id = snapshot.key;
+                    rejectFeedbacks.push(feedback);
+                });
+
+                // Load admin information for each feedback
+                Promise.all(
+                    rejectFeedbacks.map(feedback => {
+                        return new Promise((resolve, reject) => {
+                            getUserBasedOnID(feedback.sentBy)
+                                .then(admin => {
+                                    feedback.admin = admin;
+                                    return resolve(feedback);
+                                })
+                                .catch(error => {
+                                    // If we can't load the admin, still resolve with the feedback
+                                    console.warn('Could not load admin for feedback:', error);
+                                    feedback.admin = null;
+                                    return resolve(feedback);
+                                });
+                        });
+                    })
+                ).then(() => {
+                    // Sort by date descending (most recent first)
+                    rejectFeedbacks.sort((a, b) => b.date - a.date);
+                    return resolve(rejectFeedbacks);
+                }).catch(error => {
+                    return reject(error);
+                });
+            });
+    });
+};
+/**
+ * ---------------------------------------------------------------------------------------------------------------------
+ */
+
+/**
  * Close a live project temporarily or open a temporarily closed project again
  *
  * @param admin

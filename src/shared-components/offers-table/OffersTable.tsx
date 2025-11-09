@@ -4,6 +4,7 @@ import {AppState} from "../../redux-store/reducers";
 import {
     Box,
     Button,
+    Chip,
     colors,
     IconButton,
     InputAdornment,
@@ -22,7 +23,7 @@ import {
     TableRow,
     Typography
 } from "@material-ui/core";
-import {Close, CreateOutlined, ImportExportOutlined, Refresh, Search} from "@material-ui/icons";
+import {Close, CreateOutlined, ImportExportOutlined, Refresh, Search, Warning} from "@material-ui/icons";
 import {MediaQueryState} from "../../redux-store/reducers/mediaQueryReducer";
 import {ManageSystemAttributesState} from "../../redux-store/reducers/manageSystemAttributesReducer";
 import {getGroupRouteTheme, ManageGroupUrlState} from "../../redux-store/reducers/manageGroupUrlReducer";
@@ -50,6 +51,7 @@ import {
     changePage,
     changeRowsPerPage,
     exportCsv,
+    fetchDraftProjectsWithFeedbackCount,
     fetchOffers,
     filterChanged,
     filterOffersByName,
@@ -99,6 +101,7 @@ interface OffersTableProps {
     changePage: (event: any, page: number) => any;
     changeRowsPerPage: (event: any) => any;
     exportCsv: () => any;
+    fetchDraftProjectsWithFeedbackCount: () => any;
 }
 
 const mapStateToProps = (state: AppState) => {
@@ -120,7 +123,8 @@ const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
         cancelFilteringOffersByName: () => dispatch(cancelFilteringOffersByName()),
         changePage: (event: any, page: number) => dispatch(changePage(event, page)),
         changeRowsPerPage: (event: any) => dispatch(changeRowsPerPage(event)),
-        exportCsv: () => dispatch(exportCsv())
+        exportCsv: () => dispatch(exportCsv()),
+        fetchDraftProjectsWithFeedbackCount: () => dispatch(fetchDraftProjectsWithFeedbackCount())
     }
 }
 
@@ -130,9 +134,21 @@ class OffersTable extends Component<OffersTableProps, any> {
         const {
             directTableUser,
             AuthenticationState,
-            setUser
+            setUser,
+            fetchDraftProjectsWithFeedbackCount
         } = this.props;
         setUser(directTableUser ?? AuthenticationState.currentUser ?? undefined);
+        // Fetch count of draft projects with feedback for issuers
+        fetchDraftProjectsWithFeedbackCount();
+    }
+
+    componentDidUpdate(prevProps: OffersTableProps) {
+        const {fetchDraftProjectsWithFeedbackCount, OffersTableLocalState} = this.props;
+
+        // Refetch feedback count when offers are fetched
+        if (prevProps.OffersTableLocalState.offersFetched !== OffersTableLocalState.offersFetched && OffersTableLocalState.offersFetched) {
+            fetchDraftProjectsWithFeedbackCount();
+        }
     }
 
     render() {
@@ -237,6 +253,60 @@ class OffersTable extends Component<OffersTableProps, any> {
                                     />
                                 </TableCell>
                             </TableRow>
+                    }
+
+                    {/** Draft projects with feedback notification (only for non-admins) */}
+                    {
+                        !currentAdmin && OffersTableLocalState.draftProjectsWithFeedbackCount > 0
+                            ? <TableRow>
+                                <TableCell colSpan={5} >
+                                    <Box
+                                        display="flex"
+                                        alignItems="center"
+                                        padding="16px"
+                                        bgcolor="#fff8e1"
+                                        border="2px solid #ff9800"
+                                        borderRadius="8px"
+                                    >
+                                        <Warning
+                                            style={{
+                                                color: '#ff9800',
+                                                marginRight: '12px',
+                                                fontSize: '28px'
+                                            }}
+                                        />
+                                        <Box flex={1} >
+                                            <Typography
+                                                variant="h6"
+                                                style={{
+                                                    color: '#f57c00',
+                                                    fontWeight: 600
+                                                }}
+                                            >
+                                                {OffersTableLocalState.draftProjectsWithFeedbackCount === 1
+                                                    ? 'You have 1 project with admin feedback requiring action'
+                                                    : `You have ${OffersTableLocalState.draftProjectsWithFeedbackCount} projects with admin feedback requiring action`
+                                                }
+                                            </Typography>
+                                            <Typography variant="body2" style={{marginTop: '8px', color: '#e65100'}} >
+                                                Click "Show All Projects" below to view {OffersTableLocalState.draftProjectsWithFeedbackCount === 1 ? 'this project' : 'these projects'} and review the admin's feedback.
+                                            </Typography>
+                                        </Box>
+                                        <Button
+                                            variant="contained"
+                                            style={{
+                                                backgroundColor: '#ff9800',
+                                                color: 'white'
+                                            }}
+                                            className={css(sharedStyles.no_text_transform)}
+                                            onClick={() => filterChanged({target: {name: 'phaseFilter', value: 'all'}})}
+                                        >
+                                            Show All Projects
+                                        </Button>
+                                    </Box>
+                                </TableCell>
+                            </TableRow>
+                            : null
                     }
 
                     {/** Search offer by name + refresh button */}
@@ -445,10 +515,31 @@ class OffersTable extends Component<OffersTableProps, any> {
                                         </TableCell>
                                     </TableRow>
                                     // Render offers
-                                    : OffersTableLocalState.offerInstancesFilteredByName
-                                        .slice(OffersTableLocalState.currentPage * OffersTableLocalState.rowsPerPage, OffersTableLocalState.currentPage * OffersTableLocalState.rowsPerPage + OffersTableLocalState.rowsPerPage)
-                                        .map(
-                                            offerInstance => <TableRow
+                                    : (() => {
+                                        console.log('📊 OffersTable Rendering - Total filtered projects:', OffersTableLocalState.offerInstancesFilteredByName.length);
+                                        const projectsWithFeedback = OffersTableLocalState.offerInstancesFilteredByName.filter(p => p.rejectFeedbacks && p.rejectFeedbacks.length > 0);
+                                        console.log('📊 Projects with reject feedbacks:', projectsWithFeedback.length);
+                                        if (projectsWithFeedback.length > 0) {
+                                            console.log('📊 Projects with feedback details:', projectsWithFeedback.map(p => ({
+                                                name: p.projectDetail.projectName,
+                                                feedbackCount: p.rejectFeedbacks?.length,
+                                                status: p.projectDetail.status
+                                            })));
+                                        }
+
+                                        return OffersTableLocalState.offerInstancesFilteredByName
+                                            .slice(OffersTableLocalState.currentPage * OffersTableLocalState.rowsPerPage, OffersTableLocalState.currentPage * OffersTableLocalState.rowsPerPage + OffersTableLocalState.rowsPerPage)
+                                            .map(
+                                                offerInstance => {
+                                                    // Debug: Log reject feedbacks for each rendered project
+                                                    console.log('🔍 Rendering project:', {
+                                                        projectName: offerInstance.projectDetail.projectName,
+                                                        hasRejectFeedbacks: !!offerInstance.rejectFeedbacks,
+                                                        feedbackCount: offerInstance.rejectFeedbacks?.length || 0,
+                                                        feedbacks: offerInstance.rejectFeedbacks
+                                                    });
+
+                                                return <TableRow
                                                 key={offerInstance.projectDetail.id}
                                                 hover
                                             >
@@ -564,24 +655,47 @@ class OffersTable extends Component<OffersTableProps, any> {
 
                                                 {/** Status */}
                                                 <TableCell colSpan={1} >
-                                                    <Typography variant="body2" align="left" >
+                                                    <Box display="flex" flexDirection="column" >
+                                                        <Typography variant="body2" align="left" >
+                                                            {
+                                                                isDraftProject(offerInstance.projectDetail)
+                                                                    ? "Draft"
+                                                                    : isProjectWaitingToGoLive(offerInstance.projectDetail)
+                                                                    ? "Submitted. Awaiting course admin review"
+                                                                    : isProjectInLivePitchPhase(offerInstance.projectDetail)
+                                                                        ? isProjectTemporarilyClosed(offerInstance.projectDetail)
+                                                                            ? "Temporarily closed"
+                                                                            : "Live"
+                                                                        : isProjectPitchExpiredWaitingForAdminToCheck(offerInstance.projectDetail)
+                                                                            ? "Expired. Awaiting course admin review"
+                                                                            : "Closed"
+                                                            }
+                                                        </Typography>
                                                         {
-                                                            isDraftProject(offerInstance.projectDetail)
-                                                                ? "Draft"
-                                                                : isProjectWaitingToGoLive(offerInstance.projectDetail)
-                                                                ? "Submitted. Awaiting course admin review"
-                                                                : isProjectInLivePitchPhase(offerInstance.projectDetail)
-                                                                    ? isProjectTemporarilyClosed(offerInstance.projectDetail)
-                                                                        ? "Temporarily closed"
-                                                                        : "Live"
-                                                                    : isProjectPitchExpiredWaitingForAdminToCheck(offerInstance.projectDetail)
-                                                                        ? "Expired. Awaiting course admin review"
-                                                                        : "Closed"
+                                                            // Show admin feedback badge if there are reject feedbacks (but not for admins)
+                                                            !currentAdmin && offerInstance.rejectFeedbacks && offerInstance.rejectFeedbacks.length > 0
+                                                                ? <Box marginTop="12px" >
+                                                                    <Chip
+                                                                        icon={<Warning />}
+                                                                        label="Admin feedback - action required"
+                                                                        size="small"
+                                                                        style={{
+                                                                            backgroundColor: '#fff8e1',
+                                                                            color: '#f57c00',
+                                                                            borderColor: '#ff9800',
+                                                                            fontWeight: 600
+                                                                        }}
+                                                                        variant="outlined"
+                                                                    />
+                                                                </Box>
+                                                                : null
                                                         }
-                                                    </Typography>
+                                                    </Box>
                                                 </TableCell>
                                             </TableRow>
-                                        )
+                                            }
+                                        );
+                                    })()
                     }
                 </TableBody>
 

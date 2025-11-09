@@ -1,6 +1,6 @@
 import * as groupAdminsTableActions from '../actions/groupAdminsTableActions';
 import * as authActions from '../actions/authActions';
-import {ADD_NEW_GROUP_ADMIN_STATUS_NONE} from '../../pages/admin/components/GroupAdminsTable';
+import {ADD_NEW_GROUP_ADMIN_STATUS_NONE} from '../../pages/admin/components/AngelNetworks';
 
 const initState = {
     tableGroup: null,
@@ -19,6 +19,9 @@ const initState = {
 
     addNewGroupAdminDialogOpen: false,
     newGroupAdminEmail: '',
+    selectedUniversity: '',
+    selectedCourse: '',
+    availableCourses: [],
     addNewGroupAdminStatus: ADD_NEW_GROUP_ADMIN_STATUS_NONE
 };
 
@@ -74,6 +77,9 @@ const groupAdminsTableReducer = (state = initState, action) => {
                 ...state,
                 addNewGroupAdminDialogOpen: !state.addNewGroupAdminDialogOpen,
                 newGroupAdminEmail: '',
+                selectedUniversity: '',
+                selectedCourse: '',
+                availableCourses: [],
                 addNewGroupAdminStatus: ADD_NEW_GROUP_ADMIN_STATUS_NONE
             };
         case groupAdminsTableActions.GROUP_ADMINS_TABLE_CHANGED:
@@ -85,6 +91,13 @@ const groupAdminsTableReducer = (state = initState, action) => {
             return {
                 ...state,
                 addNewGroupAdminStatus: action.status
+            };
+        case groupAdminsTableActions.GROUP_ADMINS_TABLE_UNIVERSITY_CHANGED:
+            return {
+                ...state,
+                selectedUniversity: action.universityId,
+                selectedCourse: '',
+                availableCourses: action.availableCourses || []
             };
         default:
             return state;

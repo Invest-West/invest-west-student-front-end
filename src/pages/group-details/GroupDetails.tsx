@@ -17,6 +17,7 @@ import {Col, Image, Row} from "react-bootstrap";
 import {BeatLoader} from "react-spinners";
 import {getGroupRouteTheme, ManageGroupUrlState} from "../../redux-store/reducers/manageGroupUrlReducer";
 import {loadData, removeAccessRequest, sendAccessRequest} from "./GroupDetailsActions";
+import {validateGroupUrl, resetGroupUrlState} from "../../redux-store/actions/manageGroupUrlActions";
 import {getGroupLogo} from "../../models/group_properties";
 import {AuthenticationState} from "../../redux-store/reducers/authenticationReducer";
 import Admin, {isAdmin} from "../../models/admin";
@@ -33,6 +34,7 @@ import firebase from "../../firebase/firebaseApp";
 import * as DB_CONST from "../../firebase/databaseConsts";
 import {openFeedbackSnackbar} from "../../shared-components/feedback-snackbar/FeedbackSnackbarActions";
 import {FeedbackSnackbarTypes} from "../../shared-components/feedback-snackbar/FeedbackSnackbarReducer";
+import EditGroupImageDialog from "../admin/components/EditGroupImageDialog";
 
 interface GroupDetailsProps {
     MediaQueryState: MediaQueryState;
@@ -43,12 +45,15 @@ interface GroupDetailsProps {
     sendAccessRequest: () => any;
     removeAccessRequest: () => any;
     openFeedbackSnackbar: (type: FeedbackSnackbarTypes, message: string) => any;
+    validateGroupUrl: (path: string, groupUserName: string | null, courseUserName?: string | null) => any;
+    resetGroupUrlState: () => any;
 }
 
 interface GroupDetailsLocalComponentState {
     isEditingDescription: boolean;
     editedDescription: string;
     isSavingDescription: boolean;
+    editLogoDialogOpen: boolean;
 }
 
 const mapStateToProps = (state: AppState) => {
@@ -65,7 +70,9 @@ const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
         loadData: (viewedGroupUserName: string) => dispatch(loadData(viewedGroupUserName)),
         sendAccessRequest: () => dispatch(sendAccessRequest()),
         removeAccessRequest: () => dispatch(removeAccessRequest()),
-        openFeedbackSnackbar: (type: FeedbackSnackbarTypes, message: string) => dispatch(openFeedbackSnackbar(type, message))
+        openFeedbackSnackbar: (type: FeedbackSnackbarTypes, message: string) => dispatch(openFeedbackSnackbar(type, message)),
+        validateGroupUrl: (path: string, groupUserName: string | null, courseUserName?: string | null) => dispatch(validateGroupUrl(path, groupUserName, courseUserName)),
+        resetGroupUrlState: () => dispatch(resetGroupUrlState())
     }
 }
 
@@ -76,7 +83,8 @@ class GroupDetails extends Component<GroupDetailsProps & Readonly<RouteComponent
         this.state = {
             isEditingDescription: false,
             editedDescription: '',
-            isSavingDescription: false
+            isSavingDescription: false,
+            editLogoDialogOpen: false
         };
     }
 
@@ -162,6 +170,43 @@ class GroupDetails extends Component<GroupDetailsProps & Readonly<RouteComponent
         }
     }
 
+    handleOpenEditLogoDialog = () => {
+        this.setState({ editLogoDialogOpen: true });
+    }
+
+    handleCloseEditLogoDialog = () => {
+        this.setState({ editLogoDialogOpen: false });
+    }
+
+    handleLogoUpdateSuccess = () => {
+        const { openFeedbackSnackbar, validateGroupUrl, resetGroupUrlState } = this.props;
+        openFeedbackSnackbar(FeedbackSnackbarTypes.Success, 'Logo updated successfully!');
+
+        // Reload data to reflect changes
+        const viewedGroupUserName = this.props.match.params.viewedGroupUserName;
+        const viewedCourseUserName = this.props.match.params.viewedCourseUserName;
+
+        console.log('[LOGO UPDATE] Starting refresh...', { viewedGroupUserName, viewedCourseUserName });
+
+        if (viewedGroupUserName) {
+            // Reload GroupDetailsLocalState
+            console.log('[LOGO UPDATE] Calling loadData...');
+            this.props.loadData(viewedGroupUserName);
+
+            // Force refresh of ManageGroupUrlState by resetting first, then validating
+            console.log('[LOGO UPDATE] Resetting group URL state...');
+            resetGroupUrlState();
+
+            // Wait a brief moment for the reset to complete, then validate
+            setTimeout(() => {
+                console.log('[LOGO UPDATE] Calling validateGroupUrl...');
+                validateGroupUrl(this.props.location.pathname, viewedGroupUserName, viewedCourseUserName);
+            }, 100);
+        }
+
+        this.setState({ editLogoDialogOpen: false });
+    }
+
     render() {
         const {
             MediaQueryState,
@@ -219,10 +264,22 @@ class GroupDetails extends Component<GroupDetailsProps & Readonly<RouteComponent
                                 <Row noGutters>
                                     {/** Logo section */}
                                     <Col xs={{span: 12, order: 1}} sm={{span: 12, order: 1}} md={{span: 12, order: 1}} lg={{span: 3, order: 1}}>
-                                        <Box display="flex"justifyContent="center" alignItems="center">
+                                        <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center">
                                             <Link href={GroupDetailsLocalState.group?.website ?? ""} target="_blank">
                                                 <Image alt={`${GroupDetailsLocalState.group?.displayName} logo`} src={getGroupLogo(GroupDetailsLocalState.group ?? null) ?? undefined} style={{width: "100%", height: "auto", padding: 20, objectFit: "scale-down"}}/>
                                             </Link>
+                                            {currentAdmin && (currentAdmin.superAdmin || currentAdmin.superGroupAdmin) && (
+                                                <Button
+                                                    variant="outlined"
+                                                    size="small"
+                                                    startIcon={<EditIcon />}
+                                                    onClick={this.handleOpenEditLogoDialog}
+                                                    className={css(sharedStyles.no_text_transform)}
+                                                    style={{ marginTop: 10 }}
+                                                >
+                                                    Edit Logo
+                                                </Button>
+                                            )}
                                         </Box>
                                     </Col>
 
@@ -443,6 +500,17 @@ class GroupDetails extends Component<GroupDetailsProps & Readonly<RouteComponent
                     <Footer/>
                 </Col>
             </Row>
+
+            {/** Edit Logo Dialog */}
+            {GroupDetailsLocalState.group && (
+                <EditGroupImageDialog
+                    open={this.state.editLogoDialogOpen}
+                    groupUserName={GroupDetailsLocalState.group.groupUserName}
+                    currentImageUrl={getGroupLogo(GroupDetailsLocalState.group) || undefined}
+                    onClose={this.handleCloseEditLogoDialog}
+                    onSuccess={this.handleLogoUpdateSuccess}
+                />
+            )}
         </Box>;
     }
 }
