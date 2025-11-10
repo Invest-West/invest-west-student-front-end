@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.css": "https://demo.studentshowcase.co.uk/static/css/main.86e16cd0.css",
+    "main.css": "https://demo.studentshowcase.co.uk/static/css/main.f3e88cda.css",
     "main.js": "https://demo.studentshowcase.co.uk/static/js/main.d7bf12fa.js",
     "static/media/employ_hire.svg": "https://demo.studentshowcase.co.uk/static/media/employ_hire.3ac201d3ef420618ad98ca1b420f6d72.svg",
     "static/media/handshake_1.svg": "https://demo.studentshowcase.co.uk/static/media/handshake_1.e75d54b484fd818cad1fcd2049d94a0f.svg",
@@ -81,7 +81,7 @@
     "index.html": "https://demo.studentshowcase.co.uk/index.html"
   },
   "entrypoints": [
-    "static/css/main.86e16cd0.css",
+    "static/css/main.f3e88cda.css",
     "static/js/main.d7bf12fa.js"
   ]
 }
