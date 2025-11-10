@@ -135,8 +135,6 @@ class Header extends Component<HeaderProps, {}> {
                                                     return defaultLogo;
                                                 } else if (ManageGroupUrlState.group && getGroupLogo(ManageGroupUrlState.group)) {
                                                     const groupLogo = getGroupLogo(ManageGroupUrlState.group);
-                                                    console.log('[HEADER] Using group logo:', groupLogo);
-                                                    console.log('[HEADER] Full plainLogo array:', ManageGroupUrlState.group.plainLogo);
                                                     // Ensure groupLogo is never null
                                                     return groupLogo ?? undefined;
                                                 } else {

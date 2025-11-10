@@ -516,9 +516,7 @@ class OffersTable extends Component<OffersTableProps, any> {
                                     </TableRow>
                                     // Render offers
                                     : (() => {
-                                        console.log('📊 OffersTable Rendering - Total filtered projects:', OffersTableLocalState.offerInstancesFilteredByName.length);
                                         const projectsWithFeedback = OffersTableLocalState.offerInstancesFilteredByName.filter(p => p.rejectFeedbacks && p.rejectFeedbacks.length > 0);
-                                        console.log('📊 Projects with reject feedbacks:', projectsWithFeedback.length);
                                         if (projectsWithFeedback.length > 0) {
                                             console.log('📊 Projects with feedback details:', projectsWithFeedback.map(p => ({
                                                 name: p.projectDetail.projectName,

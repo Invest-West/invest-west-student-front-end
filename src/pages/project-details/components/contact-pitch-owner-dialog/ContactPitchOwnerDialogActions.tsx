@@ -174,9 +174,6 @@ export const sendContactEmail: ActionCreator<any> = () => {
                 throw new Error('Server configuration not available. Please refresh the page.');
             }
 
-            console.log('Sending contact email with data:', emailData);
-            console.log('Using server URL:', clubAttributes.serverURL);
-            console.log('Email type enum value:', emailUtils.EMAIL_CONTACT_PITCH_OWNER);
             console.log('Sending email with exact data:', {
                 serverURL: clubAttributes.serverURL,
                 emailType: emailUtils.EMAIL_CONTACT_PITCH_OWNER,

@@ -59,7 +59,6 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
         });
 
         if (isAuthenticating(AuthenticationState)) {
-            console.log(`[COURSE ADMIN AUTH] [${authCallId}] ⏭️ Skipping - already authenticating`);
             return;
         }
 
@@ -80,14 +79,11 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
 
             // user is currently signed in with Firebase
             if (currentFirebaseUser) {
-                console.log(`[COURSE ADMIN AUTH] [${authCallId}] User already signed in with Firebase`);
 
                 if (successfullyAuthenticated(AuthenticationState)) {
-                    console.log(`[COURSE ADMIN AUTH] [${authCallId}] ⏭️ Skipping - already successfully authenticated in Redux`);
                     return;
                 }
 
-                console.log(`[COURSE ADMIN AUTH] [${authCallId}] Dispatching StartAuthenticating (Firebase user exists, Redux not authenticated)`);
                 dispatch({
                     type: AuthenticationEvents.StartAuthenticating
                 });
@@ -95,31 +91,23 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
             // user is currently not signed in with Firebase
             else {
                 if (email === undefined || password === undefined) {
-                    console.log(`[COURSE ADMIN AUTH] [${authCallId}] No email/password provided, setting unauthenticated state`);
                     authenticationCompleteAction.status = AuthenticationStatus.Unauthenticated;
                     // Don't set an error for non-authenticated users - this is a normal state
                     // for users viewing public content like projects
                     return dispatch(authenticationCompleteAction);
                 }
-
-                console.log(`[COURSE ADMIN AUTH] [${authCallId}] Starting authentication for email:`, email);
-
-                console.log(`[COURSE ADMIN AUTH] [${authCallId}] Dispatching StartAuthenticating`);
                 dispatch({
                     type: AuthenticationEvents.StartAuthenticating
                 });
 
-                console.log(`[COURSE ADMIN AUTH] [${authCallId}] Setting Firebase persistence to LOCAL`);
                 // set persistence state to LOCAL
                 await firebase.auth().setPersistence(Firebase.auth.Auth.Persistence.LOCAL);
 
-                console.log(`[COURSE ADMIN AUTH] [${authCallId}] Calling Firebase signInWithEmailAndPassword`);
                 // sign in with Firebase using email and password
                 const credential: firebase.default.auth.UserCredential =
                     await firebase.auth().signInWithEmailAndPassword(email, password);
 
                 currentFirebaseUser = credential.user;
-                console.log(`[COURSE ADMIN AUTH] [${authCallId}] Firebase sign in successful, uid:`, currentFirebaseUser?.uid);
             }
 
             if (currentFirebaseUser) {
@@ -133,14 +121,12 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
                 if (cachedUser) {
                     monitorCacheHit('user');
                     currentUser = cachedUser;
-                    console.log('[COURSE ADMIN AUTH] User retrieved from cache');
                 } else {
                     // Fetch from API and cache
                     monitorCacheMiss('user');
                     const retrieveUserResponse = await new UserRepository().retrieveUser(uid);
                     currentUser = retrieveUserResponse.data;
                     userCache.set(userCacheKey, currentUser, 10 * 60 * 1000); // Cache for 10 minutes
-                    console.log('[COURSE ADMIN AUTH] User retrieved from API');
                 }
                 const currentAdmin: Admin | null = isAdmin(currentUser);
 
@@ -169,7 +155,6 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
 
                 if (Routes.isSuperAdminSignInRoute(ManageGroupUrlState.routePath ?? "")) {
                     if (!(currentAdmin && currentAdmin.superAdmin)) {
-                        console.log('[COURSE ADMIN AUTH] ❌ Non-super-admin trying to use super admin signin route');
                         validSuperAdminSignIn = false;
                         authenticationCompleteAction.error = {
                             detail: "You have no privileges to sign in."
@@ -177,7 +162,6 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
                     }
                 } else if (Routes.isSignInRoute(ManageGroupUrlState.routePath ?? "")) {
                     if (currentAdmin && currentAdmin.superAdmin) {
-                        console.log('[COURSE ADMIN AUTH] ❌ Super admin trying to use regular signin route');
                         validSuperAdminSignIn = false;
                         authenticationCompleteAction.error = {
                             detail: "Please sign in via your dedicated page."
@@ -186,13 +170,10 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
                 }
 
                 if (!validSuperAdminSignIn) {
-                    console.log('[COURSE ADMIN AUTH] ❌ SIGNING OUT - Invalid super admin signin');
                     await dispatch(signOut());
                     authenticationCompleteAction.status = AuthenticationStatus.Unauthenticated;
                     return dispatch(authenticationCompleteAction);
                 }
-
-                console.log('[COURSE ADMIN AUTH] ✅ Super admin validation passed');
 
                 authenticationCompleteAction.currentUser = currentUser;
 
@@ -200,19 +181,15 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
                 // get groups of membership for the current user (with caching)
                 const groupsCacheKey = CacheKeys.groupsOfMembership(uid);
 
-                console.log('[COURSE ADMIN AUTH] Fetching groups of membership for uid:', uid);
-
                 const cachedGroups = userCache.get<GroupOfMembership[]>(groupsCacheKey);
                 if (cachedGroups) {
                     monitorCacheHit('user');
                     authenticationCompleteAction.groupsOfMembership = cachedGroups;
-                    console.log('[COURSE ADMIN AUTH] Groups retrieved from cache:', cachedGroups.length, 'groups');
                 } else {
                     monitorCacheMiss('user');
                     const listGroupsOfMembershipResponse = await new UserRepository().listGroupsOfMembership(uid);
                     authenticationCompleteAction.groupsOfMembership = listGroupsOfMembershipResponse.data;
                     userCache.set(groupsCacheKey, listGroupsOfMembershipResponse.data, 15 * 60 * 1000); // Cache for 15 minutes
-                    console.log('[COURSE ADMIN AUTH] Groups retrieved from API:', listGroupsOfMembershipResponse.data.length, 'groups');
                 }
 
                 console.log('[COURSE ADMIN AUTH] Groups of membership details:', {
@@ -272,14 +249,11 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
                 });
 
                 // Dispatch authentication completion first
-                console.log(`[COURSE ADMIN AUTH] [${authCallId}] Dispatching CompleteAuthentication action`);
                 dispatch(authenticationCompleteAction);
 
-                console.log(`[COURSE ADMIN AUTH] [${authCallId}] Authentication dispatch complete, fetching offers`);
                 // Then trigger offers refresh to get updated data with authentication
                 return dispatch(fetchOffers());
             } else {
-                console.log(`[COURSE ADMIN AUTH] [${authCallId}] ❌ No Firebase user after authentication attempt, signing out`);
                 await dispatch(signOut());
                 authenticationCompleteAction.status = AuthenticationStatus.Unauthenticated;
                 authenticationCompleteAction.error = {
@@ -306,7 +280,6 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
 
 export const signOut: ActionCreator<any> = () => {
     return async (dispatch: Dispatch, getState: () => AppState) => {
-        console.log('[COURSE ADMIN AUTH] 🚪 signOut called - Stack trace:');
         console.trace();
 
         const state = getState();
@@ -349,8 +322,6 @@ export const signOut: ActionCreator<any> = () => {
         dispatch({
             type: AuthenticationEvents.SignOut
         });
-
-        console.log('[COURSE ADMIN AUTH] ✅ Sign out completed');
 
         // Then trigger offers refresh to get updated data without authentication
         return dispatch(fetchOffers());

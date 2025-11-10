@@ -187,13 +187,7 @@ const filterGroupsByGroupFilter: ActionCreator<any> = () => {
         const AuthenticationState = getState().AuthenticationState;
         const currentUser = AuthenticationState.currentUser;
 
-        console.log('%c=== EXPLORE GROUPS FILTER DEBUG ===', 'background: #333; color: #87CEEB; font-size: 14px');
-        console.log('Current User:', currentUser);
-        console.log('Group Filter:', groupFilter);
-        console.log('Total groups:', groups.length);
-
         if (!currentUser) {
-            console.log('%c❌ No current user - exiting', 'color: red');
             return;
         }
 
@@ -203,8 +197,6 @@ const filterGroupsByGroupFilter: ActionCreator<any> = () => {
         const admin: Admin | null = isAdmin(currentUser);
         const isSuperAdmin = admin && (admin.superAdmin || admin.superGroupAdmin);
 
-        console.log('Is Admin?', admin !== null);
-        console.log('Is Super Admin or Super Group Admin?', isSuperAdmin);
         console.log('Groups of Membership:', AuthenticationState.groupsOfMembership.map(m => ({
             name: m.group.displayName,
             anid: m.group.anid,
@@ -270,14 +262,11 @@ const filterGroupsByGroupFilter: ActionCreator<any> = () => {
             return null;
         });
 
-        console.log('%c📤 Filtered Groups Result:', 'color: purple; font-weight: bold');
-        console.log('Filtered count:', groupsFiltered.length);
         console.table(groupsFiltered.map(g => ({
             name: g.displayName,
             anid: g.anid,
             parentGroupId: g.parentGroupId
         })));
-        console.log('%c===================================', 'background: #333; color: #87CEEB');
 
         const action: FilterGroupsByGroupFilterAction = {
             type: ExploreGroupsEvents.FilterGroupsByGroupFilter,

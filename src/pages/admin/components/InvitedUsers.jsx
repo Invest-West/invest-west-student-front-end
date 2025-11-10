@@ -276,13 +276,6 @@ class InvitedUsers extends Component {
     getCourseDisplayName = (invitedUser) => {
         const { systemGroups } = this.props;
 
-        console.log('[GET COURSE DISPLAY] ==========================================');
-        console.log('[GET COURSE DISPLAY] User email:', invitedUser.email);
-        console.log('[GET COURSE DISPLAY] User courseId:', invitedUser.courseId);
-        console.log('[GET COURSE DISPLAY] User courseName (OLD FIELD - IGNORED):', invitedUser.courseName);
-        console.log('[GET COURSE DISPLAY] Has systemGroups:', !!systemGroups);
-        console.log('[GET COURSE DISPLAY] SystemGroups length:', systemGroups ? systemGroups.length : 0);
-
         // NOTE: We IGNORE courseName field - it's from the old manual entry system
         // We only use courseId to look up the real course from the system
 
@@ -296,55 +289,44 @@ class InvitedUsers extends Component {
 
         // Check if user has a courseId
         if (invitedUser.courseId && systemGroups && systemGroups.length > 0) {
-            console.log('[GET COURSE DISPLAY] ✅ User has courseId, searching for match...');
 
             let course = null;
 
             // First try: match by anid (for real course IDs)
             course = systemGroups.find(group => group.anid === invitedUser.courseId);
             if (course) {
-                console.log('[GET COURSE DISPLAY] ✅ Found course by anid match:', course.displayName || course.groupUserName);
                 return course.displayName || course.groupUserName || "Unknown course";
             }
 
             // Second try: handle virtual course IDs like "virtual-course--M2I40dBdzdI89yDCaAn-student-showcase"
             if (invitedUser.courseId.startsWith('virtual-course-')) {
-                console.log('[GET COURSE DISPLAY] 🔍 Detected virtual course ID, parsing...');
                 // Extract the course username from the virtual ID
                 // Format: "virtual-course-{parentId}-{courseUserName}"
                 // Split: ["virtual", "course", "", "M2I40dBdzdI89yDCaAn", "student", "showcase"]
                 const parts = invitedUser.courseId.split('-');
-                console.log('[GET COURSE DISPLAY] Split parts:', parts);
 
                 if (parts.length >= 5) {
                     // Skip "virtual", "course", empty string (from --), and parentId
                     // Start from index 4 onwards to get the actual course name
                     const courseUserName = parts.slice(4).join('-');
-                    console.log('[GET COURSE DISPLAY] Extracted courseUserName:', courseUserName);
-
                     // Try to find course by groupUserName
                     course = systemGroups.find(group =>
                         group.groupUserName && group.groupUserName.toLowerCase() === courseUserName.toLowerCase()
                     );
 
                     if (course) {
-                        console.log('[GET COURSE DISPLAY] ✅ Found course by groupUserName match:', course.displayName || course.groupUserName);
                         return course.displayName || course.groupUserName || "Unknown course";
                     } else {
-                        console.log('[GET COURSE DISPLAY] ❌ No course found with groupUserName:', courseUserName);
                         console.log('[GET COURSE DISPLAY] Available groupUserNames:', systemGroups.map(g => g.groupUserName));
                     }
                 }
             }
 
-            console.log('[GET COURSE DISPLAY] ❌ No matching course found for courseId:', invitedUser.courseId);
         } else {
             console.log('[GET COURSE DISPLAY] ❌ No courseId on user or no systemGroups');
         }
 
         // Fallback: check if user has profile.BusinessProfile.course
-        console.log('[GET COURSE DISPLAY] Checking officialUser.BusinessProfile.course...');
-        console.log('[GET COURSE DISPLAY] Has officialUser:', !!invitedUser.officialUser);
         if (invitedUser.officialUser) {
             console.log('[GET COURSE DISPLAY] Has BusinessProfile:', !!invitedUser.officialUser.BusinessProfile);
             if (invitedUser.officialUser.BusinessProfile) {
@@ -355,13 +337,10 @@ class InvitedUsers extends Component {
         if (invitedUser.officialUser &&
             invitedUser.officialUser.BusinessProfile &&
             invitedUser.officialUser.BusinessProfile.course) {
-            console.log('[GET COURSE DISPLAY] ✅ Using profile course:', invitedUser.officialUser.BusinessProfile.course);
             return invitedUser.officialUser.BusinessProfile.course;
         }
 
         // Default fallback
-        console.log('[GET COURSE DISPLAY] ❌ Falling back to "Home member"');
-        console.log('[GET COURSE DISPLAY] Full invitedUser object:', invitedUser);
         return "Home member";
     };
 

@@ -227,9 +227,6 @@ class CreatePitchPageMain extends Component {
             // call load data here when the save progress button is hit for the first time --> navigate to edit mode
             this.loadData();
         }
-        console.log('Page loaded. Authentication status:', this.props.AuthenticationState.isAuthenticated ? 'Authenticated' : 'Not Authenticated');
-        console.log('Current user on page load:', this.props.AuthenticationState.currentUser);
-        console.log(`Data request status on page load: ${this.state.requestToLoadData ? 'Pending' : 'Not Requested'}`);
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
@@ -278,8 +275,6 @@ class CreatePitchPageMain extends Component {
         }
 
         if (requestToLoadData) {
-            console.log('🚨 [CREATE-PROJECT DEBUG] requestToLoadData is true in componentDidUpdate, about to call loadData()');
-            console.log('🚨 [CREATE-PROJECT DEBUG] Current state when calling loadData:', this.state);
             // call load data here when the save progress button is hit for the first time --> navigate to edit mode
             this.loadData();
         }
@@ -437,15 +432,9 @@ class CreatePitchPageMain extends Component {
             requestToLoadData: false
         });
 
-        // get project id from the URL (reuse params from line 359)
-        console.log('[CREATE-PROJECT DEBUG] URL params:', params);
-        console.log('[CREATE-PROJECT DEBUG] projectIDToBeLoadedAfterSavingFirstTime:', projectIDToBeLoadedAfterSavingFirstTime);
-
         // in edit mode
         if (params.edit || projectIDToBeLoadedAfterSavingFirstTime) {
             const projectIdToLoad = !params.edit ? projectIDToBeLoadedAfterSavingFirstTime : params.edit;
-            console.log('[CREATE-PROJECT DEBUG] Loading project with ID:', projectIdToLoad);
-
             // load the project
             realtimeDBUtils
                 .loadAParticularProject(projectIdToLoad)

@@ -261,12 +261,7 @@ class ProjectDetailsMain extends Component {
             const canLoadProject = !authIsNotInitialized(this.props.AuthenticationState); // Just wait for auth initialization
             
             if (canLoadProject) {
-                console.log('🔍 ComponentDidMount - Can load project, checking conditions...');
-                console.log('🔍 !dataBeingLoaded:', !dataBeingLoaded, 'dataBeingLoaded:', dataBeingLoaded);
-                console.log('🔍 !dataLoaded:', !dataLoaded, 'dataLoaded:', dataLoaded);
-                
                 if (!dataBeingLoaded && !dataLoaded) {
-                    console.log('✅ Loading project data (auth initialization complete)');
                     this.loadData();
                 } else {
                     console.log('❌ NOT loading - conditions not met');
@@ -275,17 +270,6 @@ class ProjectDetailsMain extends Component {
                 console.log('⏳ Waiting for auth initialization...');
             }
         }
-        console.log('=== PROJECT DETAILS DEBUG ===');
-        console.log('Authentication status:', this.props.AuthenticationState.status);
-        console.log('Current user:', this.props.AuthenticationState.currentUser);
-        console.log('isAuthenticating:', isAuthenticating(this.props.AuthenticationState));
-        console.log('authIsNotInitialized:', authIsNotInitialized(this.props.AuthenticationState));
-        console.log('Auth resolved:', !isAuthenticating(this.props.AuthenticationState) && !authIsNotInitialized(this.props.AuthenticationState));
-        console.log('groupPropertiesLoaded:', groupPropertiesLoaded);
-        console.log('shouldLoadOtherData:', shouldLoadOtherData);
-        console.log('dataBeingLoaded:', dataBeingLoaded);
-        console.log('dataLoaded:', dataLoaded);
-        console.log('========================');
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
@@ -315,12 +299,6 @@ class ProjectDetailsMain extends Component {
         if (groupPropertiesLoaded && shouldLoadOtherData) {
             // For project viewing, we don't need to wait for authentication to be fully resolved
             const canLoadProject = !authIsNotInitialized(this.props.AuthenticationState);
-            
-            console.log('=== componentDidUpdate DEBUG ===');
-            console.log('Auth status:', this.props.AuthenticationState.status);
-            console.log('Can load project:', canLoadProject);
-            console.log('dataBeingLoaded:', dataBeingLoaded);
-            console.log('dataLoaded:', dataLoaded);
             
             if (canLoadProject) {
                 if (!dataBeingLoaded && !dataLoaded) {
@@ -381,9 +359,7 @@ class ProjectDetailsMain extends Component {
     /**
      * This function is used to load data for the whole page
      */
-    loadData = () => {
-        console.log('🚀 LOADDATA CALLED - Starting data load process');
-        
+    loadData = () => {        
         const {
             user,
             selectProjectVisibility_setProject
@@ -425,35 +401,28 @@ class ProjectDetailsMain extends Component {
             return;
         }
 
-        console.log('✅ LoadData: Setting loading state...');
         this.setState({
             dataLoaded: false,
             dataBeingLoaded: true
         });
 
         // load the requested project
-        const projectID = this.props.match.params.projectID;
-        console.log('🔍 LoadData: Project ID:', projectID);
-        
+        const projectID = this.props.match.params.projectID;        
         // Try to get project from cache first
         const cacheKey = CacheKeys.project(projectID);
         const cachedProject = apiCache.get(cacheKey);
         
         if (cachedProject) {
-            console.log('📦 Using cached project data');
             this.processProjectData(cachedProject);
             return;
         }
-        
-        console.log('🌐 No cached data, fetching from Firebase...');
-        
+                
         realtimeDBUtils
             .loadAParticularProject(projectID)
             .then(project => {
                 console.log('✅ Firebase project loaded successfully:', project?.projectName || project?.id);
                 // Cache the project data for 10 minutes
                 apiCache.set(cacheKey, project, 10 * 60 * 1000);
-                console.log('📦 Project cached, calling processProjectData...');
                 this.processProjectData(project);
             })
             .catch(error => {
@@ -520,8 +489,6 @@ class ProjectDetailsMain extends Component {
                 });
 
                 // Load all related data in parallel for better performance
-                console.log('🔄 ProcessProjectData: Starting Promise.all for votes, pledges, issuer, and reject feedbacks...');
-                console.log('🔍 Project issuer ID:', project.issuerID);
                 Promise.all([
                     realtimeDBUtils.loadVotes(project.id, null, realtimeDBUtils.LOAD_VOTES_ORDER_BY_PROJECT),
                     realtimeDBUtils.loadPledges(project.id, null, realtimeDBUtils.LOAD_PLEDGES_ORDER_BY_PROJECT),
@@ -546,7 +513,6 @@ class ProjectDetailsMain extends Component {
                     }
 
                     // Update state with all loaded data at once
-                    console.log('🎯 Setting final state with all loaded data...');
                     this.setState({
                         dataLoaded: true,
                         dataBeingLoaded: false,
@@ -563,9 +529,7 @@ class ProjectDetailsMain extends Component {
                             projectIssuer: projectIssuer,
                             projectIssuerLoaded: true
                         }
-                    }, () => {
-                        console.log('✅ State updated successfully! Component should now render content.');
-                        
+                    }, () => {                        
                         // Auto-refresh mechanism: Force a re-render after data loads
                         setTimeout(() => {
                             console.log('🔄 Auto-refresh: Forcing component re-render...');
@@ -2205,7 +2169,6 @@ class ProjectDetails extends Component {
      * Render the page content
      */
     renderPageContent = (props) => {
-        console.log('🎬 RENDERPAGE CONTENT CALLED!');
         const {
             AuthenticationState,
             groupsUserIsIn,

@@ -521,11 +521,9 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             let redirectRoute: string;
 
             if (storedRedirectUrl) {
-                console.log('[POST-LOGIN] ✅ Using stored redirect URL:', storedRedirectUrl);
                 redirectRoute = storedRedirectUrl;
                 safeRemoveItem('redirectToAfterAuth');
             } else {
-                console.log('[POST-LOGIN] ⚠️ No stored redirect found, constructing route based on user type');
                 // Construct redirect route with robust fallback logic
                 redirectRoute = this.constructPostLoginRoute();
             }
@@ -596,11 +594,9 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
         });
 
         if (successfullyAuthenticated(this.props.AuthenticationState) && !this.state.navigatingFromSignInOrSignUpToDashboard) {
-            console.log('[ROUTING DEBUG] Checking user access permissions');
             const currentUser: User | Admin | null = this.props.AuthenticationState.currentUser;
 
             if (currentUser) {
-                console.log('[ROUTING DEBUG] Current user found:', currentUser.id);
                 const currentAdmin: Admin | null = isAdmin(currentUser);
                 let shouldRedirectToError: boolean = false;
                 
@@ -610,7 +606,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                     }
                 } else if (Routes.isGroupAdminRoute(this.routePath)) {
                     if (!currentAdmin) {
-                        console.log('[ROUTING DEBUG] 🚫 Not an admin, will redirect to 404');
                         shouldRedirectToError = true;
                     } else {
                         console.log('[ROUTING DEBUG] 🔍 Checking admin route permissions', {
@@ -702,7 +697,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                     });
 
                     if (!isInvestor(currentUser)) {
-                        console.log('[ROUTING DEBUG] User is not an investor, redirecting to 404');
                         shouldRedirectToError = true;
                     } else if (this.routeParams.courseUserName) {
                         // For course-based routes, check if it's the invest-west group
@@ -714,7 +708,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
 
                         // invest-west with courses doesn't require membership check
                         if (this.routeParams.groupUserName === 'invest-west') {
-                            console.log('[ROUTING DEBUG] invest-west course route - allowing access without membership check');
                             shouldRedirectToError = false;
                         } else {
                             // For non-invest-west course routes, still check membership
@@ -728,7 +721,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                             });
 
                             if (membershipCount === 0) {
-                                console.log('[ROUTING DEBUG] User is not a member of group:', this.routeParams.groupUserName, ', redirecting to 404');
                                 shouldRedirectToError = true;
                             }
                         }
