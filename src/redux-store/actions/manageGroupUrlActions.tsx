@@ -103,7 +103,6 @@ export const validateGroupUrl: ActionCreator<any> = (path: string, groupUserName
                 try {
                     const response = await new GroupRepository().getGroup('invest-west');
                     investWestGroup = response.data;
-                    console.log('[VALIDATE GROUP] Fetched invest-west group from backend:', investWestGroup);
                 } catch (error) {
                     console.error('[VALIDATE GROUP] Failed to fetch invest-west group, using fallback:', error);
                     // Fallback to hardcoded object if fetch fails
@@ -137,7 +136,6 @@ export const validateGroupUrl: ActionCreator<any> = (path: string, groupUserName
                             // Don't fail validation here - the course might exist but we can't read it
                             // due to Firebase security rules (not authenticated yet)
                             // Let the authentication and permission checks handle access control
-                            console.log(`[COURSE VALIDATION] ⏭️ Allowing validation to proceed - auth check will verify access`);
                         } else {
                             // Verify the course belongs to this parent group
                             if (courseGroup.parentGroupId !== investWestGroup.anid) {
@@ -149,7 +147,6 @@ export const validateGroupUrl: ActionCreator<any> = (path: string, groupUserName
                                 return dispatch(finishedLoadingGroupUrlAction);
                             }
 
-                            console.log(`[COURSE VALIDATION] ✅ Course validated from Firebase: "${courseUserName}"`);
                         }
                     } catch (error) {
                         console.error('[COURSE VALIDATION] Error validating course:', error);
@@ -159,7 +156,6 @@ export const validateGroupUrl: ActionCreator<any> = (path: string, groupUserName
                                                  error.code === 'PERMISSION_DENIED';
 
                         if (isPermissionError) {
-                            console.log(`[COURSE VALIDATION] ⏭️ Permission error - user likely not authenticated. Allowing validation to proceed.`);
                             // Allow validation to pass - authentication check will handle this
                         } else {
                             // For other errors, we might want to fail validation
@@ -190,11 +186,9 @@ export const validateGroupUrl: ActionCreator<any> = (path: string, groupUserName
                             // Don't fail validation here - the course might exist but we can't read it
                             // due to Firebase security rules (not authenticated yet)
                             // Let the authentication and permission checks handle access control
-                            console.log(`[COURSE VALIDATION] ⏭️ Allowing validation to proceed - auth check will verify access`);
                         } else {
                             // Verify the course belongs to this parent group
                             if (courseGroup.parentGroupId !== retrievedGroup.anid) {
-                                console.log(`[COURSE VALIDATION] ❌ Course "${courseUserName}" does not belong to parent group "${groupUserName}"`);
                                 finishedLoadingGroupUrlAction.group = retrievedGroup;
                                 finishedLoadingGroupUrlAction.validGroupUrl = false;
                                 finishedLoadingGroupUrlAction.error = {

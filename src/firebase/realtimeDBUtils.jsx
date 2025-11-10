@@ -504,8 +504,6 @@ export const loadGroupsUserIsIn = async (userID) => {
  */
 export const loadAngelNetworkBasedOnANID = async (anid) => {
     return new Promise((resolve, reject) => {
-        console.log('[REALTIME-DB DEBUG] Looking for angel network with ANID:', anid);
-
         firebase
             .database()
             .ref(DB_CONST.GROUP_PROPERTIES_CHILD)
@@ -1801,9 +1799,6 @@ export const fetchProjectsBy = async (
  * @returns {Promise<*>}
  */
 export const loadAParticularProject = async (projectID) => {
-    console.log('[REALTIME-DB DEBUG] ========================================');
-    console.log('[REALTIME-DB DEBUG] loadAParticularProject called with:', projectID);
-    console.log('[REALTIME-DB DEBUG] ========================================');
 
     const db = firebase.database();
     return new Promise((resolve, reject) => {
@@ -1811,20 +1806,15 @@ export const loadAParticularProject = async (projectID) => {
             .child(projectID)
             .once('value', snapshot => {
                 if (!snapshot || !snapshot.exists() || !snapshot.val()) {
-                    console.log('[REALTIME-DB DEBUG] No project found for ID:', projectID);
                     return reject("No project found.");
                 }
 
                 let project = snapshot.val();
-                console.log('[REALTIME-DB DEBUG] Project loaded successfully:', project);
-
                 console.log('[REALTIME-DB DEBUG] Loading project group:', {
                     projectID: projectID,
                     projectAnid: project.anid,
                     projectData: project
                 });
-
-                console.log('[REALTIME-DB DEBUG] About to call loadAngelNetworkBasedOnANID with ANID:', project.anid);
 
                 // Check if the ANID is actually a groupUserName (like "invest-west") instead of a Firebase key
                 // Firebase keys typically start with "-" and are longer
@@ -1838,10 +1828,8 @@ export const loadAParticularProject = async (projectID) => {
 
                 if (!isFirebaseKey && project.anid) {
                     // The ANID appears to be a groupUserName, use it directly
-                    console.log('[REALTIME-DB DEBUG] ANID appears to be groupUserName, using loadAngelNetworkBasedOnGroupUserName');
                     loadAngelNetworkBasedOnGroupUserName(project.anid)
                         .then(group => {
-                            console.log('[REALTIME-DB DEBUG] Group lookup by username succeeded:', group);
                             project.group = group;
 
                             getUserBasedOnID(project.issuerID)
@@ -1869,11 +1857,9 @@ export const loadAParticularProject = async (projectID) => {
                                 });
                         })
                         .catch(error => {
-                            console.log('[REALTIME-DB DEBUG] Group lookup by username failed, trying invest-west fallback:', error);
                             // Fallback to invest-west if the groupUserName lookup fails
                             loadAngelNetworkBasedOnGroupUserName("invest-west")
                                 .then(group => {
-                                    console.log('[REALTIME-DB DEBUG] Invest-west fallback succeeded:', group);
                                     project.group = group;
 
                                     getUserBasedOnID(project.issuerID)
@@ -1947,14 +1933,12 @@ export const loadAParticularProject = async (projectID) => {
 
                         // Fallback: try to load group by groupUserName "invest-west"
                         // This helps with course-based contexts where ANID might not match
-                        console.log('[REALTIME-DB DEBUG] About to call fallback loadAngelNetworkBasedOnGroupUserName("invest-west")');
 
                         // Special handling for course contexts - always fallback to invest-west
                         const fallbackPromise = loadAngelNetworkBasedOnGroupUserName("invest-west");
 
                         fallbackPromise
                             .then(group => {
-                                console.log('[REALTIME-DB DEBUG] Fallback group lookup succeeded:', group);
                                 project.group = group;
 
                                 getUserBasedOnID(project.issuerID)

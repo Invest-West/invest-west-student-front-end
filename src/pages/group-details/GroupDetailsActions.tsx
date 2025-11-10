@@ -85,15 +85,10 @@ export const loadData: ActionCreator<any> = (groupUserName: string) => {
             // Load group admins/lecturers using 3-scenario approach (non-blocking - don't fail if this errors)
             let groupAdmins: any[] = [];
             try {
-                console.log(`📊 [GroupDetails] Loading admins for group: ${group.anid} (${group.displayName})`);
-
                 // SCENARIO 1: Load admins where anid = group.anid (course/group-level admins)
-                console.log(`    🌐 Scenario 1: Loading admins with anid = ${group.anid}`);
                 const courseAdmins = await realtimeDBUtils.loadGroupAdminsBasedOnGroupID(group.anid) as any[];
-                console.log(`    ✅ Found ${courseAdmins?.length || 0} course-level admins`);
 
                 // SCENARIO 2: Load ALL admins and filter for those with courseIds containing this group's anid
-                console.log(`    🌐 Scenario 2: Loading all admins to check courseIds arrays`);
                 const firebase = require('../../firebase/firebaseApp').default;
                 const DB_CONST = require('../../firebase/databaseConsts');
 

@@ -8,9 +8,7 @@ import * as DB_CONST from '../firebase/databaseConsts';
 import { convertAvailableCoursesToStructured } from '../utils/courseUtils';
 
 const migrateCourseStructure = async () => {
-    try {
-        console.log('Starting course structure migration...');
-        
+    try {        
         // Get the invest-west group
         const groupRef = firebase.database().ref(DB_CONST.GROUP_PROPERTIES_CHILD);
         const snapshot = await groupRef.orderByChild('groupUserName').equalTo('invest-west').once('value');
@@ -34,14 +32,9 @@ const migrateCourseStructure = async () => {
             return;
         }
         
-        console.log('Found invest-west group:', investWestKey);
-        console.log('Current availableCourses:', investWestData.availableCourses);
-        
         // Convert existing availableCourses to new structure
         const structuredCourses = convertAvailableCoursesToStructured(investWestData.availableCourses || []);
-        
-        console.log('Generated course structure:', structuredCourses);
-        
+                
         // Update the database
         const updates = {
             [`${DB_CONST.GROUP_PROPERTIES_CHILD}/${investWestKey}/courses`]: structuredCourses
@@ -49,8 +42,6 @@ const migrateCourseStructure = async () => {
         
         await firebase.database().ref().update(updates);
         
-        console.log('✅ Successfully migrated course structure!');
-        console.log('New courses added:');
         Object.entries(structuredCourses).forEach(([courseUserName, course]) => {
             console.log(`  - ${course.displayName} (${courseUserName}) - ${course.isDefault ? 'DEFAULT' : 'REGULAR'}`);
         });
@@ -65,6 +56,5 @@ export default migrateCourseStructure;
 
 // If running directly (for testing)
 if (typeof window !== 'undefined' && window.location.search.includes('migrate=true')) {
-    console.log('Running migration from browser...');
     migrateCourseStructure();
 }

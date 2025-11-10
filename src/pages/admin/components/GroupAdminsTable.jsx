@@ -398,23 +398,14 @@ class GroupAdminsTable extends Component {
     getCourseNames = (admin) => {
         const { systemGroups } = this.props;
 
-        console.log('[GET COURSE NAMES] Admin email:', admin.email);
-        console.log('[GET COURSE NAMES] Admin object:', admin);
-        console.log('[GET COURSE NAMES] Admin courseIds:', admin.courseIds);
-        console.log('[GET COURSE NAMES] Admin university anid:', admin.anid);
-        console.log('[GET COURSE NAMES] Available systemGroups:', systemGroups);
-
         if (!systemGroups || systemGroups.length === 0) {
-            console.log('[GET COURSE NAMES] No systemGroups available');
             return '-';
         }
 
         // If admin has specific courseIds, use those
         if (admin.courseIds && admin.courseIds.length > 0) {
-            console.log('[GET COURSE NAMES] Admin has courseIds, using those');
             const courseNames = admin.courseIds.map(courseId => {
                 const course = systemGroups.find(group => group.anid === courseId);
-                console.log('[GET COURSE NAMES] Looking for course with anid:', courseId, 'Found:', course);
                 return course ? course.displayName : courseId;
             });
             return courseNames.join(', ');
@@ -428,20 +419,15 @@ class GroupAdminsTable extends Component {
 
         // Check if admin's anid matches a specific COURSE (course-level admin)
         const adminCourse = systemGroups.find(group => group.anid === admin.anid && group.parentGroupId);
-        console.log('[GET COURSE NAMES] Checking if admin anid matches a course:', adminCourse);
 
         if (adminCourse) {
-            console.log('[GET COURSE NAMES] Admin is a course-level admin for:', adminCourse.displayName);
             return adminCourse.displayName || adminCourse.groupUserName;
         }
 
         // Otherwise, check if admin's anid matches a UNIVERSITY (university-level admin)
         const adminUniversity = systemGroups.find(group => group.anid === admin.anid && !group.parentGroupId);
-        console.log('[GET COURSE NAMES] Checking if admin anid matches a university:', adminUniversity);
 
         if (adminUniversity) {
-            console.log('[GET COURSE NAMES] Admin is a university-level admin for:', adminUniversity.displayName);
-
             // Find all courses under this university
             const coursesUnderUniversity = systemGroups.filter(group => {
                 const isChildByParentId = group.parentGroupId === admin.anid;
@@ -449,12 +435,8 @@ class GroupAdminsTable extends Component {
                                          group.groupUserName.includes('-') &&
                                          group.groupUserName.startsWith(adminUniversity.groupUserName + '-');
 
-                console.log('[GET COURSE NAMES] Checking group:', group.displayName, 'parentGroupId:', group.parentGroupId, 'isChild:', isChildByParentId || isChildByUserName);
-
                 return isChildByParentId || isChildByUserName;
             });
-
-            console.log('[GET COURSE NAMES] Found courses under university:', coursesUnderUniversity);
 
             if (coursesUnderUniversity.length === 0) {
                 return 'All courses';
@@ -464,7 +446,6 @@ class GroupAdminsTable extends Component {
             return courseNames.join(', ');
         }
 
-        console.log('[GET COURSE NAMES] Could not find university or course for admin anid:', admin.anid);
         return 'All courses';
     };
 

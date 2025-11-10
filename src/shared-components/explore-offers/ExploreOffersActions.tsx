@@ -108,8 +108,6 @@ export const fetchOffers: ActionCreator<any> = () => {
 
         // Don't filter by group when on course-based URLs - show all projects
         let effectiveGroupFilter = groupFilter;
-        console.log('[ExploreOffersActions] effectiveGroupFilter before logic:', effectiveGroupFilter);
-
         // Check if the groupFilter is a groupUserName that should be undefined for API
         // The backend now accepts both anid and groupUserName, but we should still log this
         if (effectiveGroupFilter && effectiveGroupFilter !== "all") {
@@ -125,8 +123,6 @@ export const fetchOffers: ActionCreator<any> = () => {
             phase: phaseFilter,
             orderBy,
         };
-
-        console.log('[ExploreOffersActions] Final fetchOffersOptions:', JSON.stringify(fetchOffersOptions, null, 2));
 
         // Use advanced caching system
         const cacheKey = CacheKeys.offers(fetchOffersOptions);

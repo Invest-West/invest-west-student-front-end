@@ -108,7 +108,6 @@ export default class EditGroupImageDialog extends Component<EditGroupImageDialog
                 formData.append("storageLocation", "PlainLogos");
 
                 const idToken = await firebase.auth().currentUser?.getIdToken();
-                console.log("Uploading file to:", `${process.env.REACT_APP_BACK_END_BASE_URL}${ApiRoutes.uploadSingleFileRoute}`);
                 console.log("File details:", {
                     name: selectedFile.name,
                     size: selectedFile.size,
@@ -128,10 +127,6 @@ export default class EditGroupImageDialog extends Component<EditGroupImageDialog
                     }
                 );
 
-                console.log("Response status:", response.status);
-                console.log("Response ok:", response.ok);
-                console.log("Response headers:", Array.from(response.headers.entries()));
-
                 if (!response.ok) {
                     const errorText = await response.text();
                     console.error("Upload failed with status:", response.status);
@@ -140,8 +135,6 @@ export default class EditGroupImageDialog extends Component<EditGroupImageDialog
                 }
 
                 const responseText = await response.text();
-                console.log("Raw response text:", responseText);
-                console.log("Response text length:", responseText.length);
 
                 if (!responseText || responseText.trim() === '') {
                     throw new Error(`Empty response from server. Status: ${response.status}`);
@@ -150,7 +143,6 @@ export default class EditGroupImageDialog extends Component<EditGroupImageDialog
                 let data;
                 try {
                     data = JSON.parse(responseText);
-                    console.log("Parsed response data:", data);
                 } catch (parseError) {
                     console.error("JSON parse error:", parseError);
                     console.error("Response text was:", responseText);

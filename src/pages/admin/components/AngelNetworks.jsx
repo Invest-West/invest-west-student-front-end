@@ -117,7 +117,6 @@ class AngelNetworks extends Component {
         super(props);
 
         // VERSION MARKER - Confirm new code is loaded
-        console.log('🔥🔥🔥 AngelNetworks v2.0 - 3-SCENARIO LECTURER LOADING ENABLED 🔥🔥🔥');
 
         this.state = {
             expandedUniversities: {}, // Track which universities are expanded: {universityId: boolean}
@@ -169,7 +168,7 @@ class AngelNetworks extends Component {
 
         // Special marker for debugging
         if (courseId === '-Ocef1L3VwMSRKDgT5n5') {
-            console.log('🎯🎯🎯 LOADING LECTURERS FOR YOUR COURSE: -Ocef1L3VwMSRKDgT5n5 🎯🎯🎯');
+            console.log('LOADING LECTURERS FOR YOUR COURSE: -Ocef1L3VwMSRKDgT5n5');
         }
 
         if (this._isMounted) {
@@ -190,12 +189,8 @@ class AngelNetworks extends Component {
             console.log(`    📚 Course found:`, course?.displayName || course?.groupUserName);
 
             // SCENARIO 1: Load admins where anid = courseId (course-level admins)
-            console.log(`    🌐 Scenario 1: Loading admins with anid = courseId (${courseId})`);
             const courseAdmins = await realtimeDBUtils.loadGroupAdminsBasedOnGroupID(courseId);
-            console.log(`    ✅ Found ${courseAdmins?.length || 0} course-level admins`);
-
             // SCENARIO 2: Load ALL admins and filter for those with courseIds containing this courseId
-            console.log(`    🌐 Scenario 2: Loading all admins to check courseIds arrays`);
             const firebase = require('../../../firebase/firebaseApp').default;
             const DB_CONST = require('../../../firebase/databaseConsts');
 
@@ -212,7 +207,6 @@ class AngelNetworks extends Component {
                     admin.courseIds && Array.isArray(admin.courseIds) && admin.courseIds.includes(courseId)
                 );
             }
-            console.log(`    ✅ Found ${adminsWithCourseId.length} admins with courseIds containing ${courseId}`);
 
             if (!this._isMounted) return; // ⚡ FIX: Stop if unmounted during async call
 
@@ -226,7 +220,6 @@ class AngelNetworks extends Component {
                 return acc;
             }, []);
 
-            console.log(`    📊 Total unique admins for THIS COURSE ONLY: ${uniqueAdmins.length}`);
 
             const adminsArray = uniqueAdmins || [];
 
@@ -241,13 +234,11 @@ class AngelNetworks extends Component {
             const adminsWithDetails = await Promise.all(adminsArray.map(async (admin) => {
                 // If firstName and lastName exist, use them
                 if (admin.firstName && admin.lastName) {
-                    console.log(`    ✅ Admin ${admin.email} already has name: ${admin.firstName} ${admin.lastName}`);
                     return admin;
                 }
 
                 // Otherwise, fetch from Users node
                 try {
-                    console.log(`    🔍 Fetching user details for admin ${admin.email} (${admin.id})`);
                     const userProfile = await realtimeDBUtils.loadUserBasedOnID(admin.id);
                     if (userProfile) {
                         console.log(`    ✅ Found user profile:`, userProfile.firstName, userProfile.lastName);
@@ -319,7 +310,6 @@ class AngelNetworks extends Component {
 
         // Prevent loading multiple times
         if (this.state.hasLoadedCourseMembers) {
-            console.log('⏭️ Course members already loaded, skipping...');
             return;
         }
 
@@ -327,35 +317,26 @@ class AngelNetworks extends Component {
         this.setState({hasLoadedCourseMembers: true});
 
         if (!systemGroups || systemGroups.length === 0) {
-            console.log('⚠️ No systemGroups available to load course members from');
             return;
         }
-
-        console.log('🔍 DEBUG: systemGroups structure:', systemGroups.length, 'total groups');
 
         // Courses are stored separately with parentGroupId linking to university
         const allCourses = systemGroups.filter(g => g.parentGroupId);
 
-        console.log(`📚 Found ${allCourses.length} courses in systemGroups`);
         allCourses.forEach(course => {
             console.log(`  Course: ${course.displayName} (${course.anid}) - parent: ${course.parentGroupId}`);
         });
 
         if (allCourses.length === 0) {
-            console.log('⚠️ No courses found in systemGroups');
             return;
         }
 
-        console.log(`📚 Loading members for ${allCourses.length} courses...`);
-
         // Load members for all courses in parallel
         const promises = allCourses.map(course => {
-            console.log(`  → Loading members for course: ${course.groupUserName} (${course.anid})`);
             return this.loadCourseMembers(course.anid, course.groupUserName);
         });
 
         await Promise.all(promises);
-        console.log('✅ All course members loaded');
     };
 
     /**
@@ -446,7 +427,6 @@ class AngelNetworks extends Component {
         this.addListener();
         this.loadCourseRequests(); // Load pending course requests
 
-        console.log('🎯 componentDidMount - checking if we should load course members');
         const {angelNetworks, angelNetworksLoaded, systemGroups} = this.props;
         console.log('  angelNetworksLoaded:', angelNetworksLoaded);
         console.log('  angelNetworks count:', angelNetworks?.length);
@@ -485,7 +465,6 @@ class AngelNetworks extends Component {
 
         // cancel all listeners if user is set to null or user is not an admin with permission
         if (!admin || (admin && !admin.superAdmin && admin.type !== DB_CONST.TYPE_ADMIN) || !shouldLoadOtherData) {
-            console.log('⚠️ Early return from componentDidUpdate - no admin permission or shouldLoadOtherData');
             stopListeningForAngelNetworksChanged();
             return;
         }
@@ -585,13 +564,6 @@ class AngelNetworks extends Component {
 
         // Check if user is super admin or super group admin
         const isSuperUser = admin && (admin.superAdmin || admin.superGroupAdmin);
-
-        // Debug logging
-        console.log('%c=== ANGEL NETWORKS BUTTON DEBUG ===', 'background: #222; color: #ff6b6b; font-size: 14px');
-        console.log('Admin:', admin);
-        console.log('Is Super User (superAdmin OR superGroupAdmin)?', isSuperUser);
-        console.log('Will show:', isSuperUser ? 'Add New Group button' : 'Add New Course button');
-        console.log('%c===================================', 'background: #222; color: #ff6b6b');
 
         return (
             <FlexView
@@ -833,8 +805,6 @@ class AngelNetworks extends Component {
 
         // Debug: Log systemGroups to verify it contains both universities and courses
         if (systemGroups && systemGroups.length > 0) {
-            console.log('%c🔍 SystemGroups Debug:', 'background: #222; color: #ffa500; font-size: 14px');
-            console.log('Total systemGroups:', systemGroups.length);
             const universities = systemGroups.filter(g => !g.parentGroupId);
             const courses = systemGroups.filter(g => g.parentGroupId);
             console.log(`Universities: ${universities.length}, Courses: ${courses.length}`);
@@ -907,7 +877,6 @@ class AngelNetworks extends Component {
 
                     // Debug logging
                     if (courses.length > 0) {
-                        console.log(`%c📚 Found ${courses.length} courses for ${angelNetwork.displayName}:`, 'color: green; font-weight: bold');
                         console.table(courses.map(c => ({
                             name: c.displayName,
                             anid: c.anid,
@@ -1016,8 +985,6 @@ class AngelNetworks extends Component {
 
                                                             // Debug logging
                                                             if (isCourseExpanded) {
-                                                                console.log(`📖 Rendering expanded course ${course.displayName} (${course.anid})`);
-                                                                console.log(`   Members in state:`, courseMembers.length, courseMembers.map(m => `${m.profile?.firstName} ${m.profile?.lastName}`));
                                                                 console.log(`   All course members in state:`, Object.keys(this.state.courseMembers));
                                                             }
 

@@ -322,8 +322,6 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
     };
 
     selectUser = (user: any) => {
-        console.log('[SELECT USER] User selected:', user);
-
         // Auto-select university and course based on the user's current membership
         let autoSelectedUniversity = '';
         let autoSelectedCourse = '';
@@ -331,7 +329,6 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
 
         // If user is not an admin and has invitedBy field, use it to determine their group
         if (!user.isAdmin && user.invitedBy) {
-            console.log('[SELECT USER] User is a regular member with invitedBy:', user.invitedBy);
             const userGroup = this.props.systemGroups.find(g => g.anid === user.invitedBy);
 
             if (userGroup) {
@@ -371,7 +368,6 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
             }
         } else if (user.isAdmin && user.adminOfGroup) {
             // User is already an admin - show their current admin group
-            console.log('[SELECT USER] User is already admin of:', user.adminOfGroup.displayName);
             const adminGroup = user.adminOfGroup;
 
             if (isCourse(adminGroup)) {
