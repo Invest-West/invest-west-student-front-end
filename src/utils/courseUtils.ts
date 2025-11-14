@@ -11,6 +11,9 @@
  * "Student Showcase" -> "student-showcase"
  */
 export const courseDisplayNameToUrlName = (displayName: string): string => {
+    if (!displayName) {
+        return '';
+    }
     return displayName
         .toLowerCase()
         .replace(/\s+/g, '-')  // Replace spaces with hyphens
@@ -23,6 +26,9 @@ export const courseDisplayNameToUrlName = (displayName: string): string => {
  * "student-showcase" -> "Student Showcase"
  */
 export const courseUrlNameToDisplayName = (urlName: string): string => {
+    if (!urlName) {
+        return '';
+    }
     return urlName
         .split('-')
         .map(word => {
@@ -48,8 +54,11 @@ export const courseUrlNameToDisplayName = (urlName: string): string => {
 export const findCourseDisplayNameByUrl = (urlName: string, availableCourses: string[]): string | null => {
     if (!urlName || !availableCourses) return null;
 
+    // Filter out any null/undefined values from the array
+    const validCourses = availableCourses.filter(course => course != null && course.trim().length > 0);
+
     // First, try exact match by converting display names to URL names
-    const matchingCourse = availableCourses.find(course =>
+    const matchingCourse = validCourses.find(course =>
         courseDisplayNameToUrlName(course) === urlName.toLowerCase()
     );
 
@@ -59,7 +68,7 @@ export const findCourseDisplayNameByUrl = (urlName: string, availableCourses: st
 
     // If no exact match, try case-insensitive search with normalization
     const normalizedUrl = urlName.toLowerCase().trim();
-    return availableCourses.find(course => {
+    return validCourses.find(course => {
         const courseUrlName = courseDisplayNameToUrlName(course);
         return courseUrlName === normalizedUrl;
     }) || null;
@@ -81,7 +90,10 @@ export const validateCourseUrlName = (urlName: string, availableCourses: string[
  * @returns Array of URL-friendly course names
  */
 export const getAvailableCourseUrlNames = (availableCourses: string[]): string[] => {
-    return availableCourses.map(courseDisplayNameToUrlName);
+    if (!availableCourses) return [];
+    return availableCourses
+        .filter(course => course != null && course.trim().length > 0)
+        .map(courseDisplayNameToUrlName);
 };
 
 /**
