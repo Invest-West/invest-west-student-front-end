@@ -255,60 +255,6 @@ class OffersTable extends Component<OffersTableProps, any> {
                             </TableRow>
                     }
 
-                    {/** Draft projects with feedback notification (only for non-admins) */}
-                    {
-                        !currentAdmin && OffersTableLocalState.draftProjectsWithFeedbackCount > 0
-                            ? <TableRow>
-                                <TableCell colSpan={5} >
-                                    <Box
-                                        display="flex"
-                                        alignItems="center"
-                                        padding="16px"
-                                        bgcolor="#fff8e1"
-                                        border="2px solid #ff9800"
-                                        borderRadius="8px"
-                                    >
-                                        <Warning
-                                            style={{
-                                                color: '#ff9800',
-                                                marginRight: '12px',
-                                                fontSize: '28px'
-                                            }}
-                                        />
-                                        <Box flex={1} >
-                                            <Typography
-                                                variant="h6"
-                                                style={{
-                                                    color: '#f57c00',
-                                                    fontWeight: 600
-                                                }}
-                                            >
-                                                {OffersTableLocalState.draftProjectsWithFeedbackCount === 1
-                                                    ? 'You have 1 project with admin feedback requiring action'
-                                                    : `You have ${OffersTableLocalState.draftProjectsWithFeedbackCount} projects with admin feedback requiring action`
-                                                }
-                                            </Typography>
-                                            <Typography variant="body2" style={{marginTop: '8px', color: '#e65100'}} >
-                                                Click "Show All Projects" below to view {OffersTableLocalState.draftProjectsWithFeedbackCount === 1 ? 'this project' : 'these projects'} and review the admin's feedback.
-                                            </Typography>
-                                        </Box>
-                                        <Button
-                                            variant="contained"
-                                            style={{
-                                                backgroundColor: '#ff9800',
-                                                color: 'white'
-                                            }}
-                                            className={css(sharedStyles.no_text_transform)}
-                                            onClick={() => filterChanged({target: {name: 'phaseFilter', value: 'all'}})}
-                                        >
-                                            Show All Projects
-                                        </Button>
-                                    </Box>
-                                </TableCell>
-                            </TableRow>
-                            : null
-                    }
-
                     {/** Search offer by name + refresh button */}
                     <TableRow>
                         <TableCell colSpan={5} >

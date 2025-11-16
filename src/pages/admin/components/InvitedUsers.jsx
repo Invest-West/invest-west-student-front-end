@@ -1079,24 +1079,7 @@ class InvitedUsers extends Component {
                             {/** Email */}
                             <TableCell colSpan={2}>
                                 <FlexView column>
-                                    <Typography align="left" variant="body2" paragraph={(admin.superAdmin || admin.superGroupAdmin)}>{invitedUser.email}</Typography>
-
-                                    {
-                                        (admin.superAdmin || admin.superGroupAdmin)
-                                            ?
-                                            <FlexView column>
-                                                <Typography align="left" variant="body2" color="textSecondary"><b><u>Invited ID:</u></b> {invitedUser.id}</Typography>
-                                                {
-                                                    !invitedUser.hasOwnProperty('officialUserID')
-                                                        ?
-                                                        null
-                                                        :
-                                                        <Typography align="left" variant="body2" color="textSecondary"><b><u>UID:</u></b> {invitedUser.officialUserID}</Typography>
-                                                }
-                                            </FlexView>
-                                            :
-                                            null
-                                    }
+                                    <Typography align="left" variant="body2">{invitedUser.email}</Typography>
                                 </FlexView>
                             </TableCell>
 

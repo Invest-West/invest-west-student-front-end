@@ -105,6 +105,9 @@ const mapDispatchToProps = dispatch => {
 
         toggleNotifications: (event) => dispatch(notificationsActions.toggleNotifications(event)),
         notificationRefUpdated: (ref) => dispatch(notificationsActions.notificationRefUpdated(ref)),
+        loadNotifications: () => dispatch(notificationsActions.loadNotifications()),
+        startListeningForNotificationsChanged: () => dispatch(notificationsActions.startListeningForNotificationsChanged()),
+        stopListeningForNotificationsChanged: () => dispatch(notificationsActions.stopListeningForNotificationsChanged()),
     }
 };
 
@@ -167,6 +170,8 @@ class AdminDashboard extends Component {
             loadAngelNetwork,
 
             notificationRefUpdated,
+            loadNotifications,
+            startListeningForNotificationsChanged,
 
             history,
             match,
@@ -182,19 +187,19 @@ class AdminDashboard extends Component {
         // Determine expected route based on whether this is a course-based route
         const hasCourseParam = match.params.hasOwnProperty('courseUserName');
         const hasGroupParam = match.params.hasOwnProperty('groupUserName');
-        
+
         let expectedPath;
         if (hasCourseParam && hasGroupParam) {
             // Course-based admin route: /groups/:groupUserName/:courseUserName/admin
             expectedPath = '/groups/:groupUserName/:courseUserName/admin';
         } else if (hasGroupParam) {
-            // Group-based admin route: /groups/:groupUserName/admin  
+            // Group-based admin route: /groups/:groupUserName/admin
             expectedPath = ROUTES.ADMIN;
         } else {
             // Super admin route
             expectedPath = ROUTES.ADMIN_INVEST_WEST_SUPER;
         }
-        
+
         setExpectedAndCurrentPathsForChecking(expectedPath, match.path);
 
         loadAngelNetwork()
@@ -207,6 +212,19 @@ class AdminDashboard extends Component {
         }
 
         notificationRefUpdated(this.notificationBell.current);
+
+        // Load notifications immediately on mount
+        loadNotifications();
+        startListeningForNotificationsChanged();
+    }
+
+    componentWillUnmount() {
+        const {
+            stopListeningForNotificationsChanged
+        } = this.props;
+
+        // Stop listening for notification changes when component unmounts
+        stopListeningForNotificationsChanged();
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {

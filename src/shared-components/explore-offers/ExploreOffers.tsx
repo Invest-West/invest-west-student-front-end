@@ -85,6 +85,8 @@ interface ExploreOffersComponentState {
   }
 
   class ExploreOffers extends Component<ExploreOffersProps, ExploreOffersComponentState> {
+    private _isMounted: boolean = false; // ⚡ Track mount state to prevent memory leaks
+
     constructor(props: ExploreOffersProps) {
       super(props);
       this.state = {
@@ -93,16 +95,24 @@ interface ExploreOffersComponentState {
     }
   
     componentDidMount() {
+        this._isMounted = true; // ⚡ Component is now mounted
         if (hasNotFetchedOffers(this.props.ExploreOffersLocalState)) {
           this.props.fetchOffers(FetchProjectsOrderByOptions.Phase);
         }
         this.fetchGroups();
       }
 
+      componentWillUnmount() {
+        this._isMounted = false; // ⚡ Component is unmounting
+      }
+
       fetchGroups = async () => {
         try {
           const response = await new GroupRepository().fetchGroups();
-          this.setState({ groups: response.data });
+          // ⚡ Only update state if component is still mounted
+          if (this._isMounted) {
+            this.setState({ groups: response.data });
+          }
         } catch (error) {
           console.error("Error fetching groups:", error);
         }

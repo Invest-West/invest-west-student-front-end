@@ -443,6 +443,8 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             isSignInRoute: Routes.isSignInRoute(this.routePath),
             isSignUpRoute: Routes.isSignUpRoute(this.routePath),
             isGroupViewOffer: this.routePath === Routes.groupViewOffer,
+            isCourseViewOffer: this.routePath === Routes.courseViewOffer,
+            isNonGroupViewOffer: this.routePath === Routes.nonGroupViewOffer,
             isInvestWestRoute: isInvestWestRoute,
             isProtectedAdminRoute: isProtectedAdminRoute,
             navigatingToError: this.state.navigatingToError,
@@ -457,6 +459,8 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             && !Routes.isSignInRoute(this.routePath)
             && !Routes.isSignUpRoute(this.routePath)
             && this.routePath !== Routes.groupViewOffer
+            && this.routePath !== Routes.courseViewOffer
+            && this.routePath !== Routes.nonGroupViewOffer
             && !isCreateOfferRoute  // Add exclusion for create-offer routes
             && !isCourseDashboardRoute  // Add exclusion for course-based dashboard routes
             && !isInvestWestRoute
@@ -468,6 +472,8 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                 isSignInRoute: Routes.isSignInRoute(this.routePath),
                 isSignUpRoute: Routes.isSignUpRoute(this.routePath),
                 isGroupViewOffer: this.routePath === Routes.groupViewOffer,
+                isCourseViewOffer: this.routePath === Routes.courseViewOffer,
+                isNonGroupViewOffer: this.routePath === Routes.nonGroupViewOffer,
                 isCreateOfferRoute: isCreateOfferRoute,
                 isCourseDashboardRoute: isCourseDashboardRoute,
                 isInvestWestRoute: isInvestWestRoute,
@@ -502,7 +508,13 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                 signInRoute: Routes.constructSignInRoute(this.routeParams)
             });
 
-            safeSetItem('redirectToAfterAuth', redirectUrl);
+            // Only save redirect URL if we're not in the middle of logging out
+            const isLoggingOut = safeGetItem('isLoggingOut') === 'true';
+            if (!isLoggingOut) {
+                safeSetItem('redirectToAfterAuth', redirectUrl);
+            } else {
+                console.log('[ROUTING DEBUG] Skipping redirect URL save - user is logging out');
+            }
 
             this.setState({
                 navigatingToSignIn: true
@@ -745,6 +757,19 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                     const currentAdmin = isAdmin(currentUser);
                     if (!isIssuer(currentUser) && !isInvestor(currentUser) && !currentAdmin) {
                         shouldRedirectToError = true;
+                    } else if (this.routeParams.courseUserName) {
+                        // For course-based routes, check if it's the invest-west group
+                        // invest-west with courses doesn't require membership check
+                        if (this.routeParams.groupUserName !== 'invest-west') {
+                            // For non-invest-west course routes, still check membership
+                            if (this.props.AuthenticationState.groupsOfMembership
+                                .filter(groupOfMembership =>
+                                    groupOfMembership.group.groupUserName === this.routeParams.groupUserName).length === 0
+                            ) {
+                                shouldRedirectToError = true;
+                            }
+                        }
+                        // invest-west course routes are allowed for all issuers/investors/admins
                     } else if (this.props.AuthenticationState.groupsOfMembership
                         .filter(groupOfMembership =>
                             groupOfMembership.group.groupUserName === this.routeParams.groupUserName).length === 0
@@ -834,7 +859,7 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
         this.updateRouteAndParams();
 
         // Check if current route is a project viewing route (public access allowed)
-        const isProjectViewRoute = this.routePath === Routes.groupViewOffer || this.routePath === Routes.nonGroupViewOffer;
+        const isProjectViewRoute = this.routePath === Routes.groupViewOffer || this.routePath === Routes.nonGroupViewOffer || this.routePath === Routes.courseViewOffer;
         
         // Check if current route is an admin route that should be handled more gracefully during auth loading
         const isAdminRoute = Routes.isGroupAdminRoute(this.routePath);
@@ -868,7 +893,7 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             || validatingGroupUrl
             || (groupUrlValidated && authNotInitialized && !isPublicRoute)
             || ((!Routes.isSignInRoute(this.routePath) && !Routes.isSignUpRoute(this.routePath))
-                && isAuthenticatingUser)
+                && isAuthenticatingUser && !isPublicRoute)
         ) {
             return (
                 <Box>
@@ -1012,7 +1037,7 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
         } = this.props;
 
         // Check if current route is a project viewing route (public access allowed)
-        const isProjectViewRoute = this.routePath === Routes.groupViewOffer || this.routePath === Routes.nonGroupViewOffer;
+        const isProjectViewRoute = this.routePath === Routes.groupViewOffer || this.routePath === Routes.nonGroupViewOffer || this.routePath === Routes.courseViewOffer;
 
         // Check if current route is an admin route that should attach auth listener immediately
         const isAdminRoute = Routes.isGroupAdminRoute(this.routePath);

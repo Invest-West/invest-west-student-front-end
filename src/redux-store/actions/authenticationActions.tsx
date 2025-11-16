@@ -305,7 +305,8 @@ export const signOut: ActionCreator<any> = () => {
 
         // Clear any stored redirect URL to prevent wrong redirection for next user
         try {
-            localStorage.removeItem('redirectToAfterAuth');
+            const { safeRemoveItem } = await import('../../utils/browser');
+            safeRemoveItem('redirectToAfterAuth');
         } catch (error) {
         }
 
@@ -324,7 +325,16 @@ export const signOut: ActionCreator<any> = () => {
         });
 
         // Then trigger offers refresh to get updated data without authentication
-        return dispatch(fetchOffers());
+        await dispatch(fetchOffers());
+
+        // Clear redirect URL again at the end to handle any race conditions
+        // where it might have been set between the first clear and now
+        try {
+            const { safeRemoveItem } = await import('../../utils/browser');
+            safeRemoveItem('redirectToAfterAuth');
+            safeRemoveItem('isLoggingOut');
+        } catch (error) {
+        }
     }
 }
 

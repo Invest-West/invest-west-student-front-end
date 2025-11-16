@@ -120,9 +120,16 @@ class Header extends Component<HeaderProps, {}> {
                                         alt="logo"
                                         src={
                                             (() => {
+                                                // If user is not authenticated, always use universal logo
+                                                if (!successfullyAuthenticated(AuthenticationState)) {
+                                                    console.log('[HEADER] Using universal logo (not authenticated):', defaultLogo);
+                                                    return defaultLogo;
+                                                }
+
+                                                // For authenticated users, show group-specific logo
                                                 const isSystemPublic = Routes.isSystemPublicRoute(routePath);
                                                 const isError = Routes.isErrorRoute(routePath);
-                                                console.log('[HEADER] Rendering logo...', {
+                                                console.log('[HEADER] Rendering logo for authenticated user...', {
                                                     routePath,
                                                     isSystemPublic,
                                                     isError,

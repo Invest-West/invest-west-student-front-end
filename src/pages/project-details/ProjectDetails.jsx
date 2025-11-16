@@ -27,7 +27,7 @@ import CreateIcon from "@material-ui/icons/CreateOutlined";
 import CheckCircleIcon from "@material-ui/icons/CheckCircle";
 import {Col, Container, Image, Row} from "react-bootstrap";
 import HashLoader from "react-spinners/HashLoader";
-import {NavLink} from "react-router-dom";
+import {NavLink, withRouter} from "react-router-dom";
 import ReactPlayer from "react-player";
 import * as colors from "../../values/colors";
 import * as utils from "../../utils/utils";
@@ -103,6 +103,9 @@ const mapStateToProps = (state) => {
         groupProperties: state.manageGroupFromParams.groupProperties,
         groupPropertiesLoaded: state.manageGroupFromParams.groupPropertiesLoaded,
         shouldLoadOtherData: state.manageGroupFromParams.shouldLoadOtherData,
+
+        // Get course name from URL
+        ManageGroupUrlState: state.ManageGroupUrlState,
 
         authStatus: state.auth.authStatus,
         authenticating: state.auth.authenticating,
@@ -257,17 +260,30 @@ class ProjectDetailsMain extends Component {
 
         if (groupPropertiesLoaded && shouldLoadOtherData) {
             // For project viewing, we don't need to wait for authentication to be fully resolved
-            // Projects can be viewed by both authenticated and unauthenticated users
-            const canLoadProject = !authIsNotInitialized(this.props.AuthenticationState); // Just wait for auth initialization
-            
+            // Projects are public and can be viewed without authentication
+            // Only wait if authentication is actively in progress, not just uninitialized
+            const authState = this.props.AuthenticationState;
+            const canLoadProject = !isAuthenticating(authState);
+
+            console.log('[PROJECT DETAILS AUTH] componentDidMount auth check:', {
+                status: authState.status,
+                isNotInitialized: authIsNotInitialized(authState),
+                isAuthenticating: isAuthenticating(authState),
+                hasUser: !!authState.currentUser,
+                canLoadProject: canLoadProject,
+                dataLoaded: dataLoaded,
+                dataBeingLoaded: dataBeingLoaded
+            });
+
             if (canLoadProject) {
                 if (!dataBeingLoaded && !dataLoaded) {
+                    console.log('🚀 Loading project data from componentDidMount...');
                     this.loadData();
                 } else {
-                    console.log('❌ NOT loading - conditions not met');
+                    console.log('❌ NOT loading - data already loaded or being loaded');
                 }
             } else {
-                console.log('⏳ Waiting for auth initialization...');
+                console.log('⏳ Waiting for active authentication...');
             }
         }
     }
@@ -298,15 +314,28 @@ class ProjectDetailsMain extends Component {
 
         if (groupPropertiesLoaded && shouldLoadOtherData) {
             // For project viewing, we don't need to wait for authentication to be fully resolved
-            const canLoadProject = !authIsNotInitialized(this.props.AuthenticationState);
-            
+            // Projects are public and can be viewed without authentication
+            // Only wait if authentication is actively in progress, not just uninitialized
+            const authState = this.props.AuthenticationState;
+            const canLoadProject = !isAuthenticating(authState);
+
+            console.log('[PROJECT DETAILS AUTH] componentDidUpdate auth check:', {
+                status: authState.status,
+                isNotInitialized: authIsNotInitialized(authState),
+                isAuthenticating: isAuthenticating(authState),
+                hasUser: !!authState.currentUser,
+                canLoadProject: canLoadProject,
+                dataLoaded: dataLoaded,
+                dataBeingLoaded: dataBeingLoaded
+            });
+
             if (canLoadProject) {
                 if (!dataBeingLoaded && !dataLoaded) {
                     console.log('🚀 Loading project data from componentDidUpdate...');
                     this.loadData();
                 }
             } else {
-                console.log('⏳ Waiting for auth initialization in componentDidUpdate...');
+                console.log('⏳ Waiting for active authentication in componentDidUpdate...');
             }
 
             // attach project changed listener
@@ -489,12 +518,26 @@ class ProjectDetailsMain extends Component {
                 });
 
                 // Load all related data in parallel for better performance
-                Promise.all([
+                // Only load reject feedbacks if user is authenticated and is either an admin or the project owner
+                const shouldLoadRejectFeedbacks = user && (
+                    user.type === DB_CONST.TYPE_ADMIN ||
+                    user.id === project.issuerID
+                );
+
+                const promises = [
                     realtimeDBUtils.loadVotes(project.id, null, realtimeDBUtils.LOAD_VOTES_ORDER_BY_PROJECT),
                     realtimeDBUtils.loadPledges(project.id, null, realtimeDBUtils.LOAD_PLEDGES_ORDER_BY_PROJECT),
-                    realtimeDBUtils.getUserBasedOnID(project.issuerID),
-                    realtimeDBUtils.loadProjectRejectFeedbacks(project.id)
-                ]).then(([votes, pledges, projectIssuer, rejectFeedbacks]) => {
+                    realtimeDBUtils.getUserBasedOnID(project.issuerID)
+                ];
+
+                if (shouldLoadRejectFeedbacks) {
+                    promises.push(realtimeDBUtils.loadProjectRejectFeedbacks(project.id));
+                }
+
+                Promise.all(promises).then((results) => {
+                    const [votes, pledges, projectIssuer, rejectFeedbacks] = shouldLoadRejectFeedbacks
+                        ? results
+                        : [...results, []];
                     console.log('✅ Promise.all completed successfully!', {
                         votesCount: votes?.length,
                         pledgesCount: pledges?.length,
@@ -1937,6 +1980,8 @@ class ProjectDetailsMain extends Component {
                     user={user}
                     userLoaded={userLoaded}
                     groupsUserIsIn={groupsUserIsIn}
+                    match={this.props.match}
+                    ManageGroupUrlState={this.props.ManageGroupUrlState}
                     mainBody={mainBody}
                     adminOfferStatesActiveStep={adminOfferStatesActiveStep}
                     comments={comments}
@@ -2449,24 +2494,48 @@ class ProjectDetails extends Component {
                                                     <CreateIcon style={{marginRight: 8,  width: 20, height: "auto"}}
                                                     />Edit offer</Button>
                                                 :
-                                                <NavLink
-                                                    to={
-                                                        groupUserName
-                                                            ?
-                                                            Routes.constructCreateProjectRoute(
-                                                                groupUserName,
-                                                                project.course ? project.course.replace(/\s+/g, '-') : null,
-                                                                {edit: project.id}
-                                                            )
-                                                            :
-                                                            ROUTES.EDIT_OFFER_INVEST_WEST_SUPER
-                                                                .replace(":projectID", project.id)
+                                                (() => {
+                                                    // Parse course name directly from URL pathname
+                                                    // URL format: /groups/:groupUserName/:courseUserName/projects/:projectID
+                                                    const pathname = window.location.pathname;
+                                                    const pathParts = pathname.split('/').filter(p => p);
+                                                    let courseUserName = null;
+
+                                                    // Check if URL has format: /groups/groupName/courseName/projects/...
+                                                    if (pathParts.length >= 5 && pathParts[0] === 'groups' && pathParts[3] === 'projects') {
+                                                        courseUserName = pathParts[2]; // The course name is the 3rd part
                                                     }
-                                                    className={css(sharedStyles.nav_link_hover_without_changing_text_color)}
-                                                >
-                                                    <Button color="default" variant="outlined" size="medium" className={css(sharedStyles.no_text_transform)}>
-                                                        <CreateIcon style={{marginRight: 8, width: 20, height: "auto"}}/>Edit offer</Button>
-                                                </NavLink>
+
+                                                    console.log('[PROJECT DETAILS EDIT] Debugging edit URL construction:', {
+                                                        pathname,
+                                                        pathParts,
+                                                        groupUserName,
+                                                        courseUserName,
+                                                        projectId: project.id
+                                                    });
+
+                                                    return (
+                                                        <NavLink
+                                                            to={
+                                                                groupUserName
+                                                                    ?
+                                                                    Routes.constructCreateProjectRoute(
+                                                                        groupUserName,
+                                                                        courseUserName,
+                                                                        {edit: project.id}
+                                                                    )
+                                                                    :
+                                                                    ROUTES.EDIT_OFFER_INVEST_WEST_SUPER
+                                                                        .replace(":projectID", project.id)
+                                                            }
+                                                            className={css(sharedStyles.nav_link_hover_without_changing_text_color)}
+                                                        >
+                                                            <Button color="default" variant="outlined" size="medium" className={css(sharedStyles.no_text_transform)}>
+                                                                <CreateIcon style={{marginRight: 8, width: 20, height: "auto"}}/>Edit offer</Button>
+                                                        </NavLink>
+                                                    );
+                                                })()
+
                                         }
                                         {/*<FlexView*/}
                                         {/*    marginLeft={15}*/}
@@ -4505,7 +4574,7 @@ class CommentReplyInputArea extends Component {
     }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(ProjectDetailsMain);
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(ProjectDetailsMain));
 
 
 const styles = StyleSheet.create({

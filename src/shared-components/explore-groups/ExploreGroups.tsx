@@ -129,7 +129,7 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
                                     fullWidth
                                     name="nameFilter"
                                     value={ExploreGroupsLocalState.nameFilter}
-                                    placeholder="Search course by name"
+                                    placeholder="Search university by name"
                                     onChange={filterChanged}
                                     disabled={!successfullyFetchedGroups(ExploreGroupsLocalState)}
                                     startAdornment={
@@ -175,8 +175,8 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
                                     onChange={filterChanged}
                                     disabled={!successfullyFetchedGroups(ExploreGroupsLocalState)}
                                 >
-                                    <MenuItem key="all" value="all">All courses</MenuItem>
-                                    <MenuItem key="groupsOfMembership" value="groupsOfMembership">My courses</MenuItem>
+                                    <MenuItem key="all" value="all">All universities</MenuItem>
+                                    <MenuItem key="groupsOfMembership" value="groupsOfMembership">My universities</MenuItem>
                                 </Select>
 
                                 <Box width="15px" />
@@ -208,7 +208,7 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
                     ? null
                     : !hasGroupsForCurrentFilters(ExploreGroupsLocalState)
                     ? <Box marginY="80px" >
-                        <Typography align="center" variant="h5" > There are no courses available using your current filter criteria </Typography>
+                        <Typography align="center" variant="h5" > There are no universities available using your current filter criteria </Typography>
                     </Box>
                     : <Box marginTop="30px" >
                         <Row noGutters >

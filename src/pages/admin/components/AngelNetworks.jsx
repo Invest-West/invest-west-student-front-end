@@ -130,9 +130,12 @@ class AngelNetworks extends Component {
             hasLoadedCourseMembers: false // Track if we've already loaded all course members
         };
         this._isMounted = false; // ⚡ Track mount state to prevent memory leaks
+        this._loadCourseMembersTimeout = null; // ⚡ Track timeout to cancel on unmount
     }
 
     toggleUniversityExpansion = (universityId) => {
+        if (!this._isMounted) return;
+
         this.setState(prevState => ({
             expandedUniversities: {
                 ...prevState.expandedUniversities,
@@ -142,15 +145,19 @@ class AngelNetworks extends Component {
     };
 
     toggleCourseExpansion = async (courseId, courseGroupUserName) => {
+        if (!this._isMounted) return;
+
         const isCurrentlyExpanded = this.state.expandedCourses[courseId];
 
         // Toggle expansion
-        this.setState(prevState => ({
-            expandedCourses: {
-                ...prevState.expandedCourses,
-                [courseId]: !isCurrentlyExpanded
-            }
-        }));
+        if (this._isMounted) {
+            this.setState(prevState => ({
+                expandedCourses: {
+                    ...prevState.expandedCourses,
+                    [courseId]: !isCurrentlyExpanded
+                }
+            }));
+        }
 
         // If we're expanding and haven't loaded members yet, fetch them
         if (!isCurrentlyExpanded && !this.state.courseMembers[courseId]) {
@@ -306,6 +313,11 @@ class AngelNetworks extends Component {
      * Load all course members proactively
      */
     loadAllCourseMembers = async () => {
+        // ⚡ FIX: Check if component is still mounted before doing anything
+        if (!this._isMounted) {
+            return;
+        }
+
         const {angelNetworks, systemGroups} = this.props;
 
         // Prevent loading multiple times
@@ -314,7 +326,9 @@ class AngelNetworks extends Component {
         }
 
         // Mark as loaded immediately to prevent multiple calls
-        this.setState({hasLoadedCourseMembers: true});
+        if (this._isMounted) {
+            this.setState({hasLoadedCourseMembers: true});
+        }
 
         if (!systemGroups || systemGroups.length === 0) {
             return;
@@ -343,6 +357,11 @@ class AngelNetworks extends Component {
      * Load course requests
      */
     loadCourseRequests = async () => {
+        // ⚡ FIX: Check if component is still mounted
+        if (!this._isMounted) {
+            return;
+        }
+
         const {admin} = this.props;
 
         // Only load for admins
@@ -350,7 +369,9 @@ class AngelNetworks extends Component {
             return;
         }
 
-        this.setState({loadingCourseRequests: true});
+        if (this._isMounted) {
+            this.setState({loadingCourseRequests: true});
+        }
 
         try {
             const CourseRequestRepository = require('../../../api/repositories/CourseRequestRepository').default;
@@ -358,16 +379,20 @@ class AngelNetworks extends Component {
                 status: "pending" // Only fetch pending requests
             });
 
-            this.setState({
-                courseRequests: response.data || [],
-                loadingCourseRequests: false
-            });
+            if (this._isMounted) {
+                this.setState({
+                    courseRequests: response.data || [],
+                    loadingCourseRequests: false
+                });
+            }
         } catch (error) {
             console.error('Error loading course requests:', error);
-            this.setState({
-                courseRequests: [],
-                loadingCourseRequests: false
-            });
+            if (this._isMounted) {
+                this.setState({
+                    courseRequests: [],
+                    loadingCourseRequests: false
+                });
+            }
         }
     };
 
@@ -375,7 +400,11 @@ class AngelNetworks extends Component {
      * Approve a course request
      */
     handleApproveCourseRequest = async (requestId) => {
-        this.setState({approvingRequest: requestId});
+        if (!this._isMounted) return;
+
+        if (this._isMounted) {
+            this.setState({approvingRequest: requestId});
+        }
 
         try {
             const CourseRequestRepository = require('../../../api/repositories/CourseRequestRepository').default;
@@ -385,11 +414,15 @@ class AngelNetworks extends Component {
             await this.loadCourseRequests();
             this.props.loadAngelNetworks();
 
-            this.setState({approvingRequest: null});
+            if (this._isMounted) {
+                this.setState({approvingRequest: null});
+            }
         } catch (error) {
             console.error('Error approving course request:', error);
             alert('Error approving course request: ' + (error.response?.data?.detail || error.message));
-            this.setState({approvingRequest: null});
+            if (this._isMounted) {
+                this.setState({approvingRequest: null});
+            }
         }
     };
 
@@ -397,13 +430,17 @@ class AngelNetworks extends Component {
      * Reject a course request
      */
     handleRejectCourseRequest = async (requestId, courseName) => {
+        if (!this._isMounted) return;
+
         const reason = prompt(`Please provide a reason for rejecting "${courseName}":`);
 
         if (!reason || reason.trim().length === 0) {
             return; // User cancelled or didn't provide a reason
         }
 
-        this.setState({rejectingRequest: requestId});
+        if (this._isMounted) {
+            this.setState({rejectingRequest: requestId});
+        }
 
         try {
             const CourseRequestRepository = require('../../../api/repositories/CourseRequestRepository').default;
@@ -412,11 +449,15 @@ class AngelNetworks extends Component {
             // Reload course requests to remove the rejected one
             await this.loadCourseRequests();
 
-            this.setState({rejectingRequest: null});
+            if (this._isMounted) {
+                this.setState({rejectingRequest: null});
+            }
         } catch (error) {
             console.error('Error rejecting course request:', error);
             alert('Error rejecting course request: ' + (error.response?.data?.detail || error.message));
-            this.setState({rejectingRequest: null});
+            if (this._isMounted) {
+                this.setState({rejectingRequest: null});
+            }
         }
     };
 
@@ -436,8 +477,10 @@ class AngelNetworks extends Component {
         if (systemGroups && systemGroups.length > 0) {
             console.log('🎓 systemGroups available in componentDidMount, loading course members now...');
             // Add a small delay to ensure everything is ready
-            setTimeout(() => {
-                this.loadAllCourseMembers();
+            this._loadCourseMembersTimeout = setTimeout(() => {
+                if (this._isMounted) {
+                    this.loadAllCourseMembers();
+                }
             }, 500);
         } else {
             console.log('⏳ systemGroups not available yet in componentDidMount, will try in componentDidUpdate');
@@ -485,6 +528,12 @@ class AngelNetworks extends Component {
 
     componentWillUnmount() {
         this._isMounted = false; // ⚡ Component is unmounting
+
+        // ⚡ Cancel pending timeout to prevent memory leak
+        if (this._loadCourseMembersTimeout) {
+            clearTimeout(this._loadCourseMembersTimeout);
+            this._loadCourseMembersTimeout = null;
+        }
 
         const {
             stopListeningForAngelNetworksChanged

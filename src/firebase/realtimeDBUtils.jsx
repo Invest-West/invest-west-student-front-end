@@ -2705,6 +2705,10 @@ export const deleteAllNotifications = async (userID) => {
         // load all notifications of the specified user
         loadNotifications(userID)
             .then(notifications => {
+                if (notifications.length === 0) {
+                    return resolve();
+                }
+
                 // delete them all
                 Promise.all(notifications.map(notification => {
                     return new Promise((resolve, reject) => {

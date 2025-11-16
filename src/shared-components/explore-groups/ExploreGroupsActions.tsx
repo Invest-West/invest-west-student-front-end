@@ -82,54 +82,32 @@ export const fetchGroups: ActionCreator<any> = () => {
             groups: []
         };
 
-        if (!currentUser) {
-            completeAction.error = "Unauthenticated user.";
-            return dispatch(completeAction);
-        }
-
         try {
-            // Fetch universities from the API
+            // Fetch universities from the API (works for both authenticated and unauthenticated users)
             const groupsResponse = await new GroupRepository().fetchGroups(
                 nameFilter.trim().length === 0 ? undefined : {name: nameFilter}
             );
             const universities = groupsResponse.data;
 
-            // Fetch courses directly from Firebase Courses node
-            const coursesSnapshot = await firebase
-                .database()
-                .ref(DB_CONST.COURSES_CHILD)
-                .once('value');
+            // Only include universities in the filter (courses will be shown nested within their parent university)
+            completeAction.groups = universities;
 
-            let courses: GroupProperties[] = [];
-            if (coursesSnapshot.exists()) {
-                const coursesObject = coursesSnapshot.val();
-                courses = Object.keys(coursesObject).map(key => coursesObject[key]);
-
-                // Filter by name if nameFilter is provided
-                if (nameFilter.trim().length > 0) {
-                    const lowerFilter = nameFilter.toLowerCase();
-                    courses = courses.filter(course =>
-                        course.displayName?.toLowerCase().includes(lowerFilter) ||
-                        course.displayNameLower?.includes(lowerFilter)
-                    );
+            // Fetch access requests only for authenticated non-admin users
+            if (currentUser) {
+                const admin: Admin | null = isAdmin(currentUser);
+                if (!admin || (admin && !admin.superAdmin)) {
+                    // user is an issuer, investor, or group admin
+                    // and access requests have not been fetched
+                    if (!accessRequestsInstances) {
+                        const accessRequestInstancesResponse = await new AccessRequestRepository().fetchAccessRequests({
+                            user: currentUser.id,
+                            orderBy: "user"
+                        });
+                        completeAction.accessRequestInstances = accessRequestInstancesResponse.data;
+                    }
                 }
             }
 
-            // Merge universities and courses
-            completeAction.groups = [...universities, ...courses];
-
-            const admin: Admin | null = isAdmin(currentUser);
-            if (!admin || (admin && !admin.superAdmin)) {
-                // user is an issuer, investor, or group admin
-                // and access requests have not been fetched
-                if (!accessRequestsInstances) {
-                    const accessRequestInstancesResponse = await new AccessRequestRepository().fetchAccessRequests({
-                        user: currentUser.id,
-                        orderBy: "user"
-                    });
-                    completeAction.accessRequestInstances = accessRequestInstancesResponse.data;
-                }
-            }
             dispatch(completeAction);
             return dispatch(filterGroupsByGroupFilter());
         } catch (error) {
@@ -187,25 +165,15 @@ const filterGroupsByGroupFilter: ActionCreator<any> = () => {
         const AuthenticationState = getState().AuthenticationState;
         const currentUser = AuthenticationState.currentUser;
 
-        if (!currentUser) {
-            return;
-        }
-
         const groupsFiltered: GroupProperties[] = [];
 
-        // Check if user is a super admin or super group admin
-        const admin: Admin | null = isAdmin(currentUser);
+        // Check if user is a super admin or super group admin (only if authenticated)
+        const admin: Admin | null = currentUser ? isAdmin(currentUser) : null;
         const isSuperAdmin = admin && (admin.superAdmin || admin.superGroupAdmin);
-
-        console.log('Groups of Membership:', AuthenticationState.groupsOfMembership.map(m => ({
-            name: m.group.displayName,
-            anid: m.group.anid,
-            parentGroupId: m.group.parentGroupId
-        })));
 
         // For normal users (non-super admins), find their university
         let userUniversityId: string | null = null;
-        if (!isSuperAdmin) {
+        if (currentUser && !isSuperAdmin) {
             // Find the university the user belongs to by looking at their group memberships
             for (const membership of AuthenticationState.groupsOfMembership) {
                 const memberGroup = membership.group;
@@ -222,7 +190,6 @@ const filterGroupsByGroupFilter: ActionCreator<any> = () => {
                     break;
                 }
             }
-            console.log('Normal user - University ID:', userUniversityId);
         }
 
         groups.map(group => {
@@ -261,12 +228,6 @@ const filterGroupsByGroupFilter: ActionCreator<any> = () => {
             }
             return null;
         });
-
-        console.table(groupsFiltered.map(g => ({
-            name: g.displayName,
-            anid: g.anid,
-            parentGroupId: g.parentGroupId
-        })));
 
         const action: FilterGroupsByGroupFilterAction = {
             type: ExploreGroupsEvents.FilterGroupsByGroupFilter,

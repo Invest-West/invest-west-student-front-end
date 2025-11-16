@@ -27,6 +27,7 @@ import * as utils from "../../utils/utils";
 import sharedStyles from "../../shared-js-css-styles/SharedStyles";
 import {signOut} from "../../redux-store/actions/authenticationActions";
 import {School} from "@material-ui/icons";
+import {safeRemoveItem, safeSetItem} from "../../utils/browser";
 
 export const HOME_TAB = "Home";
 export const PROFILE_TAB = "Profile";
@@ -79,10 +80,26 @@ class SidebarContent extends Component {
             signOutNew
         } = this.props;
 
-        await signOutNew();
-        dashboardProps.history.push(Routes.constructHomeRoute(dashboardProps.match.params, ManageGroupUrlState, AuthenticationState));
+        // CRITICAL: Set a logout flag FIRST to prevent GroupRoute from saving redirect URLs
+        safeSetItem('isLoggingOut', 'true');
 
+        // Clear any existing redirect URL immediately
+        safeRemoveItem('redirectToAfterAuth');
+
+        // Navigate to home BEFORE signing out to prevent race condition
+        // where GroupRoute saves the current protected route as redirectToAfterAuth
+        const homeRoute = Routes.constructHomeRoute(dashboardProps.match.params, ManageGroupUrlState, AuthenticationState);
+        dashboardProps.history.push(homeRoute);
+
+        // Small delay to ensure navigation happens before sign out
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        await signOutNew();
         logout(); // logout old
+
+        // Clear the logout flag and redirect URL one final time
+        safeRemoveItem('isLoggingOut');
+        safeRemoveItem('redirectToAfterAuth');
     };
 
     onForumsTabClick = () => {
