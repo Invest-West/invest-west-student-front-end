@@ -129,7 +129,6 @@ class SignUpNew extends Component<SignUpProps & Readonly<RouteComponentProps<Rou
             );
 
             if (courseDisplayName) {
-                console.log('[SIGNUP] Auto-selecting course from URL:', courseFromUrl, '->', courseDisplayName);
                 // Simulate an input field change to set the course
                 const mockEvent = {
                     target: {
@@ -141,8 +140,6 @@ class SignUpNew extends Component<SignUpProps & Readonly<RouteComponentProps<Rou
                 } as React.ChangeEvent<HTMLInputElement>;
 
                 handleInputFieldChanged(mockEvent);
-            } else {
-                console.warn('[SIGNUP] Course from URL not found in available courses:', courseFromUrl);
             }
         }
     }

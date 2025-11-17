@@ -711,27 +711,8 @@ export default class Routes {
 
         let route: string = "";
 
-        // Debug: Log current admin and memberships
-        console.log('[DASHBOARD DEBUG] Admin user:', {
-            adminId: currentAdmin?.id,
-            adminAnid: currentAdmin?.anid,
-            groupsOfMembershipCount: AuthenticationState.groupsOfMembership?.length || 0,
-            groups: AuthenticationState.groupsOfMembership?.map(m => ({
-                groupUserName: m.group.groupUserName,
-                displayName: m.group.displayName,
-                anid: m.group.anid,
-                isHomeGroup: m.isHomeGroup
-            }))
-        });
-
         // Get university and course usernames based on user's membership
         const { universityUserName, courseUserName } = getUniversityAndCourseForUser();
-
-        console.log('[DASHBOARD DEBUG] Determined university and course:', {
-            universityUserName,
-            courseUserName,
-            routeParams
-        });
 
         // Handle admin users
         if (currentAdmin) {
@@ -744,8 +725,6 @@ export default class Routes {
                 route = Routes.courseAdminDashboard
                     .replace(":groupUserName", universityUserName)
                     .replace(":courseUserName", courseUserName);
-                console.log('[DASHBOARD DEBUG] Constructed admin dashboard route:', route,
-                    `(university: ${universityUserName}, course: ${courseUserName})`);
             }
         }
         // Handle regular users (investors/issuers)
@@ -754,15 +733,11 @@ export default class Routes {
                 route = Routes.courseInvestorDashboard
                     .replace(":groupUserName", universityUserName)
                     .replace(":courseUserName", courseUserName);
-                console.log('[DASHBOARD DEBUG] Constructed investor dashboard route:', route,
-                    `(university: ${universityUserName}, course: ${courseUserName})`);
             } else {
                 // Assume issuer if not investor
                 route = Routes.courseIssuerDashboard
                     .replace(":groupUserName", universityUserName)
                     .replace(":courseUserName", courseUserName);
-                console.log('[DASHBOARD DEBUG] Constructed issuer dashboard route:', route,
-                    `(university: ${universityUserName}, course: ${courseUserName})`);
             }
         }
 

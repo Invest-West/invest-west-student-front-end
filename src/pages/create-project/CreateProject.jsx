@@ -270,7 +270,7 @@ class CreatePitchPageMain extends Component {
                             : previousState.groupIssuerCreateOfferFor,
                         requestToLoadData: !previousState.requestToLoadData ? true : previousState.requestToLoadData
                     }
-                }, () => console.log('New state after next step:', this.state));
+                });
             }
         }
 
@@ -281,14 +281,6 @@ class CreatePitchPageMain extends Component {
 
         if (saveProgress && !progressBeingSaved) {
             this.uploadProject();
-        }
-
-        if (prevProps.ManageGroupUrlState !== this.props.ManageGroupUrlState) {
-            console.log('ManageGroupUrlState changed:', this.props.ManageGroupUrlState);
-        }
-
-        if (prevProps.AuthenticationState.currentUser !== this.props.AuthenticationState.currentUser) {
-            console.log('Authentication state changed. Current user:', this.props.AuthenticationState.currentUser);
         }
     }
 
@@ -338,7 +330,6 @@ class CreatePitchPageMain extends Component {
                 }
             });
         }
-        console.log(`Navigating to step ${activeStep} with projectID ${projectID}. Current state:`, this.state);
     };
 
     /**
@@ -346,12 +337,6 @@ class CreatePitchPageMain extends Component {
      */
     loadData = () => {
         const params = queryString.parse(this.props.location.search);
-        console.log('[CREATE-PROJECT DEBUG] loadData called:', {
-            editParam: params.edit,
-            currentURL: window.location.href,
-            projectEditedLoaded: this.state.projectEditedLoaded,
-            projectIDToBeLoadedAfterSavingFirstTime: this.state.projectIDToBeLoadedAfterSavingFirstTime
-        });
 
         const {
             ManageGroupUrlState,
@@ -365,7 +350,6 @@ class CreatePitchPageMain extends Component {
         } = this.state;
 
         if (isValidatingGroupUrl(ManageGroupUrlState) || isAuthenticating(AuthenticationState)) {
-            console.log('[CREATE-PROJECT DEBUG] Waiting for group validation or authentication');
             return;
         }
 
@@ -389,13 +373,6 @@ class CreatePitchPageMain extends Component {
             } else {
                 // New project creation - handle initialization for investors
                 if (!projectEditedLoaded) {
-                    console.log('[CREATE-PROJECT DEBUG] Setting groupIssuerCreateOfferFor from ManageGroupUrlState:', {
-                        group: ManageGroupUrlState.group,
-                        groupAnid: ManageGroupUrlState.group ? ManageGroupUrlState.group.anid : 'null',
-                        groupUserName: ManageGroupUrlState.groupNameFromUrl,
-                        courseUserName: ManageGroupUrlState.courseNameFromUrl
-                    });
-
                     this.setState({
                         projectEditedLoaded: true,
                         projectIDToBeLoadedAfterSavingFirstTime: null,
@@ -555,9 +532,6 @@ class CreatePitchPageMain extends Component {
                     });
                 })
                 .catch(error => {
-                    console.error('💥 ERROR in CreateProject loadData catch block:', error);
-                    console.error('💥 ERROR Stack trace:', new Error().stack);
-                    console.error('💥 ERROR Current state at error:', this.state);
                     this.setState({
                         projectEditedLoaded: true,
                         projectIDToBeLoadedAfterSavingFirstTime: null,
@@ -651,22 +625,6 @@ class CreatePitchPageMain extends Component {
         switch (activeStep) {
             // General information
             case STEP_PITCH_GENERAL_INFORMATION:
-                // Debug: Log validation values
-                console.log('Validation check:', {
-                    pitchSector: pitchSector, 
-                    pitchCourse: pitchCourse,
-                    pitchProjectName: pitchProjectName,
-                    pitchProjectDescription: pitchProjectDescription,
-                    pitchExpiryDate: pitchExpiryDate,
-                    //financialRound: financialRound,
-                    groupIssuerCreateOfferFor: groupIssuerCreateOfferFor,
-                    isIssuer: isIssuer(AuthenticationState.currentUser),
-                    isInvestor: isInvestor(AuthenticationState.currentUser),
-                    isEdit: params.edit && projectEdited,
-                    groupName: ManageGroupUrlState.groupNameFromUrl,
-                    qibSpecialNews: qibSpecialNews
-                });
-                
                 // Auto-fill expiry date to 1 year from now if not provided
                 let finalExpiryDate = pitchExpiryDate;
                 if (pitchExpiryDate === null) {
@@ -1624,7 +1582,6 @@ class CreatePitchPageMain extends Component {
                                                             });
                                                         })
                                                         .catch(error => {
-                                                            console.error("Error clearing reject feedbacks:", error);
                                                         });
 
                                                     // don't need to check for prior TCs acceptance because this is create new mode
@@ -1657,7 +1614,6 @@ class CreatePitchPageMain extends Component {
                                                             } catch (error) {
                                                                 // Log error but don't block the publish process
                                                                 // The project is already published, email is just a notification
-                                                                console.error("Failed to send pitch published email:", error);
                                                             }
 
                                                             // track activity for creating a new project from a draft one
@@ -2686,15 +2642,6 @@ class CreatePitchPageMain extends Component {
                     && AuthenticationState.currentUser.id !== projectEdited.issuerID
                 )
             ) {
-                console.log('[CREATE-PROJECT DEBUG] Showing 404 because:', {
-                    projectEdited: !!projectEdited,
-                    projectEditedLoaded: projectEditedLoaded,
-                    currentUser: AuthenticationState.currentUser,
-                    projectIssuerID: projectEdited?.issuerID,
-                    isIssuer: AuthenticationState.currentUser?.type === DB_CONST.TYPE_ISSUER,
-                    ownsProject: AuthenticationState.currentUser?.id === projectEdited?.issuerID,
-                    editParam: queryString.parse(this.props.location.search).edit
-                });
                 return (
                     <PageNotFoundWhole/>
                 );

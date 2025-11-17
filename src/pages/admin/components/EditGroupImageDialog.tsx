@@ -108,13 +108,6 @@ export default class EditGroupImageDialog extends Component<EditGroupImageDialog
                 formData.append("storageLocation", "PlainLogos");
 
                 const idToken = await firebase.auth().currentUser?.getIdToken();
-                console.log("File details:", {
-                    name: selectedFile.name,
-                    size: selectedFile.size,
-                    type: selectedFile.type,
-                    fileName: `${groupUserName}-logo-${Date.now()}`,
-                    storageLocation: "PlainLogos"
-                });
 
                 const response = await fetch(
                     `${process.env.REACT_APP_BACK_END_BASE_URL}${ApiRoutes.uploadSingleFileRoute}`,
@@ -129,8 +122,6 @@ export default class EditGroupImageDialog extends Component<EditGroupImageDialog
 
                 if (!response.ok) {
                     const errorText = await response.text();
-                    console.error("Upload failed with status:", response.status);
-                    console.error("Error response:", errorText);
                     throw new Error(`Failed to upload file: ${response.status} - ${errorText}`);
                 }
 
@@ -144,8 +135,6 @@ export default class EditGroupImageDialog extends Component<EditGroupImageDialog
                 try {
                     data = JSON.parse(responseText);
                 } catch (parseError) {
-                    console.error("JSON parse error:", parseError);
-                    console.error("Response text was:", responseText);
                     throw new Error(`Invalid JSON response: ${responseText.substring(0, 100)}`);
                 }
 
@@ -154,7 +143,6 @@ export default class EditGroupImageDialog extends Component<EditGroupImageDialog
                 }
 
                 finalImageUrl = data.url;
-                console.log("Successfully got file URL:", finalImageUrl);
                 this.setState({ uploading: false });
             } else {
                 // Validate URL
@@ -173,7 +161,6 @@ export default class EditGroupImageDialog extends Component<EditGroupImageDialog
             onSuccess();
             onClose();
         } catch (error) {
-            console.error("Error saving image:", error);
             this.setState({
                 error: "Failed to save image. Please try again.",
                 uploading: false,

@@ -104,7 +104,6 @@ export const validateGroupUrl: ActionCreator<any> = (path: string, groupUserName
                     const response = await new GroupRepository().getGroup('invest-west');
                     investWestGroup = response.data;
                 } catch (error) {
-                    console.error('[VALIDATE GROUP] Failed to fetch invest-west group, using fallback:', error);
                     // Fallback to hardcoded object if fetch fails
                     investWestGroup = {
                         anid: '-M2I40dBdzdI89yDCaAn',
@@ -132,14 +131,12 @@ export const validateGroupUrl: ActionCreator<any> = (path: string, groupUserName
                         const courseGroup = await new GroupRepository().getCourseByUserName(courseUserName);
 
                         if (!courseGroup) {
-                            console.log(`[COURSE VALIDATION] ⚠️ Course not found in Firebase: ${courseUserName}`);
                             // Don't fail validation here - the course might exist but we can't read it
                             // due to Firebase security rules (not authenticated yet)
                             // Let the authentication and permission checks handle access control
                         } else {
                             // Verify the course belongs to this parent group
                             if (courseGroup.parentGroupId !== investWestGroup.anid) {
-                                console.log(`[COURSE VALIDATION] ❌ Course "${courseUserName}" does not belong to parent group "${groupUserName}"`);
                                 finishedLoadingGroupUrlAction.validGroupUrl = false;
                                 finishedLoadingGroupUrlAction.error = {
                                     detail: `Course "${courseUserName}" is not part of ${investWestGroup.displayName}`
@@ -149,7 +146,6 @@ export const validateGroupUrl: ActionCreator<any> = (path: string, groupUserName
 
                         }
                     } catch (error) {
-                        console.error('[COURSE VALIDATION] Error validating course:', error);
                         // Check if this is a permission/auth error (PERMISSION_DENIED from Firebase)
                         const isPermissionError = error.toString().includes('PERMISSION_DENIED') ||
                                                  error.toString().includes('permission') ||
@@ -159,7 +155,6 @@ export const validateGroupUrl: ActionCreator<any> = (path: string, groupUserName
                             // Allow validation to pass - authentication check will handle this
                         } else {
                             // For other errors, we might want to fail validation
-                            console.log(`[COURSE VALIDATION] ⚠️ Non-permission error, but allowing validation to proceed: ${error.toString()}`);
                             // Still allow it to pass - be lenient with course validation
                             // The auth/permission checks will catch any real issues
                         }
@@ -182,7 +177,6 @@ export const validateGroupUrl: ActionCreator<any> = (path: string, groupUserName
                         const courseGroup = await new GroupRepository().getCourseByUserName(courseUserName);
 
                         if (!courseGroup) {
-                            console.log(`[COURSE VALIDATION] ⚠️ Course not found in Firebase: ${courseUserName}`);
                             // Don't fail validation here - the course might exist but we can't read it
                             // due to Firebase security rules (not authenticated yet)
                             // Let the authentication and permission checks handle access control
@@ -197,21 +191,17 @@ export const validateGroupUrl: ActionCreator<any> = (path: string, groupUserName
                                 return dispatch(finishedLoadingGroupUrlAction);
                             }
 
-                            console.log(`[COURSE VALIDATION] ✅ Course validated from Firebase: "${courseUserName}" for group "${groupUserName}"`);
                         }
                     } catch (error) {
-                        console.error('[COURSE VALIDATION] Error validating course:', error);
                         // Check if this is a permission/auth error (PERMISSION_DENIED from Firebase)
                         const isPermissionError = error.toString().includes('PERMISSION_DENIED') ||
                                                  error.toString().includes('permission') ||
                                                  error.code === 'PERMISSION_DENIED';
 
                         if (isPermissionError) {
-                            console.log(`[COURSE VALIDATION] ⏭️ Permission error - user likely not authenticated. Allowing validation to proceed.`);
                             // Allow validation to pass - authentication check will handle this
                         } else {
                             // For other errors, we might want to fail validation
-                            console.log(`[COURSE VALIDATION] ⚠️ Non-permission error, but allowing validation to proceed: ${error.toString()}`);
                             // Still allow it to pass - be lenient with course validation
                             // The auth/permission checks will catch any real issues
                         }

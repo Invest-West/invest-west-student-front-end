@@ -12,8 +12,7 @@ interface CarouselOfferItemProps {
 
 const CarouselOfferItem: React.FC<CarouselOfferItemProps> = ({ offer, onClick }) => {
     const pitchCover = getPitchCover(offer.projectDetail);
-    console.log('CarouselOfferItem pitchCover:', pitchCover);
-    
+
     return (
         <div style={{ background: 'lightblue', padding: '10px', margin: '5px', border: '1px solid blue' }}>
             <h3>DEBUG: {offer.projectDetail.projectName}</h3>

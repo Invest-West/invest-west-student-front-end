@@ -45,18 +45,6 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
             AuthenticationState
         } = getState();
 
-        console.log(`[COURSE ADMIN AUTH] [${authCallId}] signIn called`, {
-            hasEmail: !!email,
-            hasPassword: !!password,
-            currentAuthState: {
-                status: AuthenticationState.status,
-                isAuthenticating: isAuthenticating(AuthenticationState),
-                isAuthenticated: successfullyAuthenticated(AuthenticationState),
-                currentUserId: AuthenticationState.currentUser?.id,
-                currentUserEmail: AuthenticationState.currentUser?.email,
-                currentUserType: AuthenticationState.currentUser?.type
-            }
-        });
 
         if (isAuthenticating(AuthenticationState)) {
             return;
@@ -71,11 +59,6 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
 
         try {
             let currentFirebaseUser: firebase.default.User | null = await firebase.auth().currentUser;
-            console.log(`[COURSE ADMIN AUTH] [${authCallId}] Current Firebase user:`, {
-                hasUser: !!currentFirebaseUser,
-                uid: currentFirebaseUser?.uid,
-                email: currentFirebaseUser?.email
-            });
 
             // user is currently signed in with Firebase
             if (currentFirebaseUser) {
@@ -130,28 +113,10 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
                 }
                 const currentAdmin: Admin | null = isAdmin(currentUser);
 
-                console.log('[COURSE ADMIN AUTH] User details:', {
-                    uid: currentUser.id,
-                    email: currentUser.email,
-                    type: currentUser.type,
-                    isAdmin: !!currentAdmin,
-                    superAdmin: currentAdmin?.superAdmin,
-                    superGroupAdmin: currentAdmin?.superGroupAdmin,
-                    anid: currentAdmin?.anid
-                });
-
                 // Check:
                 // 1. Super admin must sign in via the dedicated URL.
                 // 2. Only super admin can sign in via the dedicated URL.
                 let validSuperAdminSignIn: boolean = true;
-
-                console.log('[COURSE ADMIN AUTH] Checking super admin validation:', {
-                    routePath: ManageGroupUrlState.routePath,
-                    isSuperAdminRoute: Routes.isSuperAdminSignInRoute(ManageGroupUrlState.routePath ?? ""),
-                    isRegularSignInRoute: Routes.isSignInRoute(ManageGroupUrlState.routePath ?? ""),
-                    isSuperAdmin: currentAdmin?.superAdmin,
-                    isAdmin: !!currentAdmin
-                });
 
                 if (Routes.isSuperAdminSignInRoute(ManageGroupUrlState.routePath ?? "")) {
                     if (!(currentAdmin && currentAdmin.superAdmin)) {
@@ -192,18 +157,6 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
                     userCache.set(groupsCacheKey, listGroupsOfMembershipResponse.data, 15 * 60 * 1000); // Cache for 15 minutes
                 }
 
-                console.log('[COURSE ADMIN AUTH] Groups of membership details:', {
-                    count: authenticationCompleteAction.groupsOfMembership.length,
-                    groups: authenticationCompleteAction.groupsOfMembership.map(m => ({
-                        groupUserName: m.group.groupUserName,
-                        displayName: m.group.displayName,
-                        anid: m.group.anid,
-                        parentGroupId: m.group.parentGroupId,
-                        groupType: m.group.groupType,
-                        isHomeGroup: m.isHomeGroup
-                    }))
-                });
-
                 // Update last login date
                 try {
                     const currentTimestamp = Date.now();
@@ -228,8 +181,6 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
                         authenticationCompleteAction.currentUser = updatedUser;
                     }
                 } catch (error) {
-                    console.error("LOGIN TRACKING: Failed to update last login date:", error);
-                    console.error("LOGIN TRACKING: Error details:", error.message || error);
                     // Continue with authentication even if login tracking fails
                 }
 
@@ -238,15 +189,6 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
                 CacheInvalidationManager.invalidateOffersCache('user authenticated');
 
                 authenticationCompleteAction.status = AuthenticationStatus.Authenticated;
-
-                console.log(`[COURSE ADMIN AUTH] [${authCallId}] ✅ Authentication successful! Dispatching completion action:`, {
-                    userId: authenticationCompleteAction.currentUser?.id,
-                    email: authenticationCompleteAction.currentUser?.email,
-                    groupsCount: authenticationCompleteAction.groupsOfMembership.length,
-                    status: authenticationCompleteAction.status,
-                    firebaseUid: currentFirebaseUser.uid,
-                    userType: authenticationCompleteAction.currentUser?.type
-                });
 
                 // Dispatch authentication completion first
                 dispatch(authenticationCompleteAction);
@@ -262,12 +204,6 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
                 return dispatch(authenticationCompleteAction);
             }
         } catch (error) {
-            console.log(`[COURSE ADMIN AUTH] [${authCallId}] ❌ Authentication error:`, {
-                error: error.toString(),
-                errorCode: error.code,
-                errorMessage: error.message,
-                stack: error.stack
-            });
             await dispatch(signOut());
             authenticationCompleteAction.status = AuthenticationStatus.Unauthenticated;
             authenticationCompleteAction.error = {
@@ -280,16 +216,8 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
 
 export const signOut: ActionCreator<any> = () => {
     return async (dispatch: Dispatch, getState: () => AppState) => {
-        console.trace();
-
         const state = getState();
         const currentUser = state.AuthenticationState?.currentUser;
-
-        console.log('[COURSE ADMIN AUTH] Signing out user:', {
-            userId: currentUser?.id,
-            email: currentUser?.email,
-            type: currentUser?.type
-        });
 
         try {
             await firebase.auth().signOut();

@@ -77,7 +77,6 @@ export default class EditCourseImageDialog extends Component<EditCourseImageDial
     };
 
     handleFileError = (error: any, file: File) => {
-        console.error("File error:", error);
         this.setState({
             error: "Error uploading file. Please make sure it's a valid image under 30MB.",
             selectedFile: null
@@ -122,12 +121,10 @@ export default class EditCourseImageDialog extends Component<EditCourseImageDial
 
                 if (!response.ok) {
                     const errorText = await response.text();
-                    console.error("Upload failed:", errorText);
                     throw new Error(`Failed to upload file: ${response.status}`);
                 }
 
                 const responseText = await response.text();
-                console.log("Upload response:", responseText);
 
                 if (!responseText) {
                     throw new Error("Empty response from server");
@@ -153,7 +150,6 @@ export default class EditCourseImageDialog extends Component<EditCourseImageDial
             onSuccess();
             onClose();
         } catch (error) {
-            console.error("Error saving image:", error);
             this.setState({
                 error: "Failed to save image. Please try again.",
                 uploading: false,

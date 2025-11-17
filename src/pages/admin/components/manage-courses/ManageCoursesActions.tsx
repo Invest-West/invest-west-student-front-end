@@ -86,14 +86,10 @@ export const loadCoursesFromGroup: ActionCreator<any> = () => {
                         courseNames.push(course.displayName);
                     }
                 });
-                console.log(`[ManageCourses] Loaded ${courseNames.length} courses from Courses node for: ${groupProperties.displayName}`);
-            } else {
-                console.log(`[ManageCourses] No courses found in Courses node`);
             }
 
             return dispatch(setCourses(courseNames));
         } catch (error) {
-            console.error('[ManageCourses] Error loading courses from Firebase:', error);
             return dispatch(setCourses([]));
         }
     }
@@ -196,7 +192,6 @@ export const addNewCourse: ActionCreator<any> = () => {
             dispatch(loadCourseStatistics());
 
         } catch (error) {
-            console.error('Error creating course:', error);
             dispatch(openFeedbackSnackbar(FeedbackSnackbarTypes.Error, `Failed to create course: ${error.message}`));
 
             // Complete creating state even on error
@@ -451,7 +446,6 @@ export const loadCourseStatistics: ActionCreator<any> = () => {
             dispatch(setCourseStatistics(updatedStatistics));
 
         } catch (error) {
-            console.error('Error loading course statistics:', error);
             dispatch(openFeedbackSnackbar(FeedbackSnackbarTypes.Error, 'Failed to load course statistics'));
             
             // Set error state for all courses

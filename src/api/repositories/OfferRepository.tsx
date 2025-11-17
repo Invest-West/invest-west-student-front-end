@@ -43,25 +43,17 @@ export default class OfferRepository {
      * @param options
      */
     public async fetchOffers(options: FetchProjectsOptions) {
-        console.log("[OfferRepository] Fetching offers with raw options:", options);
         const fetchOptions = { ...options, orderBy: options.orderBy || FetchProjectsOrderByOptions.Phase };
-        console.log("[OfferRepository] Final fetchOptions being sent to API:", fetchOptions);
 
-        try {
-            const response = await new Api().request(
-                "get",
-                ApiRoutes.listProjectsRoute,
-                {
-                    requestBody: null,
-                    queryParameters: fetchOptions
-                }
-            );
-            console.log("[OfferRepository] API response received, data count:", response?.data?.length || 0);
-            return response;
-        } catch (error) {
-            console.error("[OfferRepository] Error fetching offers:", error);
-            throw error;
-        }
+        const response = await new Api().request(
+            "get",
+            ApiRoutes.listProjectsRoute,
+            {
+                requestBody: null,
+                queryParameters: fetchOptions
+            }
+        );
+        return response;
     }
 
     /**

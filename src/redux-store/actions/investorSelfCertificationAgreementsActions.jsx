@@ -55,7 +55,6 @@ export const loadInvestorSelfCertificationAgreement = () => {
             const agreementData = snapshot.val();
   
             if (isCertificationExpired(agreementData.selfCertificationTimestamp)) {
-                console.log("Expired")
               // Certification has expired
               // Prompt the user to reapply for self-certification
               // You can use dispatch to update the UI, show a modal, or navigate to another screen

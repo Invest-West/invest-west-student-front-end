@@ -413,7 +413,6 @@ class GroupAdminsTable extends Component {
 
         // Check if this is a super group admin who manages all courses
         if (admin.superGroupAdmin) {
-            console.log('[GET COURSE NAMES] Super group admin - manages all courses');
             return 'All courses';
         }
 

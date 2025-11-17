@@ -205,7 +205,6 @@ class InvitedUsers extends Component {
                 loadingProjectCounts: false 
             });
         } catch (error) {
-            console.error("Error loading project counts:", error);
             this.setState({ loadingProjectCounts: false });
         }
     };
@@ -243,7 +242,6 @@ class InvitedUsers extends Component {
                         }
                     }
                 } catch (error) {
-                    console.warn(`Failed to fetch last login date for user ${user.email}:`, error);
                 }
             }
 
@@ -252,7 +250,6 @@ class InvitedUsers extends Component {
                 loadingLastLoginDates: false 
             });
         } catch (error) {
-            console.error("Error loading last login dates:", error);
             this.setState({ loadingLastLoginDates: false });
         }
     };
@@ -278,14 +275,6 @@ class InvitedUsers extends Component {
 
         // NOTE: We IGNORE courseName field - it's from the old manual entry system
         // We only use courseId to look up the real course from the system
-
-        if (systemGroups && systemGroups.length > 0) {
-            console.log('[GET COURSE DISPLAY] Available groups:', systemGroups.map(g => ({
-                anid: g.anid,
-                name: g.displayName || g.groupUserName,
-                groupUserName: g.groupUserName
-            })));
-        }
 
         // Check if user has a courseId
         if (invitedUser.courseId && systemGroups && systemGroups.length > 0) {
@@ -316,23 +305,13 @@ class InvitedUsers extends Component {
 
                     if (course) {
                         return course.displayName || course.groupUserName || "Unknown course";
-                    } else {
-                        console.log('[GET COURSE DISPLAY] Available groupUserNames:', systemGroups.map(g => g.groupUserName));
                     }
                 }
             }
 
-        } else {
-            console.log('[GET COURSE DISPLAY] ❌ No courseId on user or no systemGroups');
         }
 
         // Fallback: check if user has profile.BusinessProfile.course
-        if (invitedUser.officialUser) {
-            console.log('[GET COURSE DISPLAY] Has BusinessProfile:', !!invitedUser.officialUser.BusinessProfile);
-            if (invitedUser.officialUser.BusinessProfile) {
-                console.log('[GET COURSE DISPLAY] BusinessProfile.course:', invitedUser.officialUser.BusinessProfile.course);
-            }
-        }
 
         if (invitedUser.officialUser &&
             invitedUser.officialUser.BusinessProfile &&
@@ -367,7 +346,6 @@ class InvitedUsers extends Component {
             
             return verifyResponse.data;
         } catch (error) {
-            console.error(`TEST UPDATE: Error during test:`, error);
             return null;
         }
     };
@@ -397,9 +375,7 @@ class InvitedUsers extends Component {
         // Copy to clipboard
         navigator.clipboard.writeText(signupUrl).then(() => {
             // You could add a success notification here if needed
-            console.log('Signup URL copied to clipboard:', signupUrl);
         }).catch((error) => {
-            console.error('Failed to copy to clipboard:', error);
             // Fallback for older browsers
             const textArea = document.createElement('textarea');
             textArea.value = signupUrl;
@@ -903,7 +879,6 @@ class InvitedUsers extends Component {
             </Paper>
         );
     } catch (error) {
-        console.error("Error in renderInvitedUsersTable:", error);
         return null;
     }
 

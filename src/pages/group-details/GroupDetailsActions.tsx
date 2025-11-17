@@ -105,7 +105,6 @@ export const loadData: ActionCreator<any> = (groupUserName: string) => {
                         admin.courseIds && Array.isArray(admin.courseIds) && admin.courseIds.includes(group.anid)
                     );
                 }
-                console.log(`    ✅ Found ${adminsWithCourseId.length} admins with courseIds containing ${group.anid}`);
 
                 // Combine course-specific admins and remove duplicates by email
                 // NOTE: We do NOT include university-level admins here - only admins specifically assigned to this course
@@ -117,7 +116,6 @@ export const loadData: ActionCreator<any> = (groupUserName: string) => {
                     return acc;
                 }, []);
 
-                console.log(`    📊 Total unique admins for THIS COURSE ONLY (${group.displayName}): ${uniqueAdmins.length}`);
                 groupAdmins = uniqueAdmins;
             } catch (adminError) {
                 console.error("Failed to load group admins:", adminError);

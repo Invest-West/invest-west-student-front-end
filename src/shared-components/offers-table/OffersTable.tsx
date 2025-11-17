@@ -462,27 +462,10 @@ class OffersTable extends Component<OffersTableProps, any> {
                                     </TableRow>
                                     // Render offers
                                     : (() => {
-                                        const projectsWithFeedback = OffersTableLocalState.offerInstancesFilteredByName.filter(p => p.rejectFeedbacks && p.rejectFeedbacks.length > 0);
-                                        if (projectsWithFeedback.length > 0) {
-                                            console.log('📊 Projects with feedback details:', projectsWithFeedback.map(p => ({
-                                                name: p.projectDetail.projectName,
-                                                feedbackCount: p.rejectFeedbacks?.length,
-                                                status: p.projectDetail.status
-                                            })));
-                                        }
-
                                         return OffersTableLocalState.offerInstancesFilteredByName
                                             .slice(OffersTableLocalState.currentPage * OffersTableLocalState.rowsPerPage, OffersTableLocalState.currentPage * OffersTableLocalState.rowsPerPage + OffersTableLocalState.rowsPerPage)
                                             .map(
                                                 offerInstance => {
-                                                    // Debug: Log reject feedbacks for each rendered project
-                                                    console.log('🔍 Rendering project:', {
-                                                        projectName: offerInstance.projectDetail.projectName,
-                                                        hasRejectFeedbacks: !!offerInstance.rejectFeedbacks,
-                                                        feedbackCount: offerInstance.rejectFeedbacks?.length || 0,
-                                                        feedbacks: offerInstance.rejectFeedbacks
-                                                    });
-
                                                 return <TableRow
                                                 key={offerInstance.projectDetail.id}
                                                 hover

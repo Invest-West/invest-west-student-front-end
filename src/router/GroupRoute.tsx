@@ -128,7 +128,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             const staleThreshold = 30000; // 30 seconds
 
             if (timeSinceLastAuth > staleThreshold) {
-                console.log(`[COURSE ADMIN AUTH] 🧹 Clearing stale auth timestamp (${timeSinceLastAuth}ms old)`);
                 this.setLastAuthTimestamp(0);
             }
         }
@@ -159,31 +158,9 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             // Check if user is admin - admins use groupsOfMembership for course assignments
             const currentAdmin: Admin | null = isAdmin(currentUser);
 
-            console.log('[GET UNIVERSITY AND COURSE] Starting with:', {
-                routeParams: this.routeParams,
-                isAdmin: !!currentAdmin,
-                userCourse: !currentAdmin ? (currentUser as User).course : undefined,
-                userCourseType: !currentAdmin ? typeof (currentUser as User).course : undefined,
-                userCourseValue: !currentAdmin ? JSON.stringify((currentUser as User).course) : undefined,
-                groupsOfMembershipCount: groupsOfMembership.length,
-                groupsOfMembership: groupsOfMembership.map(m => ({
-                    groupUserName: m.group.groupUserName,
-                    displayName: m.group.displayName,
-                    groupType: m.group.groupType,
-                    isHomeGroup: m.isHomeGroup,
-                    anid: m.group.anid
-                }))
-            });
-
             // For non-admin users (issuers/investors), check user.course field first
             // IMPORTANT: Exclude '-1' which is a placeholder/uninitialized value during signup
             const userCourseField = !currentAdmin ? (currentUser as User).course : undefined;
-            console.log('[GET UNIVERSITY AND COURSE] 🔍 Checking user.course field:', {
-                hasUserCourse: !!userCourseField,
-                userCourseValue: userCourseField,
-                isNotMinusOne: userCourseField !== '-1',
-                willUseCourseField: !!userCourseField && userCourseField !== '-1'
-            });
 
             if (!currentAdmin && userCourseField && userCourseField !== '-1') {
                 const userCourse = userCourseField;
@@ -199,13 +176,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                         m.group.anid === courseMembership.group.parentGroupId
                     );
 
-                    console.log('[GET UNIVERSITY AND COURSE] ✅ Found matching course in groupsOfMembership:', {
-                        courseUserName: courseMembership.group.groupUserName,
-                        courseName: courseMembership.group.displayName,
-                        courseAnid: courseMembership.group.anid,
-                        universityUserName: parentUniversity ? parentUniversity.group.groupUserName : 'invest-west',
-                        matchedBy: courseMembership.group.anid === userCourse ? 'anid' : 'groupUserName'
-                    });
 
                     return {
                         universityUserName: parentUniversity ? parentUniversity.group.groupUserName : 'invest-west',
@@ -214,10 +184,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                 }
 
                 // If no match found in groupsOfMembership, assume userCourse is already a course username
-                console.log('[GET UNIVERSITY AND COURSE] ⚠️ Course not found in groupsOfMembership, using as-is:', {
-                    courseUserName: userCourse,
-                    universityUserName: 'invest-west'
-                });
                 return {
                     universityUserName: 'invest-west',
                     courseUserName: userCourse
@@ -228,12 +194,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             const courseMemberships = groupsOfMembership.filter(m => isCourse(m.group));
             const universityMemberships = groupsOfMembership.filter(m => isUniversity(m.group));
 
-            console.log('[GET UNIVERSITY AND COURSE] Separated memberships:', {
-                courseCount: courseMemberships.length,
-                universityCount: universityMemberships.length,
-                courses: courseMemberships.map(m => m.group.groupUserName),
-                universities: universityMemberships.map(m => m.group.groupUserName)
-            });
 
             // If user has course membership(s), use the FIRST course found (their assigned course)
             if (courseMemberships.length > 0) {
@@ -244,12 +204,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                     .find(m => m.group.anid === firstCourse.parentGroupId);
 
                 if (parentUniversity) {
-                    console.log('[GET UNIVERSITY AND COURSE] ✅ Found user assigned course with parent university:', {
-                        courseUserName: firstCourse.groupUserName,
-                        universityUserName: parentUniversity.group.groupUserName,
-                        courseName: firstCourse.displayName,
-                        universityName: parentUniversity.group.displayName
-                    });
                     return {
                         universityUserName: parentUniversity.group.groupUserName,
                         courseUserName: firstCourse.groupUserName
@@ -258,10 +212,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
 
                 // If parent not in memberships but parentGroup is populated
                 if (firstCourse.parentGroup) {
-                    console.log('[GET UNIVERSITY AND COURSE] ✅ Found user assigned course with parentGroup property:', {
-                        courseUserName: firstCourse.groupUserName,
-                        universityUserName: firstCourse.parentGroup.groupUserName
-                    });
                     return {
                         universityUserName: firstCourse.parentGroup.groupUserName,
                         courseUserName: firstCourse.groupUserName
@@ -271,10 +221,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                 // Fallback: extract university from course username (format: university-course-name)
                 const courseUserName = firstCourse.groupUserName;
                 if (courseUserName.startsWith('invest-west-')) {
-                    console.log('[GET UNIVERSITY AND COURSE] ✅ Found user assigned invest-west course:', {
-                        courseUserName: courseUserName,
-                        universityUserName: 'invest-west'
-                    });
                     return {
                         universityUserName: 'invest-west',
                         courseUserName: courseUserName
@@ -285,10 +231,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             // If user has NO course memberships but has university membership, use DEFAULT course
             if (universityMemberships.length > 0) {
                 const firstUniversity = universityMemberships[0].group;
-                console.log('[GET UNIVERSITY AND COURSE] ⚠️ User has university membership but NO course - using DEFAULT:', {
-                    universityUserName: firstUniversity.groupUserName,
-                    courseUserName: 'student-showcase'
-                });
                 return {
                     universityUserName: firstUniversity.groupUserName,
                     courseUserName: 'student-showcase'
@@ -296,7 +238,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             }
 
             // Ultimate fallback: DEFAULT to invest-west/student-showcase
-            console.log('[GET UNIVERSITY AND COURSE] ⚠️ No memberships found - using ultimate DEFAULT');
             return {
                 universityUserName: 'invest-west',
                 courseUserName: 'student-showcase'
@@ -319,8 +260,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             const adminRoute = Routes.courseAdminDashboard
                 .replace(":groupUserName", universityUserName)
                 .replace(":courseUserName", courseUserName) + "?tab=Home";
-            console.log('[POST-LOGIN DEBUG] Admin route:', adminRoute,
-                `(university: ${universityUserName}, course: ${courseUserName})`);
             return adminRoute;
         }
 
@@ -329,16 +268,12 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             const investorRoute = Routes.courseInvestorDashboard
                 .replace(":groupUserName", universityUserName)
                 .replace(":courseUserName", courseUserName) + "?tab=Home";
-            console.log('[POST-LOGIN DEBUG] Investor route:', investorRoute,
-                `(university: ${universityUserName}, course: ${courseUserName})`);
             return investorRoute;
         } else {
             // Assume issuer if not investor
             const issuerRoute = Routes.courseIssuerDashboard
                 .replace(":groupUserName", universityUserName)
                 .replace(":courseUserName", courseUserName) + "?tab=Home";
-            console.log('[POST-LOGIN DEBUG] Issuer route:', issuerRoute,
-                `(university: ${universityUserName}, course: ${courseUserName})`);
             return issuerRoute;
         }
     };
@@ -359,7 +294,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
 
         if (justAuthenticated) {
             const now = Date.now();
-            console.log(`[COURSE ADMIN AUTH] ✅ Authentication completed successfully! Setting grace period timestamp: ${now}`);
             this.setLastAuthTimestamp(now);
         }
 
@@ -401,16 +335,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
         // invalid group url --> redirect to 404 page
         // Skip this check for signup/signin routes where group validation might be pending
         // Also skip for project viewing routes which should be accessible without group validation
-        console.log('[ROUTING DEBUG] Group URL validation check:', {
-            successfullyValidatedGroupUrl: successfullyValidatedGroupUrl(this.props.ManageGroupUrlState),
-            navigatingToError: this.state.navigatingToError,
-            navigatingFromSignInOrSignUpToDashboard: this.state.navigatingFromSignInOrSignUpToDashboard,
-            isSignInRoute: Routes.isSignInRoute(this.routePath),
-            isSignUpRoute: Routes.isSignUpRoute(this.routePath),
-            routePath: this.routePath,
-            ManageGroupUrlState: this.props.ManageGroupUrlState,
-            hasValidationError: this.props.ManageGroupUrlState.error
-        });
 
         // Allow invest-west group to bypass validation issues temporarily for debugging
         const isInvestWestRoute = this.routeParams.groupUserName === 'invest-west';
@@ -419,14 +343,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
         const isAdminRoute = Routes.isGroupAdminRoute(this.routePath);
         const isProtectedAdminRoute = Routes.isProtectedRoute(this.routePath) && isAdminRoute;
 
-        console.log('[ROUTING DEBUG] Route validation check:', {
-            isInvestWestRoute,
-            isAdminRoute,
-            isProtectedAdminRoute,
-            routePath: this.routePath,
-            successfullyValidatedGroupUrl: successfullyValidatedGroupUrl(this.props.ManageGroupUrlState)
-        });
-
         // Check if this is a create-offer route that should be excluded from 404 redirect
         const isCreateOfferRoute = Routes.isCreateOfferRoute(this.routePath);
 
@@ -434,23 +350,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
         const isCourseDashboardRoute = Routes.isIssuerDashboardRoute(this.routePath) ||
                                      Routes.isInvestorDashboardRoute(this.routePath) ||
                                      Routes.isGroupAdminRoute(this.routePath);
-
-        console.log('[ROUTING DEBUG] Pre-404 check:', {
-            groupUrlValidated: successfullyValidatedGroupUrl(this.props.ManageGroupUrlState),
-            routePath: this.routePath,
-            isCreateOfferRoute: isCreateOfferRoute,
-            isCourseDashboardRoute: isCourseDashboardRoute,
-            isSignInRoute: Routes.isSignInRoute(this.routePath),
-            isSignUpRoute: Routes.isSignUpRoute(this.routePath),
-            isGroupViewOffer: this.routePath === Routes.groupViewOffer,
-            isCourseViewOffer: this.routePath === Routes.courseViewOffer,
-            isNonGroupViewOffer: this.routePath === Routes.nonGroupViewOffer,
-            isInvestWestRoute: isInvestWestRoute,
-            isProtectedAdminRoute: isProtectedAdminRoute,
-            navigatingToError: this.state.navigatingToError,
-            navigatingFromSignIn: this.state.navigatingFromSignInOrSignUpToDashboard,
-            validationError: this.props.ManageGroupUrlState.error?.detail
-        });
 
         if (!successfullyValidatedGroupUrl(this.props.ManageGroupUrlState)
             && !this.state.navigatingToError
@@ -465,29 +364,11 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             && !isCourseDashboardRoute  // Add exclusion for course-based dashboard routes
             && !isInvestWestRoute
             && !isProtectedAdminRoute) {  // Don't redirect admin routes to 404 - let auth handle it
-            console.log('[ROUTING DEBUG] ❌ TRIGGERING 404 REDIRECT - Validation check failed', {
-                successfullyValidatedGroupUrl: successfullyValidatedGroupUrl(this.props.ManageGroupUrlState),
-                navigatingToError: this.state.navigatingToError,
-                navigatingFromSignInOrSignUpToDashboard: this.state.navigatingFromSignInOrSignUpToDashboard,
-                isSignInRoute: Routes.isSignInRoute(this.routePath),
-                isSignUpRoute: Routes.isSignUpRoute(this.routePath),
-                isGroupViewOffer: this.routePath === Routes.groupViewOffer,
-                isCourseViewOffer: this.routePath === Routes.courseViewOffer,
-                isNonGroupViewOffer: this.routePath === Routes.nonGroupViewOffer,
-                isCreateOfferRoute: isCreateOfferRoute,
-                isCourseDashboardRoute: isCourseDashboardRoute,
-                isInvestWestRoute: isInvestWestRoute,
-                isProtectedAdminRoute: isProtectedAdminRoute,
-                routePath: this.routePath,
-                ManageGroupUrlState: this.props.ManageGroupUrlState
-            });
             this.setState({
                 navigatingToError: true
             });
             this.props.history.push(Routes.error404);
             return;
-        } else if ((isInvestWestRoute || isProtectedAdminRoute) && !successfullyValidatedGroupUrl(this.props.ManageGroupUrlState)) {
-            console.log('[ROUTING DEBUG] invest-west or admin route detected but validation pending, allowing through');
         }
 
         // redirect an unauthenticated user to the sign in route if they try to access protected routes
@@ -500,20 +381,10 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             const { location } = this.props;
             const redirectUrl = `${location.pathname}${location?.search}`;
 
-            console.log('[ROUTING DEBUG] 🔒 Protected route - redirecting to sign in', {
-                protectedRoute: this.routePath,
-                routeParams: this.routeParams,
-                redirectUrl: redirectUrl,
-                storingInSessionStorage: true,
-                signInRoute: Routes.constructSignInRoute(this.routeParams)
-            });
-
             // Only save redirect URL if we're not in the middle of logging out
             const isLoggingOut = safeGetItem('isLoggingOut') === 'true';
             if (!isLoggingOut) {
                 safeSetItem('redirectToAfterAuth', redirectUrl);
-            } else {
-                console.log('[ROUTING DEBUG] Skipping redirect URL save - user is logging out');
             }
 
             this.setState({
@@ -540,53 +411,16 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                 redirectRoute = this.constructPostLoginRoute();
             }
 
-            // IMPORTANT: Validate the constructed/stored route
-            // If it contains course info, verify the user has access
-            const urlParts = redirectRoute.split('/');
-            if (urlParts.length >= 5 && urlParts[1] === 'groups') {
-                const groupParam = urlParts[2];
-                const courseParam = urlParts[3];
-                console.log('[POST-LOGIN] Validating redirect route:', {
-                    redirectRoute,
-                    groupParam,
-                    courseParam,
-                    groupsOfMembership: this.props.AuthenticationState.groupsOfMembership.map(m => ({
-                        groupUserName: m.group.groupUserName,
-                        groupType: m.group.groupType
-                    }))
-                });
-            }
-
 
             // Validate the route before redirecting
             if (!redirectRoute || redirectRoute === '') {
-                console.error('[ROUTING ERROR] Redirect route is empty or null!');
                 redirectRoute = '/groups/invest-west'; // Emergency fallback
             }
 
             // Ensure route starts with / for absolute path
             if (!redirectRoute.startsWith('/')) {
-                console.warn('[ROUTING WARNING] Redirect route is not absolute, fixing:', redirectRoute);
                 redirectRoute = '/' + redirectRoute;
             }
-
-            console.log('[POST-LOGIN] 🎯 Redirecting after successful authentication:', {
-                from: this.routePath,
-                to: redirectRoute,
-                settingNavigatingFlag: true,
-                currentUser: {
-                    id: this.props.AuthenticationState.currentUser?.id,
-                    email: this.props.AuthenticationState.currentUser?.email,
-                    type: this.props.AuthenticationState.currentUser?.type
-                },
-                groupsOfMembershipCount: this.props.AuthenticationState.groupsOfMembership.length,
-                groupsOfMembership: this.props.AuthenticationState.groupsOfMembership.map(m => ({
-                    groupUserName: m.group.groupUserName,
-                    displayName: m.group.displayName,
-                    anid: m.group.anid,
-                    groupType: m.group.groupType
-                }))
-            });
 
             this.setState({
                 navigatingFromSignInOrSignUpToDashboard: true
@@ -597,13 +431,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
         }
 
         // redirect the user to 404 page if they are trying to access routes that are not meant for them
-        console.log('[ROUTING DEBUG] Permission check gate:', {
-            successfullyAuthenticated: successfullyAuthenticated(this.props.AuthenticationState),
-            navigatingFromSignInOrSignUpToDashboard: this.state.navigatingFromSignInOrSignUpToDashboard,
-            willCheckPermissions: successfullyAuthenticated(this.props.AuthenticationState) && !this.state.navigatingFromSignInOrSignUpToDashboard,
-            currentUser: this.props.AuthenticationState.currentUser?.id,
-            authStatus: this.props.AuthenticationState.status
-        });
 
         if (successfullyAuthenticated(this.props.AuthenticationState) && !this.state.navigatingFromSignInOrSignUpToDashboard) {
             const currentUser: User | Admin | null = this.props.AuthenticationState.currentUser;
@@ -620,15 +447,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                     if (!currentAdmin) {
                         shouldRedirectToError = true;
                     } else {
-                        console.log('[ROUTING DEBUG] 🔍 Checking admin route permissions', {
-                            routePath: this.routePath,
-                            routeGroupUserName: this.routeParams.groupUserName,
-                            routeCourseUserName: this.routeParams.courseUserName,
-                            adminAnid: currentAdmin.anid,
-                            adminSuperAdmin: currentAdmin.superAdmin,
-                            totalMemberships: this.props.AuthenticationState.groupsOfMembership.length
-                        });
-
                         // For course-based admin routes, check if admin has membership to either:
                         // 1. The course specified in courseUserName parameter, OR
                         // 2. The university specified in groupUserName parameter
@@ -637,42 +455,13 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                             const matchesCourse = this.routeParams.courseUserName &&
                                                  membership.group.groupUserName === this.routeParams.courseUserName;
 
-                            console.log('[ROUTING DEBUG] Checking membership:', {
-                                membershipGroupUserName: membership.group.groupUserName,
-                                membershipDisplayName: membership.group.displayName,
-                                membershipAnid: membership.group.anid,
-                                membershipGroupType: membership.group.groupType,
-                                routeGroupUserName: this.routeParams.groupUserName,
-                                routeCourseUserName: this.routeParams.courseUserName,
-                                matchesUniversity,
-                                matchesCourse,
-                                willMatch: matchesUniversity || matchesCourse
-                            });
-
                             return matchesUniversity || matchesCourse;
                         });
 
                         const hasMatchingMembership = membershipChecks.some(match => match);
 
-                        console.log('[ROUTING DEBUG] 📋 Admin membership check result:', {
-                            hasMatchingMembership,
-                            routeGroupUserName: this.routeParams.groupUserName,
-                            routeCourseUserName: this.routeParams.courseUserName,
-                            membershipCount: this.props.AuthenticationState.groupsOfMembership.length,
-                            adminMemberships: this.props.AuthenticationState.groupsOfMembership.map(m => ({
-                                groupUserName: m.group.groupUserName,
-                                displayName: m.group.displayName,
-                                anid: m.group.anid,
-                                groupType: m.group.groupType
-                            })),
-                            willRedirectTo404: !hasMatchingMembership
-                        });
-
                         if (!hasMatchingMembership) {
-                            console.log('[ROUTING DEBUG] 🚫 No matching membership found, will redirect to 404');
                             shouldRedirectToError = true;
-                        } else {
-                            console.log('[ROUTING DEBUG] ✅ Matching membership found, access granted');
                         }
                     }
                 } else if (Routes.isIssuerDashboardRoute(this.routePath)) {
@@ -698,26 +487,10 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                         shouldRedirectToError = true;
                     }
                 } else if (Routes.isInvestorDashboardRoute(this.routePath)) {
-                    console.log('[ROUTING DEBUG] Checking investor dashboard access:', {
-                        isInvestor: isInvestor(currentUser),
-                        routeParams: this.routeParams,
-                        groupsOfMembership: this.props.AuthenticationState.groupsOfMembership,
-                        routePath: this.routePath,
-                        hasCourseParam: !!this.routeParams.courseUserName,
-                        groupUserName: this.routeParams.groupUserName,
-                        courseUserName: this.routeParams.courseUserName
-                    });
-
                     if (!isInvestor(currentUser)) {
                         shouldRedirectToError = true;
                     } else if (this.routeParams.courseUserName) {
                         // For course-based routes, check if it's the invest-west group
-                        console.log('[ROUTING DEBUG] Course-based investor route detected:', {
-                            groupUserName: this.routeParams.groupUserName,
-                            courseUserName: this.routeParams.courseUserName,
-                            isInvestWest: this.routeParams.groupUserName === 'invest-west'
-                        });
-
                         // invest-west with courses doesn't require membership check
                         if (this.routeParams.groupUserName === 'invest-west') {
                             shouldRedirectToError = false;
@@ -726,11 +499,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                             const membershipCount = this.props.AuthenticationState.groupsOfMembership
                                 .filter(groupOfMembership =>
                                     groupOfMembership.group.groupUserName === this.routeParams.groupUserName).length;
-
-                            console.log('[ROUTING DEBUG] Non-invest-west course route membership check:', {
-                                groupUserName: this.routeParams.groupUserName,
-                                membershipCount: membershipCount
-                            });
 
                             if (membershipCount === 0) {
                                 shouldRedirectToError = true;
@@ -742,13 +510,7 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                             .filter(groupOfMembership =>
                                 groupOfMembership.group.groupUserName === this.routeParams.groupUserName).length;
 
-                        console.log('[ROUTING DEBUG] Standard group route membership check:', {
-                            groupUserName: this.routeParams.groupUserName,
-                            membershipCount: membershipCount
-                        });
-
                         if (membershipCount === 0) {
-                            console.log('[ROUTING DEBUG] User is not a member of group:', this.routeParams.groupUserName, ', redirecting to 404');
                             shouldRedirectToError = true;
                         }
                     }
@@ -778,39 +540,7 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                     }
                 }
 
-                console.log('[ROUTING DEBUG] Final redirect decision:', {
-                    shouldRedirectToError,
-                    navigatingToError: this.state.navigatingToError,
-                    willRedirect: shouldRedirectToError && !this.state.navigatingToError,
-                    routePath: this.routePath,
-                    routeParams: this.routeParams
-                });
-
                 if (shouldRedirectToError && !this.state.navigatingToError) {
-                    console.log('[ROUTING DEBUG] ⛔ REDIRECTING TO 404 PAGE - Permission check failed ⛔', {
-                        routePath: this.routePath,
-                        routeParams: this.routeParams,
-                        currentUser: {
-                            id: this.props.AuthenticationState.currentUser?.id,
-                            email: this.props.AuthenticationState.currentUser?.email,
-                            type: this.props.AuthenticationState.currentUser?.type
-                        },
-                        isAdmin: !!currentAdmin,
-                        adminAnid: currentAdmin?.anid,
-                        groupsOfMembership: this.props.AuthenticationState.groupsOfMembership.map(m => ({
-                            groupUserName: m.group.groupUserName,
-                            displayName: m.group.displayName,
-                            anid: m.group.anid,
-                            groupType: m.group.groupType,
-                            isHomeGroup: m.isHomeGroup
-                        })),
-                        reasonForRedirect: Routes.isRouteReservedForSuperAdmin(this.routePath) ? 'Not super admin' :
-                                          Routes.isGroupAdminRoute(this.routePath) ? 'Admin permission check failed' :
-                                          Routes.isIssuerDashboardRoute(this.routePath) ? 'Issuer permission check failed' :
-                                          Routes.isInvestorDashboardRoute(this.routePath) ? 'Investor permission check failed' :
-                                          Routes.isCreateOfferRoute(this.routePath) ? 'Create offer permission check failed' :
-                                          'Unknown reason'
-                    });
                     this.setState({
                         navigatingToError: true
                     });
@@ -821,10 +551,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
         }
 
         if (!Routes.isSignInRoute(this.routePath) && !Routes.isSignUpRoute(this.routePath) && this.state.navigatingFromSignInOrSignUpToDashboard) {
-            console.log('[ROUTING DEBUG] Resetting navigatingFromSignInOrSignUpToDashboard flag:', {
-                currentRoute: this.routePath,
-                wasNavigatingFromSignIn: this.state.navigatingFromSignInOrSignUpToDashboard
-            });
             this.setState({
                 navigatingFromSignInOrSignUpToDashboard: false
             });
@@ -873,20 +599,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
         // ⚡ FIX: Check if this is a public route that doesn't require auth
         const isPublicRoute = !Routes.isProtectedRoute(this.routePath);
 
-        console.log('[ROUTING DEBUG] Loading states check:', {
-            loadingSystemAttrs,
-            validatingGroupUrl,
-            groupUrlValidated,
-            authNotInitialized,
-            isAuthenticatingUser,
-            isProjectViewRoute,
-            isAdminRoute,
-            isPublicRoute,
-            routePath: this.routePath,
-            isSignInRoute: Routes.isSignInRoute(this.routePath),
-            isSignUpRoute: Routes.isSignUpRoute(this.routePath)
-        });
-
         // ⚡ FIX: Don't block rendering for public routes
         // Only require auth initialization for protected routes
         if (loadingSystemAttrs
@@ -907,7 +619,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
         }
 
         if (successfullyValidatedGroupUrl(ManageGroupUrlState)) {
-            console.log('[ROUTING DEBUG] Rendering component for validated group URL');
             return (
                 <Container
                     fluid
@@ -956,11 +667,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             );
         }
 
-        console.log('[ROUTING DEBUG] Final state check:', {
-            successfullyValidated: successfullyValidatedGroupUrl(ManageGroupUrlState),
-            ManageGroupUrlState,
-            finalRender: 'null'
-        });
         return null;
     }
 
@@ -980,47 +686,7 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
         const courseUserNameParam = this.routeParams.hasOwnProperty("courseUserName")
             ? this.routeParams.courseUserName
             : null;  // Course is optional
-                    
-        console.log('[ROUTING DEBUG] validateGroupUrl called with:', {
-            routePath: this.routePath,
-            groupUserNameParam,
-            courseUserNameParam,
-            routeParams: this.routeParams,
-            currentURL: window.location.href,
-            matchPath: this.props.match.path,
-            matchParams: this.props.match.params
-        });
-        
-        // Extra debugging for course admin route specifically
-        if (this.routePath === Routes.courseAdminDashboard) {
-            console.log('[ADMIN ROUTE DEBUG] Course admin route detected!', {
-                routePath: this.routePath,
-                expectedPath: Routes.courseAdminDashboard,
-                groupParam: groupUserNameParam,
-                courseParam: courseUserNameParam,
-                hasGroupParam: this.routeParams.hasOwnProperty("groupUserName"),
-                hasCourseParam: this.routeParams.hasOwnProperty("courseUserName")
-            });
-        }
 
-        // Extra debugging for create-offer routes specifically
-        if (this.routePath === Routes.courseCreateOffer || this.routePath === Routes.groupCreateOffer || this.routePath === Routes.nonGroupCreateOffer) {
-            console.log('[CREATE-OFFER ROUTE DEBUG] Create offer route detected!', {
-                routePath: this.routePath,
-                expectedCoursePath: Routes.courseCreateOffer,
-                expectedGroupPath: Routes.groupCreateOffer,
-                expectedNonGroupPath: Routes.nonGroupCreateOffer,
-                groupParam: groupUserNameParam,
-                courseParam: courseUserNameParam,
-                hasGroupParam: this.routeParams.hasOwnProperty("groupUserName"),
-                hasCourseParam: this.routeParams.hasOwnProperty("courseUserName"),
-                currentURL: window.location.href,
-                matchPath: this.props.match.path,
-                matchParams: this.props.match.params,
-                allRouteParams: this.routeParams
-            });
-        }
-        
         this.props.validateGroupUrl(this.routePath, groupUserNameParam, courseUserNameParam);
 
         this.attachAuthListener();
@@ -1045,8 +711,6 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
         // For project viewing routes and admin routes, attach auth listener immediately to avoid blocking
         // For other routes, wait for group URL validation to complete
         if ((successfullyValidatedGroupUrl(ManageGroupUrlState) || isProjectViewRoute || isAdminRoute) && !this.authListener) {
-            console.log('[COURSE ADMIN AUTH] 🔥 Attaching auth listener');
-
             this.authListener = firebase.auth().onAuthStateChanged(firebaseUser => {
                 const timestamp = new Date().toISOString();
                 const now = Date.now();
@@ -1070,36 +734,7 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                 const timeSinceLastAuth = now - lastAuthTimestamp;
                 const isWithinGracePeriod = timeSinceLastAuth < 10000; // ⚡ FIX: Increased to 10 seconds for safer navigation
 
-                console.log(`[COURSE ADMIN AUTH] 🔥 Auth listener triggered at ${timestamp}`, {
-                    hasFirebaseUser: !!firebaseUser,
-                    firebaseUserId: firebaseUser?.uid,
-                    firebaseEmail: firebaseUser?.email,
-                    reduxAuthStatus: authStatus,
-                    reduxCurrentUserId: currentUser?.id,
-                    reduxCurrentUserEmail: currentUser?.email,
-                    reduxCurrentUserType: currentUser?.type,
-                    isCurrentlyAuthenticating,
-                    isAlreadyAuthenticated,
-                    isWithinGracePeriod,
-                    isInitialCheck,
-                    timeSinceLastAuth,
-                    lastAuthTimestamp,
-                    routePath: this.routePath
-                });
-
                 if (firebaseUser) {
-                    console.log(`[COURSE ADMIN AUTH] 🔥 Auth listener at ${timestamp}: Firebase user detected, calling signIn`, {
-                        uid: firebaseUser.uid,
-                        email: firebaseUser.email,
-                        willCallSignIn: true,
-                        isInitialCheck,
-                        currentReduxState: {
-                            isAuthenticating: isCurrentlyAuthenticating,
-                            isAuthenticated: isAlreadyAuthenticated,
-                            currentUserId: currentUser?.id
-                        }
-                    });
-
                     // Note: Grace period timestamp is set in componentDidUpdate when auth completes
                     this.props.signIn();
                 } else {
@@ -1111,31 +746,10 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
                     // This prevents premature sign-out during auth process, navigation, and page refresh
                     const willSignOut = !isCurrentlyAuthenticating && !isAlreadyAuthenticated && !isWithinGracePeriod && !isInitialCheck;
 
-                    console.log(`[COURSE ADMIN AUTH] 🔥 Auth listener at ${timestamp}: No Firebase user detected`, {
-                        isCurrentlyAuthenticating,
-                        isAlreadyAuthenticated,
-                        isWithinGracePeriod,
-                        isInitialCheck,
-                        willSignOut,
-                        currentReduxUser: {
-                            id: currentUser?.id,
-                            email: currentUser?.email,
-                            type: currentUser?.type
-                        },
-                        authStatus,
-                        routePath: this.routePath,
-                        lastAuthTimestamp,
-                        timeSinceLastAuth
-                    });
-
                     if (willSignOut) {
-                        console.log(`[COURSE ADMIN AUTH] 🔥 Auth listener at ${timestamp}: Calling signOut`);
-                        console.trace('[COURSE ADMIN AUTH] Stack trace for signOut trigger:');
                         // Clear the timestamp when signing out
                         this.setLastAuthTimestamp(0);
                         this.props.signOut();
-                    } else {
-                        console.log(`[COURSE ADMIN AUTH] 🔥 Auth listener at ${timestamp}: Skipping signOut (user is authenticating, authenticated, within grace period, or initial check)`);
                     }
                 }
             });

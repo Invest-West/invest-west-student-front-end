@@ -171,11 +171,8 @@ class AngelNetworks extends Component {
     loadCourseMembers = async (courseId, courseGroupUserName) => {
         if (!this._isMounted) return; // ⚡ FIX: Don't start if unmounted
 
-        console.log(`🔄 [AngelNetworks] Loading course members for courseId: ${courseId}, courseGroupUserName: ${courseGroupUserName}`);
-
         // Special marker for debugging
         if (courseId === '-Ocef1L3VwMSRKDgT5n5') {
-            console.log('LOADING LECTURERS FOR YOUR COURSE: -Ocef1L3VwMSRKDgT5n5');
         }
 
         if (this._isMounted) {
@@ -193,7 +190,6 @@ class AngelNetworks extends Component {
 
             // Find the course to get its parent university
             const course = systemGroups?.find(g => g.anid === courseId);
-            console.log(`    📚 Course found:`, course?.displayName || course?.groupUserName);
 
             // SCENARIO 1: Load admins where anid = courseId (course-level admins)
             const courseAdmins = await realtimeDBUtils.loadGroupAdminsBasedOnGroupID(courseId);
@@ -232,8 +228,6 @@ class AngelNetworks extends Component {
 
             // Debug: Check the structure of the first admin object
             if (adminsArray.length > 0) {
-                console.log(`    🔍 First admin object structure:`, adminsArray[0]);
-                console.log(`    🔍 Available properties:`, Object.keys(adminsArray[0]));
             }
 
             // Fetch user details for admins who are missing firstName/lastName
@@ -248,7 +242,6 @@ class AngelNetworks extends Component {
                 try {
                     const userProfile = await realtimeDBUtils.loadUserBasedOnID(admin.id);
                     if (userProfile) {
-                        console.log(`    ✅ Found user profile:`, userProfile.firstName, userProfile.lastName);
                         return {
                             ...admin,
                             firstName: userProfile.firstName || undefined,
@@ -257,11 +250,9 @@ class AngelNetworks extends Component {
                         };
                     }
                 } catch (error) {
-                    console.warn(`    ⚠️ Could not load user profile for ${admin.email}:`, error);
                 }
 
                 // No fallback - leave as undefined to indicate missing data
-                console.log(`    ⚠️ Admin ${admin.email} has no firstName/lastName in database`);
                 return {
                     ...admin,
                     firstName: undefined,
@@ -270,13 +261,8 @@ class AngelNetworks extends Component {
                 };
             }));
 
-            console.log(`    👨‍🏫 Found ${adminsWithDetails.length} admins/lecturers for course ${courseId}:`,
-                adminsWithDetails.map(m => `${m.firstName} ${m.lastName}`).join(', ')
-            );
-
             if (this._isMounted) { // ⚡ FIX: Only update state if still mounted
                 this.setState(prevState => {
-                    console.log(`    💾 Storing ${adminsWithDetails.length} members for courseId ${courseId} in state`);
                     return {
                         courseMembers: {
                             ...prevState.courseMembers,
@@ -290,10 +276,6 @@ class AngelNetworks extends Component {
                 });
             }
         } catch (error) {
-            console.error(`❌ Error loading course members for ${courseId}:`, error);
-            console.error(`❌ Error details:`, {
-                message: error.message
-            });
             if (this._isMounted) { // ⚡ FIX: Only update state if still mounted
                 this.setState(prevState => ({
                     courseMembers: {
@@ -336,10 +318,6 @@ class AngelNetworks extends Component {
 
         // Courses are stored separately with parentGroupId linking to university
         const allCourses = systemGroups.filter(g => g.parentGroupId);
-
-        allCourses.forEach(course => {
-            console.log(`  Course: ${course.displayName} (${course.anid}) - parent: ${course.parentGroupId}`);
-        });
 
         if (allCourses.length === 0) {
             return;
@@ -386,7 +364,6 @@ class AngelNetworks extends Component {
                 });
             }
         } catch (error) {
-            console.error('Error loading course requests:', error);
             if (this._isMounted) {
                 this.setState({
                     courseRequests: [],
@@ -418,7 +395,6 @@ class AngelNetworks extends Component {
                 this.setState({approvingRequest: null});
             }
         } catch (error) {
-            console.error('Error approving course request:', error);
             alert('Error approving course request: ' + (error.response?.data?.detail || error.message));
             if (this._isMounted) {
                 this.setState({approvingRequest: null});
@@ -453,7 +429,6 @@ class AngelNetworks extends Component {
                 this.setState({rejectingRequest: null});
             }
         } catch (error) {
-            console.error('Error rejecting course request:', error);
             alert('Error rejecting course request: ' + (error.response?.data?.detail || error.message));
             if (this._isMounted) {
                 this.setState({rejectingRequest: null});
@@ -469,13 +444,9 @@ class AngelNetworks extends Component {
         this.loadCourseRequests(); // Load pending course requests
 
         const {angelNetworks, angelNetworksLoaded, systemGroups} = this.props;
-        console.log('  angelNetworksLoaded:', angelNetworksLoaded);
-        console.log('  angelNetworks count:', angelNetworks?.length);
-        console.log('  systemGroups count:', systemGroups?.length);
 
         // Try to load course members if system groups are available
         if (systemGroups && systemGroups.length > 0) {
-            console.log('🎓 systemGroups available in componentDidMount, loading course members now...');
             // Add a small delay to ensure everything is ready
             this._loadCourseMembersTimeout = setTimeout(() => {
                 if (this._isMounted) {
@@ -483,7 +454,6 @@ class AngelNetworks extends Component {
                 }
             }, 500);
         } else {
-            console.log('⏳ systemGroups not available yet in componentDidMount, will try in componentDidUpdate');
         }
     }
 
@@ -497,14 +467,6 @@ class AngelNetworks extends Component {
 
             stopListeningForAngelNetworksChanged
         } = this.props;
-
-        console.log('🔍 AngelNetworks componentDidUpdate:', {
-            prevAngel: prevProps.angelNetworks?.length,
-            currentAngel: angelNetworks?.length,
-            prevLoaded: prevProps.angelNetworksLoaded,
-            currentLoaded: angelNetworksLoaded,
-            shouldLoad: !prevProps.angelNetworksLoaded && angelNetworksLoaded && angelNetworks && angelNetworks.length > 0
-        });
 
         // cancel all listeners if user is set to null or user is not an admin with permission
         if (!admin || (admin && !admin.superAdmin && admin.type !== DB_CONST.TYPE_ADMIN) || !shouldLoadOtherData) {
@@ -521,7 +483,6 @@ class AngelNetworks extends Component {
 
         if (!this.state.hasLoadedCourseMembers && systemGroups && systemGroups.length > 0 &&
             (!prevSystemGroups || prevSystemGroups.length === 0 || prevSystemGroups !== systemGroups)) {
-            console.log('🎓 systemGroups just became available in componentDidUpdate, loading course members...');
             this.loadAllCourseMembers();
         }
     }
@@ -856,15 +817,7 @@ class AngelNetworks extends Component {
         if (systemGroups && systemGroups.length > 0) {
             const universities = systemGroups.filter(g => !g.parentGroupId);
             const courses = systemGroups.filter(g => g.parentGroupId);
-            console.log(`Universities: ${universities.length}, Courses: ${courses.length}`);
             if (courses.length > 0) {
-                console.log('Courses in systemGroups:');
-                console.table(courses.map(c => ({
-                    name: c.displayName,
-                    anid: c.anid,
-                    parentGroupId: c.parentGroupId,
-                    groupType: c.groupType || 'N/A'
-                })));
             }
         }
 
@@ -926,12 +879,6 @@ class AngelNetworks extends Component {
 
                     // Debug logging
                     if (courses.length > 0) {
-                        console.table(courses.map(c => ({
-                            name: c.displayName,
-                            anid: c.anid,
-                            parentGroupId: c.parentGroupId,
-                            groupType: c.groupType
-                        })));
                     }
                 }
 
@@ -1034,7 +981,6 @@ class AngelNetworks extends Component {
 
                                                             // Debug logging
                                                             if (isCourseExpanded) {
-                                                                console.log(`   All course members in state:`, Object.keys(this.state.courseMembers));
                                                             }
 
                                                             return (

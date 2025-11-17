@@ -55,8 +55,6 @@ class OfferItem extends Component<OfferItemProps, any> {
 
         const pitchCover: PitchCover | null = getPitchCover(offerInstance.projectDetail);
         const projectUrl = Routes.constructProjectDetailRoute(ManageGroupUrlState.groupNameFromUrl ?? null, ManageGroupUrlState.courseNameFromUrl ?? null, offerInstance.projectDetail.id);
-        
-        console.log('OfferItem - Project URL:', projectUrl, 'for project:', offerInstance.projectDetail.projectName);
 
         return <CustomLink
             url={projectUrl}

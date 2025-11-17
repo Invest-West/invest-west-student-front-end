@@ -22,13 +22,6 @@ export const loadAngelNetworks = () => {
         realtimeDBUtils
             .loadAngelNetworks({}, realtimeDBUtils.SEARCH_ANGEL_NETWORKS_NONE)
             .then(angelNetworks => {
-                console.log('Total count:', angelNetworks.length);
-                console.table(angelNetworks.map(n => ({
-                    name: n.displayName,
-                    anid: n.anid,
-                    isInvestWest: n.isInvestWest
-                })));
-
                 // Note: Courses are now in separate Courses node, so we don't need to filter them out here
                 let filteredAngelNetworks = angelNetworks;
 
@@ -39,14 +32,7 @@ export const loadAngelNetworks = () => {
                 // Only regular group admins (not super admins or super group admins) see filtered view
                 if (shouldFilter) {
                     filteredAngelNetworks = angelNetworks.filter(network => network.anid === admin.anid);
-                } else {
-                    console.log('%c✅ NO FILTERING: Super user mode (superAdmin OR superGroupAdmin) - showing ALL universities', 'color: green; font-weight: bold');
                 }
-
-                console.table(filteredAngelNetworks.map(n => ({
-                    name: n.displayName,
-                    anid: n.anid
-                })));
 
                 dispatch({
                     type: FINISHED_LOADING_ANGEL_NETWORKS,
@@ -54,7 +40,6 @@ export const loadAngelNetworks = () => {
                 });
             })
             .catch(error => {
-                console.error('%c❌ ERROR loading angel networks:', 'color: red; font-weight: bold', error);
                 dispatch({
                     type: FINISHED_LOADING_ANGEL_NETWORKS,
                     error

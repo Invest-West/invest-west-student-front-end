@@ -509,26 +509,15 @@ export const loadAngelNetworkBasedOnANID = async (anid) => {
             .ref(DB_CONST.GROUP_PROPERTIES_CHILD)
             .child(anid)
             .once('value', snapshot => {
-                console.log('[REALTIME-DB DEBUG] Angel network lookup result:', {
-                    anid: anid,
-                    exists: snapshot ? snapshot.exists() : false,
-                    data: snapshot ? snapshot.val() : null
-                });
 
                 if (!snapshot || !snapshot.exists()) {
                     // Not found in GROUP_PROPERTIES_CHILD, check if it's a course
-                    console.log('[REALTIME-DB DEBUG] Not found in groups, checking Courses node:', anid);
 
                     firebase
                         .database()
                         .ref(DB_CONST.COURSES_CHILD)
                         .child(anid)
                         .once('value', courseSnapshot => {
-                            console.log('[REALTIME-DB DEBUG] Course lookup result:', {
-                                anid: anid,
-                                exists: courseSnapshot ? courseSnapshot.exists() : false,
-                                hasCourseData: courseSnapshot ? !!courseSnapshot.val() : false
-                            });
 
                             if (!courseSnapshot || !courseSnapshot.exists()) {
                                 return reject("Angel network not found");
@@ -538,23 +527,19 @@ export const loadAngelNetworkBasedOnANID = async (anid) => {
 
                             // If this is a course with a parent, load the parent university
                             if (courseData.parentGroupId) {
-                                console.log('[REALTIME-DB DEBUG] Course found, loading parent university:', courseData.parentGroupId);
                                 firebase
                                     .database()
                                     .ref(DB_CONST.GROUP_PROPERTIES_CHILD)
                                     .child(courseData.parentGroupId)
                                     .once('value', parentSnapshot => {
                                         if (!parentSnapshot || !parentSnapshot.exists()) {
-                                            console.warn('[REALTIME-DB DEBUG] Parent university not found for course:', courseData.parentGroupId);
                                             return reject("Parent university not found");
                                         }
 
-                                        console.log('[REALTIME-DB DEBUG] Returning parent university for course ANID');
                                         return resolve(parentSnapshot.val());
                                     });
                             } else {
                                 // Course without parent - just return the course data
-                                console.log('[REALTIME-DB DEBUG] Returning course data (no parent)');
                                 return resolve(courseData);
                             }
                         });
@@ -576,7 +561,6 @@ export const loadAngelNetworkBasedOnANID = async (anid) => {
  */
 export const loadAngelNetworkBasedOnGroupUserName = async (groupUserName) => {
     return new Promise((resolve, reject) => {
-        console.log('[REALTIME-DB DEBUG] Looking for group with groupUserName:', groupUserName);
 
         firebase
             .database()
@@ -584,12 +568,6 @@ export const loadAngelNetworkBasedOnGroupUserName = async (groupUserName) => {
             .orderByChild('groupUserName')
             .equalTo(groupUserName)
             .once('value', snapshots => {
-                console.log('[REALTIME-DB DEBUG] Group lookup by username result:', {
-                    groupUserName: groupUserName,
-                    exists: snapshots ? snapshots.exists() : false,
-                    numChildren: snapshots ? snapshots.numChildren() : 0,
-                    data: snapshots ? snapshots.val() : null
-                });
 
                 if (!snapshots
                     || !snapshots.exists()
@@ -599,7 +577,6 @@ export const loadAngelNetworkBasedOnGroupUserName = async (groupUserName) => {
                 }
 
                 snapshots.forEach(snapshot => {
-                    console.log('[REALTIME-DB DEBUG] Returning group data:', snapshot.val());
                     return resolve(snapshot.val());
                 });
             });
@@ -665,7 +642,6 @@ export const courseExistsInGroup = async (groupUserName, courseUserName) => {
         const course = await loadCourseFromGroup(groupUserName, courseUserName);
         return course !== null;
     } catch (error) {
-        console.error('Error checking course existence:', error);
         return false;
     }
 };
@@ -841,7 +817,6 @@ export const getUser = async (type, userID) => {
                 .ref(DB_CONST.USERS_CHILD)
                 .child(userID)
                 .once('value', snapshot => {
-                    //console.log("User snapshot value:", snapshot.val());
                     // if the user's node does not exist
                     if (!snapshot || !snapshot.exists()) {
                         return reject("User not found");
@@ -861,7 +836,6 @@ export const getUser = async (type, userID) => {
                 .ref(DB_CONST.ADMINISTRATORS_CHILD)
                 .child(userID)
                 .once('value', snapshot => {
-                    //console.log("Admin snapshot value:", snapshot.val());
                     // if the user's node does not exist
                     if (!snapshot || !snapshot.exists()) {
                         return reject("User not found");
@@ -888,7 +862,6 @@ export const getUser = async (type, userID) => {
 export const getUserBasedOnID = async (uid) => {
     return new Promise((resolve, reject) => {
         if (!uid) {
-            console.warn("Null id provided");
             return resolve(null);
         }
 
@@ -909,7 +882,6 @@ export const getUserBasedOnID = async (uid) => {
                                     return resolve(admin);
                                 })
                                 .catch(error => {
-                                    console.error("Error loading group details:", error);
                                     return resolve(null);
                                 });
                         }
@@ -919,7 +891,6 @@ export const getUserBasedOnID = async (uid) => {
                         }
                     })
                     .catch(error => {
-                        console.warn("Admin not found for uid:", uid);
                         return resolve(null);
                     });
             });
@@ -1810,21 +1781,10 @@ export const loadAParticularProject = async (projectID) => {
                 }
 
                 let project = snapshot.val();
-                console.log('[REALTIME-DB DEBUG] Loading project group:', {
-                    projectID: projectID,
-                    projectAnid: project.anid,
-                    projectData: project
-                });
 
                 // Check if the ANID is actually a groupUserName (like "invest-west") instead of a Firebase key
                 // Firebase keys typically start with "-" and are longer
                 const isFirebaseKey = project.anid && project.anid.startsWith('-') && project.anid.length > 10;
-
-                console.log('[REALTIME-DB DEBUG] ANID analysis:', {
-                    anid: project.anid,
-                    isFirebaseKey: isFirebaseKey,
-                    shouldUseGroupUserName: !isFirebaseKey
-                });
 
                 if (!isFirebaseKey && project.anid) {
                     // The ANID appears to be a groupUserName, use it directly
@@ -1887,10 +1847,6 @@ export const loadAParticularProject = async (projectID) => {
                                         });
                                 })
                                 .catch(fallbackError => {
-                                    console.log('[REALTIME-DB DEBUG] All group loading attempts failed:', {
-                                        originalGroupUserName: project.anid,
-                                        fallbackError: fallbackError
-                                    });
                                     return reject("Couldn't load group - all attempts failed");
                                 });
                         });
@@ -1925,11 +1881,6 @@ export const loadAParticularProject = async (projectID) => {
                             });
                     })
                     .catch(error => {
-                        console.log('[REALTIME-DB DEBUG] ANID lookup failed, trying fallback with invest-west:', {
-                            originalError: error,
-                            projectAnid: project.anid,
-                            projectID: projectID
-                        });
 
                         // Fallback: try to load group by groupUserName "invest-west"
                         // This helps with course-based contexts where ANID might not match
@@ -1966,14 +1917,6 @@ export const loadAParticularProject = async (projectID) => {
                                     });
                             })
                             .catch(fallbackError => {
-                                console.log('[REALTIME-DB DEBUG] Both ANID and fallback lookups failed:', {
-                                    originalError: error,
-                                    fallbackError: fallbackError,
-                                    projectAnid: project.anid,
-                                    projectID: projectID,
-                                    fallbackAttempted: 'invest-west'
-                                });
-                                console.error('[REALTIME-DB ERROR] Complete failure in group loading for project', projectID);
                                 return reject("Couldn't load group - both primary and fallback failed");
                             });
                     });
@@ -2025,7 +1968,6 @@ export const loadProjectRejectFeedbacks = async (projectID) => {
                                 })
                                 .catch(error => {
                                     // If we can't load the admin, still resolve with the feedback
-                                    console.warn('Could not load admin for feedback:', error);
                                     feedback.admin = null;
                                     return resolve(feedback);
                                 });

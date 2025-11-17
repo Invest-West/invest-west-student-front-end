@@ -203,18 +203,6 @@ export const fetchOffers: ActionCreator<any> = () => {
             const response = await new OfferRepository().fetchOffers(fetchOffersOptions);
             completeAction.offerInstances = response.data;
 
-            // Debug: Log projects with feedback
-            const projectsWithFeedback = response.data.filter((p: ProjectInstance) => p.rejectFeedbacks && p.rejectFeedbacks.length > 0);
-            console.log('🔵 OffersTableActions - Projects fetched from API:', {
-                totalProjects: response.data.length,
-                projectsWithFeedback: projectsWithFeedback.length,
-                feedbackDetails: projectsWithFeedback.map((p: ProjectInstance) => ({
-                    name: p.projectDetail.projectName,
-                    feedbackCount: p.rejectFeedbacks.length,
-                    feedbacks: p.rejectFeedbacks
-                }))
-            });
-
             dispatch(completeAction);
             return dispatch(filterOffersByName());
         } catch (error) {
@@ -369,15 +357,6 @@ export const fetchDraftProjectsWithFeedbackCount: ActionCreator<any> = () => {
             });
 
             completeAction.count = draftProjectsWithFeedback.length;
-
-            console.log('📬 Feedback Count Check:', {
-                totalProjects: response.data.length,
-                draftProjectsWithFeedback: draftProjectsWithFeedback.length,
-                projects: draftProjectsWithFeedback.map((p: ProjectInstance) => ({
-                    name: p.projectDetail.projectName,
-                    feedbackCount: p.rejectFeedbacks.length
-                }))
-            });
 
             return dispatch(completeAction);
         } catch (error) {

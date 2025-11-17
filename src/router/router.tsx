@@ -78,7 +78,6 @@ const AppRouter = () => (
             <Route path="/groups/:groupUserName/:courseUserName/debug" exact
                 // @ts-ignore
                    render={props => {
-                       console.log('[ROUTE DEBUG] Course route params:', props.match.params);
                        return <div style={{padding: '20px'}}>
                            <h1>Route Parameters Debug</h1>
                            <p><strong>Match Path:</strong> {props.match.path}</p>
@@ -93,7 +92,6 @@ const AppRouter = () => (
             <Route path="/groups/:groupUserName/:courseUserName/test-admin" exact
                 // @ts-ignore
                    render={props => {
-                       console.log('[ADMIN TEST] Direct admin route accessed:', props.match.params);
                        return <div style={{padding: '20px'}}>
                            <h1>Direct Admin Test</h1>
                            <p>This route bypasses GroupRoute validation</p>

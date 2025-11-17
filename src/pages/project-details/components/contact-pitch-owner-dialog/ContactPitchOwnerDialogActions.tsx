@@ -170,16 +170,9 @@ export const sendContactEmail: ActionCreator<any> = () => {
 
         try {
             if (!clubAttributes || !clubAttributes.serverURL) {
-                console.error('Server URL not available in clubAttributes. State:', state.manageClubAttributes);
                 throw new Error('Server configuration not available. Please refresh the page.');
             }
 
-            console.log('Sending email with exact data:', {
-                serverURL: clubAttributes.serverURL,
-                emailType: emailUtils.EMAIL_CONTACT_PITCH_OWNER,
-                data: emailData
-            });
-            
             // Try with EMAIL_CONTACT_PITCH_OWNER first, fallback to EMAIL_ENQUIRY if needed
             let emailTypeToUse = emailUtils.EMAIL_CONTACT_PITCH_OWNER;
             let emailDataToUse: any = emailData;
@@ -192,8 +185,6 @@ export const sendContactEmail: ActionCreator<any> = () => {
                     data: emailDataToUse
                 });
             } catch (firstError) {
-                console.warn('ContactPitchOwner email type failed, trying EMAIL_ENQUIRY:', firstError);
-                
                 // Fallback to EMAIL_ENQUIRY format (like ContactUs)
                 emailTypeToUse = emailUtils.EMAIL_ENQUIRY;
                 emailDataToUse = {
@@ -204,44 +195,17 @@ export const sendContactEmail: ActionCreator<any> = () => {
                     companyPosition: companyPosition,
                     message: `${senderName} from ${companyName} (${companyPosition}) would like to know more about your project "${projectName}".\n\nMessage: ${message}\n\nPlease contact them at ${companyEmail}.`
                 } as any; // Cast to any to avoid type conflicts
-                
-                console.log('Retrying with EMAIL_ENQUIRY format:', {
-                    serverURL: clubAttributes.serverURL,
-                    emailType: emailTypeToUse,
-                    data: emailDataToUse
-                });
-                
+
                 await emailUtils.sendEmail({
                     serverURL: clubAttributes.serverURL,
                     emailType: emailTypeToUse,
                     data: emailDataToUse
                 });
             }
-            
-            console.log('Email sent successfully!');
+
             dispatch(completeAction);
             return dispatch(openFeedbackSnackbar(FeedbackSnackbarTypes.Success, "Email sent successfully."));
         } catch (error) {
-            console.error('Email sending failed:', error);
-            console.error('Error details:', {
-                message: error.message,
-                stack: error.stack,
-                statusCode: error.statusCode,
-                response: error.response,
-                responseData: error.response?.data,
-                responseStatus: error.response?.status,
-                responseHeaders: error.response?.headers
-            });
-            
-            // Log the exact request data that failed
-            const state = getState() as any;
-            const { clubAttributes: logClubAttributes } = state.manageClubAttributes || {};
-            console.error('Failed request data:', {
-                serverURL: logClubAttributes?.serverURL,
-                emailType: emailUtils.EMAIL_CONTACT_PITCH_OWNER,
-                emailData: emailData
-            });
-            
             let errorMessage = 'Failed to send email.';
             if (error.statusCode === 404) {
                 errorMessage = 'Email service not available. Please try again later.';

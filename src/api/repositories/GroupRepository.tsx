@@ -52,10 +52,8 @@ export default class GroupRepository {
                 }
             });
 
-            console.log(`[GroupRepository] Fetched ${courses.length} courses for parent group: ${parentGroupId}`);
             return courses;
         } catch (error) {
-            console.error('[GroupRepository] Error fetching courses:', error);
             throw error;
         }
     }
@@ -77,7 +75,6 @@ export default class GroupRepository {
                 .once('value');
 
             if (!courseSnapshot.exists()) {
-                console.log(`[GroupRepository] Course not found: ${courseUserName}`);
                 return null;
             }
 
@@ -86,10 +83,8 @@ export default class GroupRepository {
                 course = snapshot.val();
             });
 
-            console.log(`[GroupRepository] Found course: ${courseUserName}`, course);
             return course;
         } catch (error) {
-            console.error('[GroupRepository] Error fetching course by username:', error);
             throw error;
         }
     }

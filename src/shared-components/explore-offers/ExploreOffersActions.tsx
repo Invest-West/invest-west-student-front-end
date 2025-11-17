@@ -78,24 +78,10 @@ export const fetchOffers: ActionCreator<any> = () => {
             groupFilter,
         } = getState().ExploreOffersLocalState;
 
-        console.log('[ExploreOffersActions] fetchOffers called with state:', {
-            groupFilter,
-            searchFilter,
-            visibilityFilter,
-            sectorFilter,
-            phaseFilter
-        });
-
         // Get group and course info from URL
         const { ManageGroupUrlState } = getState();
         const groupNameFromUrl = ManageGroupUrlState.groupNameFromUrl;
         const courseNameFromUrl = ManageGroupUrlState.courseNameFromUrl;
-
-        console.log('[ExploreOffersActions] URL info from ManageGroupUrlState:', {
-            groupNameFromUrl,
-            courseNameFromUrl,
-            fullState: ManageGroupUrlState
-        });
 
         // Determine orderBy based on phaseFilter and potentially other conditions
         let orderBy;
@@ -108,13 +94,6 @@ export const fetchOffers: ActionCreator<any> = () => {
 
         // Don't filter by group when on course-based URLs - show all projects
         let effectiveGroupFilter = groupFilter;
-        // Check if the groupFilter is a groupUserName that should be undefined for API
-        // The backend now accepts both anid and groupUserName, but we should still log this
-        if (effectiveGroupFilter && effectiveGroupFilter !== "all") {
-            console.log('[ExploreOffersActions] WARNING: Group filter is set to:', effectiveGroupFilter,
-                '- this should be either "all" or a Firebase anid for best compatibility');
-        }
-
         const fetchOffersOptions: FetchProjectsOptions = {
             search: searchFilter.trim().length === 0 ? undefined : searchFilter,
             visibility: visibilityFilter,

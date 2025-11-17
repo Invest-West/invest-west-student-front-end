@@ -164,7 +164,6 @@ class GroupDetails extends Component<GroupDetailsProps & Readonly<RouteComponent
                 this.props.loadData(viewedGroupUserName);
             }
         } catch (error) {
-            console.error('Error updating description:', error);
             openFeedbackSnackbar(FeedbackSnackbarTypes.Error, 'Failed to update description');
             this.setState({ isSavingDescription: false });
         }
@@ -186,20 +185,15 @@ class GroupDetails extends Component<GroupDetailsProps & Readonly<RouteComponent
         const viewedGroupUserName = this.props.match.params.viewedGroupUserName;
         const viewedCourseUserName = this.props.match.params.viewedCourseUserName;
 
-        console.log('[LOGO UPDATE] Starting refresh...', { viewedGroupUserName, viewedCourseUserName });
-
         if (viewedGroupUserName) {
             // Reload GroupDetailsLocalState
-            console.log('[LOGO UPDATE] Calling loadData...');
             this.props.loadData(viewedGroupUserName);
 
             // Force refresh of ManageGroupUrlState by resetting first, then validating
-            console.log('[LOGO UPDATE] Resetting group URL state...');
             resetGroupUrlState();
 
             // Wait a brief moment for the reset to complete, then validate
             setTimeout(() => {
-                console.log('[LOGO UPDATE] Calling validateGroupUrl...');
                 validateGroupUrl(this.props.location.pathname, viewedGroupUserName, viewedCourseUserName);
             }, 100);
         }

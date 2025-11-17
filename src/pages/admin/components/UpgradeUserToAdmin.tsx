@@ -290,7 +290,6 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
                     });
                     allAdminUsers.push(...adminMatches);
                 } catch (error) {
-                    console.warn(`Error loading admins for group ${group.displayName}:`, error);
                 }
             }
 
@@ -313,10 +312,9 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
                     combinedResults.push(user);
                 }
             });
-            
+
             return combinedResults;
         } catch (error) {
-            console.error("Error searching users:", error);
             throw error;
         }
     };
@@ -332,12 +330,6 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
             const userGroup = this.props.systemGroups.find(g => g.anid === user.invitedBy);
 
             if (userGroup) {
-                console.log('[SELECT USER] Found user group:', {
-                    displayName: userGroup.displayName,
-                    groupType: userGroup.groupType,
-                    parentGroupId: userGroup.parentGroupId
-                });
-
                 if (isCourse(userGroup)) {
                     // User belongs to a course - auto-select both course and parent university
                     autoSelectedCourse = userGroup.anid;
@@ -346,25 +338,11 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
                     if (autoSelectedUniversity) {
                         availableCourses = this.getAvailableCoursesForUniversity(autoSelectedUniversity, this.props.systemGroups);
                     }
-
-                    console.log('[SELECT USER] Auto-selected course and university:', {
-                        course: userGroup.displayName,
-                        courseId: autoSelectedCourse,
-                        universityId: autoSelectedUniversity
-                    });
                 } else if (isUniversity(userGroup)) {
                     // User belongs to a university - auto-select university and load courses
                     autoSelectedUniversity = userGroup.anid;
                     availableCourses = this.getAvailableCoursesForUniversity(autoSelectedUniversity, this.props.systemGroups);
-
-                    console.log('[SELECT USER] Auto-selected university:', {
-                        university: userGroup.displayName,
-                        universityId: autoSelectedUniversity,
-                        availableCoursesCount: availableCourses.length
-                    });
                 }
-            } else {
-                console.warn('[SELECT USER] Could not find group with anid:', user.invitedBy);
             }
         } else if (user.isAdmin && user.adminOfGroup) {
             // User is already an admin - show their current admin group
@@ -533,7 +511,6 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
                     }
                 }
             } catch (adminCheckError) {
-                console.warn('Could not verify admin status before upgrade:', adminCheckError);
                 // Continue with the upgrade attempt
             }
 
@@ -587,7 +564,6 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
                             }
                         );
                     } catch (universityError) {
-                        console.warn('Error adding user to university (might already be a member):', universityError);
                         // Continue with course assignment even if university assignment fails
                     }
                 }
@@ -632,7 +608,6 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
             try {
                 this.props.loadCourseStatistics();
             } catch (statsError) {
-                console.warn('Failed to refresh course statistics:', statsError);
                 // Don't fail the upgrade process if statistics refresh fails
             }
 
@@ -644,7 +619,6 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
                     userCache.delete(`user:${userUid}:groups`);
                 }
             } catch (cacheError) {
-                console.warn('Error clearing cache for upgraded user:', cacheError);
                 // Don't fail the upgrade process if cache clearing fails
             }
 
@@ -654,8 +628,6 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
             }, 2000);
 
         } catch (error: unknown) {
-            console.error('Error upgrading user:', error);
-            
             // Check if the error is about the user already being an admin
             const errorMessage = error instanceof Error ? error.message : String(error);
             if (errorMessage && (errorMessage.includes('already been used') || errorMessage.includes('already exists'))) {
@@ -664,17 +636,6 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
                     statusMessage: `${selectedUser.email} is already an admin of ${targetCourseProperties.displayName}.`
                 });
             } else {
-                // Log more details about the error for debugging
-                console.error('Full error details:', {
-                    message: errorMessage,
-                    response: error && typeof error === 'object' && 'response' in error ? (error as any).response : undefined,
-                    requestData: {
-                        adder: currentAdmin,
-                        groupProperties: targetCourseProperties,
-                        newGroupAdminEmail: selectedUser.email
-                    }
-                });
-                
                 this.setState({
                     upgradeStatus: UPGRADE_USER_STATUS_ERROR,
                     statusMessage: `Failed to upgrade user: ${errorMessage || 'Unknown error occurred'}`

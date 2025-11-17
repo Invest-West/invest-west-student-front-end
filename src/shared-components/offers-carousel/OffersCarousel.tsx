@@ -66,7 +66,6 @@ class OffersCarousel extends Component<OffersCarouselProps, OffersCarouselState>
     handleOfferClick = (offer: ProjectInstance) => {
         const { ManageGroupUrlState, history } = this.props;
         const projectUrl = Routes.constructProjectDetailRoute(ManageGroupUrlState.groupNameFromUrl ?? null, ManageGroupUrlState.courseNameFromUrl ?? null, offer.projectDetail.id);
-        console.log('Navigating to:', projectUrl);
         history.push(projectUrl);
     }
     

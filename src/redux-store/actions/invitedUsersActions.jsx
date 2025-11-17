@@ -27,7 +27,6 @@ export const loadInvitedUsers = () => {
         realtimeDBUtils
             .loadInvitedUsers(admin.superAdmin ? null : admin.anid)
             .then(invitedUsers => {
-                //console.log("Invited users loaded successfully:", invitedUsers);
                 dispatch({
                     type: FINISHED_LOADING_INVITED_USERS,
                     invitedUsers,

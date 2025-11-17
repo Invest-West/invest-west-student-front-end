@@ -265,25 +265,11 @@ class ProjectDetailsMain extends Component {
             const authState = this.props.AuthenticationState;
             const canLoadProject = !isAuthenticating(authState);
 
-            console.log('[PROJECT DETAILS AUTH] componentDidMount auth check:', {
-                status: authState.status,
-                isNotInitialized: authIsNotInitialized(authState),
-                isAuthenticating: isAuthenticating(authState),
-                hasUser: !!authState.currentUser,
-                canLoadProject: canLoadProject,
-                dataLoaded: dataLoaded,
-                dataBeingLoaded: dataBeingLoaded
-            });
 
             if (canLoadProject) {
                 if (!dataBeingLoaded && !dataLoaded) {
-                    console.log('🚀 Loading project data from componentDidMount...');
                     this.loadData();
-                } else {
-                    console.log('❌ NOT loading - data already loaded or being loaded');
                 }
-            } else {
-                console.log('⏳ Waiting for active authentication...');
             }
         }
     }
@@ -319,23 +305,11 @@ class ProjectDetailsMain extends Component {
             const authState = this.props.AuthenticationState;
             const canLoadProject = !isAuthenticating(authState);
 
-            console.log('[PROJECT DETAILS AUTH] componentDidUpdate auth check:', {
-                status: authState.status,
-                isNotInitialized: authIsNotInitialized(authState),
-                isAuthenticating: isAuthenticating(authState),
-                hasUser: !!authState.currentUser,
-                canLoadProject: canLoadProject,
-                dataLoaded: dataLoaded,
-                dataBeingLoaded: dataBeingLoaded
-            });
 
             if (canLoadProject) {
                 if (!dataBeingLoaded && !dataLoaded) {
-                    console.log('🚀 Loading project data from componentDidUpdate...');
                     this.loadData();
                 }
-            } else {
-                console.log('⏳ Waiting for active authentication in componentDidUpdate...');
             }
 
             // attach project changed listener
@@ -399,8 +373,6 @@ class ProjectDetailsMain extends Component {
             dataBeingLoaded
         } = this.state;
 
-        console.log('🔍 LoadData state check:', { dataLoaded, dataBeingLoaded });
-        console.log('🔍 Current user:', user);
 
         // OLD CHECK REMOVED: if (!userLoaded) return;
         // Projects can be viewed by both authenticated and unauthenticated users
@@ -426,7 +398,6 @@ class ProjectDetailsMain extends Component {
 
         // data is being loaded
         if (dataBeingLoaded) {
-            console.log('❌ LoadData: Already being loaded, returning early');
             return;
         }
 
@@ -449,13 +420,11 @@ class ProjectDetailsMain extends Component {
         realtimeDBUtils
             .loadAParticularProject(projectID)
             .then(project => {
-                console.log('✅ Firebase project loaded successfully:', project?.projectName || project?.id);
                 // Cache the project data for 10 minutes
                 apiCache.set(cacheKey, project, 10 * 60 * 1000);
                 this.processProjectData(project);
             })
             .catch(error => {
-                console.error("❌ Error loading project:", error);
                 this.setState({
                     dataLoaded: false,
                     dataBeingLoaded: false
@@ -464,7 +433,6 @@ class ProjectDetailsMain extends Component {
     }
     
     processProjectData = (project) => {
-        console.log('🔄 ProcessProjectData called with project:', project?.projectName || project?.id);
         const { user, selectProjectVisibility_setProject } = this.props;
                 // track activity for investors only
                 if (user?.type === DB_CONST.TYPE_INVESTOR) {
@@ -538,14 +506,6 @@ class ProjectDetailsMain extends Component {
                     const [votes, pledges, projectIssuer, rejectFeedbacks] = shouldLoadRejectFeedbacks
                         ? results
                         : [...results, []];
-                    console.log('✅ Promise.all completed successfully!', {
-                        votesCount: votes?.length,
-                        pledgesCount: pledges?.length,
-                        issuerName: projectIssuer?.displayName,
-                        issuerID: projectIssuer?.id,
-                        rejectFeedbacksCount: rejectFeedbacks?.length,
-                        fullIssuer: projectIssuer
-                    });
                     // Check if current user has pledged (only for investors)
                     let investorPledge = null;
                     if (user?.type === DB_CONST.TYPE_INVESTOR) {
@@ -572,15 +532,13 @@ class ProjectDetailsMain extends Component {
                             projectIssuer: projectIssuer,
                             projectIssuerLoaded: true
                         }
-                    }, () => {                        
+                    }, () => {
                         // Auto-refresh mechanism: Force a re-render after data loads
                         setTimeout(() => {
-                            console.log('🔄 Auto-refresh: Forcing component re-render...');
                             this.forceUpdate();
                         }, 100);
                     });
                 }).catch(error => {
-                    console.error("❌ Error loading project related data:", error);
                     // Set error state but still mark as loaded to prevent infinite loading
                     this.setState({
                         dataLoaded: true,
@@ -1172,14 +1130,6 @@ class ProjectDetailsMain extends Component {
                     project.group = this.state.projectDetail.project.group;
                     project.issuer = this.state.projectDetail.project.issuer;
 
-                    console.log('🔄 Project listener fired:', {
-                        projectName: project.projectName,
-                        status: project.status,
-                        isDraft: utils.isDraftProject(project),
-                        userType: user?.type,
-                        isAdmin: user?.type === DB_CONST.TYPE_ADMIN
-                    });
-
                     // Determine mainBody based on user type and project status
                     // For draft projects, ALWAYS use CAMPAIGN tab regardless of user type
                     const isDraft = utils.isDraftProject(project);
@@ -1187,14 +1137,6 @@ class ProjectDetailsMain extends Component {
                     const canSeeAdminTab = isAdmin && (user?.superAdmin || user?.anid === project.anid);
 
                     const newMainBody = isDraft || !canSeeAdminTab ? MAIN_BODY_CAMPAIGN : MAIN_BODY_ADMIN_OFFER_STATES;
-
-                    console.log('🔄 Setting mainBody to:', {
-                        newMainBody,
-                        isDraft,
-                        isAdmin,
-                        canSeeAdminTab,
-                        currentMainBody: this.state.mainBody
-                    });
 
                     this.setState({
                         projectDetail: {
@@ -2251,16 +2193,6 @@ class ProjectDetails extends Component {
             sendingProjectBack
         } = props;
 
-        console.log('🔍 RENDER DEBUG: Checking render conditions...', {
-            pledgesLoaded,
-            votesLoaded, 
-            investorPledgeLoaded,
-            projectIssuerLoaded,
-            hasProject: !!project,
-            hasPledges: !!pledges,
-            hasProjectIssuer: !!projectIssuer,
-            projectIssuerDisplayName: projectIssuer?.displayName
-        });
 
         // if the data is being loaded
         // display loading
@@ -2269,12 +2201,6 @@ class ProjectDetails extends Component {
             || !investorPledgeLoaded
             || !projectIssuerLoaded
         ) {
-            console.log('🔄 RENDER: Still loading data...', { 
-                pledgesLoaded, 
-                votesLoaded, 
-                investorPledgeLoaded, 
-                projectIssuerLoaded 
-            });
             return (
                 <Row noGutters>
                     <Col xs={12} md={12} lg={12}>
@@ -2306,13 +2232,6 @@ class ProjectDetails extends Component {
                 && (groupsUserIsIn !== null && groupsUserIsIn.findIndex(group => group.anid === project.anid) === -1)
             )
         ) {
-            console.log('🚫 RENDER: Page Not Found - missing data or access denied', { 
-                hasProject: !!project, 
-                hasPledges: !!pledges, 
-                hasProjectIssuer: !!projectIssuer,
-                projectVisibility: project?.visibility,
-                userType: user?.type
-            });
             return (
                 <Row noGutters>
                     <Col xs={12} md={12} lg={12}>
@@ -2360,13 +2279,6 @@ class ProjectDetails extends Component {
                 </Row>
             );
         }
-
-        console.log('🎉 RENDER: All checks passed! Rendering project content...', { 
-            projectName: project?.projectName, 
-            projectId: project?.id,
-            pledgesCount: pledges?.length,
-            hasProjectIssuer: !!projectIssuer
-        });
 
         let sortedComments = comments;
         // if the list of comments is not null
@@ -2505,14 +2417,6 @@ class ProjectDetails extends Component {
                                                     if (pathParts.length >= 5 && pathParts[0] === 'groups' && pathParts[3] === 'projects') {
                                                         courseUserName = pathParts[2]; // The course name is the 3rd part
                                                     }
-
-                                                    console.log('[PROJECT DETAILS EDIT] Debugging edit URL construction:', {
-                                                        pathname,
-                                                        pathParts,
-                                                        groupUserName,
-                                                        courseUserName,
-                                                        projectId: project.id
-                                                    });
 
                                                     return (
                                                         <NavLink
