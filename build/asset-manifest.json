@@ -1,26 +1,26 @@
 {
   "files": {
-    "main.css": "https://studentshowcase.co.uk/static/css/main.59a5ba1c.css",
-    "main.js": "https://studentshowcase.co.uk/static/js/main.4c022b68.js",
-    "static/media/employ_hire.svg": "https://studentshowcase.co.uk/static/media/employ_hire.3ac201d3ef420618ad98ca1b420f6d72.svg",
-    "static/media/handshake_1.svg": "https://studentshowcase.co.uk/static/media/handshake_1.e75d54b484fd818cad1fcd2049d94a0f.svg",
-    "static/media/student_shake.svg": "https://studentshowcase.co.uk/static/media/student_shake.70fdc67cbd9da5e68832272bb33bfb8f.svg",
-    "static/media/employ_project.svg": "https://studentshowcase.co.uk/static/media/employ_project.504251d67e06a18aff131cf99a0fb06d.svg",
-    "static/media/employ_signup.svg": "https://studentshowcase.co.uk/static/media/employ_signup.5a14c19d12f6982a0b0e2ffab0244b40.svg",
-    "static/media/student_upload.svg": "https://studentshowcase.co.uk/static/media/student_upload.3385d16865c96e7c80d4d653d23f99bb.svg",
-    "static/media/time.svg": "https://studentshowcase.co.uk/static/media/time.9bc7b8beda1954ddc484db02cd0b97a7.svg",
-    "static/media/money.svg": "https://studentshowcase.co.uk/static/media/money.ac472c67343e4e216c6e779ffdf0b4ce.svg",
-    "static/media/employ_hero.svg": "https://studentshowcase.co.uk/static/media/employ_hero.4f09dde531e8facb7de9059ae96a7a3f.svg",
-    "static/media/student_signup.svg": "https://studentshowcase.co.uk/static/media/student_signup.6dee69dca5c62ec25d64b3c90149b0fb.svg",
-    "static/media/student_laptop.svg": "https://studentshowcase.co.uk/static/media/student_laptop.fb12273f44249eb54145e9a9608b51cd.svg",
-    "static/media/computer.svg": "https://studentshowcase.co.uk/static/media/computer.2b770647d26c6247865a8b8c1c619f8a.svg",
-    "static/media/logo.png": "https://studentshowcase.co.uk/static/media/logo.e9f008980e1bf6b22282.png",
-    "static/media/student_logo.png": "https://studentshowcase.co.uk/static/media/student_logo.e9f008980e1bf6b22282.png",
-    "static/media/admin_logo.png": "https://studentshowcase.co.uk/static/media/admin_logo.ba46fba41160c4fa6f39.png",
-    "index.html": "https://studentshowcase.co.uk/index.html"
+    "main.css": "https://www.studentshowcase.co.uk/static/css/main.06a14cb4.css",
+    "main.js": "https://www.studentshowcase.co.uk/static/js/main.66014263.js",
+    "static/media/employ_hire.svg": "https://www.studentshowcase.co.uk/static/media/employ_hire.3ac201d3ef420618ad98ca1b420f6d72.svg",
+    "static/media/handshake_1.svg": "https://www.studentshowcase.co.uk/static/media/handshake_1.e75d54b484fd818cad1fcd2049d94a0f.svg",
+    "static/media/student_shake.svg": "https://www.studentshowcase.co.uk/static/media/student_shake.70fdc67cbd9da5e68832272bb33bfb8f.svg",
+    "static/media/employ_project.svg": "https://www.studentshowcase.co.uk/static/media/employ_project.504251d67e06a18aff131cf99a0fb06d.svg",
+    "static/media/employ_signup.svg": "https://www.studentshowcase.co.uk/static/media/employ_signup.5a14c19d12f6982a0b0e2ffab0244b40.svg",
+    "static/media/student_upload.svg": "https://www.studentshowcase.co.uk/static/media/student_upload.3385d16865c96e7c80d4d653d23f99bb.svg",
+    "static/media/time.svg": "https://www.studentshowcase.co.uk/static/media/time.9bc7b8beda1954ddc484db02cd0b97a7.svg",
+    "static/media/money.svg": "https://www.studentshowcase.co.uk/static/media/money.ac472c67343e4e216c6e779ffdf0b4ce.svg",
+    "static/media/employ_hero.svg": "https://www.studentshowcase.co.uk/static/media/employ_hero.4f09dde531e8facb7de9059ae96a7a3f.svg",
+    "static/media/student_signup.svg": "https://www.studentshowcase.co.uk/static/media/student_signup.6dee69dca5c62ec25d64b3c90149b0fb.svg",
+    "static/media/student_laptop.svg": "https://www.studentshowcase.co.uk/static/media/student_laptop.fb12273f44249eb54145e9a9608b51cd.svg",
+    "static/media/computer.svg": "https://www.studentshowcase.co.uk/static/media/computer.2b770647d26c6247865a8b8c1c619f8a.svg",
+    "static/media/logo.png": "https://www.studentshowcase.co.uk/static/media/logo.e9f008980e1bf6b22282.png",
+    "static/media/student_logo.png": "https://www.studentshowcase.co.uk/static/media/student_logo.e9f008980e1bf6b22282.png",
+    "static/media/admin_logo.png": "https://www.studentshowcase.co.uk/static/media/admin_logo.ba46fba41160c4fa6f39.png",
+    "index.html": "https://www.studentshowcase.co.uk/index.html"
   },
   "entrypoints": [
-    "static/css/main.59a5ba1c.css",
-    "static/js/main.4c022b68.js"
+    "static/css/main.06a14cb4.css",
+    "static/js/main.66014263.js"
   ]
 }
