@@ -51,6 +51,7 @@ import profileReducer, {ProfileState} from "../../shared-components/profile/Prof
 import signUpReducer, {SignUpState} from "../../pages/signup/SignUpReducer";
 import manageSectorsReducer, {ManageSectorsState} from "../../pages/admin/components/manage-sectors/ManageSectorsReducer";
 import manageCoursesReducer, {ManageCoursesState} from "../../pages/admin/components/manage-courses/ManageCoursesReducer";
+import emailTemplateReducer, {EmailTemplateState} from "./emailTemplateReducer";
 
 export interface AppState {
     MediaQueryState: MediaQueryState;
@@ -76,6 +77,8 @@ export interface AppState {
     ManageCoursesLocalState: ManageCoursesState;
 
     ProfileLocalState: ProfileState;
+
+    EmailTemplateState: EmailTemplateState;
 
     // mitigation plan for the old states of old reducers
     [oldReducers: string]: any;
@@ -105,6 +108,8 @@ const rootReducer = combineReducers<AppState>({
     ManageCoursesLocalState: manageCoursesReducer,
 
     ProfileLocalState: profileReducer,
+
+    EmailTemplateState: emailTemplateReducer,
 
     // Old reducers --------------------------
     auth: authReducer,

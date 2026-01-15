@@ -131,7 +131,7 @@ class SidebarContent extends Component {
             >
                 {/** Sidebar header */}
                 <FlexView column height={65} vAlignContent="center" hAlignContent="center" style={{ padding: 8 }} >
-                    <Link href={groupProperties.website ?? ""} target="_blank">
+                    <Link href={groupProperties?.website ?? ""} target="_blank">
                         <Image
                             style={{ width: "auto", height: 65, margin: 0, padding: 10, objectFit: "scale-down" }}
                             src={

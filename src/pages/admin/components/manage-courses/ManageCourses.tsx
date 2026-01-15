@@ -21,9 +21,11 @@ import SupervisorAccountIcon from "@material-ui/icons/SupervisorAccount";
 import RefreshIcon from "@material-ui/icons/Refresh";
 import SettingsIcon from "@material-ui/icons/Settings";
 import ImageIcon from "@material-ui/icons/Image";
+import EditIcon from "@material-ui/icons/Edit";
 import CourseMembers from "./CourseMembers";
 import Routes from "../../../../router/routes";
 import EditCourseImageDialog from "../EditCourseImageDialog";
+import EditCourseNameDialog from "./EditCourseNameDialog";
 
 interface ManageCoursesProps {
     groupProperties: GroupProperties;
@@ -57,6 +59,8 @@ interface ManageCoursesLocalState {
     selectedCourse: string | null;
     editCourseImageDialogOpen: boolean;
     selectedCourseForImageEdit: string | null;
+    editCourseNameDialogOpen: boolean;
+    selectedCourseForNameEdit: string | null;
 }
 
 class ManageCourses extends Component<ManageCoursesProps, ManageCoursesLocalState> {
@@ -66,7 +70,9 @@ class ManageCourses extends Component<ManageCoursesProps, ManageCoursesLocalStat
             courseMembersDialogOpen: false,
             selectedCourse: null,
             editCourseImageDialogOpen: false,
-            selectedCourseForImageEdit: null
+            selectedCourseForImageEdit: null,
+            editCourseNameDialogOpen: false,
+            selectedCourseForNameEdit: null
         };
     }
 
@@ -127,6 +133,26 @@ class ManageCourses extends Component<ManageCoursesProps, ManageCoursesLocalStat
     handleCourseImageUpdateSuccess = () => {
         // Reload the page to show the new image
         window.location.reload();
+    };
+
+    handleOpenEditCourseName = (courseName: string) => {
+        this.setState({
+            editCourseNameDialogOpen: true,
+            selectedCourseForNameEdit: courseName
+        });
+    };
+
+    handleCloseEditCourseName = () => {
+        this.setState({
+            editCourseNameDialogOpen: false,
+            selectedCourseForNameEdit: null
+        });
+    };
+
+    handleCourseNameUpdateSuccess = (newName: string) => {
+        // Reload courses from Firebase to update the list with the new name
+        this.props.loadCoursesFromGroup();
+        this.props.loadCourseStatistics();
     };
 
     getCourseUserName = (courseName: string) => {
@@ -254,6 +280,23 @@ class ManageCourses extends Component<ManageCoursesProps, ManageCoursesLocalStat
                                         Manage Members
                                     </Button>
 
+                                    {/* Edit Name Button */}
+                                    <Button
+                                        variant="outlined"
+                                        size="small"
+                                        startIcon={<EditIcon />}
+                                        onClick={() => this.handleOpenEditCourseName(course)}
+                                        style={{
+                                            color: '#ff9800',
+                                            borderColor: '#ff9800',
+                                            fontWeight: 500,
+                                            textTransform: 'none',
+                                            marginRight: 8
+                                        }}
+                                    >
+                                        Edit Name
+                                    </Button>
+
                                     {/* Edit Image Button */}
                                     <Button
                                         variant="outlined"
@@ -319,6 +362,18 @@ class ManageCourses extends Component<ManageCoursesProps, ManageCoursesLocalStat
                     courseUserName={this.getCourseUserName(this.state.selectedCourseForImageEdit)}
                     onClose={this.handleCloseEditCourseImage}
                     onSuccess={this.handleCourseImageUpdateSuccess}
+                />
+            )}
+
+            {/* Edit Course Name Dialog */}
+            {this.state.selectedCourseForNameEdit && (
+                <EditCourseNameDialog
+                    open={this.state.editCourseNameDialogOpen}
+                    groupUserName={groupProperties.groupUserName}
+                    courseUserName={this.getCourseUserName(this.state.selectedCourseForNameEdit)}
+                    currentName={this.state.selectedCourseForNameEdit}
+                    onClose={this.handleCloseEditCourseName}
+                    onSuccess={this.handleCourseNameUpdateSuccess}
                 />
             )}
         </Box>;

@@ -83,16 +83,7 @@ export const addNewAngelNetwork = () => {
                 return;
             }
 
-            const checkExistingUser = await realtimeDBUtils.doesUserExist(email);
-
-            // email has already been used
-            if (checkExistingUser.userExists) {
-                dispatch({
-                    type: ADD_ANGEL_NETWORK_RESULT_CHANGED,
-                    result: ADD_STATUS_EMAIL_ALREADY_USED
-                });
-                return;
-            }
+            // Note: Same email can create multiple universities - no email uniqueness check needed
 
             // upload plain logo
             const uploadedPlainLogo = await uploadLogo(dispatch, anid, UPLOAD_PLAIN_LOGO, plainLogo);
@@ -127,8 +118,9 @@ export const addNewAngelNetwork = () => {
                 settings: {
                     projectVisibility: DB_CONST.PROJECT_VISIBILITY_PRIVATE,
                     makeInvestorsContactDetailsVisibleToIssuers: false, // initially set this to false
-                    primaryColor: primaryColor.toUpperCase(),
-                    secondaryColor: secondaryColor.toUpperCase()
+                    // Use Student Showcase default colors if not provided
+                    primaryColor: primaryColor.trim().length > 0 ? primaryColor.toUpperCase() : '#4C8484',
+                    secondaryColor: secondaryColor.trim().length > 0 ? secondaryColor.toUpperCase() : '#E91E63'
                 }
             }
 

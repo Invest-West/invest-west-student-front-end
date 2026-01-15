@@ -522,10 +522,14 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             this.props.history.push(Routes.constructSignInRoute(this.routeParams));
         }
         
+        // Check if current user is a super admin (they have no groups)
+        const currentUserForRedirect = this.props.AuthenticationState.currentUser;
+        const isSuperAdmin = currentUserForRedirect && isAdmin(currentUserForRedirect)?.superAdmin;
+
         if ((Routes.isSignInRoute(this.routePath) || Routes.isSignUpRoute(this.routePath))
             && successfullyAuthenticated(this.props.AuthenticationState)
             && !this.state.navigatingFromSignInOrSignUpToDashboard
-            && this.props.AuthenticationState.groupsOfMembership.length > 0  // ⚡ FIX: Ensure groups are loaded before redirect
+            && (this.props.AuthenticationState.groupsOfMembership.length > 0 || isSuperAdmin)  // Allow super admins with no groups
         ) {
 
             // Check for stored redirect URL first

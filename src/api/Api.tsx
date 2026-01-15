@@ -19,6 +19,14 @@ export class ApiRoutes {
     static emailBaseRoute = "/email";
     static sendEmailRoute = ApiRoutes.emailBaseRoute + "/send";
 
+    // Email template management routes (super admin only)
+    static emailTemplatesRoute = ApiRoutes.emailBaseRoute + "/templates";
+    static emailSettingsRoute = ApiRoutes.emailBaseRoute + "/settings";
+    static emailTestConnectionRoute = ApiRoutes.emailBaseRoute + "/test-connection";
+    static emailSendTestRoute = ApiRoutes.emailBaseRoute + "/send-test";
+    static emailPreviewRoute = ApiRoutes.emailBaseRoute + "/preview";
+    static emailSeedTemplatesRoute = ApiRoutes.emailBaseRoute + "/seed-templates";
+
     static usersBaseRoute = "/users";
     static createUser = ApiRoutes.usersBaseRoute + "/create";
     static retrieveUser = ApiRoutes.usersBaseRoute + "/:uid/retrieve";
@@ -32,6 +40,7 @@ export class ApiRoutes {
     static retrieveGroup = ApiRoutes.groupsBaseRoute + "/:groupUserName";
     static updateGroupLogo = ApiRoutes.groupsBaseRoute + "/:groupUserName/update-logo";
     static updateCourseImage = ApiRoutes.groupsBaseRoute + "/:groupUserName/courses/:courseUserName/update-image";
+    static updateCourseName = ApiRoutes.groupsBaseRoute + "/:groupUserName/courses/:courseUserName/update-name";
     static addMembersToGroup = ApiRoutes.groupsBaseRoute + "/:group/add-members";
     static listGroupMembers = ApiRoutes.groupsBaseRoute + "/:group/list-members";
 

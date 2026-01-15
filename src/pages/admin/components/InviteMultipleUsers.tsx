@@ -39,6 +39,7 @@ import * as DB_CONST from "../../../firebase/databaseConsts";
 import * as emailUtils from "../../../utils/emailUtils";
 import * as realtimeDBUtils from "../../../firebase/realtimeDBUtils";
 import firebase from "../../../firebase/firebaseApp";
+import * as utils from "../../../utils/utils";
 
 export const INVITE_STATUS_NONE = 0;
 export const INVITE_STATUS_SENDING = 1;
@@ -220,18 +221,21 @@ class InviteMultipleUsers extends Component<InviteMultipleUsersProps, InviteMult
                     .set(invitedUser);
 
                 // Send email
+                // Get the user type as a readable string
+                const userTypeString = invite.userType === DB_CONST.TYPE_ISSUER ? 'Student' : 'Project Viewer';
+
                 await emailUtils.sendEmail({
                     serverURL: process.env.REACT_APP_BACK_END_BASE_URL,
                     emailType: emailUtils.EMAIL_INVITATION,
                     data: {
                         groupName: currentGroup?.displayName,
-                        groupLogo: currentGroup?.plainLogo?.[0] || '',
+                        groupLogo: utils.getLogoFromGroup(utils.GET_PLAIN_LOGO, currentGroup) || '',
                         groupWebsite: currentGroup?.website || '',
-                        groupContactUs: currentGroup?.contactUs || '',
+                        groupContactUs: `${window.location.origin}/groups/${groupUserName}/contact-us`,
                         sender: currentAdmin?.email,
                         receiver: invite.email,
-                        receiverName: invite.email.split('@')[0],
-                        userType: invite.userType,
+                        receiverName: '', // Name not known at invitation time - template will show email instead
+                        userType: userTypeString,
                         signupURL: signupURL
                     }
                 });

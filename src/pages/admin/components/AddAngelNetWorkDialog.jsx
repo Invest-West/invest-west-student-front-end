@@ -215,15 +215,14 @@ class AddAngelNetworkDialog extends Component {
 
                     <FormControl fullWidth style={{marginTop: 25}}>
                         <TextField
-                            label="Primary color"
+                            label="Primary color (optional)"
                             placeholder="E.g. #FFFFFF"
+                            helperText="Leave blank to use Student Showcase default (#4C8484)"
                             name="primaryColor"
                             value={primaryColor.toUpperCase()}
                             fullWidth
                             margin="dense"
                             variant="outlined"
-                            required
-                            error={addButtonClicked && primaryColor.trim().length === 0}
                             onChange={handleInputChanged}
                         />
                         {
@@ -237,15 +236,14 @@ class AddAngelNetworkDialog extends Component {
 
                     <FormControl fullWidth style={{marginBottom: 25}}>
                         <TextField
-                            label="Secondary color"
+                            label="Secondary color (optional)"
                             placeholder="E.g. #FFFFFF"
+                            helperText="Leave blank to use Student Showcase default (#E91E63)"
                             name="secondaryColor"
                             value={secondaryColor.toUpperCase()}
                             fullWidth
                             margin="dense"
                             variant="outlined"
-                            required
-                            error={addButtonClicked && secondaryColor.trim().length === 0}
                             onChange={handleInputChanged}
                         />
 
@@ -329,8 +327,6 @@ class AddAngelNetworkDialog extends Component {
                                 || email.trim().length === 0
                                 || website.trim().length === 0
                                 || (website.trim().length > 0 && !utils.isValidWebURL(website))
-                                || primaryColor.trim().length === 0
-                                || secondaryColor.trim().length === 0
                                 || (primaryColor.trim().length > 0 && !utils.isValidHexColorCode(primaryColor))
                                 || (secondaryColor.trim().length > 0 && !utils.isValidHexColorCode(secondaryColor))
                                 || !plainLogo

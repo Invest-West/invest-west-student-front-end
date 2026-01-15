@@ -162,4 +162,25 @@ export default class GroupRepository {
                 }
             );
     }
+
+    /**
+     * Update course name (system admin only)
+     *
+     * @param groupUserName - University groupUserName
+     * @param courseUserName - Course groupUserName
+     * @param newName - New course name
+     */
+    public async updateCourseName(groupUserName: string, courseUserName: string, newName: string) {
+        return await new Api()
+            .request(
+                "put",
+                ApiRoutes.updateCourseName
+                    .replace(":groupUserName", groupUserName)
+                    .replace(":courseUserName", courseUserName),
+                {
+                    requestBody: { newName },
+                    queryParameters: null
+                }
+            );
+    }
 }
