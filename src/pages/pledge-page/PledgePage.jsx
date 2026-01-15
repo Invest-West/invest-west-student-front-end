@@ -8,9 +8,9 @@ import {
     DialogContentText,
     DialogTitle,
     Divider,
-    ExpansionPanel,
-    ExpansionPanelDetails,
-    ExpansionPanelSummary,
+    Accordion,
+    AccordionDetails,
+    AccordionSummary,
     InputAdornment,
     Paper,
     TextField,
@@ -907,15 +907,15 @@ class PledgePage extends Component {
                                             null
                                             :
                                             FAQs.map((question, index) => (
-                                                <ExpansionPanel key={index} elevation={0} className={css(styles.frequently_asked_question_box)}>
-                                                    <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                                                <Accordion key={index} elevation={0} className={css(styles.frequently_asked_question_box)}>
+                                                    <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                                                         <Typography variant="body2" align="left"><b>{question.question}</b></Typography>
-                                                    </ExpansionPanelSummary>
+                                                    </AccordionSummary>
 
-                                                    <ExpansionPanelDetails>
+                                                    <AccordionDetails>
                                                         <Typography variant="body2" align="left">{question.answer}</Typography>
-                                                    </ExpansionPanelDetails>
-                                                </ExpansionPanel>
+                                                    </AccordionDetails>
+                                                </Accordion>
                                             ))
                                     }
                                 </FlexView>

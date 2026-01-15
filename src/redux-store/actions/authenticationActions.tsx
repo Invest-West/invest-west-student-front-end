@@ -11,6 +11,8 @@ import Firebase from "firebase";
 import UserRepository from "../../api/repositories/UserRepository";
 import {userCache, CacheKeys} from "../../utils/CacheManager";
 import {monitorCacheHit, monitorCacheMiss} from "../../utils/CacheMonitor";
+import {CacheInvalidationManager} from "../../utils/CacheInvalidation";
+import {fetchOffers} from "../../shared-components/explore-offers/ExploreOffersActions";
 import {resetGroupUrlState} from "./manageGroupUrlActions";
 
 export enum AuthenticationEvents {
@@ -37,10 +39,24 @@ export interface CompleteAuthenticationAction extends AuthenticationAction {
 /* TODO: remove console logs */
 export const signIn: ActionCreator<any> = (email?: string, password?: string) => {
     return async (dispatch: Dispatch, getState: () => AppState) => {
+        const authCallId = `AUTH_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         const {
             ManageGroupUrlState,
             AuthenticationState
         } = getState();
+
+        console.log(`[COURSE ADMIN AUTH] [${authCallId}] signIn called`, {
+            hasEmail: !!email,
+            hasPassword: !!password,
+            currentAuthState: {
+                status: AuthenticationState.status,
+                isAuthenticating: isAuthenticating(AuthenticationState),
+                isAuthenticated: successfullyAuthenticated(AuthenticationState),
+                currentUserId: AuthenticationState.currentUser?.id,
+                currentUserEmail: AuthenticationState.currentUser?.email,
+                currentUserType: AuthenticationState.currentUser?.type
+            }
+        });
 
         if (isAuthenticating(AuthenticationState)) {
             return;
@@ -55,9 +71,15 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
 
         try {
             let currentFirebaseUser: firebase.default.User | null = await firebase.auth().currentUser;
+            console.log(`[COURSE ADMIN AUTH] [${authCallId}] Current Firebase user:`, {
+                hasUser: !!currentFirebaseUser,
+                uid: currentFirebaseUser?.uid,
+                email: currentFirebaseUser?.email
+            });
 
             // user is currently signed in with Firebase
             if (currentFirebaseUser) {
+
                 if (successfullyAuthenticated(AuthenticationState)) {
                     return;
                 }
@@ -74,12 +96,11 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
                     // for users viewing public content like projects
                     return dispatch(authenticationCompleteAction);
                 }
-
                 dispatch({
                     type: AuthenticationEvents.StartAuthenticating
                 });
 
-                // set persistence state to SESSION
+                // set persistence state to LOCAL
                 await firebase.auth().setPersistence(Firebase.auth.Auth.Persistence.LOCAL);
 
                 // sign in with Firebase using email and password
@@ -98,7 +119,6 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
                 
                 const cachedUser = userCache.get<User | Admin>(userCacheKey);
                 if (cachedUser) {
-                    console.log('Using cached user data');
                     monitorCacheHit('user');
                     currentUser = cachedUser;
                 } else {
@@ -110,10 +130,28 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
                 }
                 const currentAdmin: Admin | null = isAdmin(currentUser);
 
+                console.log('[COURSE ADMIN AUTH] User details:', {
+                    uid: currentUser.id,
+                    email: currentUser.email,
+                    type: currentUser.type,
+                    isAdmin: !!currentAdmin,
+                    superAdmin: currentAdmin?.superAdmin,
+                    superGroupAdmin: currentAdmin?.superGroupAdmin,
+                    anid: currentAdmin?.anid
+                });
+
                 // Check:
                 // 1. Super admin must sign in via the dedicated URL.
                 // 2. Only super admin can sign in via the dedicated URL.
                 let validSuperAdminSignIn: boolean = true;
+
+                console.log('[COURSE ADMIN AUTH] Checking super admin validation:', {
+                    routePath: ManageGroupUrlState.routePath,
+                    isSuperAdminRoute: Routes.isSuperAdminSignInRoute(ManageGroupUrlState.routePath ?? ""),
+                    isRegularSignInRoute: Routes.isSignInRoute(ManageGroupUrlState.routePath ?? ""),
+                    isSuperAdmin: currentAdmin?.superAdmin,
+                    isAdmin: !!currentAdmin
+                });
 
                 if (Routes.isSuperAdminSignInRoute(ManageGroupUrlState.routePath ?? "")) {
                     if (!(currentAdmin && currentAdmin.superAdmin)) {
@@ -142,10 +180,9 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
 
                 // get groups of membership for the current user (with caching)
                 const groupsCacheKey = CacheKeys.groupsOfMembership(uid);
-                
+
                 const cachedGroups = userCache.get<GroupOfMembership[]>(groupsCacheKey);
                 if (cachedGroups) {
-                    console.log('Using cached groups of membership data');
                     monitorCacheHit('user');
                     authenticationCompleteAction.groupsOfMembership = cachedGroups;
                 } else {
@@ -155,14 +192,24 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
                     userCache.set(groupsCacheKey, listGroupsOfMembershipResponse.data, 15 * 60 * 1000); // Cache for 15 minutes
                 }
 
+                console.log('[COURSE ADMIN AUTH] Groups of membership details:', {
+                    count: authenticationCompleteAction.groupsOfMembership.length,
+                    groups: authenticationCompleteAction.groupsOfMembership.map(m => ({
+                        groupUserName: m.group.groupUserName,
+                        displayName: m.group.displayName,
+                        anid: m.group.anid,
+                        parentGroupId: m.group.parentGroupId,
+                        groupType: m.group.groupType,
+                        isHomeGroup: m.isHomeGroup
+                    }))
+                });
+
                 // Update last login date
                 try {
                     const currentTimestamp = Date.now();
                     
                     if (currentAdmin) {
                         // For Admin users, we'll update the admin object in the future if needed
-                        console.log(`LOGIN TRACKING: Admin login detected for ${currentUser.email} (${currentUser.id})`);
-                        console.log(`LOGIN TRACKING: Admin login tracking not implemented yet`);
                         
                         // For now, just update the local state
                         const updatedAdmin = { ...currentUser, lastLoginDate: currentTimestamp };
@@ -171,16 +218,11 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
                         // For regular User objects, update via UserRepository
                         const updatedUser = { ...currentUser as User, lastLoginDate: currentTimestamp };
                         
-                        console.log(`LOGIN TRACKING: Attempting to update login date for user ${currentUser.email} (${currentUser.id})`);
-                        console.log(`LOGIN TRACKING: Current timestamp: ${currentTimestamp} (${new Date(currentTimestamp).toLocaleString()})`);
-                        console.log(`LOGIN TRACKING: Updated user object:`, updatedUser);
                         
                         const updateResponse = await new UserRepository().updateUser({
                             updatedUser: updatedUser
                         });
                         
-                        console.log(`LOGIN TRACKING: Update response:`, updateResponse);
-                        console.log(`LOGIN TRACKING: Successfully updated last login date for ${currentUser.email}`);
                         
                         // Update the user in the authentication state with the new last login date
                         authenticationCompleteAction.currentUser = updatedUser;
@@ -191,8 +233,26 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
                     // Continue with authentication even if login tracking fails
                 }
 
+                // Clear offers cache on successful authentication
+                // This ensures that private projects become visible immediately
+                CacheInvalidationManager.invalidateOffersCache('user authenticated');
+
                 authenticationCompleteAction.status = AuthenticationStatus.Authenticated;
-                return dispatch(authenticationCompleteAction);
+
+                console.log(`[COURSE ADMIN AUTH] [${authCallId}] ✅ Authentication successful! Dispatching completion action:`, {
+                    userId: authenticationCompleteAction.currentUser?.id,
+                    email: authenticationCompleteAction.currentUser?.email,
+                    groupsCount: authenticationCompleteAction.groupsOfMembership.length,
+                    status: authenticationCompleteAction.status,
+                    firebaseUid: currentFirebaseUser.uid,
+                    userType: authenticationCompleteAction.currentUser?.type
+                });
+
+                // Dispatch authentication completion first
+                dispatch(authenticationCompleteAction);
+
+                // Then trigger offers refresh to get updated data with authentication
+                return dispatch(fetchOffers());
             } else {
                 await dispatch(signOut());
                 authenticationCompleteAction.status = AuthenticationStatus.Unauthenticated;
@@ -202,6 +262,12 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
                 return dispatch(authenticationCompleteAction);
             }
         } catch (error) {
+            console.log(`[COURSE ADMIN AUTH] [${authCallId}] ❌ Authentication error:`, {
+                error: error.toString(),
+                errorCode: error.code,
+                errorMessage: error.message,
+                stack: error.stack
+            });
             await dispatch(signOut());
             authenticationCompleteAction.status = AuthenticationStatus.Unauthenticated;
             authenticationCompleteAction.error = {
@@ -214,31 +280,61 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
 
 export const signOut: ActionCreator<any> = () => {
     return async (dispatch: Dispatch, getState: () => AppState) => {
+        console.trace();
+
+        const state = getState();
+        const currentUser = state.AuthenticationState?.currentUser;
+
+        console.log('[COURSE ADMIN AUTH] Signing out user:', {
+            userId: currentUser?.id,
+            email: currentUser?.email,
+            type: currentUser?.type
+        });
+
         try {
             await firebase.auth().signOut();
         } catch (error) {
-            console.log(`Error signing out: ${error.toString()}`);
         }
-        
+
         // Clear user cache to prevent showing previous user's data
-        console.log('Clearing user cache on signOut');
         userCache.clear();
-        
+
+        // Clear offers cache on sign out
+        // This ensures that private projects are hidden immediately when user logs out
+        CacheInvalidationManager.invalidateOffersCache('user signed out');
+
         // Clear any stored redirect URL to prevent wrong redirection for next user
         try {
-            localStorage.removeItem('redirectToAfterAuth');
-            console.log('Cleared redirectToAfterAuth from localStorage');
+            const { safeRemoveItem } = await import('../../utils/browser');
+            safeRemoveItem('redirectToAfterAuth');
         } catch (error) {
-            console.log('Error clearing redirectToAfterAuth:', error);
         }
-        
+
+        // Clear the grace period timestamp to ensure clean state for next login
+        try {
+            sessionStorage.removeItem('lastSuccessfulAuthTimestamp');
+        } catch (error) {
+        }
+
         // Reset group URL state to prevent wrong group routing for next user
         dispatch(resetGroupUrlState());
-        console.log('Reset group URL state on signOut');
-        
-        return dispatch({
+
+        // Dispatch sign out action first
+        dispatch({
             type: AuthenticationEvents.SignOut
         });
+
+        // Then trigger offers refresh to get updated data without authentication
+        await dispatch(fetchOffers());
+
+        // Clear redirect URL again at the end to handle any race conditions
+        // where it might have been set between the first clear and now
+        try {
+            const { safeRemoveItem } = await import('../../utils/browser');
+            safeRemoveItem('redirectToAfterAuth');
+            safeRemoveItem('isLoggingOut');
+        } catch (error) {
+        }
     }
 }
 

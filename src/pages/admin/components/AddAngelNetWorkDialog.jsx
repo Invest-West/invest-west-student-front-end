@@ -131,7 +131,7 @@ class AddAngelNetworkDialog extends Component {
                     <FlexView vAlignContent="center">
                         <FlexView grow={4}>
                             <Typography variant='h6' color='primary' align="left">
-                                Add new group
+                                Add new university
                             </Typography>
                         </FlexView>
                         <FlexView grow={1} hAlignContent="right">
@@ -143,8 +143,8 @@ class AddAngelNetworkDialog extends Component {
                 </DialogTitle>
                 <DialogContent style={{marginTop: 10}}>
                     <TextField
-                        label="Course name"
-                        placeholder="Write course's full name here ..."
+                        label="University name"
+                        placeholder="Write universities full name here ..."
                         name="angelNetworkName"
                         value={angelNetworkName}
                         fullWidth
@@ -156,8 +156,8 @@ class AddAngelNetworkDialog extends Component {
                     />
 
                     <TextField
-                        label="Course username"
-                        placeholder="Write course's username here. E.g. aba, or qtec"
+                        label="University username"
+                        placeholder="Write universities username here. E.g. aba, or qtec"
                         helperText="Note: Username must be unique. For convention, use lowercase letters and use - to connect words. E.g. future-space"
                         name="angelNetworkUsername"
                         value={angelNetworkUsername}
@@ -173,7 +173,7 @@ class AddAngelNetworkDialog extends Component {
                         <TextField
                             label="Registered email"
                             placeholder="Write email here ..."
-                            helperText="This email will be used to login to course's admin page. Once added, an email with auto-generated password will be sent to this email address."
+                            helperText="This email will be used to login to Universities admin page. Once added, an email with auto-generated password will be sent to this email address."
                             name="email"
                             value={email}
                             fullWidth
@@ -188,7 +188,7 @@ class AddAngelNetworkDialog extends Component {
                     <FormControl fullWidth>
                         <TextField
                             label="Website"
-                            placeholder="Course's official website"
+                            placeholder="Universities official website"
                             name="website"
                             value={website}
                             fullWidth
@@ -215,15 +215,14 @@ class AddAngelNetworkDialog extends Component {
 
                     <FormControl fullWidth style={{marginTop: 25}}>
                         <TextField
-                            label="Primary color"
+                            label="Primary color (optional)"
                             placeholder="E.g. #FFFFFF"
+                            helperText="Leave blank to use Student Showcase default (#4C8484)"
                             name="primaryColor"
                             value={primaryColor.toUpperCase()}
                             fullWidth
                             margin="dense"
                             variant="outlined"
-                            required
-                            error={addButtonClicked && primaryColor.trim().length === 0}
                             onChange={handleInputChanged}
                         />
                         {
@@ -237,15 +236,14 @@ class AddAngelNetworkDialog extends Component {
 
                     <FormControl fullWidth style={{marginBottom: 25}}>
                         <TextField
-                            label="Secondary color"
+                            label="Secondary color (optional)"
                             placeholder="E.g. #FFFFFF"
+                            helperText="Leave blank to use Student Showcase default (#E91E63)"
                             name="secondaryColor"
                             value={secondaryColor.toUpperCase()}
                             fullWidth
                             margin="dense"
                             variant="outlined"
-                            required
-                            error={addButtonClicked && secondaryColor.trim().length === 0}
                             onChange={handleInputChanged}
                         />
 
@@ -329,8 +327,6 @@ class AddAngelNetworkDialog extends Component {
                                 || email.trim().length === 0
                                 || website.trim().length === 0
                                 || (website.trim().length > 0 && !utils.isValidWebURL(website))
-                                || primaryColor.trim().length === 0
-                                || secondaryColor.trim().length === 0
                                 || (primaryColor.trim().length > 0 && !utils.isValidHexColorCode(primaryColor))
                                 || (secondaryColor.trim().length > 0 && !utils.isValidHexColorCode(secondaryColor))
                                 || !plainLogo

@@ -27,7 +27,7 @@ import CreateIcon from "@material-ui/icons/CreateOutlined";
 import CheckCircleIcon from "@material-ui/icons/CheckCircle";
 import {Col, Container, Image, Row} from "react-bootstrap";
 import HashLoader from "react-spinners/HashLoader";
-import {NavLink} from "react-router-dom";
+import {NavLink, withRouter} from "react-router-dom";
 import ReactPlayer from "react-player";
 import * as colors from "../../values/colors";
 import * as utils from "../../utils/utils";
@@ -49,6 +49,7 @@ import {TYPE_INVESTOR} from "../../firebase/databaseConsts";
 import * as realtimeDBUtils from "../../firebase/realtimeDBUtils";
 import sharedStyles from "../../shared-js-css-styles/SharedStyles";
 import * as ROUTES from "../../router/routes";
+import Routes from "../../router/routes";
 import {AUTH_SUCCESS} from "../signin/Signin";
 import {KeyboardDatePicker} from "@material-ui/pickers";
 import Api, {ApiRoutes} from "../../api/Api";
@@ -76,6 +77,7 @@ import ContactPitchOwnerDialog from "./components/contact-pitch-owner-dialog/Con
 import FeedbackSnackbarNew from "../../shared-components/feedback-snackbar/FeedbackSnackbarNew";
 import {hasAuthenticationError, isAuthenticating, authIsNotInitialized} from "../../redux-store/reducers/authenticationReducer";
 import {apiCache, CacheKeys} from "../../utils/CacheManager";
+import RejectFeedbacksList from "../../shared-components/reject-feedbacks-list/RejectFeedbacksList";
 
 const ADMIN_OFFER_STATES_PUBLISH_PITCH = 0;
 const ADMIN_OFFER_STATES_MOVE_TO_PLEDGE = 1;
@@ -101,6 +103,9 @@ const mapStateToProps = (state) => {
         groupProperties: state.manageGroupFromParams.groupProperties,
         groupPropertiesLoaded: state.manageGroupFromParams.groupPropertiesLoaded,
         shouldLoadOtherData: state.manageGroupFromParams.shouldLoadOtherData,
+
+        // Get course name from URL
+        ManageGroupUrlState: state.ManageGroupUrlState,
 
         authStatus: state.auth.authStatus,
         authenticating: state.auth.authenticating,
@@ -205,6 +210,9 @@ class ProjectDetailsMain extends Component {
                 votes: [],
                 votesLoaded: false,
 
+                rejectFeedbacks: [],
+                rejectFeedbacksLoaded: false,
+
                 // the issuer object (the issuer who made this pitch)
                 projectIssuer: null,
                 projectIssuerLoaded: false
@@ -252,35 +260,32 @@ class ProjectDetailsMain extends Component {
 
         if (groupPropertiesLoaded && shouldLoadOtherData) {
             // For project viewing, we don't need to wait for authentication to be fully resolved
-            // Projects can be viewed by both authenticated and unauthenticated users
-            const canLoadProject = !authIsNotInitialized(this.props.AuthenticationState); // Just wait for auth initialization
-            
+            // Projects are public and can be viewed without authentication
+            // Only wait if authentication is actively in progress, not just uninitialized
+            const authState = this.props.AuthenticationState;
+            const canLoadProject = !isAuthenticating(authState);
+
+            console.log('[PROJECT DETAILS AUTH] componentDidMount auth check:', {
+                status: authState.status,
+                isNotInitialized: authIsNotInitialized(authState),
+                isAuthenticating: isAuthenticating(authState),
+                hasUser: !!authState.currentUser,
+                canLoadProject: canLoadProject,
+                dataLoaded: dataLoaded,
+                dataBeingLoaded: dataBeingLoaded
+            });
+
             if (canLoadProject) {
-                console.log('🔍 ComponentDidMount - Can load project, checking conditions...');
-                console.log('🔍 !dataBeingLoaded:', !dataBeingLoaded, 'dataBeingLoaded:', dataBeingLoaded);
-                console.log('🔍 !dataLoaded:', !dataLoaded, 'dataLoaded:', dataLoaded);
-                
                 if (!dataBeingLoaded && !dataLoaded) {
-                    console.log('✅ Loading project data (auth initialization complete)');
+                    console.log('🚀 Loading project data from componentDidMount...');
                     this.loadData();
                 } else {
-                    console.log('❌ NOT loading - conditions not met');
+                    console.log('❌ NOT loading - data already loaded or being loaded');
                 }
             } else {
-                console.log('⏳ Waiting for auth initialization...');
+                console.log('⏳ Waiting for active authentication...');
             }
         }
-        console.log('=== PROJECT DETAILS DEBUG ===');
-        console.log('Authentication status:', this.props.AuthenticationState.status);
-        console.log('Current user:', this.props.AuthenticationState.currentUser);
-        console.log('isAuthenticating:', isAuthenticating(this.props.AuthenticationState));
-        console.log('authIsNotInitialized:', authIsNotInitialized(this.props.AuthenticationState));
-        console.log('Auth resolved:', !isAuthenticating(this.props.AuthenticationState) && !authIsNotInitialized(this.props.AuthenticationState));
-        console.log('groupPropertiesLoaded:', groupPropertiesLoaded);
-        console.log('shouldLoadOtherData:', shouldLoadOtherData);
-        console.log('dataBeingLoaded:', dataBeingLoaded);
-        console.log('dataLoaded:', dataLoaded);
-        console.log('========================');
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
@@ -309,21 +314,28 @@ class ProjectDetailsMain extends Component {
 
         if (groupPropertiesLoaded && shouldLoadOtherData) {
             // For project viewing, we don't need to wait for authentication to be fully resolved
-            const canLoadProject = !authIsNotInitialized(this.props.AuthenticationState);
-            
-            console.log('=== componentDidUpdate DEBUG ===');
-            console.log('Auth status:', this.props.AuthenticationState.status);
-            console.log('Can load project:', canLoadProject);
-            console.log('dataBeingLoaded:', dataBeingLoaded);
-            console.log('dataLoaded:', dataLoaded);
-            
+            // Projects are public and can be viewed without authentication
+            // Only wait if authentication is actively in progress, not just uninitialized
+            const authState = this.props.AuthenticationState;
+            const canLoadProject = !isAuthenticating(authState);
+
+            console.log('[PROJECT DETAILS AUTH] componentDidUpdate auth check:', {
+                status: authState.status,
+                isNotInitialized: authIsNotInitialized(authState),
+                isAuthenticating: isAuthenticating(authState),
+                hasUser: !!authState.currentUser,
+                canLoadProject: canLoadProject,
+                dataLoaded: dataLoaded,
+                dataBeingLoaded: dataBeingLoaded
+            });
+
             if (canLoadProject) {
                 if (!dataBeingLoaded && !dataLoaded) {
                     console.log('🚀 Loading project data from componentDidUpdate...');
                     this.loadData();
                 }
             } else {
-                console.log('⏳ Waiting for auth initialization in componentDidUpdate...');
+                console.log('⏳ Waiting for active authentication in componentDidUpdate...');
             }
 
             // attach project changed listener
@@ -376,9 +388,7 @@ class ProjectDetailsMain extends Component {
     /**
      * This function is used to load data for the whole page
      */
-    loadData = () => {
-        console.log('🚀 LOADDATA CALLED - Starting data load process');
-        
+    loadData = () => {        
         const {
             user,
             selectProjectVisibility_setProject
@@ -420,35 +430,28 @@ class ProjectDetailsMain extends Component {
             return;
         }
 
-        console.log('✅ LoadData: Setting loading state...');
         this.setState({
             dataLoaded: false,
             dataBeingLoaded: true
         });
 
         // load the requested project
-        const projectID = this.props.match.params.projectID;
-        console.log('🔍 LoadData: Project ID:', projectID);
-        
+        const projectID = this.props.match.params.projectID;        
         // Try to get project from cache first
         const cacheKey = CacheKeys.project(projectID);
         const cachedProject = apiCache.get(cacheKey);
         
         if (cachedProject) {
-            console.log('📦 Using cached project data');
             this.processProjectData(cachedProject);
             return;
         }
-        
-        console.log('🌐 No cached data, fetching from Firebase...');
-        
+                
         realtimeDBUtils
             .loadAParticularProject(projectID)
             .then(project => {
                 console.log('✅ Firebase project loaded successfully:', project?.projectName || project?.id);
                 // Cache the project data for 10 minutes
                 apiCache.set(cacheKey, project, 10 * 60 * 1000);
-                console.log('📦 Project cached, calling processProjectData...');
                 this.processProjectData(project);
             })
             .catch(error => {
@@ -488,7 +491,9 @@ class ProjectDetailsMain extends Component {
                     mainBody:
                         user?.type === DB_CONST.TYPE_ADMIN
                             ?
-                            user?.anid === project.anid
+                            // Show control phases for super admins OR course admins who own the project
+                            // Only show admin offer states tab if project is not a draft
+                            (user?.superAdmin || user?.anid === project.anid) && !utils.isDraftProject(project)
                                 ?
                                 MAIN_BODY_ADMIN_OFFER_STATES
                                 :
@@ -513,18 +518,32 @@ class ProjectDetailsMain extends Component {
                 });
 
                 // Load all related data in parallel for better performance
-                console.log('🔄 ProcessProjectData: Starting Promise.all for votes, pledges, and issuer...');
-                console.log('🔍 Project issuer ID:', project.issuerID);
-                Promise.all([
+                // Only load reject feedbacks if user is authenticated and is either an admin or the project owner
+                const shouldLoadRejectFeedbacks = user && (
+                    user.type === DB_CONST.TYPE_ADMIN ||
+                    user.id === project.issuerID
+                );
+
+                const promises = [
                     realtimeDBUtils.loadVotes(project.id, null, realtimeDBUtils.LOAD_VOTES_ORDER_BY_PROJECT),
                     realtimeDBUtils.loadPledges(project.id, null, realtimeDBUtils.LOAD_PLEDGES_ORDER_BY_PROJECT),
                     realtimeDBUtils.getUserBasedOnID(project.issuerID)
-                ]).then(([votes, pledges, projectIssuer]) => {
-                    console.log('✅ Promise.all completed successfully!', { 
-                        votesCount: votes?.length, 
-                        pledgesCount: pledges?.length, 
+                ];
+
+                if (shouldLoadRejectFeedbacks) {
+                    promises.push(realtimeDBUtils.loadProjectRejectFeedbacks(project.id));
+                }
+
+                Promise.all(promises).then((results) => {
+                    const [votes, pledges, projectIssuer, rejectFeedbacks] = shouldLoadRejectFeedbacks
+                        ? results
+                        : [...results, []];
+                    console.log('✅ Promise.all completed successfully!', {
+                        votesCount: votes?.length,
+                        pledgesCount: pledges?.length,
                         issuerName: projectIssuer?.displayName,
                         issuerID: projectIssuer?.id,
+                        rejectFeedbacksCount: rejectFeedbacks?.length,
                         fullIssuer: projectIssuer
                     });
                     // Check if current user has pledged (only for investors)
@@ -537,7 +556,6 @@ class ProjectDetailsMain extends Component {
                     }
 
                     // Update state with all loaded data at once
-                    console.log('🎯 Setting final state with all loaded data...');
                     this.setState({
                         dataLoaded: true,
                         dataBeingLoaded: false,
@@ -549,12 +567,12 @@ class ProjectDetailsMain extends Component {
                             votesLoaded: true,
                             pledges: pledges,
                             pledgesLoaded: true,
+                            rejectFeedbacks: rejectFeedbacks,
+                            rejectFeedbacksLoaded: true,
                             projectIssuer: projectIssuer,
                             projectIssuerLoaded: true
                         }
-                    }, () => {
-                        console.log('✅ State updated successfully! Component should now render content.');
-                        
+                    }, () => {                        
                         // Auto-refresh mechanism: Force a re-render after data loads
                         setTimeout(() => {
                             console.log('🔄 Auto-refresh: Forcing component re-render...');
@@ -572,6 +590,7 @@ class ProjectDetailsMain extends Component {
                             ...this.state.projectDetail,
                             votesLoaded: true,
                             pledgesLoaded: true,
+                            rejectFeedbacksLoaded: true,
                             projectIssuerLoaded: true
                         }
                     });
@@ -1143,15 +1162,46 @@ class ProjectDetailsMain extends Component {
 
             this.projectListener
                 .on("value", snapshot => {
+                    const {user} = this.props;
                     const project = snapshot.val();
+
+                    if (!project) {
+                        return;
+                    }
+
                     project.group = this.state.projectDetail.project.group;
                     project.issuer = this.state.projectDetail.project.issuer;
+
+                    console.log('🔄 Project listener fired:', {
+                        projectName: project.projectName,
+                        status: project.status,
+                        isDraft: utils.isDraftProject(project),
+                        userType: user?.type,
+                        isAdmin: user?.type === DB_CONST.TYPE_ADMIN
+                    });
+
+                    // Determine mainBody based on user type and project status
+                    // For draft projects, ALWAYS use CAMPAIGN tab regardless of user type
+                    const isDraft = utils.isDraftProject(project);
+                    const isAdmin = user?.type === DB_CONST.TYPE_ADMIN;
+                    const canSeeAdminTab = isAdmin && (user?.superAdmin || user?.anid === project.anid);
+
+                    const newMainBody = isDraft || !canSeeAdminTab ? MAIN_BODY_CAMPAIGN : MAIN_BODY_ADMIN_OFFER_STATES;
+
+                    console.log('🔄 Setting mainBody to:', {
+                        newMainBody,
+                        isDraft,
+                        isAdmin,
+                        canSeeAdminTab,
+                        currentMainBody: this.state.mainBody
+                    });
 
                     this.setState({
                         projectDetail: {
                             ...this.state.projectDetail,
                             project: project,
                         },
+                        mainBody: newMainBody,
                         adminOfferStatesActiveStep:
                             project.status === DB_CONST.PROJECT_STATUS_BEING_CHECKED
                                 ?
@@ -1816,7 +1866,6 @@ class ProjectDetailsMain extends Component {
     }
 
     render() {
-        console.log('🎭 MAIN RENDER METHOD CALLED!');
         const {
             AuthenticationState,
 
@@ -1879,19 +1928,12 @@ class ProjectDetailsMain extends Component {
             votes,
             votesLoaded,
 
+            rejectFeedbacks,
+            rejectFeedbacksLoaded,
+
             projectIssuer,
             projectIssuerLoaded
         } = this.state.projectDetail;
-
-        console.log('🎯 MAIN RENDER: About to call renderPageContent with data:', {
-            hasProject: !!project,
-            projectName: project?.projectName,
-            pledgesLoaded,
-            votesLoaded,
-            investorPledgeLoaded,
-            projectIssuerLoaded,
-            hasProjectIssuer: !!projectIssuer
-        });
 
         if (!groupPropertiesLoaded) {
             return (
@@ -1938,6 +1980,8 @@ class ProjectDetailsMain extends Component {
                     user={user}
                     userLoaded={userLoaded}
                     groupsUserIsIn={groupsUserIsIn}
+                    match={this.props.match}
+                    ManageGroupUrlState={this.props.ManageGroupUrlState}
                     mainBody={mainBody}
                     adminOfferStatesActiveStep={adminOfferStatesActiveStep}
                     comments={comments}
@@ -1957,6 +2001,8 @@ class ProjectDetailsMain extends Component {
                     votesLoaded={votesLoaded}
                     pledges={pledges}
                     pledgesLoaded={pledgesLoaded}
+                    rejectFeedbacks={rejectFeedbacks}
+                    rejectFeedbacksLoaded={rejectFeedbacksLoaded}
                     investorPledge={investorPledge}
                     investorPledgeLoaded={investorPledgeLoaded}
                     projectIssuer={projectIssuer}
@@ -2168,7 +2214,6 @@ class ProjectDetails extends Component {
      * Render the page content
      */
     renderPageContent = (props) => {
-        console.log('🎬 RENDERPAGE CONTENT CALLED!');
         const {
             AuthenticationState,
             groupsUserIsIn,
@@ -2185,6 +2230,8 @@ class ProjectDetails extends Component {
             pledgesLoaded,
             votes,
             votesLoaded,
+            rejectFeedbacks,
+            rejectFeedbacksLoaded,
             projectIssuer,
             projectIssuerLoaded,
             investorPledge,
@@ -2436,8 +2483,8 @@ class ProjectDetails extends Component {
                                 }
                             </Typography>
                             {
-                                user?.type === DB_CONST.TYPE_ADMIN
-                                || (user?.type === DB_CONST.TYPE_ISSUER && user?.id === project.issuerID)
+                                // Only show edit button to the project creator (issuer who owns the project)
+                                (user?.type === DB_CONST.TYPE_ISSUER && user?.id === project.issuerID)
                                     ?
                                     <FlexView width="100%" hAlignContent="center" vAlignContent="center" marginTop={20}>
                                         {
@@ -2447,22 +2494,48 @@ class ProjectDetails extends Component {
                                                     <CreateIcon style={{marginRight: 8,  width: 20, height: "auto"}}
                                                     />Edit offer</Button>
                                                 :
-                                                <NavLink
-                                                    to={
-                                                        groupUserName
-                                                            ?
-                                                            ROUTES.EDIT_OFFER
-                                                                .replace(":groupUserName", groupUserName)
-                                                                .replace(":projectID", project.id)
-                                                            :
-                                                            ROUTES.EDIT_OFFER_INVEST_WEST_SUPER
-                                                                .replace(":projectID", project.id)
+                                                (() => {
+                                                    // Parse course name directly from URL pathname
+                                                    // URL format: /groups/:groupUserName/:courseUserName/projects/:projectID
+                                                    const pathname = window.location.pathname;
+                                                    const pathParts = pathname.split('/').filter(p => p);
+                                                    let courseUserName = null;
+
+                                                    // Check if URL has format: /groups/groupName/courseName/projects/...
+                                                    if (pathParts.length >= 5 && pathParts[0] === 'groups' && pathParts[3] === 'projects') {
+                                                        courseUserName = pathParts[2]; // The course name is the 3rd part
                                                     }
-                                                    className={css(sharedStyles.nav_link_hover_without_changing_text_color)}
-                                                >
-                                                    <Button color="default" variant="outlined" size="medium" className={css(sharedStyles.no_text_transform)}>
-                                                        <CreateIcon style={{marginRight: 8, width: 20, height: "auto"}}/>Edit offer</Button>
-                                                </NavLink>
+
+                                                    console.log('[PROJECT DETAILS EDIT] Debugging edit URL construction:', {
+                                                        pathname,
+                                                        pathParts,
+                                                        groupUserName,
+                                                        courseUserName,
+                                                        projectId: project.id
+                                                    });
+
+                                                    return (
+                                                        <NavLink
+                                                            to={
+                                                                groupUserName
+                                                                    ?
+                                                                    Routes.constructCreateProjectRoute(
+                                                                        groupUserName,
+                                                                        courseUserName,
+                                                                        {edit: project.id}
+                                                                    )
+                                                                    :
+                                                                    ROUTES.EDIT_OFFER_INVEST_WEST_SUPER
+                                                                        .replace(":projectID", project.id)
+                                                            }
+                                                            className={css(sharedStyles.nav_link_hover_without_changing_text_color)}
+                                                        >
+                                                            <Button color="default" variant="outlined" size="medium" className={css(sharedStyles.no_text_transform)}>
+                                                                <CreateIcon style={{marginRight: 8, width: 20, height: "auto"}}/>Edit offer</Button>
+                                                        </NavLink>
+                                                    );
+                                                })()
+
                                         }
                                         {/*<FlexView*/}
                                         {/*    marginLeft={15}*/}
@@ -2579,7 +2652,7 @@ class ProjectDetails extends Component {
                                     }}
                                 />
                                 :
-                                project.Pitch.cover.map((coverItem, index) => (
+                                project.Pitch.cover && Array.isArray(project.Pitch.cover) ? project.Pitch.cover.map((coverItem, index) => (
                                     coverItem.hasOwnProperty('removed')
                                         ?
                                         null
@@ -2600,7 +2673,7 @@ class ProjectDetails extends Component {
                                                 :
                                                 <Image key={index} src={coverItem.url} style={{maxHeight: isMobile ? MAX_COVER_HEIGHT_IN_MOBILE_MODE : MAX_COVER_HEIGHT_IN_BIG_SCREEN_MODE, border: `1px solid ${colors.gray_300}`, width: "100%", objectFit: "scale-down"}}/>
                                         )
-                                ))
+                                )) : null
                         }
                     </Col>
 
@@ -2652,7 +2725,7 @@ class ProjectDetails extends Component {
                                     : <Col xs={12} sm={12} md={{span: 10, offset: 1, order: 5}} lg={{span: 12, offset: 0, order: 7}} style={{marginTop: 15}}>
                                         <FlexView column hAlignContent="left">
                                             <FlexView hAlignContent="center" vAlignContent="center">
-                                                <Button color="primary" variant="contained" className={css(sharedStyles.no_text_transform)} disabled={this.shouldHideInformation() || (user?.type === TYPE_INVESTOR)} onClick={() => this.toggleContactPitchOwnerDialog()}>Contact us</Button>
+                                                <Button color="primary" variant="contained" className={css(sharedStyles.no_text_transform)} disabled={this.shouldHideInformation()} onClick={() => this.toggleContactPitchOwnerDialog()}>Contact us</Button>
                                                 {/*<Button*/}
                                                 {/*    size="medium"*/}
                                                 {/*    variant={getInvestorVote(votes, user) && getInvestorVote(votes, user).voted ? "contained" : "outlined"}*/}
@@ -2726,7 +2799,7 @@ class ProjectDetails extends Component {
                                                         </NavLink>
                                                     </FlexView>
                                                 :
-                                                this.renderInvestorSelfCertifyReminder()
+                                                null
                                         }
                                     </Col>
                             }
@@ -2925,18 +2998,14 @@ class ProjectDetails extends Component {
                                                                             ?
                                                                             null
                                                                             :
-                                                                            isProjectCreatedByGroupAdmin(project)
-                                                                                ?
-                                                                                <Button fullWidth color="primary" variant="contained" className={css(sharedStyles.no_text_transform)} disabled={user?.superAdmin} onClick={() => this.onMakeProjectGoLiveDecision({decision: true, projectVisibilitySetting})}>Publish project</Button>
-                                                                                :
-                                                                                <FlexView>
-                                                                                    <FlexView grow marginRight={10}>
-                                                                                        <Button fullWidth color="primary" variant="contained" className={css(sharedStyles.no_text_transform)} disabled={user?.superAdmin} onClick={() => this.onMakeProjectGoLiveDecision({decision: true, projectVisibilitySetting})}>Publish project</Button>
-                                                                                    </FlexView>
-                                                                                    <FlexView grow marginLeft={10}>
-                                                                                        <Button fullWidth color="secondary" variant="outlined" className={css(sharedStyles.no_text_transform)} disabled={user?.superAdmin} onClick={() => this.toggleRejectFeedback()}>Send back to issuer</Button>
-                                                                                    </FlexView>
+                                                                            <FlexView>
+                                                                                <FlexView grow marginRight={10}>
+                                                                                    <Button fullWidth color="primary" variant="contained" className={css(sharedStyles.no_text_transform)} disabled={user?.superAdmin} onClick={() => this.onMakeProjectGoLiveDecision({decision: true, projectVisibilitySetting})}>Publish project</Button>
                                                                                 </FlexView>
+                                                                                <FlexView grow marginLeft={10}>
+                                                                                    <Button fullWidth color="secondary" variant="outlined" className={css(sharedStyles.no_text_transform)} disabled={user?.superAdmin} onClick={() => this.toggleRejectFeedback()}>Send back to issuer</Button>
+                                                                                </FlexView>
+                                                                            </FlexView>
                                                                     }
 
                                                                     {
@@ -3449,6 +3518,15 @@ class ProjectDetails extends Component {
                                 <Col xs={12} sm={12} md={12} lg={{span: 6, offset: 3}}>
 
                                     {
+                                        // Display reject feedbacks for the issuer (project owner) - not for admins
+                                        user && user.type !== DB_CONST.TYPE_ADMIN && isProjectOwner(user, project) && rejectFeedbacks && rejectFeedbacks.length > 0
+                                            ?
+                                            <RejectFeedbacksList rejectFeedbacks={rejectFeedbacks} />
+                                            :
+                                            null
+                                    }
+
+                                    {
                                         // Project deck
                                         !project.Pitch.presentationDocument
                                             ?
@@ -3837,10 +3915,6 @@ class ProjectDetails extends Component {
                                                                                 }
                                                                             >Post a comment</Button>
                                                                         </div>
-
-                                                                        {
-                                                                            this.renderInvestorSelfCertifyReminder()
-                                                                        }
                                                                     </FlexView>
                                                                 </FlexView>
                                                     )
@@ -3980,12 +4054,29 @@ class ProjectDetails extends Component {
                                             null
                                     }
 
-                                    {/** Course */}
+                                    {/** University */}
                                     {
-                                        project.course
+                                        projectIssuer && projectIssuer.BusinessProfile && projectIssuer.BusinessProfile.university
                                             ?
                                             <FlexView className={css(styles.border_box)} style={{backgroundColor: colors.kick_starter_background_color}} column marginTop={30} vAlignContent="center">
-                                                <Typography variant="body1" align="left">Course: <b>{project.course}</b></Typography>
+                                                <Typography variant="body1" align="left">University: <b>{projectIssuer.BusinessProfile.university}</b></Typography>
+                                            </FlexView>
+                                            :
+                                            null
+                                    }
+
+                                    {/** Course - prioritize BusinessProfile.course, fallback to project.course, then user.course */}
+                                    {
+                                        (projectIssuer && projectIssuer.BusinessProfile && projectIssuer.BusinessProfile.course)
+                                        || project.course
+                                        || (projectIssuer && projectIssuer.course)
+                                            ?
+                                            <FlexView className={css(styles.border_box)} style={{backgroundColor: colors.kick_starter_background_color}} column marginTop={30} vAlignContent="center">
+                                                <Typography variant="body1" align="left">Course: <b>{
+                                                    (projectIssuer && projectIssuer.BusinessProfile && projectIssuer.BusinessProfile.course)
+                                                    || project.course
+                                                    || (projectIssuer && projectIssuer.course)
+                                                }</b></Typography>
                                             </FlexView>
                                             :
                                             null
@@ -4060,60 +4151,102 @@ class ProjectDetails extends Component {
     };
 
     /**
-     * Prevent the investors from interacting with the offer if they have not self-certified
-     *
-     * @returns {*}
+     * Self-certification reminder has been removed - investors can now contact project owners directly
+     * This function is no longer used and is kept here for reference only
      */
-    renderInvestorSelfCertifyReminder = () => {
-        const {
-            groupUserName,
-            user,
-            project
-        } = this.props;
+    // renderInvestorSelfCertifyReminder = () => {
+    //     const {
+    //         groupUserName,
+    //         user,
+    //         project
+    //     } = this.props;
 
-        if (user?.type !== DB_CONST.TYPE_INVESTOR) {
-            return null;
-        }
+    //     if (user?.type !== DB_CONST.TYPE_INVESTOR) {
+    //         return null;
+    //     }
 
-        return (
-            utils.isProjectLive(project)
-                ?
-                <FlexView column marginTop={20}>
-                    <NavLink
-                        to={
-                            groupUserName
-                                ?
-                                `${ROUTES.DASHBOARD_INVESTOR.replace(":groupUserName", groupUserName)}?tab=Profile`
-                                :
-                                `${ROUTES.DASHBOARD_INVESTOR_INVEST_WEST_SUPER}?tab=Profile`
-                        }
-                        style={{
-                            marginTop: 4
-                        }}
-                    >
-                        <Typography variant="body2"><u>Self certify</u></Typography>
-                    </NavLink>
-                </FlexView>
-                :
-                null
-        );
-    }
+    //     return (
+    //         utils.isProjectLive(project)
+    //             ?
+    //             <FlexView column marginTop={20}>
+    //                 <NavLink
+    //                     to={
+    //                         groupUserName
+    //                             ?
+    //                             `${ROUTES.DASHBOARD_INVESTOR.replace(":groupUserName", groupUserName)}?tab=Profile`
+    //                             :
+    //                             `${ROUTES.DASHBOARD_INVESTOR_INVEST_WEST_SUPER}?tab=Profile`
+    //                     }
+    //                     style={{
+    //                         marginTop: 4
+    //                     }}
+    //                 >
+    //                     <Typography variant="body2"><u>Self certify</u></Typography>
+    //                 </NavLink>
+    //             </FlexView>
+    //             :
+    //             null
+    //     );
+    // }
 
     render() {
-        console.log('🎬 ProjectDetailsMain RENDER: Received props:', {
-            hasProject: !!this.props.project,
-            projectName: this.props.project?.projectName,
-            pledgesLoaded: this.props.pledgesLoaded,
-            votesLoaded: this.props.votesLoaded,
-            investorPledgeLoaded: this.props.investorPledgeLoaded,
-            projectIssuerLoaded: this.props.projectIssuerLoaded,
-            hasProjectIssuer: !!this.props.projectIssuer
-        });
+        const {
+            project,
+            pledges,
+            pledgesLoaded,
+            votes,
+            votesLoaded,
+            rejectFeedbacks,
+            rejectFeedbacksLoaded,
+            projectIssuer,
+            projectIssuerLoaded,
+            investorPledge,
+            investorPledgeLoaded,
+            mainBody,
+            adminOfferStatesActiveStep,
+            comments,
+            commentsLoaded,
+            currentComment,
+            currentCommentText,
+            replyingToComment,
+            replyText,
+            replyEdited,
+            changedPitchExpiryDate,
+            addingRejectFeedback,
+            rejectFeedback,
+            sendingProjectBack
+        } = this.props;
 
         return (
             <Container fluid style={{padding: 0}}>
                 {
-                    this.renderPageContent(this.props)
+                    this.renderPageContent({
+                        ...this.props,
+                        project,
+                        pledges,
+                        pledgesLoaded,
+                        votes,
+                        votesLoaded,
+                        rejectFeedbacks,
+                        rejectFeedbacksLoaded,
+                        projectIssuer,
+                        projectIssuerLoaded,
+                        investorPledge,
+                        investorPledgeLoaded,
+                        mainBody,
+                        adminOfferStatesActiveStep,
+                        comments,
+                        commentsLoaded,
+                        currentComment,
+                        currentCommentText,
+                        replyingToComment,
+                        replyText,
+                        replyEdited,
+                        changedPitchExpiryDate,
+                        addingRejectFeedback,
+                        rejectFeedback,
+                        sendingProjectBack
+                    })
                 }
             </Container>
         );
@@ -4441,7 +4574,7 @@ class CommentReplyInputArea extends Component {
     }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(ProjectDetailsMain);
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(ProjectDetailsMain));
 
 
 const styles = StyleSheet.create({

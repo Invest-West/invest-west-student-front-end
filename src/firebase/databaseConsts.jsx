@@ -11,6 +11,9 @@
 // Groups node
 export const GROUP_PROPERTIES_CHILD = "AngelNetworkProperties";
 
+// Courses node (separate from groups for cleaner architecture)
+export const COURSES_CHILD = "Courses";
+
 // Admins node
 export const ADMINISTRATORS_CHILD = "Administrators";
 
@@ -23,11 +26,17 @@ export const USERS_CHILD = "Users";
 // Projects node
 export const PROJECTS_CHILD = "Projects";
 
+// Project reject feedbacks node
+export const PROJECT_REJECT_FEEDBACKS_CHILD = "ProjectRejectFeedbacks";
+
 // Activities log node
 export const ACTIVITIES_LOG_CHILD = "ActivitiesLog";
 
 // Access requests to a group node
 export const REQUESTS_TO_JOIN_CHILD = "RequestsToJoin";
+
+// Course creation requests node
+export const COURSE_REQUESTS_CHILD = "CourseRequests";
 
 // Contact us enquiries node
 export const CONTACT_US_ENQUIRIES_CHILD = "ContactUsEnquiries";

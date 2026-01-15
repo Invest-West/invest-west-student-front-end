@@ -33,8 +33,8 @@ import * as colors from "../../../values/colors";
 import * as utils from "../../../utils/utils";
 import * as ROUTES from "../../../router/routes";
 import Routes from "../../../router/routes";
-import ManageSectors from "./manage-sectors/ManageSectors";
 import ManageCourses from "./manage-courses/ManageCourses";
+import EditGroupImageDialog from "./EditGroupImageDialog";
 
 const mapStateToProps = state => {
     return {
@@ -42,6 +42,7 @@ const mapStateToProps = state => {
         groupDetails: state.manageGroupFromParams.groupProperties,
         groupAttributesEdited: state.groupAdminSettings.groupAttributesEdited,
 
+        currentUser: state.auth.user,
         clubAttributes: state.manageClubAttributes.clubAttributes,
         clubAttributesEdited: state.groupAdminSettings.clubAttributesEdited,
 
@@ -87,12 +88,32 @@ const mapDispatchToProps = dispatch => {
 
 class GroupAdminSettings extends Component {
 
+    constructor(props) {
+        super(props);
+        this.state = {
+            editLogoDialogOpen: false
+        };
+    }
+
     handleExpandPledgeFAQPanel = FAQ => (event, isExpanded) => {
         this.props.handleExpandPledgeFAQPanel(FAQ, isExpanded);
     };
 
     handleQuillEditorChanged = fieldName => (content, delta, source, editor) => {
         this.props.handleQuillEditorChanged(fieldName, content, delta, source, editor);
+    };
+
+    handleOpenEditLogoDialog = () => {
+        this.setState({ editLogoDialogOpen: true });
+    };
+
+    handleCloseEditLogoDialog = () => {
+        this.setState({ editLogoDialogOpen: false });
+    };
+
+    handleLogoUpdateSuccess = () => {
+        // Reload the group properties to show the new logo
+        window.location.reload();
     };
 
     componentDidMount() {
@@ -109,6 +130,7 @@ class GroupAdminSettings extends Component {
             groupDetails,
             groupAttributesEdited,
 
+            currentUser,
             clubAttributes,
             clubAttributesEdited,
 
@@ -127,6 +149,8 @@ class GroupAdminSettings extends Component {
             cancelEditingColor,
             saveEditedQuill,
         } = this.props;
+
+        const { editLogoDialogOpen } = this.state;
 
         if (!groupAttributesEdited) {
             return null;
@@ -448,56 +472,51 @@ class GroupAdminSettings extends Component {
                             }}/>
                     </Col>
 
-                    {/** Edit sectors */}
-                    <Col xs={12} sm={12} md={12} lg={12}>
-                        <ManageSectors/>
-                    </Col>
+                    {/** Edit Logo (Super Admin or Super Group Admin) */}
+                    {currentUser && (currentUser.superAdmin || currentUser.superGroupAdmin) && (
+                        <Col xs={12} sm={12} md={12} lg={12}>
+                            <FlexView column marginBottom={40}>
+                                <Typography variant="h6" color="primary">
+                                    Manage University Logo
+                                </Typography>
 
-                    {/** Divider */}
-                    <Col xs={12} sm={12} md={12} lg={12}>
-                        <Divider style={{marginTop: 40, marginBottom: 40, height: 4,
-                                backgroundColor:
-                                    !groupDetails
-                                        ?
-                                        colors.primaryColor
-                                        :
-                                        groupDetails.settings.primaryColor
-                            }}/>
-                    </Col>
+                                <FlexView marginTop={16}>
+                                    <Button
+                                        className={css(sharedStyles.no_text_transform)}
+                                        variant="contained"
+                                        color="primary"
+                                        onClick={this.handleOpenEditLogoDialog}
+                                    >
+                                        Edit University Logo
+                                    </Button>
+                                </FlexView>
+
+                                {groupDetails && groupDetails.plainLogo && groupDetails.plainLogo.length > 0 && (
+                                    <FlexView marginTop={16}>
+                                        <img
+                                            src={groupDetails.plainLogo.find(logo => !logo.removed)?.url}
+                                            alt="Current logo"
+                                            style={{ maxWidth: 200, maxHeight: 100, objectFit: 'contain' }}
+                                        />
+                                    </FlexView>
+                                )}
+                            </FlexView>
+
+                            <EditGroupImageDialog
+                                open={editLogoDialogOpen}
+                                groupUserName={groupUserName}
+                                currentImageUrl={groupDetails?.plainLogo?.find(logo => !logo.removed)?.url}
+                                onClose={this.handleCloseEditLogoDialog}
+                                onSuccess={this.handleLogoUpdateSuccess}
+                            />
+                        </Col>
+                    )}
 
                     {/** Edit courses */}
                     <Col xs={12} sm={12} md={12} lg={12}>
                         <ManageCourses/>
                     </Col>
 
-                    {/** Divider */}
-                    <Col xs={12} sm={12} md={12} lg={12}>
-                        <Divider style={{marginTop: 40, marginBottom: 40, height: 4,
-                                backgroundColor:
-                                    !groupDetails
-                                        ?
-                                        colors.primaryColor
-                                        :
-                                        groupDetails.settings.primaryColor
-                            }}/>
-                    </Col>
-
-                    {/** Edit create project terms and conditions */}
-                    <Col xs={12} sm={12} md={12} lg={12}>
-                        <FlexView column>
-                            <Typography variant="h6" color="primary">Edit create project terms and conditions</Typography>
-
-                            <NavLink to={ROUTES.CREATE_PITCH_TERMS_AND_CONDITIONS} target="_blank" className={css(sharedStyles.nav_link_hover_without_changing_text_color)} style={{marginTop: 30}}>
-                                <Button variant="outlined" color="primary" className={css(sharedStyles.no_text_transform)}>View create project terms and conditions page</Button>
-                            </NavLink>
-
-                            <ReactQuill theme="snow" onChange={this.handleQuillEditorChanged('createPitchTermsAndConditions')} modules={modules} value={clubAttributesEdited && clubAttributesEdited.hasOwnProperty('createPitchTermsAndConditions') ? clubAttributesEdited.createPitchTermsAndConditions : {ops: []}} style={{marginTop: 20}}/>
-
-                            <FlexView marginTop={15} width="100%" hAlignContent="right">
-                                <Button variant="contained" color="primary" onClick={() => saveEditedQuill('createPitchTermsAndConditions')} style={{marginLeft: 12}}>Save</Button>
-                            </FlexView>
-                        </FlexView>
-                    </Col>
 {/* 
                     <Col xs={12} sm={12} md={12} lg={12}>
                         <FlexView column>

@@ -30,15 +30,30 @@ export const sendEmail = async (
         try {
             // make authenticated request when sending invitation email
             if (emailType === EMAIL_INVITATION) {
-                // get current user's id token
-                const idToken = await firebase.auth().currentUser.getIdToken(true);
+                // Check if user is logged in
+                const currentUser = firebase.auth().currentUser;
+                if (!currentUser) {
+                    console.error('[EMAIL_UTILS] No current user found - user may not be logged in');
+                    return reject(new Error('You must be logged in to send invitations. Please refresh the page and try again.'));
+                }
 
-                requestConfig = {
-                    headers: {
-                        'Authorization': idToken
-                    }
-                };
+                // get current user's id token
+                try {
+                    const idToken = await currentUser.getIdToken(true);
+                    console.log('[EMAIL_UTILS] Successfully obtained ID token for invitation email');
+
+                    requestConfig = {
+                        headers: {
+                            'Authorization': idToken
+                        }
+                    };
+                } catch (tokenError) {
+                    console.error('[EMAIL_UTILS] Failed to get ID token:', tokenError);
+                    return reject(new Error('Failed to authenticate. Please refresh the page and try again.'));
+                }
             }
+
+            console.log('[EMAIL_UTILS] Sending email request to:', `${serverURL}${ApiRoutes.sendEmailRoute}`);
 
             await axios
                 .post(
@@ -50,8 +65,21 @@ export const sendEmail = async (
                     requestConfig
                 );
 
+            console.log('[EMAIL_UTILS] Email sent successfully');
             return resolve();
         } catch (error) {
+            console.error('[EMAIL_UTILS] Error sending email:', error);
+            // Provide more helpful error messages
+            if (error.response) {
+                const status = error.response.status;
+                if (status === 401) {
+                    return reject(new Error('Authentication failed. Please refresh the page and log in again.'));
+                } else if (status === 403) {
+                    return reject(new Error('You do not have permission to send invitations.'));
+                } else if (status === 400) {
+                    return reject(new Error('Invalid email data. Please check the form and try again.'));
+                }
+            }
             return reject(error);
         }
     });

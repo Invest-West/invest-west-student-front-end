@@ -15,7 +15,9 @@ export interface SignUpData {
     userProfile: Partial<User>;
     password: string;
     groupID: string;
+    discover: string;
     acceptMarketingPreferences: boolean;
+    courseUserName?: string;
 }
 
     export default class UserRepository {

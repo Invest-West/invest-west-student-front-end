@@ -3,23 +3,38 @@ import {
     CompletedSavingCoursesChangesAction,
     ManageCoursesAction,
     ManageCoursesEvents,
-    SetCoursesAction
+    SetCoursesAction,
+    SetCourseStatisticsAction,
+    UpdateCourseStatisticAction
 } from "./ManageCoursesActions";
 import Error from "../../../../models/error";
+
+export interface CourseStatistics {
+    courseName: string;
+    studentCount: number;
+    adminCount: number;
+    loading: boolean;
+}
 
 export interface ManageCoursesState {
     addingNewCourse: boolean;
     newCourse: string;
     courses: string[];
+    courseStatistics: CourseStatistics[];
     savingCourses: boolean;
     errorSavingCourses?: Error;
+    loadingStatistics: boolean;
+    creatingCourse: boolean;
 }
 
 const initialState: ManageCoursesState = {
     addingNewCourse: false,
     newCourse: "",
     courses: [],
-    savingCourses: false
+    courseStatistics: [],
+    savingCourses: false,
+    loadingStatistics: false,
+    creatingCourse: false
 }
 
 export const isSavingCoursesChanges = (state: ManageCoursesState) => {
@@ -59,6 +74,46 @@ export const manageCoursesReducer = (state = initialState, action: ManageCourses
                 savingCourses: false,
                 errorSavingCourses: completedSavingCoursesChanges.error !== undefined
                     ? {detail: completedSavingCoursesChanges.error} : state.errorSavingCourses
+            }
+        case ManageCoursesEvents.LoadingCourseStatistics:
+            return {
+                ...state,
+                loadingStatistics: true
+            }
+        case ManageCoursesEvents.SetCourseStatistics:
+            const setCourseStatisticsAction: SetCourseStatisticsAction = action as SetCourseStatisticsAction;
+            return {
+                ...state,
+                courseStatistics: setCourseStatisticsAction.courseStatistics,
+                loadingStatistics: false
+            }
+        case ManageCoursesEvents.UpdateCourseStatistic:
+            const updateCourseStatisticAction: UpdateCourseStatisticAction = action as UpdateCourseStatisticAction;
+            const updatedStatistics = state.courseStatistics.map(stat =>
+                stat.courseName === updateCourseStatisticAction.courseName
+                    ? {
+                        ...stat,
+                        studentCount: updateCourseStatisticAction.studentCount,
+                        adminCount: updateCourseStatisticAction.adminCount,
+                        loading: false
+                    }
+                    : stat
+            );
+            return {
+                ...state,
+                courseStatistics: updatedStatistics
+            }
+        case ManageCoursesEvents.CreatingCourse:
+            return {
+                ...state,
+                creatingCourse: true
+            }
+        case ManageCoursesEvents.CompletedCreatingCourse:
+            return {
+                ...state,
+                creatingCourse: false,
+                addingNewCourse: false,
+                newCourse: ""
             }
         default:
             return state;

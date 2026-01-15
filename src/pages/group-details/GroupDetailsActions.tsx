@@ -8,6 +8,7 @@ import OfferRepository, {FetchProjectsOrderByOptions} from "../../api/repositori
 import AccessRequest, {AccessRequestInstance} from "../../models/access_request";
 import Admin, {isAdmin} from "../../models/admin";
 import AccessRequestRepository from "../../api/repositories/AccessRequestRepository";
+import * as realtimeDBUtils from "../../firebase/realtimeDBUtils";
 
 export enum GroupDetailsEvents {
     LoadingData = "GroupDetailsEvents.LoadData",
@@ -27,6 +28,7 @@ export interface CompleteLoadingDataAction extends GroupDetailsAction {
     members?: InvitedUserWithProfile[];
     offers?: ProjectInstance[];
     accessRequestInstances?: AccessRequestInstance[];
+    admins?: any[];
     error?: string;
 }
 
@@ -70,7 +72,7 @@ export const loadData: ActionCreator<any> = (groupUserName: string) => {
             const groupResponse = await new GroupRepository().getGroup(groupUserName);
             const group: GroupProperties = groupResponse.data;
 
-            const membersResponse = await new GroupRepository().fetchGroupMembers(group.anid);
+            const membersResponse = await new GroupRepository().fetchGroupMembers(group.groupUserName);
             const members: InvitedUserWithProfile[] = membersResponse.data;
 
             const offersResponse = await new OfferRepository().fetchOffers({
@@ -79,6 +81,48 @@ export const loadData: ActionCreator<any> = (groupUserName: string) => {
                 orderBy: FetchProjectsOrderByOptions.Group
             });
             const offers: ProjectInstance[] = offersResponse.data;
+
+            // Load group admins/lecturers using 3-scenario approach (non-blocking - don't fail if this errors)
+            let groupAdmins: any[] = [];
+            try {
+                // SCENARIO 1: Load admins where anid = group.anid (course/group-level admins)
+                const courseAdmins = await realtimeDBUtils.loadGroupAdminsBasedOnGroupID(group.anid) as any[];
+
+                // SCENARIO 2: Load ALL admins and filter for those with courseIds containing this group's anid
+                const firebase = require('../../firebase/firebaseApp').default;
+                const DB_CONST = require('../../firebase/databaseConsts');
+
+                const snapshot = await firebase
+                    .database()
+                    .ref(DB_CONST.ADMINISTRATORS_CHILD)
+                    .once('value');
+
+                let adminsWithCourseId: any[] = [];
+                if (snapshot.exists()) {
+                    const adminsObject = snapshot.val();
+                    const allAdmins = Object.keys(adminsObject).map(key => adminsObject[key]);
+                    adminsWithCourseId = allAdmins.filter((admin: any) =>
+                        admin.courseIds && Array.isArray(admin.courseIds) && admin.courseIds.includes(group.anid)
+                    );
+                }
+                console.log(`    ✅ Found ${adminsWithCourseId.length} admins with courseIds containing ${group.anid}`);
+
+                // Combine course-specific admins and remove duplicates by email
+                // NOTE: We do NOT include university-level admins here - only admins specifically assigned to this course
+                const allCourseAdmins = [...(courseAdmins || []), ...adminsWithCourseId];
+                const uniqueAdmins = allCourseAdmins.reduce((acc: any[], admin: any) => {
+                    if (!acc.find((a: any) => a.email === admin.email)) {
+                        acc.push(admin);
+                    }
+                    return acc;
+                }, []);
+
+                console.log(`    📊 Total unique admins for THIS COURSE ONLY (${group.displayName}): ${uniqueAdmins.length}`);
+                groupAdmins = uniqueAdmins;
+            } catch (adminError) {
+                console.error("Failed to load group admins:", adminError);
+                // Continue without admins - set to empty array
+            }
 
             const admin: Admin | null = isAdmin(currentUser);
             if (!admin || (admin && !admin.superAdmin)) {
@@ -96,6 +140,7 @@ export const loadData: ActionCreator<any> = (groupUserName: string) => {
             completeAction.group = group;
             completeAction.members = members;
             completeAction.offers = offers;
+            completeAction.admins = groupAdmins;
             return dispatch(completeAction);
         } catch (error) {
             completeAction.error = error.toString();

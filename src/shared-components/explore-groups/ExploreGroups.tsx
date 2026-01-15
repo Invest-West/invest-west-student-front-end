@@ -33,10 +33,14 @@ import {
     fetchGroups,
     filterChanged,
     filterGroupsByName,
-    paginationChanged
+    paginationChanged,
+    removeAccessRequest,
+    sendAccessRequest
 } from "./ExploreGroupsActions";
 import {BeatLoader} from "react-spinners";
 import GroupItem from "./GroupItem";
+import UniversityGroupItem from "./UniversityGroupItem";
+import {buildHierarchicalGroups, isUniversity, isCourse} from "../../models/group_properties";
 import {isAdmin} from "../../models/admin";
 import {MediaQueryState} from "../../redux-store/reducers/mediaQueryReducer";
 import {Pagination} from "@material-ui/lab";
@@ -51,6 +55,8 @@ interface ExploreGroupsProps {
     filterGroupsByName: () => any;
     cancelFilteringGroupsByName: () => any;
     paginationChanged: (event: React.ChangeEvent<unknown>, page: number) => any;
+    sendAccessRequest: (groupID: string) => any;
+    removeAccessRequest: (groupID: string) => any;
 }
 
 const mapStateToProps = (state: AppState) => {
@@ -68,7 +74,9 @@ const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
         filterChanged: (event: any) => dispatch(filterChanged(event)),
         filterGroupsByName: () => dispatch(filterGroupsByName()),
         cancelFilteringGroupsByName: () => dispatch(cancelFilteringGroupsByName()),
-        paginationChanged: (event: React.ChangeEvent<unknown>, page: number) => dispatch(paginationChanged(event, page))
+        paginationChanged: (event: React.ChangeEvent<unknown>, page: number) => dispatch(paginationChanged(event, page)),
+        sendAccessRequest: (groupID: string) => dispatch(sendAccessRequest(groupID)),
+        removeAccessRequest: (groupID: string) => dispatch(removeAccessRequest(groupID))
     }
 }
 
@@ -112,7 +120,7 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
                             color="white"
                             paddingY="28px"
                         >
-                            <Typography variant="h6" align="center">Courses on Student network</Typography>
+                            <Typography variant="h6" align="center">Universitys on Student network</Typography>
 
                             <Box height="28px" />
 
@@ -121,7 +129,7 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
                                     fullWidth
                                     name="nameFilter"
                                     value={ExploreGroupsLocalState.nameFilter}
-                                    placeholder="Search course by name"
+                                    placeholder="Search university by name"
                                     onChange={filterChanged}
                                     disabled={!successfullyFetchedGroups(ExploreGroupsLocalState)}
                                     startAdornment={
@@ -167,9 +175,8 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
                                     onChange={filterChanged}
                                     disabled={!successfullyFetchedGroups(ExploreGroupsLocalState)}
                                 >
-                                    <MenuItem key="all" value="all">All courses</MenuItem>
-                                    <MenuItem key="groupsOfMembership" value="groupsOfMembership">My courses</MenuItem>
-                                    <MenuItem key="groupsOfPendingRequest" value="groupsOfPendingRequest">Pending requests</MenuItem>
+                                    <MenuItem key="all" value="all">All universities</MenuItem>
+                                    <MenuItem key="groupsOfMembership" value="groupsOfMembership">My universities</MenuItem>
                                 </Select>
 
                                 <Box width="15px" />
@@ -201,22 +208,12 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
                     ? null
                     : !hasGroupsForCurrentFilters(ExploreGroupsLocalState)
                     ? <Box marginY="80px" >
-                        <Typography align="center" variant="h5" > There are no courses available using your current filter criteria </Typography>
+                        <Typography align="center" variant="h5" > There are no universities available using your current filter criteria </Typography>
                     </Box>
                     : <Box marginTop="30px" >
                         <Row noGutters >
                             <Col xs={12} sm={12} md={12} lg={12} >
-                                <Row>
-                                    {
-                                        ExploreGroupsLocalState.groupsFiltered
-                                            .slice(paginationIndices.startIndex, paginationIndices.endIndex + 1)
-                                            .map(group =>
-                                                <Col key={group.anid} xs={12} sm={12} md={4} lg={3} xl={2} >
-                                                    <GroupItem group={group} />
-                                                </Col>
-                                            )
-                                    }
-                                </Row>
+                                {this.renderHierarchicalGroups()}
                             </Col>
                         </Row>
                     </Box>
@@ -237,6 +234,29 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
                     </Row>
             }
         </Box>;
+    }
+
+    renderHierarchicalGroups() {
+        const {
+            ExploreGroupsLocalState,
+            ManageGroupUrlState,
+            AuthenticationState
+        } = this.props;
+
+        if (!ExploreGroupsLocalState.groups) {
+            return null;
+        }
+
+        const hierarchicalGroups = buildHierarchicalGroups(ExploreGroupsLocalState.groups);
+        const paginationIndices = calculatePaginationIndices(ExploreGroupsLocalState);
+        const paginatedGroups = hierarchicalGroups.slice(paginationIndices.startIndex, paginationIndices.endIndex + 1);
+
+        return paginatedGroups.map(university => (
+            <UniversityGroupItem
+                key={university.anid}
+                university={university}
+            />
+        ));
     }
 }
 

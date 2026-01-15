@@ -117,7 +117,19 @@ class IssuerDashboard extends Component {
         }
 
         setGroupUserNameFromParams(match.params.hasOwnProperty('groupUserName') ? match.params.groupUserName : null);
-        setExpectedAndCurrentPathsForChecking(match.params.hasOwnProperty('groupUserName') ? ROUTES.DASHBOARD_ISSUER : ROUTES.DASHBOARD_ISSUER_INVEST_WEST_SUPER, match.path);
+        // Determine expected path based on URL structure
+        let expectedPath;
+        if (match.params.hasOwnProperty('courseUserName')) {
+            // Course-based route: /groups/:groupUserName/:courseUserName/dashboard/issuer
+            expectedPath = '/groups/:groupUserName/:courseUserName/dashboard/issuer';
+        } else if (match.params.hasOwnProperty('groupUserName')) {
+            // Group-based route: /groups/:groupUserName/dashboard/issuer
+            expectedPath = ROUTES.DASHBOARD_ISSUER;
+        } else {
+            // Super admin route
+            expectedPath = ROUTES.DASHBOARD_ISSUER_INVEST_WEST_SUPER;
+        }
+        setExpectedAndCurrentPathsForChecking(expectedPath, match.path);
 
         loadAngelNetwork();
 

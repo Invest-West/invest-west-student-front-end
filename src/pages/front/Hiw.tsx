@@ -41,18 +41,38 @@ const mapStateToProps = (state: AppState) => {
 
 interface HiwState {
     activeTab: "academia" | "employer";
+    isMobileMenuOpen: boolean;
 }
 
 class Hiw extends Component<HiwProps & Readonly<RouteComponentProps<RouteParams>>, HiwState> {
     constructor(props: HiwProps & Readonly<RouteComponentProps<RouteParams>>) {
         super(props);
         this.state = {
-            activeTab: "academia"
+            activeTab: "academia",
+            isMobileMenuOpen: false
         };
     }
     
     handleTabChange = (tab: "academia" | "employer") => {
         this.setState({ activeTab: tab });
+    }
+
+    toggleMobileMenu = () => {
+        this.setState(prevState => ({
+            isMobileMenuOpen: !prevState.isMobileMenuOpen
+        }));
+        
+        // Prevent body scrolling when menu is open
+        if (!this.state.isMobileMenuOpen) {
+            document.body.classList.add('no-scroll');
+        } else {
+            document.body.classList.remove('no-scroll');
+        }
+    }
+
+    componentWillUnmount() {
+        // Clean up body class when component unmounts
+        document.body.classList.remove('no-scroll');
     }
       render() {
         const {
@@ -60,15 +80,15 @@ class Hiw extends Component<HiwProps & Readonly<RouteComponentProps<RouteParams>
             AuthenticationState
         } = this.props;
         
-        const { activeTab } = this.state;
+        const { activeTab, isMobileMenuOpen } = this.state;
         const { match } = this.props;
         const groupParam = match.params.groupUserName ? match.params.groupUserName : null;
         
         // Construct proper routes based on whether we have a group or not
-        const aboutRoute = groupParam ? `/groups/${groupParam}/about` : "/about";
-        const hiwRoute = groupParam ? `/groups/${groupParam}/Hiw` : "/Hiw";
-        const contactRoute = groupParam ? Routes.groupContact.replace(":groupUserName", groupParam) : Routes.nonGroupContact;
-        const exploreRoute = groupParam ? `/groups/${groupParam}/explore` : "/explore";
+        const aboutRoute = Routes.constructAboutRoute(match.params);
+        const hiwRoute = Routes.constructHiwRoute(match.params);
+        const contactRoute = Routes.constructContactRoute(match.params);
+        const exploreRoute = Routes.constructExploreRoute(match.params);
         const signInRoute = Routes.constructSignInRoute(match.params);
         const homeRoute = Routes.constructHomeRoute(match.params, ManageGroupUrlState, AuthenticationState);
         
@@ -80,21 +100,22 @@ class Hiw extends Component<HiwProps & Readonly<RouteComponentProps<RouteParams>
                 <p className="title">Student Showcase</p>
             </div>
         
-            <div className="burger-menu">
+            <div className={`burger-menu ${isMobileMenuOpen ? 'active' : ''}`} onClick={this.toggleMobileMenu}>
                 <div className="burger-bar"></div>
                 <div className="burger-bar"></div>
                 <div className="burger-bar"></div>
             </div>
             
-            <div className="nav-overlay"></div>
+            <div className={`nav-overlay ${isMobileMenuOpen ? 'active' : ''}`} onClick={this.toggleMobileMenu}></div>
         
-            <div className="navbar-center">
-                <NavLink to={aboutRoute}>About</NavLink>
-                <NavLink to={hiwRoute}>How It Works</NavLink>
-                <NavLink to={contactRoute}>Contact</NavLink>
-            </div>            <div className="navbar-right">
-                <NavLink to={exploreRoute}>Explore</NavLink>
-                <NavLink to={signInRoute}>Login</NavLink>
+            <div className={`navbar-center ${isMobileMenuOpen ? 'mobile-active' : ''}`}>
+                <NavLink to={aboutRoute} onClick={this.toggleMobileMenu}>About</NavLink>
+                <NavLink to={hiwRoute} onClick={this.toggleMobileMenu}>How It Works</NavLink>
+                <NavLink to={contactRoute} onClick={this.toggleMobileMenu}>Contact</NavLink>
+            </div>            
+            <div className={`navbar-right ${isMobileMenuOpen ? 'mobile-active' : ''}`}>
+                <NavLink to={exploreRoute} onClick={this.toggleMobileMenu}>Explore</NavLink>
+                <NavLink to={signInRoute} onClick={this.toggleMobileMenu}>Login</NavLink>
             </div>
            </header>
             <div className="hiw-tabs">

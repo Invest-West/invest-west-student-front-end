@@ -53,12 +53,14 @@ export const loadNotifications = () => {
             return;
         }
 
+        const userId = user.hasOwnProperty('anid') ? user.anid : user.id;
+
         dispatch({
             type: LOADING_NOTIFICATIONS
         });
 
         realtimeDBUtils
-            .loadNotifications(user.hasOwnProperty('anid') ? user.anid : user.id)
+            .loadNotifications(userId)
             .then(notifications => {
                 dispatch({
                     type: FINISHED_LOADING_NOTIFICATIONS,
@@ -82,10 +84,10 @@ export const deleteANotification = notification => {
             .child(notification.id)
             .remove()
             .then(() => {
-                dispatch({
-                    type: TOGGLE_NOTIFICATIONS,
-                    notificationsAnchorEl: null
-                });
+                // Don't close the panel - let the real-time listener update the UI
+            })
+            .catch(error => {
+                console.error("Error deleting notification:", error);
             });
     }
 };
@@ -98,8 +100,16 @@ export const deleteAllNotifications = () => {
             return;
         }
 
+        const userId = user.hasOwnProperty('anid') ? user.anid : user.id;
+
         realtimeDBUtils
-            .deleteAllNotifications(user.hasOwnProperty('anid') ? user.anid : user.id);
+            .deleteAllNotifications(userId)
+            .then(() => {
+                // Don't close the panel - let the real-time listener update the UI
+            })
+            .catch(error => {
+                console.error("Error deleting all notifications:", error);
+            });
     }
 };
 
@@ -118,11 +128,13 @@ export const startListeningForNotificationsChanged = () => {
                 return;
             }
 
+            const userId = user.hasOwnProperty('anid') ? user.anid : user.id;
+
             notificationsListener = firebase
                 .database()
                 .ref(DB_CONST.NOTIFICATIONS_CHILD)
                 .orderByChild('userID')
-                .equalTo(user.hasOwnProperty('anid') ? user.anid : user.id);
+                .equalTo(userId);
 
             notificationsListener
                 .on('child_added', snapshot => {
@@ -130,6 +142,7 @@ export const startListeningForNotificationsChanged = () => {
 
                     let notifications = [...getState().manageNotifications.notifications];
                     let notificationIndex = notifications.findIndex(existingNotification => existingNotification.id === notification.id);
+
                     if (notificationIndex === -1) {
                         dispatch({
                             type: NOTIFICATIONS_LIST_CHANGED,

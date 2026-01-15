@@ -4,7 +4,11 @@ import {
     ContactPitchOwnerDialogEvents,
     ToggleContactDialogAction,
     UpdateSenderEmailAction,
-    UpdateSenderNameAction
+    UpdateSenderNameAction,
+    UpdateCompanyNameAction,
+    UpdateCompanyPositionAction,
+    UpdateCompanyEmailAction,
+    UpdateMessageAction
 } from "./ContactPitchOwnerDialogActions";
 import Error from "../../../../models/error";
 
@@ -14,8 +18,11 @@ export interface ContactPitchOwnerDialogState {
     contactDialogOpen: boolean;
     sendingContactEmail: boolean;
     errorSendingContactEmail?: Error;
-    senderEmail: string;
     senderName: string;
+    companyName: string;
+    companyPosition: string;
+    companyEmail: string;
+    message: string;
 }
 
 const initialState: ContactPitchOwnerDialogState = {
@@ -23,8 +30,11 @@ const initialState: ContactPitchOwnerDialogState = {
     projectOwnerEmail: null,
     contactDialogOpen: false,
     sendingContactEmail: false,
-    senderEmail: '',
-    senderName: ''
+    senderName: '',
+    companyName: '',
+    companyPosition: '',
+    companyEmail: '',
+    message: ''
 }
 
 export const isSendingContactEmail = (state: ContactPitchOwnerDialogState) => {
@@ -72,6 +82,30 @@ const contactPitchOwnerDialogReducer = (state = initialState, action: ContactPit
             return {
                 ...state,
                 senderName: updateSenderNameAction.senderName
+            }
+        case ContactPitchOwnerDialogEvents.UpdateCompanyName:
+            const updateCompanyNameAction: UpdateCompanyNameAction = action as UpdateCompanyNameAction;
+            return {
+                ...state,
+                companyName: updateCompanyNameAction.companyName
+            }
+        case ContactPitchOwnerDialogEvents.UpdateCompanyPosition:
+            const updateCompanyPositionAction: UpdateCompanyPositionAction = action as UpdateCompanyPositionAction;
+            return {
+                ...state,
+                companyPosition: updateCompanyPositionAction.companyPosition
+            }
+        case ContactPitchOwnerDialogEvents.UpdateCompanyEmail:
+            const updateCompanyEmailAction: UpdateCompanyEmailAction = action as UpdateCompanyEmailAction;
+            return {
+                ...state,
+                companyEmail: updateCompanyEmailAction.companyEmail
+            }
+        case ContactPitchOwnerDialogEvents.UpdateMessage:
+            const updateMessageAction: UpdateMessageAction = action as UpdateMessageAction;
+            return {
+                ...state,
+                message: updateMessageAction.message
             }
         default:
             return state;

@@ -63,11 +63,11 @@ const mapDispatchToProps = dispatch => {
 };
 
 const initState = {
-    email: '',
-    subject: '-',
     name: '',
-    phone: '',
-    description: '',
+    companyName: '',
+    companyPosition: '',
+    companyEmail: '',
+    message: '',
 
     submitClick: false,
     sending: false,
@@ -111,7 +111,7 @@ class ContactUs extends Component {
                 if (user) {
                     if (!this.state.hasSetData) {
                         this.setState({
-                            email: user.email,
+                            companyEmail: user.email,
                             name: user.firstName + " " + user.lastName,
                             hasSetData: true
                         });
@@ -138,7 +138,7 @@ class ContactUs extends Component {
                 if (user) {
                     if (!this.state.hasSetData) {
                         this.setState({
-                            email: user.email,
+                            companyEmail: user.email,
                             name: user.firstName + " " + user.lastName,
                             hasSetData: true
                         });
@@ -164,17 +164,21 @@ class ContactUs extends Component {
         } = this.props;
 
         const {
-            email,
-            subject,
             name,
-            phone,
-            description
+            companyName,
+            companyPosition,
+            companyEmail,
+            message
         } = this.state;
 
-        if (email.trim().length === 0
-            || subject === "-"
-            || name.trim().length === 0
-            || description.trim().length === 0
+        // For issuers, don't require company position
+        const isIssuer = user && user.type === DB_CONST.TYPE_ISSUER;
+
+        if (name.trim().length === 0
+            || companyName.trim().length === 0
+            || (!isIssuer && companyPosition.trim().length === 0)
+            || companyEmail.trim().length === 0
+            || message.trim().length === 0
         ) {
             this.setState({
                 submitClick: true
@@ -193,12 +197,12 @@ class ContactUs extends Component {
                 serverURL: clubAttributes.serverURL,
                 emailType: emailUtils.EMAIL_ENQUIRY,
                 data: {
-                    sender: email.toLowerCase(),
+                    sender: companyEmail.toLowerCase(),
                     receiver: groupID,
-                    subject,
-                    description,
                     senderName: name,
-                    senderPhone: phone
+                    companyName,
+                    companyPosition: isIssuer ? '' : companyPosition,
+                    message
                 }
             })
             .then(() => {
@@ -216,11 +220,11 @@ class ContactUs extends Component {
                     .logContactUsEnquiry({
                         userID: user ? user.id : null,
                         anid: !groupProperties ? "Student super admin" : groupProperties.anid,
-                        email: email.toLowerCase(),
+                        email: companyEmail.toLowerCase(),
                         name,
-                        phone,
-                        subject,
-                        description
+                        companyName,
+                        companyPosition: isIssuer ? '' : companyPosition,
+                        message
                     })
                     .then(enquiryID => {
                         // track activity for authenticated user
@@ -266,18 +270,22 @@ class ContactUs extends Component {
 
             authenticating,
             userLoaded,
-            clubAttributesLoaded
+            clubAttributesLoaded,
+            user
         } = this.props;
 
         const {
-            email,
-            subject,
             name,
-            phone,
-            description,
+            companyName,
+            companyPosition,
+            companyEmail,
+            message,
             submitClick,
             sending
         } = this.state;
+
+        // Check if user is an issuer
+        const isIssuer = user && user.type === DB_CONST.TYPE_ISSUER;
 
         if (!groupPropertiesLoaded) {
             return (
@@ -327,60 +335,48 @@ class ContactUs extends Component {
                                 </Typography>
 
                                 <FlexView width="100%" marginTop={40}>
-                                    <FormControl fullWidth required error={submitClick && email.trim().length === 0}>
-                                        <FormLabel> Your email address</FormLabel>
-                                        <TextField value={email} name="email" variant="outlined" margin="dense" onChange={this.onTextChanged} error={submitClick && email.trim().length === 0}/>
-                                    </FormControl>
-                                </FlexView>
-
-                                <FlexView width="100%" marginTop={25}>
-                                    <FormControl fullWidth required error={submitClick && subject === "-"}>
-                                        <FormLabel>
-                                            Subject
-                                        </FormLabel>
-                                        <Select name="subject" value={subject} variant="outlined" margin="dense" onChange={this.onTextChanged} input={<OutlinedInput/>} error={submitClick && subject === "-"} >
-                                            <MenuItem value={"-"} key={-1}>
-                                                -
-                                            </MenuItem>
-                                            {
-                                                subjects.map((subject, index) => (
-                                                    <MenuItem
-                                                        value={subject}
-                                                        key={index}
-                                                    >
-                                                        {subject}
-                                                    </MenuItem>
-                                                ))
-                                            }
-                                        </Select>
-                                    </FormControl>
-                                </FlexView>
-
-                                <FlexView width="100%" marginTop={25}>
-                                    <FormControl fullWidth>
-                                        <FormLabel>
-                                            Name
-                                        </FormLabel>
+                                    <FormControl fullWidth required error={submitClick && name.trim().length === 0}>
+                                        <FormLabel>Name</FormLabel>
                                         <TextField value={name} name="name" variant="outlined" margin="dense" onChange={this.onTextChanged} error={submitClick && name.trim().length === 0}/>
                                     </FormControl>
                                 </FlexView>
 
                                 <FlexView width="100%" marginTop={25}>
-                                    <FormControl fullWidth>
+                                    <FormControl fullWidth required error={submitClick && companyName.trim().length === 0}>
                                         <FormLabel>
-                                            Phone number
+                                            {isIssuer ? 'University Name' : 'Company Name'}
                                         </FormLabel>
-                                        <TextField value={phone} name="phone" variant="outlined" margin="dense" onChange={this.onTextChanged}/>
+                                        <TextField value={companyName} name="companyName" variant="outlined" margin="dense" onChange={this.onTextChanged} error={submitClick && companyName.trim().length === 0}/>
+                                    </FormControl>
+                                </FlexView>
+
+                                {!isIssuer && (
+                                    <FlexView width="100%" marginTop={25}>
+                                        <FormControl fullWidth required error={submitClick && companyPosition.trim().length === 0}>
+                                            <FormLabel>
+                                                Company Position
+                                            </FormLabel>
+                                            <TextField value={companyPosition} name="companyPosition" variant="outlined" margin="dense" onChange={this.onTextChanged} error={submitClick && companyPosition.trim().length === 0}/>
+                                        </FormControl>
+                                    </FlexView>
+                                )}
+
+                                <FlexView width="100%" marginTop={25}>
+                                    <FormControl fullWidth required error={submitClick && companyEmail.trim().length === 0}>
+                                        <FormLabel>
+                                            {isIssuer ? 'University Email' : 'Company Email'}
+                                        </FormLabel>
+                                        <TextField value={companyEmail} name="companyEmail" variant="outlined" margin="dense" onChange={this.onTextChanged} error={submitClick && companyEmail.trim().length === 0}/>
                                     </FormControl>
                                 </FlexView>
                             </FlexView>
 
                             <FlexView width="100%" marginTop={25}>
-                                <FormControl fullWidth required error={submitClick && description.trim().length === 0}>
+                                <FormControl fullWidth required error={submitClick && message.trim().length === 0}>
                                     <FormLabel>
-                                        Description
+                                        Message
                                     </FormLabel>
-                                    <TextField value={description} name="description" variant="outlined" margin="dense" multiline rows={5} rowsMax={5} onChange={this.onTextChanged} error={submitClick && description.trim().length === 0}/>
+                                    <TextField value={message} name="message" variant="outlined" margin="dense" multiline rows={5} rowsMax={5} onChange={this.onTextChanged} error={submitClick && message.trim().length === 0}/>
                                     <FormHelperText>
                                         Please enter the details of your request. A member of our support team will respond as soon as possible.
                                     </FormHelperText>

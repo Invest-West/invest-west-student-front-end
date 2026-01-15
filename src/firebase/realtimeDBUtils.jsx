@@ -283,9 +283,9 @@ export const logContactUsEnquiry = (
         anid = null, // null = Invest West, not null = group
         email,
         name,
-        phone = null,
-        subject,
-        description
+        companyName,
+        companyPosition,
+        message
     }
 ) => {
     return new Promise((resolve, reject) => {
@@ -302,9 +302,9 @@ export const logContactUsEnquiry = (
                 groupContacted: anid,
                 email,
                 name,
-                phone,
-                subject,
-                description,
+                companyName,
+                companyPosition,
+                message,
                 id: enquiryID,
                 time: utils.getCurrentDate()
             })
@@ -497,6 +497,7 @@ export const loadGroupsUserIsIn = async (userID) => {
 
 /**
  * Load angel network based on anid
+ * Also checks Courses node if not found in angel networks
  *
  * @param anid
  * @returns {Promise<unknown>}
@@ -508,11 +509,58 @@ export const loadAngelNetworkBasedOnANID = async (anid) => {
             .ref(DB_CONST.GROUP_PROPERTIES_CHILD)
             .child(anid)
             .once('value', snapshot => {
-                if (!snapshot || !snapshot.exists()) {
-                    return reject("Angel network not found");
-                }
+                console.log('[REALTIME-DB DEBUG] Angel network lookup result:', {
+                    anid: anid,
+                    exists: snapshot ? snapshot.exists() : false,
+                    data: snapshot ? snapshot.val() : null
+                });
 
-                return resolve(snapshot.val());
+                if (!snapshot || !snapshot.exists()) {
+                    // Not found in GROUP_PROPERTIES_CHILD, check if it's a course
+                    console.log('[REALTIME-DB DEBUG] Not found in groups, checking Courses node:', anid);
+
+                    firebase
+                        .database()
+                        .ref(DB_CONST.COURSES_CHILD)
+                        .child(anid)
+                        .once('value', courseSnapshot => {
+                            console.log('[REALTIME-DB DEBUG] Course lookup result:', {
+                                anid: anid,
+                                exists: courseSnapshot ? courseSnapshot.exists() : false,
+                                hasCourseData: courseSnapshot ? !!courseSnapshot.val() : false
+                            });
+
+                            if (!courseSnapshot || !courseSnapshot.exists()) {
+                                return reject("Angel network not found");
+                            }
+
+                            const courseData = courseSnapshot.val();
+
+                            // If this is a course with a parent, load the parent university
+                            if (courseData.parentGroupId) {
+                                console.log('[REALTIME-DB DEBUG] Course found, loading parent university:', courseData.parentGroupId);
+                                firebase
+                                    .database()
+                                    .ref(DB_CONST.GROUP_PROPERTIES_CHILD)
+                                    .child(courseData.parentGroupId)
+                                    .once('value', parentSnapshot => {
+                                        if (!parentSnapshot || !parentSnapshot.exists()) {
+                                            console.warn('[REALTIME-DB DEBUG] Parent university not found for course:', courseData.parentGroupId);
+                                            return reject("Parent university not found");
+                                        }
+
+                                        console.log('[REALTIME-DB DEBUG] Returning parent university for course ANID');
+                                        return resolve(parentSnapshot.val());
+                                    });
+                            } else {
+                                // Course without parent - just return the course data
+                                console.log('[REALTIME-DB DEBUG] Returning course data (no parent)');
+                                return resolve(courseData);
+                            }
+                        });
+                } else {
+                    return resolve(snapshot.val());
+                }
             });
     });
 };
@@ -528,12 +576,21 @@ export const loadAngelNetworkBasedOnANID = async (anid) => {
  */
 export const loadAngelNetworkBasedOnGroupUserName = async (groupUserName) => {
     return new Promise((resolve, reject) => {
+        console.log('[REALTIME-DB DEBUG] Looking for group with groupUserName:', groupUserName);
+
         firebase
             .database()
             .ref(DB_CONST.GROUP_PROPERTIES_CHILD)
             .orderByChild('groupUserName')
             .equalTo(groupUserName)
             .once('value', snapshots => {
+                console.log('[REALTIME-DB DEBUG] Group lookup by username result:', {
+                    groupUserName: groupUserName,
+                    exists: snapshots ? snapshots.exists() : false,
+                    numChildren: snapshots ? snapshots.numChildren() : 0,
+                    data: snapshots ? snapshots.val() : null
+                });
+
                 if (!snapshots
                     || !snapshots.exists()
                     || (snapshots && (!snapshots.val() || snapshots.numChildren() === 0))
@@ -542,11 +599,77 @@ export const loadAngelNetworkBasedOnGroupUserName = async (groupUserName) => {
                 }
 
                 snapshots.forEach(snapshot => {
+                    console.log('[REALTIME-DB DEBUG] Returning group data:', snapshot.val());
                     return resolve(snapshot.val());
                 });
             });
     });
 };
+
+/**
+ * Load course details from a group
+ *
+ * @param {string} groupUserName - Group username
+ * @param {string} courseUserName - Course username  
+ * @returns {Promise<object>} Course object or null if not found
+ */
+export const loadCourseFromGroup = async (groupUserName, courseUserName) => {
+    return new Promise((resolve, reject) => {
+        // First load the group
+        loadAngelNetworkBasedOnGroupUserName(groupUserName)
+            .then(group => {
+                // Check if the group has the new courses structure
+                if (group.courses && group.courses[courseUserName]) {
+                    resolve({
+                        ...group.courses[courseUserName],
+                        groupData: group
+                    });
+                } 
+                // Fallback: check if courseUserName matches a legacy availableCourses entry
+                else if (group.availableCourses) {
+                    const matchingCourse = group.availableCourses.find(course => {
+                        const convertedName = course.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+                        return convertedName === courseUserName;
+                    });
+                    
+                    if (matchingCourse) {
+                        // Return a synthetic course object for backward compatibility
+                        resolve({
+                            displayName: matchingCourse,
+                            courseUserName: courseUserName,
+                            description: `${matchingCourse} course`,
+                            isDefault: courseUserName === 'student-showcase',
+                            status: 1,
+                            groupData: group
+                        });
+                    } else {
+                        resolve(null);
+                    }
+                } else {
+                    resolve(null);
+                }
+            })
+            .catch(error => reject(error));
+    });
+};
+
+/**
+ * Check if a course exists within a group
+ *
+ * @param {string} groupUserName - Group username
+ * @param {string} courseUserName - Course username
+ * @returns {Promise<boolean>} True if course exists
+ */
+export const courseExistsInGroup = async (groupUserName, courseUserName) => {
+    try {
+        const course = await loadCourseFromGroup(groupUserName, courseUserName);
+        return course !== null;
+    } catch (error) {
+        console.error('Error checking course existence:', error);
+        return false;
+    }
+};
+
 /**
  * ---------------------------------------------------------------------------------------------------------------------
  */
@@ -1676,6 +1799,7 @@ export const fetchProjectsBy = async (
  * @returns {Promise<*>}
  */
 export const loadAParticularProject = async (projectID) => {
+
     const db = firebase.database();
     return new Promise((resolve, reject) => {
         db.ref(DB_CONST.PROJECTS_CHILD)
@@ -1686,8 +1810,93 @@ export const loadAParticularProject = async (projectID) => {
                 }
 
                 let project = snapshot.val();
+                console.log('[REALTIME-DB DEBUG] Loading project group:', {
+                    projectID: projectID,
+                    projectAnid: project.anid,
+                    projectData: project
+                });
 
-                loadAngelNetworkBasedOnANID(project.anid)
+                // Check if the ANID is actually a groupUserName (like "invest-west") instead of a Firebase key
+                // Firebase keys typically start with "-" and are longer
+                const isFirebaseKey = project.anid && project.anid.startsWith('-') && project.anid.length > 10;
+
+                console.log('[REALTIME-DB DEBUG] ANID analysis:', {
+                    anid: project.anid,
+                    isFirebaseKey: isFirebaseKey,
+                    shouldUseGroupUserName: !isFirebaseKey
+                });
+
+                if (!isFirebaseKey && project.anid) {
+                    // The ANID appears to be a groupUserName, use it directly
+                    loadAngelNetworkBasedOnGroupUserName(project.anid)
+                        .then(group => {
+                            project.group = group;
+
+                            getUserBasedOnID(project.issuerID)
+                                .then(issuer => {
+                                    project.issuer = issuer;
+
+                                    // projects in pitch phase cannot have any pledges
+                                    if (project.status !== DB_CONST.PROJECT_STATUS_PITCH_PHASE) {
+                                        // load pledges
+                                        loadPledges(projectID, null, LOAD_PLEDGES_ORDER_BY_PROJECT)
+                                            .then(pledges => {
+                                                project.pledges = pledges;
+                                                return resolve(project);
+                                            })
+                                            .catch(error => {
+                                                // error in loading pledges
+                                                return reject(error);
+                                            });
+                                    } else {
+                                        return resolve(project);
+                                    }
+                                })
+                                .catch(error => {
+                                    return reject("Couldn't load project issuer");
+                                });
+                        })
+                        .catch(error => {
+                            // Fallback to invest-west if the groupUserName lookup fails
+                            loadAngelNetworkBasedOnGroupUserName("invest-west")
+                                .then(group => {
+                                    project.group = group;
+
+                                    getUserBasedOnID(project.issuerID)
+                                        .then(issuer => {
+                                            project.issuer = issuer;
+
+                                            // projects in pitch phase cannot have any pledges
+                                            if (project.status !== DB_CONST.PROJECT_STATUS_PITCH_PHASE) {
+                                                // load pledges
+                                                loadPledges(projectID, null, LOAD_PLEDGES_ORDER_BY_PROJECT)
+                                                    .then(pledges => {
+                                                        project.pledges = pledges;
+                                                        return resolve(project);
+                                                    })
+                                                    .catch(error => {
+                                                        // error in loading pledges
+                                                        return reject(error);
+                                                    });
+                                            } else {
+                                                return resolve(project);
+                                            }
+                                        })
+                                        .catch(error => {
+                                            return reject("Couldn't load project issuer");
+                                        });
+                                })
+                                .catch(fallbackError => {
+                                    console.log('[REALTIME-DB DEBUG] All group loading attempts failed:', {
+                                        originalGroupUserName: project.anid,
+                                        fallbackError: fallbackError
+                                    });
+                                    return reject("Couldn't load group - all attempts failed");
+                                });
+                        });
+                } else {
+                    // Try the original ANID-based lookup
+                    loadAngelNetworkBasedOnANID(project.anid)
                     .then(group => {
                         project.group = group;
 
@@ -1716,10 +1925,121 @@ export const loadAParticularProject = async (projectID) => {
                             });
                     })
                     .catch(error => {
-                        return reject("Couldn't load group");
+                        console.log('[REALTIME-DB DEBUG] ANID lookup failed, trying fallback with invest-west:', {
+                            originalError: error,
+                            projectAnid: project.anid,
+                            projectID: projectID
+                        });
+
+                        // Fallback: try to load group by groupUserName "invest-west"
+                        // This helps with course-based contexts where ANID might not match
+
+                        // Special handling for course contexts - always fallback to invest-west
+                        const fallbackPromise = loadAngelNetworkBasedOnGroupUserName("invest-west");
+
+                        fallbackPromise
+                            .then(group => {
+                                project.group = group;
+
+                                getUserBasedOnID(project.issuerID)
+                                    .then(issuer => {
+                                        project.issuer = issuer;
+
+                                        // projects in pitch phase cannot have any pledges
+                                        if (project.status !== DB_CONST.PROJECT_STATUS_PITCH_PHASE) {
+                                            // load pledges
+                                            loadPledges(projectID, null, LOAD_PLEDGES_ORDER_BY_PROJECT)
+                                                .then(pledges => {
+                                                    project.pledges = pledges;
+                                                    return resolve(project);
+                                                })
+                                                .catch(error => {
+                                                    // error in loading pledges
+                                                    return reject(error);
+                                                });
+                                        } else {
+                                            return resolve(project);
+                                        }
+                                    })
+                                    .catch(error => {
+                                        return reject("Couldn't load project issuer");
+                                    });
+                            })
+                            .catch(fallbackError => {
+                                console.log('[REALTIME-DB DEBUG] Both ANID and fallback lookups failed:', {
+                                    originalError: error,
+                                    fallbackError: fallbackError,
+                                    projectAnid: project.anid,
+                                    projectID: projectID,
+                                    fallbackAttempted: 'invest-west'
+                                });
+                                console.error('[REALTIME-DB ERROR] Complete failure in group loading for project', projectID);
+                                return reject("Couldn't load group - both primary and fallback failed");
+                            });
                     });
+                }
             });
     })
+};
+/**
+ * ---------------------------------------------------------------------------------------------------------------------
+ */
+
+/**
+ * Load all reject feedbacks for a specific project
+ *
+ * @param projectID - The ID of the project to load reject feedbacks for
+ * @returns {Promise<Array>} - Array of reject feedback objects with admin information
+ */
+export const loadProjectRejectFeedbacks = async (projectID) => {
+    const db = firebase.database();
+    let rejectFeedbacks = [];
+
+    return new Promise((resolve, reject) => {
+        db
+            .ref(DB_CONST.PROJECT_REJECT_FEEDBACKS_CHILD)
+            .orderByChild("projectID")
+            .equalTo(projectID)
+            .once('value', snapshots => {
+                if (!snapshots
+                    || !snapshots.exists()
+                    || (snapshots && (!snapshots.val() || snapshots.numChildren() === 0))
+                ) {
+                    return resolve(rejectFeedbacks);
+                }
+
+                snapshots.forEach(snapshot => {
+                    let feedback = snapshot.val();
+                    feedback.id = snapshot.key;
+                    rejectFeedbacks.push(feedback);
+                });
+
+                // Load admin information for each feedback
+                Promise.all(
+                    rejectFeedbacks.map(feedback => {
+                        return new Promise((resolve, reject) => {
+                            getUserBasedOnID(feedback.sentBy)
+                                .then(admin => {
+                                    feedback.admin = admin;
+                                    return resolve(feedback);
+                                })
+                                .catch(error => {
+                                    // If we can't load the admin, still resolve with the feedback
+                                    console.warn('Could not load admin for feedback:', error);
+                                    feedback.admin = null;
+                                    return resolve(feedback);
+                                });
+                        });
+                    })
+                ).then(() => {
+                    // Sort by date descending (most recent first)
+                    rejectFeedbacks.sort((a, b) => b.date - a.date);
+                    return resolve(rejectFeedbacks);
+                }).catch(error => {
+                    return reject(error);
+                });
+            });
+    });
 };
 /**
  * ---------------------------------------------------------------------------------------------------------------------
@@ -2385,6 +2705,10 @@ export const deleteAllNotifications = async (userID) => {
         // load all notifications of the specified user
         loadNotifications(userID)
             .then(notifications => {
+                if (notifications.length === 0) {
+                    return resolve();
+                }
+
                 // delete them all
                 Promise.all(notifications.map(notification => {
                     return new Promise((resolve, reject) => {

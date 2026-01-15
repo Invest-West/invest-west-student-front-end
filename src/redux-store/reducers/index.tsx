@@ -18,6 +18,7 @@ import legalDocumentsReducer from './legalDocumentsReducer';
 import invitedUsersReducer from './invitedUsersReducer';
 import invitationDialogReducer from './invitationDialogReducer';
 import addAngelNetworkDialogReducer from './addAngelNetworkDialogReducer';
+import courseRequestDialogReducer from './courseRequestDialogReducer';
 import manageGroupFromParamsReducer from './manageGroupFromParamsReducer';
 import angelNetworksReducer from './angelNetworksReducer';
 import manageJoinRequestsReducer from './manageJoinRequestsReducer';
@@ -50,6 +51,7 @@ import profileReducer, {ProfileState} from "../../shared-components/profile/Prof
 import signUpReducer, {SignUpState} from "../../pages/signup/SignUpReducer";
 import manageSectorsReducer, {ManageSectorsState} from "../../pages/admin/components/manage-sectors/ManageSectorsReducer";
 import manageCoursesReducer, {ManageCoursesState} from "../../pages/admin/components/manage-courses/ManageCoursesReducer";
+import emailTemplateReducer, {EmailTemplateState} from "./emailTemplateReducer";
 
 export interface AppState {
     MediaQueryState: MediaQueryState;
@@ -75,6 +77,8 @@ export interface AppState {
     ManageCoursesLocalState: ManageCoursesState;
 
     ProfileLocalState: ProfileState;
+
+    EmailTemplateState: EmailTemplateState;
 
     // mitigation plan for the old states of old reducers
     [oldReducers: string]: any;
@@ -105,6 +109,8 @@ const rootReducer = combineReducers<AppState>({
 
     ProfileLocalState: profileReducer,
 
+    EmailTemplateState: emailTemplateReducer,
+
     // Old reducers --------------------------
     auth: authReducer,
     createBusinessProfile: createBusinessProfileReducer,
@@ -124,6 +130,7 @@ const rootReducer = combineReducers<AppState>({
     invitedUsers: invitedUsersReducer,
     manageInvitationDialog: invitationDialogReducer,
     manageAddAngelNetworkDialog: addAngelNetworkDialogReducer,
+    manageCourseRequestDialog: courseRequestDialogReducer,
     manageGroupFromParams: manageGroupFromParamsReducer,
     manageAngelNetworks: angelNetworksReducer,
     manageJoinRequests: manageJoinRequestsReducer,

@@ -24,6 +24,7 @@ import SearchIcon from "@material-ui/icons/Search";
 import CloseIcon from "@material-ui/icons/Close";
 import ArrowUpwardIcon from "@material-ui/icons/ArrowUpward";
 import ArrowDownwardIcon from "@material-ui/icons/ArrowDownward";
+import FileCopyIcon from "@material-ui/icons/FileCopy";
 import {Col, Row} from "react-bootstrap";
 import FlexView from "react-flexview";
 import {HashLoader} from "react-spinners";
@@ -32,7 +33,6 @@ import {css} from "aphrodite";
 import InfoOverlay from "../../../shared-components/info_overlay/InfoOverlay";
 import {connect} from "react-redux";
 import * as invitedUsersActions from "../../../redux-store/actions/invitedUsersActions";
-import * as invitationDialogActions from "../../../redux-store/actions/invitationDialogActions";
 import sharedStyles from "../../../shared-js-css-styles/SharedStyles";
 import * as DB_CONST from "../../../firebase/databaseConsts";
 import * as ROUTES from "../../../router/routes";
@@ -41,6 +41,8 @@ import * as colors from "../../../values/colors";
 import OfferRepository, {FetchProjectsOrderByOptions} from "../../../api/repositories/OfferRepository";
 import firebase from "../../../firebase/firebaseApp";
 import UserRepository from "../../../api/repositories/UserRepository";
+import UpgradeUserToAdmin from "./UpgradeUserToAdmin";
+import InviteMultipleUsers from "./InviteMultipleUsers";
 
 export const FILTER_REGISTRATION_STATUS_ALL = -1;
 
@@ -52,6 +54,10 @@ const mapStateToProps = state => {
     return {
         groupUserName: state.manageGroupFromParams.groupUserName,
         groupProperties: state.manageGroupFromParams.groupProperties,
+
+        // Add group and course URL parameters for signup URL generation
+        groupNameFromUrl: state.ManageGroupUrlState.groupNameFromUrl,
+        courseNameFromUrl: state.ManageGroupUrlState.courseNameFromUrl,
 
         systemGroups: state.manageSystemGroups.systemGroups,
         groupsLoaded: state.manageSystemGroups.groupsLoaded,
@@ -90,9 +96,7 @@ const mapDispatchToProps = dispatch => {
         startListeningForInvitedUsersChanged: () => dispatch(invitedUsersActions.startListeningForInvitedUsersChanged()),
         resendInvite: (invitedUser) => dispatch(invitedUsersActions.resendInvite(invitedUser)),
         exportToCsv: () => dispatch(invitedUsersActions.exportToCsv()),
-        addMembersFromOneGroupToAnotherGroup: (fromGroup, toGroup) => dispatch(invitedUsersActions.addMembersFromOneGroupToAnotherGroup(fromGroup, toGroup)),
-
-        toggleInvitationDialog: () => dispatch(invitationDialogActions.toggleInvitationDialog())
+        addMembersFromOneGroupToAnotherGroup: (fromGroup, toGroup) => dispatch(invitedUsersActions.addMembersFromOneGroupToAnotherGroup(fromGroup, toGroup))
     }
 };
 
@@ -236,11 +240,7 @@ class InvitedUsers extends Component {
                         
                         if (userProfile && userProfile.lastLoginDate) {
                             lastLoginDates[user.id] = userProfile.lastLoginDate;
-                        } else {
-                            console.log(`FETCH LOGIN: No lastLoginDate field found for ${user.email}. Available fields:`, Object.keys(userProfile || {}));
                         }
-                    } else {
-                        console.log(`FETCH LOGIN: User ${user.email} has not registered yet (no officialUserID)`);
                     }
                 } catch (error) {
                     console.warn(`Failed to fetch last login date for user ${user.email}:`, error);
@@ -261,12 +261,87 @@ class InvitedUsers extends Component {
      * Refresh login dates manually
      */
     refreshLoginDates = () => {
-        this.setState({ 
+        this.setState({
             userLastLoginDates: {},  // Clear existing data
-            loadingLastLoginDates: false 
+            loadingLastLoginDates: false
         }, () => {
             this.loadLastLoginDates();
         });
+    };
+
+    /**
+     * Get course display name for a user
+     * Returns the course name if user has courseId, otherwise returns "Home member"
+     */
+    getCourseDisplayName = (invitedUser) => {
+        const { systemGroups } = this.props;
+
+        // NOTE: We IGNORE courseName field - it's from the old manual entry system
+        // We only use courseId to look up the real course from the system
+
+        if (systemGroups && systemGroups.length > 0) {
+            console.log('[GET COURSE DISPLAY] Available groups:', systemGroups.map(g => ({
+                anid: g.anid,
+                name: g.displayName || g.groupUserName,
+                groupUserName: g.groupUserName
+            })));
+        }
+
+        // Check if user has a courseId
+        if (invitedUser.courseId && systemGroups && systemGroups.length > 0) {
+
+            let course = null;
+
+            // First try: match by anid (for real course IDs)
+            course = systemGroups.find(group => group.anid === invitedUser.courseId);
+            if (course) {
+                return course.displayName || course.groupUserName || "Unknown course";
+            }
+
+            // Second try: handle virtual course IDs like "virtual-course--M2I40dBdzdI89yDCaAn-student-showcase"
+            if (invitedUser.courseId.startsWith('virtual-course-')) {
+                // Extract the course username from the virtual ID
+                // Format: "virtual-course-{parentId}-{courseUserName}"
+                // Split: ["virtual", "course", "", "M2I40dBdzdI89yDCaAn", "student", "showcase"]
+                const parts = invitedUser.courseId.split('-');
+
+                if (parts.length >= 5) {
+                    // Skip "virtual", "course", empty string (from --), and parentId
+                    // Start from index 4 onwards to get the actual course name
+                    const courseUserName = parts.slice(4).join('-');
+                    // Try to find course by groupUserName
+                    course = systemGroups.find(group =>
+                        group.groupUserName && group.groupUserName.toLowerCase() === courseUserName.toLowerCase()
+                    );
+
+                    if (course) {
+                        return course.displayName || course.groupUserName || "Unknown course";
+                    } else {
+                        console.log('[GET COURSE DISPLAY] Available groupUserNames:', systemGroups.map(g => g.groupUserName));
+                    }
+                }
+            }
+
+        } else {
+            console.log('[GET COURSE DISPLAY] ❌ No courseId on user or no systemGroups');
+        }
+
+        // Fallback: check if user has profile.BusinessProfile.course
+        if (invitedUser.officialUser) {
+            console.log('[GET COURSE DISPLAY] Has BusinessProfile:', !!invitedUser.officialUser.BusinessProfile);
+            if (invitedUser.officialUser.BusinessProfile) {
+                console.log('[GET COURSE DISPLAY] BusinessProfile.course:', invitedUser.officialUser.BusinessProfile.course);
+            }
+        }
+
+        if (invitedUser.officialUser &&
+            invitedUser.officialUser.BusinessProfile &&
+            invitedUser.officialUser.BusinessProfile.course) {
+            return invitedUser.officialUser.BusinessProfile.course;
+        }
+
+        // Default fallback
+        return "Home member";
     };
 
     /**
@@ -295,6 +370,44 @@ class InvitedUsers extends Component {
             console.error(`TEST UPDATE: Error during test:`, error);
             return null;
         }
+    };
+
+    /**
+     * Generate and copy signup URL to clipboard
+     */
+    copySignupUrl = () => {
+        const { groupNameFromUrl, courseNameFromUrl } = this.props;
+
+        // Build the signup URL based on current group and course
+        let signupUrl = `${window.location.origin}/groups`;
+
+        if (groupNameFromUrl) {
+            signupUrl += `/${groupNameFromUrl}`;
+
+            if (courseNameFromUrl) {
+                signupUrl += `/${courseNameFromUrl}`;
+            }
+
+            signupUrl += '/signup';
+        } else {
+            // Fallback to default URL structure
+            signupUrl += '/invest-west/student-showcase/signup';
+        }
+
+        // Copy to clipboard
+        navigator.clipboard.writeText(signupUrl).then(() => {
+            // You could add a success notification here if needed
+            console.log('Signup URL copied to clipboard:', signupUrl);
+        }).catch((error) => {
+            console.error('Failed to copy to clipboard:', error);
+            // Fallback for older browsers
+            const textArea = document.createElement('textarea');
+            textArea.value = signupUrl;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+        });
     };
 
     /**
@@ -422,7 +535,6 @@ class InvitedUsers extends Component {
             requestingCsv,
             addingMembersFromOneGroupToAnotherGroup,
 
-            toggleInvitationDialog,
             toggleSearchMode,
             handleInputChanged,
             exportToCsv,
@@ -433,19 +545,35 @@ class InvitedUsers extends Component {
             <FlexView column width="100%">
                 <Divider style={{marginBottom: 30}}/>
 
-                {/** Invite new user button - available for group admins only */}
-                {
-                    admin.superAdmin
-                        ?
-                        null
-                        :
-                        <Row style={{marginBottom: 30}}>
-                            <Col xs={12} md={5} lg={12}>
-                                <Button color="primary" variant="outlined" className={css(sharedStyles.no_text_transform)} onClick={toggleInvitationDialog}>
-                                    <Add style={{ marginRight: 10, width: 20, height: "auto"}}/>Invite new group member</Button>
+                {/** Invite/Upgrade users section - different UI for super admins vs regular admins */}
+                <Row style={{marginBottom: 30}}>
+                    {/** For regular admins: Show Copy URL and Invite Multiple Users */}
+                    {
+                        !(admin.superAdmin || admin.superGroupAdmin)
+                            ?
+                            <>
+                                <Col xs={12} md={6} lg={6} style={{marginBottom: 20}}>
+                                    <Button color="primary" variant="outlined" className={css(sharedStyles.no_text_transform)} onClick={this.copySignupUrl}>
+                                        <FileCopyIcon style={{ marginRight: 10, width: 20, height: "auto"}}/>Copy signup URL</Button>
+                                </Col>
+                                <Col xs={12} sm={12} md={12} lg={12}>
+                                    <InviteMultipleUsers/>
+                                </Col>
+                            </>
+                            :
+                            null
+                    }
+                    {/** For super admins and super group admins: Show Upgrade User to Admin */}
+                    {
+                        (admin.superAdmin || admin.superGroupAdmin)
+                            ?
+                            <Col xs={12} sm={12} md={12} lg={12}>
+                                <UpgradeUserToAdmin/>
                             </Col>
-                        </Row>
-                }
+                            :
+                            null
+                    }
+                </Row>
 
                 {/** Filters */}
                 <Row>
@@ -489,7 +617,7 @@ class InvitedUsers extends Component {
 
                     {/** Group members */}
                     {
-                        !admin.superAdmin
+                        !(admin.superAdmin || admin.superGroupAdmin)
                             ?
                             <Col xs={12} sm={12} md={4} lg={3}>
                                 <FlexView vAlignContent="center">
@@ -505,7 +633,7 @@ class InvitedUsers extends Component {
                                             onChange={handleInputChanged}
                                         >
                                             <MenuItem value={FILTER_GROUP_MEMBERS_ALL} key={FILTER_GROUP_MEMBERS_ALL}>All</MenuItem>
-                                            <MenuItem value={FILTER_HOME_MEMBERS} key={FILTER_HOME_MEMBERS}>Home members</MenuItem>
+                                            <MenuItem value={FILTER_HOME_MEMBERS} key={FILTER_HOME_MEMBERS}>Course students</MenuItem>
                                             <MenuItem value={FILTER_PLATFORM_MEMBERS} key={FILTER_PLATFORM_MEMBERS}>Platform members</MenuItem>
                                         </Select>
                                     </FormControl>
@@ -514,7 +642,7 @@ class InvitedUsers extends Component {
                                         <InfoOverlay
                                             placement="right"
                                             message={
-                                                "Home members are the students that registered through this course. Platform members are existing users of Student Showcase who requested access to this course."
+                                                "Students are listed with their enrolled course name. Platform members are existing users of Student Showcase who requested access to this university."
                                             }
                                         />
                                     </FlexView>
@@ -524,7 +652,7 @@ class InvitedUsers extends Component {
                             <Col xs={12} sm={12} md={4} lg={3}>
                                 <FormControl fullWidth>
                                     <InputLabel>
-                                        <Typography variant="body1" color="primary" align="left">Group</Typography>
+                                        <Typography variant="body1" color="primary" align="left">University</Typography>
                                     </InputLabel>
                                     <Select margin="dense" input={<OutlinedInput labelWidth={0} name="filterGroup" disabled={!groupsLoaded}/>
                                         }
@@ -536,7 +664,7 @@ class InvitedUsers extends Component {
                                             {
                                                 !groupsLoaded
                                                     ?
-                                                    "Loading courses ..."
+                                                    "Loading universities ..."
                                                     :
                                                     "All"
                                             }
@@ -546,9 +674,11 @@ class InvitedUsers extends Component {
                                                 ?
                                                 null
                                                 :
-                                                systemGroups.map(group => (
-                                                    <MenuItem value={group.anid} key={group.anid}>{group.displayName}</MenuItem>
-                                                ))
+                                                systemGroups
+                                                    .filter(group => !group.parentGroupId)
+                                                    .map(group => (
+                                                        <MenuItem value={group.anid} key={group.anid}>{group.displayName}</MenuItem>
+                                                    ))
                                         }
                                     </Select>
                                 </FormControl>
@@ -661,7 +791,7 @@ class InvitedUsers extends Component {
 
                             <InfoOverlay placement="right"
                                 message={
-                                    admin.superAdmin
+                                    (admin.superAdmin || admin.superGroupAdmin)
                                         ?
                                         "Export all the users in the system to a .csv file."
                                         :
@@ -714,12 +844,12 @@ class InvitedUsers extends Component {
                                 </FlexView>
                             </TableCell>
                             {
-                                !admin.superAdmin
+                                !(admin.superAdmin || admin.superGroupAdmin)
                                     ?
                                     null
                                     :
                                     <TableCell colSpan={2}>
-                                        <Typography align="left" variant="body2"><b>Group</b></Typography>
+                                        <Typography align="left" variant="body2"><b>University</b></Typography>
                                     </TableCell>
                             }
                             <TableCell colSpan={1} style={{ cursor: 'pointer' }} onClick={() => this.handleSort('userType')}>
@@ -913,8 +1043,8 @@ class InvitedUsers extends Component {
                                             :
                                             // this check to ensure only the group admin that initally invited this
                                             // user can resend the invitation
-                                            admin.superAdmin
-                                            || (!admin.superAdmin
+                                            (admin.superAdmin || admin.superGroupAdmin)
+                                            || (!(admin.superAdmin || admin.superGroupAdmin)
                                                 && groupProperties
                                                 && groupProperties.anid !== invitedUser.invitedBy
                                             )
@@ -926,9 +1056,9 @@ class InvitedUsers extends Component {
                                                 </FlexView>
                                     }
 
-                                    {/** Display home/platform members */}
+                                    {/** Display enrolled course or platform member status */}
                                     {
-                                        admin.superAdmin
+                                        (admin.superAdmin || admin.superGroupAdmin)
                                             ?
                                             null
                                             :
@@ -937,7 +1067,7 @@ class InvitedUsers extends Component {
                                                     invitedUser.hasOwnProperty('invitedDate')
                                                     && invitedUser.invitedDate !== "none"
                                                         ?
-                                                        "Home member"
+                                                        this.getCourseDisplayName(invitedUser)
                                                         :
                                                         "Platform member"
                                                 }
@@ -949,30 +1079,13 @@ class InvitedUsers extends Component {
                             {/** Email */}
                             <TableCell colSpan={2}>
                                 <FlexView column>
-                                    <Typography align="left" variant="body2" paragraph={admin.superAdmin}>{invitedUser.email}</Typography>
-
-                                    {
-                                        admin.superAdmin
-                                            ?
-                                            <FlexView column>
-                                                <Typography align="left" variant="body2" color="textSecondary"><b><u>Invited ID:</u></b> {invitedUser.id}</Typography>
-                                                {
-                                                    !invitedUser.hasOwnProperty('officialUserID')
-                                                        ?
-                                                        null
-                                                        :
-                                                        <Typography align="left" variant="body2" color="textSecondary"><b><u>UID:</u></b> {invitedUser.officialUserID}</Typography>
-                                                }
-                                            </FlexView>
-                                            :
-                                            null
-                                    }
+                                    <Typography align="left" variant="body2">{invitedUser.email}</Typography>
                                 </FlexView>
                             </TableCell>
 
-                            {/** Group the user belongs to - available only for super admins */}
+                            {/** Group the user belongs to - available only for super admins and super group admins */}
                             {
-                                !admin.superAdmin
+                                !(admin.superAdmin || admin.superGroupAdmin)
                                     ?
                                     null
                                     :
@@ -987,7 +1100,7 @@ class InvitedUsers extends Component {
                                                     invitedUser.hasOwnProperty('invitedDate')
                                                     && invitedUser.invitedDate !== "none"
                                                         ?
-                                                        "Home member"
+                                                        this.getCourseDisplayName(invitedUser)
                                                         :
                                                         "Platform member"
                                                 }

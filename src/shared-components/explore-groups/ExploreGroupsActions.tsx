@@ -6,6 +6,8 @@ import AccessRequest, {AccessRequestInstance} from "../../models/access_request"
 import AccessRequestRepository from "../../api/repositories/AccessRequestRepository";
 import Admin, {isAdmin} from "../../models/admin";
 import React from "react";
+import firebase from "../../firebase/firebaseApp";
+import * as DB_CONST from "../../firebase/databaseConsts";
 
 export enum ExploreGroupsEvents {
     FetchingGroups = "ExploreGroupsEvents.FetchingGroups",
@@ -80,29 +82,32 @@ export const fetchGroups: ActionCreator<any> = () => {
             groups: []
         };
 
-        if (!currentUser) {
-            completeAction.error = "Unauthenticated user.";
-            return dispatch(completeAction);
-        }
-
         try {
+            // Fetch universities from the API (works for both authenticated and unauthenticated users)
             const groupsResponse = await new GroupRepository().fetchGroups(
                 nameFilter.trim().length === 0 ? undefined : {name: nameFilter}
             );
-            completeAction.groups = groupsResponse.data;
+            const universities = groupsResponse.data;
 
-            const admin: Admin | null = isAdmin(currentUser);
-            if (!admin || (admin && !admin.superAdmin)) {
-                // user is an issuer, investor, or group admin
-                // and access requests have not been fetched
-                if (!accessRequestsInstances) {
-                    const accessRequestInstancesResponse = await new AccessRequestRepository().fetchAccessRequests({
-                        user: currentUser.id,
-                        orderBy: "user"
-                    });
-                    completeAction.accessRequestInstances = accessRequestInstancesResponse.data;
+            // Only include universities in the filter (courses will be shown nested within their parent university)
+            completeAction.groups = universities;
+
+            // Fetch access requests only for authenticated non-admin users
+            if (currentUser) {
+                const admin: Admin | null = isAdmin(currentUser);
+                if (!admin || (admin && !admin.superAdmin)) {
+                    // user is an issuer, investor, or group admin
+                    // and access requests have not been fetched
+                    if (!accessRequestsInstances) {
+                        const accessRequestInstancesResponse = await new AccessRequestRepository().fetchAccessRequests({
+                            user: currentUser.id,
+                            orderBy: "user"
+                        });
+                        completeAction.accessRequestInstances = accessRequestInstancesResponse.data;
+                    }
                 }
             }
+
             dispatch(completeAction);
             return dispatch(filterGroupsByGroupFilter());
         } catch (error) {
@@ -160,39 +165,64 @@ const filterGroupsByGroupFilter: ActionCreator<any> = () => {
         const AuthenticationState = getState().AuthenticationState;
         const currentUser = AuthenticationState.currentUser;
 
-        if (!currentUser) {
-            return;
-        }
-
         const groupsFiltered: GroupProperties[] = [];
+
+        // Check if user is a super admin or super group admin (only if authenticated)
+        const admin: Admin | null = currentUser ? isAdmin(currentUser) : null;
+        const isSuperAdmin = admin && (admin.superAdmin || admin.superGroupAdmin);
+
+        // For normal users (non-super admins), find their university
+        let userUniversityId: string | null = null;
+        if (currentUser && !isSuperAdmin) {
+            // Find the university the user belongs to by looking at their group memberships
+            for (const membership of AuthenticationState.groupsOfMembership) {
+                const memberGroup = membership.group;
+
+                // If user is directly in a university
+                if (!memberGroup.parentGroupId) {
+                    userUniversityId = memberGroup.anid;
+                    break;
+                }
+
+                // If user is in a course, get the parent university ID
+                if (memberGroup.parentGroupId) {
+                    userUniversityId = memberGroup.parentGroupId;
+                    break;
+                }
+            }
+        }
 
         groups.map(group => {
             let satisfiedFilter = false;
+
+            // Filtering logic based on groupFilter
             switch (groupFilter) {
                 case "all":
-                    const admin: Admin | null = isAdmin(currentUser);
-                    if (admin && admin.superAdmin) {
+                    // Show all universities (top-level groups without parentGroupId)
+                    // Courses will be shown within their parent university's dropdown
+                    if (!group.parentGroupId) {
                         satisfiedFilter = true;
-                    } else {
-                        satisfiedFilter = AuthenticationState.groupsOfMembership.findIndex(
-                            groupOfMembership => groupOfMembership.group.anid === group.anid) === -1
-                            && accessRequestsInstances !== undefined
-                            && accessRequestsInstances.findIndex(
-                                accessRequestInstance => accessRequestInstance.group.anid === group.anid) === -1;
                     }
                     break;
                 case "groupsOfMembership":
-                    satisfiedFilter = AuthenticationState.groupsOfMembership.findIndex(
-                        groupOfMembership => groupOfMembership.group.anid === group.anid) !== -1;
-                    break;
-                case "groupsOfPendingRequest":
-                    satisfiedFilter = accessRequestsInstances !== undefined
-                        && accessRequestsInstances.findIndex(
-                            accessRequestInstance => accessRequestInstance.group.anid === group.anid) !== -1;
+                    // Show universities where the user has membership in the university itself
+                    // or in any of its courses
+                    if (!group.parentGroupId) {
+                        // Check if user is member of this university
+                        const isMemberOfUniversity = AuthenticationState.groupsOfMembership.findIndex(
+                            groupOfMembership => groupOfMembership.group.anid === group.anid) !== -1;
+
+                        // Check if user is member of any course under this university
+                        const isMemberOfAnyCourse = AuthenticationState.groupsOfMembership.some(
+                            groupOfMembership => groupOfMembership.group.parentGroupId === group.anid);
+
+                        satisfiedFilter = isMemberOfUniversity || isMemberOfAnyCourse;
+                    }
                     break;
                 default:
                     break;
             }
+
             if (satisfiedFilter) {
                 groupsFiltered.push(group);
             }

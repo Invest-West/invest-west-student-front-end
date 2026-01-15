@@ -3,6 +3,7 @@ import GroupOfMembership, {getHomeGroup} from "../models/group_of_membership";
 import {AuthenticationState} from "../redux-store/reducers/authenticationReducer";
 import {ManageGroupUrlState} from "../redux-store/reducers/manageGroupUrlReducer";
 import User, {isInvestor} from "../models/user";
+import GroupProperties, {isCourse, isUniversity} from "../models/group_properties";
 
 export interface CreateProjectRouteParams {
     edit?: string;
@@ -12,61 +13,83 @@ export interface CreateProjectRouteParams {
 
 export default class Routes {
     static baseGroup: string = "/groups/:groupUserName";
+    static baseCourse: string = "/groups/:groupUserName/:courseUserName";
 
     static nonGroupFront: string = "/";
     static groupFront: string = `${Routes.baseGroup}`;
+    static courseFront: string = `${Routes.baseCourse}`;
 
     static nonGroupAbout: string = "/about";  
     static groupAbout: string = `${Routes.baseGroup}/about`;
+    static courseAbout: string = `${Routes.baseCourse}/about`;
     
     static nonGroupHiw: string = "/Hiw";
     static groupHiw: string = `${Routes.baseGroup}/Hiw`;
+    static courseHiw: string = `${Routes.baseCourse}/Hiw`;
 
     static nonGroupContact: string = "/contact-us-front";
     static groupContact: string = `${Routes.baseGroup}/contact-us-front`;
+    static courseContact: string = `${Routes.baseCourse}/contact-us-front`;
 
     static nonGroupExploreFront: string = "/explore";
     static groupExploreFront: string = `${Routes.baseGroup}/explore`;
+    static courseExploreFront: string = `${Routes.baseCourse}/explore`;
 
-    static nonGroupSignIn: string = "/groups/invest-west/signin";
+    static nonGroupSignIn: string = "/groups/invest-west/student-showcase/signin";
     static groupSignIn: string = `${Routes.baseGroup}/signin`;
+    static courseSignIn: string = `${Routes.baseCourse}/signin`;
     static superAdminSignIn: string = "/signin/super-admin";
 
-    static nonGroupSignUp:string = "/groups/invest-west/signup";
+    static nonGroupSignUp:string = "/groups/invest-west/student-showcase/signup";
     static groupSignUp: string = `${Routes.baseGroup}/signup/:id?`;
+    static courseSignUp: string = `${Routes.baseCourse}/signup/:id?`;
 
     static nonGroupAdminDashboard: string = "/admin";
     static groupAdminDashboard: string = `${Routes.baseGroup}/admin`;
+    static courseAdminDashboard: string = `${Routes.baseCourse}/admin`;
 
+    static nonGroupIssuerDashboard: string = "/groups/invest-west/student-showcase/dashboard/issuer";
     static groupIssuerDashboard: string = `${Routes.baseGroup}/dashboard/issuer`;
+    static courseIssuerDashboard: string = `${Routes.baseCourse}/dashboard/issuer`;
 
+    static nonGroupInvestorDashboard: string = "/groups/invest-west/student-showcase/dashboard/investor";
     static groupInvestorDashboard: string = `${Routes.baseGroup}/dashboard/investor`;
+    static courseInvestorDashboard: string = `${Routes.baseCourse}/dashboard/investor`;
 
     static nonGroupViewUserProfile: string = "/view-profile/:userID";
     static groupViewUserProfile: string = `${Routes.baseGroup}/view-profile/:userID`;
+    static courseViewUserProfile: string = `${Routes.baseCourse}/view-profile/:userID`;
 
     static nonGroupEditUserProfile: string = "/edit-profile/:userID";
     static groupEditUserProfile: string = `${Routes.baseGroup}/edit-profile/:userID`;
+    static courseEditUserProfile: string = `${Routes.baseCourse}/edit-profile/:userID`;
 
     static nonGroupCreateOffer: string = "/create-offer";
     static groupCreateOffer: string = `${Routes.baseGroup}/create-offer`;
+    static courseCreateOffer: string = `${Routes.baseCourse}/create-offer`;
 
     static nonGroupViewOffer: string = "/projects/:projectID";
     static groupViewOffer: string = `${Routes.baseGroup}/projects/:projectID`;
+    static courseViewOffer: string = `${Routes.baseCourse}/projects/:projectID`;
 
     static nonGroupViewPledge: string = "/pledge";
     static groupViewPledge: string = `${Routes.baseGroup}/pledge`;
+    static courseViewPledge: string = `${Routes.baseCourse}/pledge`;
 
     static nonGroupViewGroup: string = "/view-group-details/:viewedGroupUserName";
     static groupViewGroup: string = `${Routes.baseGroup}/view-group-details/:viewedGroupUserName`;
+    static courseViewGroup: string = `${Routes.baseCourse}/view-group-details/:viewedGroupUserName`;
 
     static nonGroupViewResourceDetail: string = "/resources/:resourceName";
     static groupViewResourceDetail: string = `${Routes.baseGroup}/resources/:resourceName`;
+    static courseViewResourceDetail: string = `${Routes.baseCourse}/resources/:resourceName`;
 
     static nonGroupContactUs: string = "/contact-us";
     static groupContactUs: string = `${Routes.baseGroup}/contact-us`;
+    static courseContactUs: string = `${Routes.baseCourse}/contact-us`;
 
     static groupHelp: string = `${Routes.baseGroup}/help`;
+    static courseHelp: string = `${Routes.baseCourse}/help`;
 
     static nonGroupTermsOfUse: string = "/terms-of-use";
     static nonGroupPrivacyPolicy: string = "/privacy-policy";
@@ -86,20 +109,28 @@ export default class Routes {
     public static isProtectedRoute = (route: string) => {
         return route !== Routes.nonGroupFront
             && route !== Routes.groupFront
+            && route !== Routes.courseFront
             && route !== Routes.nonGroupAbout
             && route !== Routes.groupAbout
+            && route !== Routes.courseAbout
             && route !== Routes.nonGroupHiw
             && route !== Routes.groupHiw
+            && route !== Routes.courseHiw
             && route !== Routes.nonGroupSignIn
             && route !== Routes.nonGroupContact
             && route !== Routes.nonGroupExploreFront
             && route !== Routes.groupExploreFront
+            && route !== Routes.courseExploreFront
             && route !== Routes.groupContact
+            && route !== Routes.courseContact
             && route !== Routes.groupSignIn
+            && route !== Routes.courseSignIn
             && route !== Routes.nonGroupSignUp
             && route !== Routes.groupSignUp
+            && route !== Routes.courseSignUp
             && route !== Routes.nonGroupContactUs
             && route !== Routes.groupContactUs
+            && route !== Routes.courseContactUs
             && route !== Routes.nonGroupPrivacyPolicy
             && route !== Routes.nonGroupTermsOfUse
             && route !== Routes.nonGroupRiskWarning
@@ -108,7 +139,8 @@ export default class Routes {
             && route !== Routes.nonGroupAuthAction
             && route !== Routes.error404
             && route !== Routes.nonGroupViewOffer
-            && route !== Routes.groupViewOffer;
+            && route !== Routes.groupViewOffer
+            && route !== Routes.courseViewOffer;
     }
 
     /**
@@ -131,7 +163,7 @@ export default class Routes {
      * @param route
      */
     public static isGroupAdminRoute = (route: string) => {
-        return route === Routes.groupAdminDashboard;
+        return route === Routes.groupAdminDashboard || route === Routes.courseAdminDashboard;
     }
 
     /**
@@ -140,7 +172,7 @@ export default class Routes {
      * @param route
      */
     public static isIssuerDashboardRoute = (route: string) => {
-        return route === Routes.groupIssuerDashboard;
+        return route === Routes.nonGroupIssuerDashboard || route === Routes.groupIssuerDashboard || route === Routes.courseIssuerDashboard;
     }
 
     /**
@@ -149,7 +181,7 @@ export default class Routes {
      * @param route
      */
     public static isInvestorDashboardRoute = (route: string) => {
-        return route === Routes.groupInvestorDashboard;
+        return route === Routes.nonGroupInvestorDashboard || route === Routes.groupInvestorDashboard || route === Routes.courseInvestorDashboard;
     }
 
     /**
@@ -158,7 +190,7 @@ export default class Routes {
      * @param route
      */
     public static isCreateOfferRoute = (route: string) => {
-        return route === Routes.groupCreateOffer || route === Routes.nonGroupCreateOffer;
+        return route === Routes.groupCreateOffer || route === Routes.courseCreateOffer || route === Routes.nonGroupCreateOffer;
     }
 
     /**
@@ -167,7 +199,7 @@ export default class Routes {
      * @param route
      */
     public static isSignInRoute = (route: string) => {
-        return route === Routes.nonGroupSignIn || route === Routes.groupSignIn || route === Routes.superAdminSignIn;
+        return route === Routes.nonGroupSignIn || route === Routes.groupSignIn || route === Routes.courseSignIn || route === Routes.superAdminSignIn;
     }
 
     /**
@@ -185,7 +217,7 @@ export default class Routes {
      * @param route
      */
     public static isSignUpRoute = (route: string) => {
-        return route === Routes.nonGroupSignUp || route === Routes.groupSignUp;
+        return route === Routes.nonGroupSignUp || route === Routes.groupSignUp || route === Routes.courseSignUp;
     }
 
     /**
@@ -239,54 +271,96 @@ export default class Routes {
      */
     public static constructHomeRoute = (routeParams: any, ManageGroupUrlState: ManageGroupUrlState,
                                         AuthenticationState: AuthenticationState) => {
-        let route: string = "";
-
+        
+        // If no user is authenticated, default to invest-west course-based navigation
         if (!AuthenticationState.currentUser) {
-            if (!routeParams.groupUserName) {
-                return Routes.nonGroupFront;
+            if (routeParams.groupUserName && routeParams.courseUserName) {
+                const route = Routes.courseFront
+                    .replace(":groupUserName", routeParams.groupUserName)
+                    .replace(":courseUserName", routeParams.courseUserName);
+                return route;
+            } else if (routeParams.groupUserName) {
+                // Default to a course within the group
+                const route = Routes.courseFront
+                    .replace(":groupUserName", routeParams.groupUserName)
+                    .replace(":courseUserName", "student-showcase");
+                return route;
             } else {
-                return Routes.groupFront.replace(":groupUserName", routeParams.groupUserName);
+                // Default to invest-west with student-showcase course
+                const route = Routes.courseFront
+                    .replace(":groupUserName", "invest-west")
+                    .replace(":courseUserName", "student-showcase");
+                return route;
             }
         }
 
         const currentAdmin: Admin | null = isAdmin(AuthenticationState.currentUser);
-        // an admin MUST use the correct sign in page to sign in
-        if (currentAdmin) {
-            // current admin is a super admin
-            if (currentAdmin.superAdmin) {
-                route = Routes.nonGroupFront;
+        
+        // Helper function to get course route with invest-west/student-showcase fallback
+        const getCourseRouteForUser = (): string => {
+            // First priority: Use both group and course from URL if user is a member
+            if (routeParams.groupUserName && routeParams.courseUserName && AuthenticationState.groupsOfMembership
+                .some(membership => membership.group.groupUserName === routeParams.groupUserName)) {
+                return Routes.courseFront
+                    .replace(":groupUserName", routeParams.groupUserName)
+                    .replace(":courseUserName", routeParams.courseUserName);
             }
-            // current admin is not a super admin
-            else {
-                if (AuthenticationState.groupsOfMembership.length === 1) {
-                    const adminGroup: GroupOfMembership = AuthenticationState.groupsOfMembership[0];
-                    route = Routes.groupFront.replace(":groupUserName", adminGroup.group.groupUserName);
-                }
+            
+            // Second priority: Use group from URL with default course
+            if (routeParams.groupUserName && AuthenticationState.groupsOfMembership
+                .some(membership => membership.group.groupUserName === routeParams.groupUserName)) {
+                return Routes.courseFront
+                    .replace(":groupUserName", routeParams.groupUserName)
+                    .replace(":courseUserName", "student-showcase");
             }
-        }
-            // an investor or an issuer can use any sign in page (group sign in page) to sign in,
-        // except the Invest West sign in page (with no group parameter) as it is reserved for the super admins only
-        else {
+            
+            // Third priority: Look for invest-west group specifically
+            const investWestGroup = AuthenticationState.groupsOfMembership
+                .find(membership => membership.group.groupUserName === 'invest-west');
+            if (investWestGroup) {
+                return Routes.courseFront
+                    .replace(":groupUserName", "invest-west")
+                    .replace(":courseUserName", "student-showcase");
+            }
+            
+            // Fourth priority: Use home group if available
             const homeGroup: GroupOfMembership | null = getHomeGroup(AuthenticationState.groupsOfMembership);
-            if (routeParams.groupUserName) {
-                if (AuthenticationState.groupsOfMembership
-                    .filter(groupOfMembership =>
-                        groupOfMembership.group.groupUserName === routeParams.groupUserName).length > 0
-                ) {
-                    route = Routes.groupFront.replace(":groupUserName", routeParams.groupUserName);
-                } else if (homeGroup) {
-                    route = Routes.groupFront.replace(":groupUserName", homeGroup.group.groupUserName);
-                }
-            } else if (homeGroup) {
-                route = Routes.groupFront.replace(":groupUserName", homeGroup.group.groupUserName);
+            if (homeGroup) {
+                return Routes.courseFront
+                    .replace(":groupUserName", homeGroup.group.groupUserName)
+                    .replace(":courseUserName", "student-showcase");
+            }
+            
+            // Fifth priority: Use first available group
+            if (AuthenticationState.groupsOfMembership.length > 0) {
+                return Routes.courseFront
+                    .replace(":groupUserName", AuthenticationState.groupsOfMembership[0].group.groupUserName)
+                    .replace(":courseUserName", "student-showcase");
+            }
+            
+            // Final fallback: invest-west/student-showcase
+            return Routes.courseFront
+                .replace(":groupUserName", "invest-west")
+                .replace(":courseUserName", "student-showcase");
+        };
+
+        // Handle admin users
+        if (currentAdmin) {
+            // Super admin → system front page
+            if (currentAdmin.superAdmin) {
+                return Routes.nonGroupFront;
+            }
+            // Group admin → use their group with default course
+            else if (AuthenticationState.groupsOfMembership.length > 0) {
+                const adminGroup: GroupOfMembership = AuthenticationState.groupsOfMembership[0];
+                return Routes.courseFront
+                    .replace(":groupUserName", adminGroup.group.groupUserName)
+                    .replace(":courseUserName", "student-showcase");
             }
         }
-
-        if (!route) {
-            return Routes.nonGroupFront;
-        }
-
-        return route;
+        
+        // Handle regular users (investors/issuers)
+        return getCourseRouteForUser();
     }
 
     /**
@@ -295,9 +369,17 @@ export default class Routes {
      * @param routeParams
      */
     public static constructSignInRoute = (routeParams: any) => {
-        if (routeParams.groupUserName) {
-            return Routes.groupSignIn.replace(":groupUserName", routeParams.groupUserName);
+        if (routeParams.courseUserName && routeParams.groupUserName) {
+            return Routes.courseSignIn
+                .replace(":groupUserName", routeParams.groupUserName)
+                .replace(":courseUserName", routeParams.courseUserName);
+        } else if (routeParams.groupUserName) {
+            // Default to student-showcase course for group-based URLs
+            return Routes.courseSignIn
+                .replace(":groupUserName", routeParams.groupUserName)
+                .replace(":courseUserName", "student-showcase");
         } else {
+            // Default to invest-west/student-showcase course
             return Routes.nonGroupSignIn;
         }
     }
@@ -307,9 +389,15 @@ export default class Routes {
      *
      * @param groupUserName
      * @param invitedUserID
+     * @param courseUserName
      */
-    public static constructSignUpRoute = (groupUserName: string, invitedUserID?: string) => {
-        if (groupUserName) {
+    public static constructSignUpRoute = (groupUserName: string, invitedUserID?: string, courseUserName?: string) => {
+        if (courseUserName && groupUserName) {
+            return Routes.courseSignUp
+                .replace(":groupUserName", groupUserName)
+                .replace(":courseUserName", courseUserName)
+                .replace(invitedUserID ? ":id?" : "/:id?", invitedUserID ?? "");
+        } else if (groupUserName) {
             return Routes.groupSignUp
                 .replace(":groupUserName", groupUserName)
                 .replace(invitedUserID ? ":id?" : "/:id?", invitedUserID ?? "");
@@ -319,18 +407,131 @@ export default class Routes {
     }
 
     /**
-     * Construct sign in route (navigate to Sign in page)
+     * Construct contact us route (navigate to Contact Us page)
      *
      * @param routeParams
      */
     public static constructContactUsRoute = (routeParams: any) => {
         if (routeParams.groupUserName) {
-            return Routes.groupContactUs.replace(":groupUserName", routeParams.groupUserName);
+            if (routeParams.courseUserName) {
+                // Course-based URL - maintain course parameter
+                const route = Routes.courseContactUs
+                    .replace(":groupUserName", routeParams.groupUserName)
+                    .replace(":courseUserName", routeParams.courseUserName);
+                return route;
+            } else {
+                // Group-based URL
+                const route = Routes.groupContactUs.replace(":groupUserName", routeParams.groupUserName);
+                return route;
+            }
         } else {
             return Routes.nonGroupContactUs;
         }
     }
 
+    /**
+     * Construct HIW route (How It Works) - maintains course parameter
+     */
+    public static constructHiwRoute = (routeParams: any) => {
+        
+        if (routeParams.groupUserName) {
+            if (routeParams.courseUserName) {
+                // Course-based URL - maintain course parameter
+                const route = Routes.courseHiw
+                    .replace(":groupUserName", routeParams.groupUserName)
+                    .replace(":courseUserName", routeParams.courseUserName);
+                return route;
+            } else {
+                // Group-based URL  
+                const route = Routes.groupHiw.replace(":groupUserName", routeParams.groupUserName);
+                return route;
+            }
+        } else {
+            // No group specified - default to course-based invest-west
+            const route = Routes.courseHiw
+                .replace(":groupUserName", "invest-west")
+                .replace(":courseUserName", "student-showcase");
+            return route;
+        }
+    }
+
+    /**
+     * Construct About route - maintains course parameters in navigation
+     */
+    public static constructAboutRoute = (routeParams: any) => {
+        
+        if (routeParams.groupUserName) {
+            if (routeParams.courseUserName) {
+                // Course-based URL - maintain course parameter
+                const route = Routes.courseAbout
+                    .replace(":groupUserName", routeParams.groupUserName)
+                    .replace(":courseUserName", routeParams.courseUserName);
+                return route;
+            } else {
+                // Group-based URL  
+                const route = Routes.groupAbout.replace(":groupUserName", routeParams.groupUserName);
+                return route;
+            }
+        } else {
+            // No group specified - default to course-based invest-west
+            const route = Routes.courseAbout
+                .replace(":groupUserName", "invest-west")
+                .replace(":courseUserName", "student-showcase");
+            return route;
+        }
+    }
+
+    /**
+     * Construct Contact route - maintains course parameters in navigation
+     */
+    public static constructContactRoute = (routeParams: any) => {
+        
+        if (routeParams.groupUserName) {
+            if (routeParams.courseUserName) {
+                // Course-based URL - maintain course parameter
+                const route = Routes.courseContact
+                    .replace(":groupUserName", routeParams.groupUserName)
+                    .replace(":courseUserName", routeParams.courseUserName);
+                return route;
+            } else {
+                // Group-based URL  
+                const route = Routes.groupContact.replace(":groupUserName", routeParams.groupUserName);
+                return route;
+            }
+        } else {
+            // No group specified - default to course-based invest-west
+            const route = Routes.courseContact
+                .replace(":groupUserName", "invest-west")
+                .replace(":courseUserName", "student-showcase");
+            return route;
+        }
+    }
+
+    /**
+     * Construct Explore route - maintains course parameters in navigation
+     */
+    public static constructExploreRoute = (routeParams: any) => {
+        
+        if (routeParams.groupUserName) {
+            if (routeParams.courseUserName) {
+                // Course-based URL - maintain course parameter
+                const route = Routes.courseExploreFront
+                    .replace(":groupUserName", routeParams.groupUserName)
+                    .replace(":courseUserName", routeParams.courseUserName);
+                return route;
+            } else {
+                // Group-based URL  
+                const route = Routes.groupExploreFront.replace(":groupUserName", routeParams.groupUserName);
+                return route;
+            }
+        } else {
+            // No group specified - default to course-based invest-west
+            const route = Routes.courseExploreFront
+                .replace(":groupUserName", "invest-west")
+                .replace(":courseUserName", "student-showcase");
+            return route;
+        }
+    }
 
     /**
      * Construct explore offers route (navigate to Explore Offers page)
@@ -367,8 +568,17 @@ export default class Routes {
                         const adminGroup: GroupOfMembership = AuthenticationState.groupsOfMembership[0];
                         return Routes.groupExploreFront.replace(":groupUserName", adminGroup.group.groupUserName);
                     }
+                    // Fallback for admin with no groups
+                    return Routes.groupExploreFront.replace(":groupUserName", "invest-west");
                 }
             } else {
+                // Look for invest-west group specifically first
+                const investWestGroup = AuthenticationState.groupsOfMembership
+                    .find(membership => membership.group.groupUserName === 'invest-west');
+                if (investWestGroup) {
+                    return Routes.groupExploreFront.replace(":groupUserName", "invest-west");
+                }
+
                 const homeGroup: GroupOfMembership | null = getHomeGroup(AuthenticationState.groupsOfMembership);
                 if (homeGroup) {
                     return Routes.groupExploreFront.replace(":groupUserName", homeGroup.group.groupUserName);
@@ -380,8 +590,10 @@ export default class Routes {
             }
         }
 
-        // Default fallback
-        return Routes.nonGroupExploreFront;
+        // Default fallback to invest-west/student-showcase course instead of non-group
+        return Routes.courseExploreFront
+            .replace(":groupUserName", "invest-west")
+            .replace(":courseUserName", "student-showcase");
     }
 
     /**
@@ -393,62 +605,172 @@ export default class Routes {
      */
     public static constructDashboardRoute = (routeParams: any, ManageGroupUrlState: ManageGroupUrlState,
                                              AuthenticationState: AuthenticationState) => {
-        let route: string = "";
-
         if (!AuthenticationState.currentUser) {
             return Routes.constructSignInRoute(routeParams);
         }
 
         const currentAdmin: Admin | null = isAdmin(AuthenticationState.currentUser);
-        // an admin MUST use the correct sign in page to sign in
+
+        /**
+         * Helper to extract university and course usernames from user's group membership
+         * Returns { universityUserName: string, courseUserName: string }
+         *
+         * NOTE: Admins use groupsOfMembership for courses, but Issuers/Investors have course in user.course field
+         */
+        const getUniversityAndCourseForUser = (): { universityUserName: string, courseUserName: string } => {
+            // First, try to match URL parameters if provided
+            if (routeParams.groupUserName && routeParams.courseUserName) {
+                // Verify user has membership to BOTH university AND course
+                const hasUniversityMembership = AuthenticationState.groupsOfMembership
+                    .some(m => m.group.groupUserName === routeParams.groupUserName && isUniversity(m.group));
+                const hasCourseMembership = AuthenticationState.groupsOfMembership
+                    .some(m => m.group.groupUserName === routeParams.courseUserName && isCourse(m.group));
+
+                // IMPORTANT: User must have access to BOTH to use route params
+                if (hasUniversityMembership && hasCourseMembership) {
+                    return {
+                        universityUserName: routeParams.groupUserName,
+                        courseUserName: routeParams.courseUserName
+                    };
+                }
+            }
+
+            // For non-admin users (issuers/investors), check user.course field first
+            // IMPORTANT: Exclude '-1' which is a placeholder/uninitialized value during signup
+            const userCourseField = !currentAdmin ? (AuthenticationState.currentUser as User).course : undefined;
+
+            if (!currentAdmin && userCourseField && userCourseField !== '-1') {
+                const userCourse = userCourseField;
+
+                // Check if userCourse is a course anid (number) or course username (string)
+                // If it's an anid, we need to find the corresponding course in groupsOfMembership
+                const courseMembership = AuthenticationState.groupsOfMembership.find(m =>
+                    isCourse(m.group) && (m.group.anid === userCourse || m.group.groupUserName === userCourse)
+                );
+
+                if (courseMembership) {
+                    const parentUniversity = AuthenticationState.groupsOfMembership.find(m =>
+                        m.group.anid === courseMembership.group.parentGroupId
+                    );
+
+                    return {
+                        universityUserName: parentUniversity ? parentUniversity.group.groupUserName : 'invest-west',
+                        courseUserName: courseMembership.group.groupUserName
+                    };
+                }
+
+                // If no match found in groupsOfMembership, assume userCourse is already a course username
+                return {
+                    universityUserName: 'invest-west',
+                    courseUserName: userCourse
+                };
+            }
+
+            // If user doesn't have access to requested URL or no URL was requested,
+            // find the user's ACTUAL assigned course (first course in their memberships)
+            const courseMemberships = AuthenticationState.groupsOfMembership.filter(m => isCourse(m.group));
+
+            if (courseMemberships.length > 0) {
+                const firstCourse = courseMemberships[0].group;
+
+                // Try to find parent university in memberships
+                const parentUniversity = AuthenticationState.groupsOfMembership
+                    .find(m => m.group.anid === firstCourse.parentGroupId);
+
+                if (parentUniversity) {
+                    return {
+                        universityUserName: parentUniversity.group.groupUserName,
+                        courseUserName: firstCourse.groupUserName
+                    };
+                }
+
+                // If parent not in memberships but parentGroup is populated
+                if (firstCourse.parentGroup) {
+                    return {
+                        universityUserName: firstCourse.parentGroup.groupUserName,
+                        courseUserName: firstCourse.groupUserName
+                    };
+                }
+
+                // Fallback: extract university from course username
+                const courseUserName = firstCourse.groupUserName;
+                if (courseUserName.startsWith('invest-west-')) {
+                    return {
+                        universityUserName: 'invest-west',
+                        courseUserName: courseUserName
+                    };
+                }
+            }
+
+            // If user has NO course memberships, use DEFAULT
+            return {
+                universityUserName: 'invest-west',
+                courseUserName: 'student-showcase'
+            };
+        };
+
+        let route: string = "";
+
+        // Debug: Log current admin and memberships
+        console.log('[DASHBOARD DEBUG] Admin user:', {
+            adminId: currentAdmin?.id,
+            adminAnid: currentAdmin?.anid,
+            groupsOfMembershipCount: AuthenticationState.groupsOfMembership?.length || 0,
+            groups: AuthenticationState.groupsOfMembership?.map(m => ({
+                groupUserName: m.group.groupUserName,
+                displayName: m.group.displayName,
+                anid: m.group.anid,
+                isHomeGroup: m.isHomeGroup
+            }))
+        });
+
+        // Get university and course usernames based on user's membership
+        const { universityUserName, courseUserName } = getUniversityAndCourseForUser();
+
+        console.log('[DASHBOARD DEBUG] Determined university and course:', {
+            universityUserName,
+            courseUserName,
+            routeParams
+        });
+
+        // Handle admin users
         if (currentAdmin) {
-            // current admin is a super admin
-            // --> redirect to super admin dashboard
+            // Super admin → system admin dashboard
             if (currentAdmin.superAdmin) {
                 route = Routes.nonGroupAdminDashboard;
             }
-                // current admin is not a super admin
-            // --> redirect to group admin dashboard
+            // Group admin → course admin dashboard
             else {
-                if (AuthenticationState.groupsOfMembership.length === 1) {
-                    const adminGroup: GroupOfMembership = AuthenticationState.groupsOfMembership[0];
-                    route = Routes.groupAdminDashboard.replace(":groupUserName", adminGroup.group.groupUserName);
-                }
+                route = Routes.courseAdminDashboard
+                    .replace(":groupUserName", universityUserName)
+                    .replace(":courseUserName", courseUserName);
+                console.log('[DASHBOARD DEBUG] Constructed admin dashboard route:', route,
+                    `(university: ${universityUserName}, course: ${courseUserName})`);
             }
         }
-            // an investor or an issuer can use any sign in page (group sign in page) to sign in,
-        // except the Invest West sign in page (with no group parameter) as it is reserved for the super admins only
+        // Handle regular users (investors/issuers)
         else {
-            const homeGroup: GroupOfMembership | null = getHomeGroup(AuthenticationState.groupsOfMembership);
-            if (routeParams.groupUserName) {
-                if (AuthenticationState.groupsOfMembership
-                    .filter(groupOfMembership =>
-                        groupOfMembership.group.groupUserName === routeParams.groupUserName).length > 0
-                ) {
-                    if (isInvestor(AuthenticationState.currentUser as User)) {
-                        route = Routes.groupInvestorDashboard.replace(":groupUserName", routeParams.groupUserName);
-                    } else {
-                        route = Routes.groupIssuerDashboard.replace(":groupUserName", routeParams.groupUserName);
-                    }
-                } else if (homeGroup) {
-                    if (isInvestor(AuthenticationState.currentUser as User)) {
-                        route = Routes.groupInvestorDashboard.replace(":groupUserName", homeGroup.group.groupUserName);
-                    } else {
-                        route = Routes.groupIssuerDashboard.replace(":groupUserName", homeGroup.group.groupUserName);
-                    }
-                }
-            } else if (homeGroup) {
-                if (isInvestor(AuthenticationState.currentUser as User)) {
-                    route = Routes.groupInvestorDashboard.replace(":groupUserName", homeGroup.group.groupUserName);
-                } else {
-                    route = Routes.groupIssuerDashboard.replace(":groupUserName", homeGroup.group.groupUserName);
-                }
+            if (isInvestor(AuthenticationState.currentUser as User)) {
+                route = Routes.courseInvestorDashboard
+                    .replace(":groupUserName", universityUserName)
+                    .replace(":courseUserName", courseUserName);
+                console.log('[DASHBOARD DEBUG] Constructed investor dashboard route:', route,
+                    `(university: ${universityUserName}, course: ${courseUserName})`);
+            } else {
+                // Assume issuer if not investor
+                route = Routes.courseIssuerDashboard
+                    .replace(":groupUserName", universityUserName)
+                    .replace(":courseUserName", courseUserName);
+                console.log('[DASHBOARD DEBUG] Constructed issuer dashboard route:', route,
+                    `(university: ${universityUserName}, course: ${courseUserName})`);
             }
         }
 
-        if (route === "") {
+        // Fallback safety check
+        if (!route) {
             return Routes.constructSignInRoute(routeParams);
         }
+
         route += "?tab=Home";
         return route;
     }
@@ -457,12 +779,19 @@ export default class Routes {
      * Construct view project (offer) route
      *
      * @param groupUserName
+     * @param courseUserName
      * @param projectID
      */
-    public static constructProjectDetailRoute = (groupUserName: string | null, projectID: string) => {
+    public static constructProjectDetailRoute = (groupUserName: string | null, courseUserName: string | null, projectID: string) => {
         let route;
         if (groupUserName) {
-            route = Routes.groupViewOffer.replace(":groupUserName", groupUserName);
+            if (courseUserName) {
+                route = Routes.courseViewOffer
+                    .replace(":groupUserName", groupUserName)
+                    .replace(":courseUserName", courseUserName);
+            } else {
+                route = Routes.groupViewOffer.replace(":groupUserName", groupUserName);
+            }
         } else {
             route = Routes.nonGroupViewOffer;
         }
@@ -474,12 +803,19 @@ export default class Routes {
      * Construct create project (offer) route
      *
      * @param groupUserName
+     * @param courseUserName
      * @param params
      */
-    public static constructCreateProjectRoute = (groupUserName: string | null, params?: CreateProjectRouteParams) => {
+    public static constructCreateProjectRoute = (groupUserName: string | null, courseUserName?: string | null, params?: CreateProjectRouteParams) => {
         let route;
         if (groupUserName) {
-            route = Routes.groupCreateOffer.replace(":groupUserName", groupUserName);
+            if (courseUserName) {
+                route = Routes.courseCreateOffer
+                    .replace(":groupUserName", groupUserName)
+                    .replace(":courseUserName", courseUserName);
+            } else {
+                route = Routes.groupCreateOffer.replace(":groupUserName", groupUserName);
+            }
         } else {
             route = Routes.nonGroupCreateOffer;
         }
@@ -502,12 +838,19 @@ export default class Routes {
      * Construct view group route
      *
      * @param groupUserName
+     * @param courseUserName
      * @param viewedGroupUserName
      */
-    public static constructGroupDetailRoute = (groupUserName: string | null, viewedGroupUserName: string) => {
+    public static constructGroupDetailRoute = (groupUserName: string | null, courseUserName: string | null, viewedGroupUserName: string) => {
         let route;
         if (groupUserName) {
-            route = Routes.groupViewGroup.replace(":groupUserName", groupUserName);
+            if (courseUserName) {
+                route = Routes.courseViewGroup
+                    .replace(":groupUserName", groupUserName)
+                    .replace(":courseUserName", courseUserName);
+            } else {
+                route = Routes.groupViewGroup.replace(":groupUserName", groupUserName);
+            }
         } else {
             route = Routes.nonGroupViewGroup;
         }
@@ -519,14 +862,22 @@ export default class Routes {
      * Construct view resource detail route
      *
      * @param groupUserName
+     * @param courseUserName
      * @param resourceName
      */
-    public static constructViewResourceDetailRoute = (groupUserName: string | null, resourceName: string) => {
+    public static constructViewResourceDetailRoute = (groupUserName: string | null, courseUserName: string | null, resourceName: string) => {
         let route;
         if (groupUserName) {
-            route = Routes.groupViewResourceDetail
-                .replace(":groupUserName", groupUserName)
-                .replace(":resourceName", resourceName);
+            if (courseUserName) {
+                route = Routes.courseViewResourceDetail
+                    .replace(":groupUserName", groupUserName)
+                    .replace(":courseUserName", courseUserName)
+                    .replace(":resourceName", resourceName);
+            } else {
+                route = Routes.groupViewResourceDetail
+                    .replace(":groupUserName", groupUserName)
+                    .replace(":resourceName", resourceName);
+            }
         } else {
             route = Routes.nonGroupViewResourceDetail.replace(":resourceName", resourceName);
         }

@@ -27,6 +27,7 @@ import * as utils from "../../utils/utils";
 import sharedStyles from "../../shared-js-css-styles/SharedStyles";
 import {signOut} from "../../redux-store/actions/authenticationActions";
 import {School} from "@material-ui/icons";
+import {safeRemoveItem, safeSetItem} from "../../utils/browser";
 
 export const HOME_TAB = "Home";
 export const PROFILE_TAB = "Profile";
@@ -38,7 +39,7 @@ export const CHANGE_PASSWORD_TAB = "Change password";
 export const CONTACT_US_TAB = "Contact us";
 export const GUIDELINE_TAB = "Help";
 export const RESOURCES_TAB = "Resources";
-export const EXPLORE_GROUPS_TAB = "Explore courses";
+export const EXPLORE_GROUPS_TAB = "Explore Universities";
 export const EXPLORE_OFFERS_TAB = "Explore student projects";
 export const MY_ACTIVITIES_TAB = "My activities";
 export const GROUP_ACTIVITIES_TAB = "Audit Log";
@@ -79,10 +80,26 @@ class SidebarContent extends Component {
             signOutNew
         } = this.props;
 
-        await signOutNew();
-        dashboardProps.history.push(Routes.constructHomeRoute(dashboardProps.match.params, ManageGroupUrlState, AuthenticationState));
+        // CRITICAL: Set a logout flag FIRST to prevent GroupRoute from saving redirect URLs
+        safeSetItem('isLoggingOut', 'true');
 
+        // Clear any existing redirect URL immediately
+        safeRemoveItem('redirectToAfterAuth');
+
+        // Navigate to home BEFORE signing out to prevent race condition
+        // where GroupRoute saves the current protected route as redirectToAfterAuth
+        const homeRoute = Routes.constructHomeRoute(dashboardProps.match.params, ManageGroupUrlState, AuthenticationState);
+        dashboardProps.history.push(homeRoute);
+
+        // Small delay to ensure navigation happens before sign out
+        await new Promise(resolve => setTimeout(resolve, 100));
+
+        await signOutNew();
         logout(); // logout old
+
+        // Clear the logout flag and redirect URL one final time
+        safeRemoveItem('isLoggingOut');
+        safeRemoveItem('redirectToAfterAuth');
     };
 
     onForumsTabClick = () => {
@@ -114,7 +131,7 @@ class SidebarContent extends Component {
             >
                 {/** Sidebar header */}
                 <FlexView column height={65} vAlignContent="center" hAlignContent="center" style={{ padding: 8 }} >
-                    <Link href={groupProperties.website ?? ""} target="_blank">
+                    <Link href={groupProperties?.website ?? ""} target="_blank">
                         <Image
                             style={{ width: "auto", height: 65, margin: 0, padding: 10, objectFit: "scale-down" }}
                             src={
@@ -373,13 +390,7 @@ class SidebarContent extends Component {
                                 null
                                 :
                                 <NavLink
-                                    to={
-                                        groupUserName
-                                            ?
-                                            ROUTES.CONTACT_US.replace(':groupUserName', groupUserName)
-                                            :
-                                            ROUTES.CONTACT_US_INVEST_WEST_SUPER
-                                    }
+                                    to={Routes.constructContactUsRoute(dashboardProps.match.params)}
                                     className={css(sharedStyles.nav_link_white_text_hover_without_changing_text_color)}
                                 >
                                     <ListItem button onClick={() => toggleSidebar(false)} >
@@ -392,6 +403,7 @@ class SidebarContent extends Component {
                         }
 
                         {/** Help tab */}
+                        {/* COMMENTED OUT - Help menu removed from all accounts
                         {
                             // don't need to show this tab to super admin
                             user.type === DB_CONST.TYPE_ADMIN
@@ -417,6 +429,7 @@ class SidebarContent extends Component {
                                     </ListItem>
                                 </NavLink>
                         }
+                        */}
 
                         {/** Logout tab */}
                         <ListItem button onClick={this.onLogoutClick} >

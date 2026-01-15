@@ -86,8 +86,6 @@ export const calculatePaginationIndices = (state: ExploreOffersState) => {
 }
 
 const exploreOffersReducer = (state: ExploreOffersState = initialState, action: ExploreOffersAction) => {
-    console.log("Current state:", state);
-    console.log("Received action:", action);
     switch (action.type) {
         case ExploreOffersEvents.FetchingOffers:
             return {

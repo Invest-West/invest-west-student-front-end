@@ -6,9 +6,10 @@ import {
     ADD_NEW_GROUP_ADMIN_STATUS_CHECKING,
     ADD_NEW_GROUP_ADMIN_STATUS_EMAIL_USED,
     ADD_NEW_GROUP_ADMIN_STATUS_MISSING_EMAIL
-} from "../../pages/admin/components/GroupAdminsTable";
+} from "../../pages/admin/components/AngelNetworks";
 import * as feedbackSnackbarActions from "./feedbackSnackbarActions";
 import Api, {ApiRoutes} from "../../api/Api.tsx";
+import {getCoursesForUniversity} from "../../models/group_properties";
 
 export const GROUP_ADMINS_TABLE_SET_GROUP = 'GROUP_ADMINS_TABLE_SET_GROUP';
 export const setGroup = newGroup => {
@@ -37,7 +38,7 @@ export const setGroup = newGroup => {
 export const GROUP_ADMINS_TABLE_LOADING_GROUP_ADMINS = 'GROUP_ADMINS_TABLE_LOADING_GROUP_ADMINS';
 export const GROUP_ADMINS_TABLE_FINISHED_LOADING_GROUP_ADMINS = 'GROUP_ADMINS_TABLE_FINISHED_LOADING_GROUP_ADMINS';
 export const loadGroupAdmins = () => {
-    return (dispatch, getState) => {
+    return async (dispatch, getState) => {
         const currentUser = getState().auth.user;
         const tableGroup = getState().manageGroupAdminsTable.tableGroup;
 
@@ -49,35 +50,43 @@ export const loadGroupAdmins = () => {
             return;
         }
 
-        if (!currentUser.superAdmin) {
-            if (currentUser.anid !== tableGroup.anid) {
-                dispatch({
-                    type: GROUP_ADMINS_TABLE_FINISHED_LOADING_GROUP_ADMINS,
-                    groupAdmins: []
-                });
-                return;
-            }
-        }
-
         dispatch({
             type: GROUP_ADMINS_TABLE_LOADING_GROUP_ADMINS
         });
 
-        realtimeDBUtils
-        .loadGroupAdminsBasedOnGroupID(tableGroup.anid)
-        .then(groupAdmins => {
+        try {
+            let groupAdmins = [];
+
+            // Super admins OR super group admins see ALL admins
+            const isSuperUser = currentUser.superAdmin || currentUser.superGroupAdmin;
+
+            if (isSuperUser) {
+                // Super users see ALL admins from all universities
+                const snapshot = await firebase
+                    .database()
+                    .ref(DB_CONST.ADMINISTRATORS_CHILD)
+                    .once('value');
+
+                if (snapshot.exists()) {
+                    const adminsObject = snapshot.val();
+                    groupAdmins = Object.keys(adminsObject).map(key => adminsObject[key]);
+                }
+            } else {
+                // Regular group admins only see admins from their university
+                groupAdmins = await realtimeDBUtils.loadGroupAdminsBasedOnGroupID(currentUser.anid);
+            }
+
             dispatch({
                 type: GROUP_ADMINS_TABLE_FINISHED_LOADING_GROUP_ADMINS,
                 groupAdmins: [...groupAdmins]
             });
-        })
-        .catch(error => {
+        } catch (error) {
             console.error('Error loading group admins:', error);
             dispatch({
                 type: GROUP_ADMINS_TABLE_FINISHED_LOADING_GROUP_ADMINS,
                 groupAdmins: []
             });
-        });
+        }
     }
 };
 
@@ -105,10 +114,29 @@ export const toggleSearchMode = () => {
 };
 
 export const GROUP_ADMINS_TABLE_HANDLE_INPUT_CHANGED = 'GROUP_ADMINS_TABLE_HANDLE_INPUT_CHANGED';
+export const GROUP_ADMINS_TABLE_UNIVERSITY_CHANGED = 'GROUP_ADMINS_TABLE_UNIVERSITY_CHANGED';
+
 export const handleInputChanged = event => {
-    return {
-        type: GROUP_ADMINS_TABLE_HANDLE_INPUT_CHANGED,
-        event
+    return (dispatch, getState) => {
+        const {name, value} = event.target;
+
+        // If university is changed, load available courses
+        if (name === 'selectedUniversity') {
+            const systemGroups = getState().manageSystemGroups?.systemGroups || [];
+            const availableCourses = value ? getCoursesForUniversity(systemGroups, value) : [];
+
+            dispatch({
+                type: GROUP_ADMINS_TABLE_UNIVERSITY_CHANGED,
+                universityId: value,
+                availableCourses
+            });
+        } else {
+            // For other inputs, use the standard handler
+            dispatch({
+                type: GROUP_ADMINS_TABLE_HANDLE_INPUT_CHANGED,
+                event
+            });
+        }
     }
 };
 
@@ -122,9 +150,12 @@ export const toggleAddNewGroupAdminDialog = () => {
 export const GROUP_ADMINS_TABLE_ADD_NEW_GROUP_STATUS_CHANGED = 'GROUP_ADMINS_TABLE_ADD_NEW_GROUP_STATUS_CHANGED';
 export const handleAddNewGroupAdmin = () => {
     return async (dispatch, getState) => {
-        const newGroupAdminEmail = getState().manageGroupAdminsTable.newGroupAdminEmail;
-        const currentUser = getState().auth.user;
-        const groupProperties = getState().manageGroupFromParams.groupProperties;
+        const state = getState();
+        const newGroupAdminEmail = state.manageGroupAdminsTable.newGroupAdminEmail;
+        const selectedUniversity = state.manageGroupAdminsTable.selectedUniversity;
+        const selectedCourse = state.manageGroupAdminsTable.selectedCourse;
+        const currentUser = state.auth.user;
+        const systemGroups = state.manageSystemGroups?.systemGroups || [];
 
         if (!currentUser) {
             return;
@@ -138,12 +169,31 @@ export const handleAddNewGroupAdmin = () => {
             return;
         }
 
-        if (newGroupAdminEmail.trim().length === 0) {
+        // Validate email and university
+        if (newGroupAdminEmail.trim().length === 0 || !selectedUniversity) {
             dispatch({
                 type: GROUP_ADMINS_TABLE_ADD_NEW_GROUP_STATUS_CHANGED,
                 status: ADD_NEW_GROUP_ADMIN_STATUS_MISSING_EMAIL
             });
             return;
+        }
+
+        // Get the selected university's groupProperties
+        const universityGroupProperties = systemGroups.find(g => g.anid === selectedUniversity);
+        if (!universityGroupProperties) {
+            dispatch({
+                type: feedbackSnackbarActions.SET_FEEDBACK_SNACKBAR_CONTENT,
+                message: "Could not find selected university. Please try again.",
+                color: "error",
+                position: "bottom"
+            });
+            return;
+        }
+
+        // Get course properties if a specific course is selected
+        let courseGroupProperties = null;
+        if (selectedCourse) {
+            courseGroupProperties = systemGroups.find(g => g.anid === selectedCourse);
         }
 
         dispatch({
@@ -168,8 +218,11 @@ export const handleAddNewGroupAdmin = () => {
                         queryParameters: null,
                         requestBody: {
                             adder: currentUser,
-                            groupProperties: groupProperties,
-                            newGroupAdminEmail: newGroupAdminEmail
+                            groupProperties: universityGroupProperties,
+                            newGroupAdminEmail: newGroupAdminEmail,
+                            selectedUniversity: selectedUniversity,
+                            selectedCourse: selectedCourse || null,
+                            courseGroupProperties: courseGroupProperties
                         }
                     }
                 );
@@ -191,9 +244,13 @@ export const handleAddNewGroupAdmin = () => {
                     value: newGroupAdmin
                 });
 
+                const successMessage = courseGroupProperties
+                    ? `Course admin added successfully for ${courseGroupProperties.displayName} (${universityGroupProperties.displayName}).`
+                    : `Course admin added successfully for ${universityGroupProperties.displayName}.`;
+
                 dispatch({
                     type: feedbackSnackbarActions.SET_FEEDBACK_SNACKBAR_CONTENT,
-                    message: "Course admin added successfully.",
+                    message: successMessage,
                     color: "primary",
                     position: "bottom"
                 });
@@ -224,13 +281,8 @@ export const startListeningForGroupAdminsChanged = () => {
         }
 
         const currentUser = getState().auth.user;
-        const tableGroup = getState().manageGroupAdminsTable.tableGroup;
 
         if (currentUser.type !== DB_CONST.TYPE_ADMIN) {
-            return;
-        }
-
-        if (!currentUser.superAdmin && currentUser.anid !== tableGroup.anid) {
             return;
         }
 
@@ -245,8 +297,9 @@ export const startListeningForGroupAdminsChanged = () => {
 
                 const index = groupAdmins.findIndex(existingGroupAdmin => existingGroupAdmin.id === groupAdmin.id);
                 if (index === -1) {
-
-                    if (groupAdmin.anid === tableGroup.anid) {
+                    // Super users (superAdmin OR superGroupAdmin) see all admins, regular group admins only see their own university's admins
+                    const isSuperUser = currentUser.superAdmin || currentUser.superGroupAdmin;
+                    if (isSuperUser || groupAdmin.anid === currentUser.anid) {
                         dispatch({
                             type: GROUP_ADMINS_TABLE_CHANGED,
                             groupAdmins: [...groupAdmins, groupAdmin]
@@ -262,11 +315,15 @@ export const startListeningForGroupAdminsChanged = () => {
 
                 const index = groupAdmins.findIndex(existingGroupAdmin => existingGroupAdmin.id === groupAdmin.id);
                 if (index !== -1) {
-                    groupAdmins[index] = groupAdmin;
-                    dispatch({
-                        type: GROUP_ADMINS_TABLE_CHANGED,
-                        groupAdmins: [...groupAdmins]
-                    });
+                    // Only update if visible to this admin
+                    const isSuperUser = currentUser.superAdmin || currentUser.superGroupAdmin;
+                    if (isSuperUser || groupAdmin.anid === currentUser.anid) {
+                        groupAdmins[index] = groupAdmin;
+                        dispatch({
+                            type: GROUP_ADMINS_TABLE_CHANGED,
+                            groupAdmins: [...groupAdmins]
+                        });
+                    }
                 }
             });
 

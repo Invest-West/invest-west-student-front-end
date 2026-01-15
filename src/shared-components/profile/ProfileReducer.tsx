@@ -80,6 +80,8 @@ const initialBusinessProfileState: BusinessProfileState = {
         companyName: "",
         companyWebsite: "",
         sector: "none",
+        university: "",
+        course: "",
         logo: [
             {
                 storageID: -1,

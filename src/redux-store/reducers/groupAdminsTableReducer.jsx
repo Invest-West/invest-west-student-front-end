@@ -1,6 +1,6 @@
 import * as groupAdminsTableActions from '../actions/groupAdminsTableActions';
 import * as authActions from '../actions/authActions';
-import {ADD_NEW_GROUP_ADMIN_STATUS_NONE} from '../../pages/admin/components/GroupAdminsTable';
+import {ADD_NEW_GROUP_ADMIN_STATUS_NONE} from '../../pages/admin/components/AngelNetworks';
 
 const initState = {
     tableGroup: null,
@@ -12,11 +12,16 @@ const initState = {
     searchText: '',
     inSearchMode: false,
 
+    filterCourse: 'all', // 'all' or specific course anid
+
     page: 0,
     rowsPerPage: 10,
 
     addNewGroupAdminDialogOpen: false,
     newGroupAdminEmail: '',
+    selectedUniversity: '',
+    selectedCourse: '',
+    availableCourses: [],
     addNewGroupAdminStatus: ADD_NEW_GROUP_ADMIN_STATUS_NONE
 };
 
@@ -46,22 +51,25 @@ const groupAdminsTableReducer = (state = initState, action) => {
         case groupAdminsTableActions.GROUP_ADMINS_TABLE_PAGE_CHANGED:
             return {
                 ...state,
-                rowsPerPage: action.newPage
+                page: action.newPage
             };
         case groupAdminsTableActions.GROUP_ADMINS_TABLE_ROWS_PER_PAGE_CHANGED:
             return {
                 ...state,
+                page: 0,
                 rowsPerPage: action.value
             };
         case groupAdminsTableActions.GROUP_ADMINS_TABLE_TOGGLE_SEARCH_MODE:
             return {
                 ...state,
+                page: 0,
                 searchText: state.inSearchMode ? '' : state.searchText,
                 inSearchMode: !state.inSearchMode
             };
         case groupAdminsTableActions.GROUP_ADMINS_TABLE_HANDLE_INPUT_CHANGED:
             return {
                 ...state,
+                page: action.event.target.name === 'filterCourse' ? 0 : state.page,
                 [action.event.target.name]: action.event.target.value
             };
         case groupAdminsTableActions.GROUP_ADMINS_TABLE_TOGGLE_ADD_NEW_GROUP_ADMIN_DIALOG:
@@ -69,6 +77,9 @@ const groupAdminsTableReducer = (state = initState, action) => {
                 ...state,
                 addNewGroupAdminDialogOpen: !state.addNewGroupAdminDialogOpen,
                 newGroupAdminEmail: '',
+                selectedUniversity: '',
+                selectedCourse: '',
+                availableCourses: [],
                 addNewGroupAdminStatus: ADD_NEW_GROUP_ADMIN_STATUS_NONE
             };
         case groupAdminsTableActions.GROUP_ADMINS_TABLE_CHANGED:
@@ -80,6 +91,13 @@ const groupAdminsTableReducer = (state = initState, action) => {
             return {
                 ...state,
                 addNewGroupAdminStatus: action.status
+            };
+        case groupAdminsTableActions.GROUP_ADMINS_TABLE_UNIVERSITY_CHANGED:
+            return {
+                ...state,
+                selectedUniversity: action.universityId,
+                selectedCourse: '',
+                availableCourses: action.availableCourses || []
             };
         default:
             return state;

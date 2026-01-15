@@ -19,6 +19,14 @@ export class ApiRoutes {
     static emailBaseRoute = "/email";
     static sendEmailRoute = ApiRoutes.emailBaseRoute + "/send";
 
+    // Email template management routes (super admin only)
+    static emailTemplatesRoute = ApiRoutes.emailBaseRoute + "/templates";
+    static emailSettingsRoute = ApiRoutes.emailBaseRoute + "/settings";
+    static emailTestConnectionRoute = ApiRoutes.emailBaseRoute + "/test-connection";
+    static emailSendTestRoute = ApiRoutes.emailBaseRoute + "/send-test";
+    static emailPreviewRoute = ApiRoutes.emailBaseRoute + "/preview";
+    static emailSeedTemplatesRoute = ApiRoutes.emailBaseRoute + "/seed-templates";
+
     static usersBaseRoute = "/users";
     static createUser = ApiRoutes.usersBaseRoute + "/create";
     static retrieveUser = ApiRoutes.usersBaseRoute + "/:uid/retrieve";
@@ -30,6 +38,9 @@ export class ApiRoutes {
     static groupsBaseRoute = "/groups";
     static listGroups = ApiRoutes.groupsBaseRoute + "/list";
     static retrieveGroup = ApiRoutes.groupsBaseRoute + "/:groupUserName";
+    static updateGroupLogo = ApiRoutes.groupsBaseRoute + "/:groupUserName/update-logo";
+    static updateCourseImage = ApiRoutes.groupsBaseRoute + "/:groupUserName/courses/:courseUserName/update-image";
+    static updateCourseName = ApiRoutes.groupsBaseRoute + "/:groupUserName/courses/:courseUserName/update-name";
     static addMembersToGroup = ApiRoutes.groupsBaseRoute + "/:group/add-members";
     static listGroupMembers = ApiRoutes.groupsBaseRoute + "/:group/list-members";
 
@@ -45,6 +56,18 @@ export class ApiRoutes {
     static listAccessRequestsRoute = ApiRoutes.accessRequestsBaseRoute + "/list";
     static createAccessRequestRoute = ApiRoutes.accessRequestsBaseRoute + "/create";
     static removeAccessRequestRoute = ApiRoutes.createAccessRequestRoute + "/remove";
+
+    static courseRequestsBaseRoute = "/course-requests";
+    static listCourseRequestsRoute = ApiRoutes.courseRequestsBaseRoute + "/list";
+    static createCourseRequestRoute = ApiRoutes.courseRequestsBaseRoute + "/create";
+    static approveCourseRequestRoute = ApiRoutes.courseRequestsBaseRoute + "/approve";
+    static rejectCourseRequestRoute = ApiRoutes.courseRequestsBaseRoute + "/reject";
+
+    static adminAccessRequestsBaseRoute = "/admin-access-requests";
+    static listAdminAccessRequestsRoute = ApiRoutes.adminAccessRequestsBaseRoute + "/list";
+    static createAdminAccessRequestRoute = ApiRoutes.adminAccessRequestsBaseRoute + "/create";
+    static approveAdminAccessRequestRoute = ApiRoutes.adminAccessRequestsBaseRoute + "/approve";
+    static rejectAdminAccessRequestRoute = ApiRoutes.adminAccessRequestsBaseRoute + "/reject";
 
     static fileBaseRoute = "/file";
     static uploadSingleFileRoute = ApiRoutes.fileBaseRoute + "/upload-single";
@@ -71,7 +94,18 @@ export default class Api {
      * @private
      */
     private buildUrl(endPoint: string, queryParameters: any): string {
-        let fullUrl = this.baseUrl + endPoint + Api.buildQueryParameters(queryParameters);
+        const queryString = Api.buildQueryParameters(queryParameters);
+        let fullUrl = this.baseUrl + endPoint + queryString;
+
+        if (endPoint.includes('projects')) {
+            console.log('[API] Building URL for projects endpoint:', {
+                endPoint,
+                queryParameters,
+                queryString,
+                fullUrl
+            });
+        }
+
         return encodeURI(fullUrl);
     }
 
@@ -156,13 +190,25 @@ export default class Api {
                 : null
         );
 
-        let currentUser: firebase.default.User | null = await firebase.auth().currentUser;
+        let currentUser: firebase.default.User | null = firebase.auth().currentUser;
 
         try {
             let idToken: string | null = null;
 
             if (currentUser) {
-                idToken = await currentUser.getIdToken();
+                try {
+                    // Get ID token - Firebase will auto-refresh if expired
+                    idToken = await currentUser.getIdToken();
+                } catch (tokenError) {
+                    console.error('Failed to get ID token:', tokenError);
+                    // If token retrieval fails, try to force refresh once
+                    try {
+                        idToken = await currentUser.getIdToken(true);
+                    } catch (refreshError) {
+                        console.error('Failed to refresh ID token:', refreshError);
+                        throw new Error('Authentication token could not be retrieved. Please try logging in again.');
+                    }
+                }
             }
 
             let bodyData: any;
@@ -275,5 +321,36 @@ export default class Api {
      */
     public isRequestSuccessful(response: AxiosResponse): boolean {
         return response != null && response.status >= 200 && response.status < 300;
+    }
+
+    // Static instance for convenience methods
+    private static instance = new Api();
+
+    /**
+     * Convenience method for GET requests
+     */
+    public static async doGet(endpoint: string, queryParameters?: any): Promise<AxiosResponse> {
+        return Api.instance.request('GET', endpoint, { requestBody: null, queryParameters });
+    }
+
+    /**
+     * Convenience method for POST requests
+     */
+    public static async doPost(endpoint: string, requestBody?: any, queryParameters?: any): Promise<AxiosResponse> {
+        return Api.instance.request('POST', endpoint, { requestBody, queryParameters });
+    }
+
+    /**
+     * Convenience method for PUT requests
+     */
+    public static async doPut(endpoint: string, requestBody?: any, queryParameters?: any): Promise<AxiosResponse> {
+        return Api.instance.request('PUT', endpoint, { requestBody, queryParameters });
+    }
+
+    /**
+     * Convenience method for DELETE requests
+     */
+    public static async doDelete(endpoint: string, queryParameters?: any): Promise<AxiosResponse> {
+        return Api.instance.request('DELETE', endpoint, { requestBody: null, queryParameters });
     }
 }

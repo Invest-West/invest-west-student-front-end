@@ -109,7 +109,6 @@ class NotificationsBox extends Component {
             notificationBellRef,
         } = this.props;
 
-
         if (this.wrapperRef && !this.wrapperRef.current.contains(event.target) && !notificationBellRef.contains(event.target) ) {
             toggleNotifications(event);
         }
@@ -190,7 +189,16 @@ class NotificationsBox extends Component {
                                             :
                                             <Col xs={12} sm={12} md={12} lg={12} style={{ paddingTop: 5, paddingBottom: 5, paddingRight: 18 }} >
                                                 <FlexView hAlignContent="right" >
-                                                    <Button variant="text" className={css(sharedStyles.no_text_transform, styles.clear_all_text)} size="medium" onClick={deleteAllNotifications} >
+                                                    <Button
+                                                        variant="text"
+                                                        className={css(sharedStyles.no_text_transform, styles.clear_all_text)}
+                                                        size="medium"
+                                                        onMouseDown={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            deleteAllNotifications();
+                                                        }}
+                                                    >
                                                         <ClearAllIcon style={{ marginRight: 6 }} />
                                                         Clear all
                                                     </Button>
@@ -255,7 +263,10 @@ class NotificationsBox extends Component {
                                                                                             notification.action
                                                                                     }
                                                                                     className={css(sharedStyles.nav_link_hover_without_changing_text_color)}
-                                                                                    onClick={() => deleteANotification(notification)}
+                                                                                    onClick={() => {
+                                                                                        deleteANotification(notification);
+                                                                                        toggleNotifications();
+                                                                                    }}
                                                                                 >
                                                                                     <FlexView vAlignContent="center" >
                                                                                         <NotificationsIcon className={css(styles.notification_item_icon)} />
@@ -269,7 +280,13 @@ class NotificationsBox extends Component {
                                                                             </Col>
                                                                             <Col xs={2} sm={2} md={1} lg={1} style={{ paddingLeft: 8, paddingRight: 8 }} >
                                                                                 <FlexView width="100%" height="100%" vAlignContent="center" hAlignContent="center" >
-                                                                                    <IconButton onClick={() => deleteANotification(notification)} >
+                                                                                    <IconButton
+                                                                                        onMouseDown={(e) => {
+                                                                                            e.preventDefault();
+                                                                                            e.stopPropagation();
+                                                                                            deleteANotification(notification);
+                                                                                        }}
+                                                                                    >
                                                                                         <DeleteIcon fontSize="small" />
                                                                                     </IconButton>
                                                                                 </FlexView>

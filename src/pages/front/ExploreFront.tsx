@@ -57,10 +57,10 @@ class ExploreFront extends Component<ExploreFrontProps & Readonly<RouteComponent
         const groupParam = match.params.groupUserName ? match.params.groupUserName : null;
         
         // Construct proper routes based on whether we have a group or not
-        const aboutRoute = groupParam ? `/groups/${groupParam}/about` : "/about";
-        const hiwRoute = groupParam ? `/groups/${groupParam}/Hiw` : "/Hiw";
-        const contactRoute = groupParam ? Routes.groupContact.replace(":groupUserName", groupParam) : Routes.nonGroupContact;
-        const exploreRoute = groupParam ? `/groups/${groupParam}/explore` : "/explore";
+        const aboutRoute = Routes.constructAboutRoute(match.params);
+        const hiwRoute = Routes.constructHiwRoute(match.params);
+        const contactRoute = Routes.constructContactRoute(match.params);
+        const exploreRoute = Routes.constructExploreRoute(match.params);
         const signInRoute = Routes.constructSignInRoute(match.params);
         const homeRoute = Routes.constructHomeRoute(match.params, ManageGroupUrlState, AuthenticationState);
         

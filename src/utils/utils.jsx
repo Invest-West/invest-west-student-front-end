@@ -362,17 +362,29 @@ export const getLogoFromGroup = (getLogoType, groupProperties) => {
         case GET_PLAIN_LOGO:
             if (!groupProperties.hasOwnProperty('plainLogo')
                 || (groupProperties.hasOwnProperty('plainLogo') && groupProperties.plainLogo === null)
+                || !Array.isArray(groupProperties.plainLogo)
             ) {
                 return null;
             }
-            return groupProperties.plainLogo[groupProperties.plainLogo.findIndex(logo => !logo.hasOwnProperty('removed'))].url;
+            // Find logo that is not removed (either removed is undefined or false)
+            const plainLogoIndex = groupProperties.plainLogo.findIndex(logo => logo.removed === undefined || logo.removed === false);
+            if (plainLogoIndex === -1) {
+                return null;
+            }
+            return groupProperties.plainLogo[plainLogoIndex].url;
         case GET_LOGO_WITH_TEXT:
             if (!groupProperties.hasOwnProperty('logoWithText')
                 || (groupProperties.hasOwnProperty('logoWithText') && groupProperties.logoWithText === null)
+                || !Array.isArray(groupProperties.logoWithText)
             ) {
                 return null;
             }
-            return groupProperties.logoWithText[groupProperties.logoWithText.findIndex(logo => !logo.hasOwnProperty('removed'))].url;
+            // Find logo that is not removed (either removed is undefined or false)
+            const logoWithTextIndex = groupProperties.logoWithText.findIndex(logo => logo.removed === undefined || logo.removed === false);
+            if (logoWithTextIndex === -1) {
+                return null;
+            }
+            return groupProperties.logoWithText[logoWithTextIndex].url;
         default:
             return null;
     }

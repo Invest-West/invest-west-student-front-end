@@ -104,7 +104,7 @@ class ManageSectors extends Component<ManageSectorsProps, any> {
 
             {
                 ManageSectorsLocalState.sectors.map(sector => (
-                    <Box display="flex" flexDirection="row" alignItems="center" marginBottom="10px">
+                    <Box key={sector} display="flex" flexDirection="row" alignItems="center" marginBottom="10px">
                         <Typography align="left" variant="body1">{sector}
                         </Typography>
                         <Box width="10px"/>

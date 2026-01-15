@@ -2,6 +2,7 @@ import {
     ChangePageAction,
     ChangeRowsPerPageAction,
     CompleteExportingCsvAction,
+    CompleteFetchingFeedbackCountAction,
     CompleteFetchingOffersAction,
     FilterChangedAction,
     FilterOffersByNameAction,
@@ -39,6 +40,10 @@ export interface OffersTableStates {
     exportingCsv: boolean;
     errorExportingCsv?: Error;
 
+    // Count of draft projects with admin feedback
+    draftProjectsWithFeedbackCount: number;
+    fetchingFeedbackCount: boolean;
+
     error?: Error
 }
 
@@ -57,7 +62,10 @@ const initialState: OffersTableStates = {
     currentPage: 0,
     rowsPerPage: 5,
 
-    exportingCsv: false
+    exportingCsv: false,
+
+    draftProjectsWithFeedbackCount: 0,
+    fetchingFeedbackCount: false
 }
 
 export const isFetchingOffers = (state: OffersTableStates) => {
@@ -180,6 +188,18 @@ const offersTableReducer = (state = initialState, action: OffersTableAction) => 
                 exportingCsv: false,
                 errorExportingCsv: completeExportingCsvAction.error !== undefined
                     ? {detail: completeExportingCsvAction.error} : state.errorExportingCsv
+            }
+        case OffersTableEvents.FetchingFeedbackCount:
+            return {
+                ...state,
+                fetchingFeedbackCount: true
+            }
+        case OffersTableEvents.CompleteFetchingFeedbackCount:
+            const completeFetchingFeedbackCountAction: CompleteFetchingFeedbackCountAction = action as CompleteFetchingFeedbackCountAction;
+            return {
+                ...state,
+                fetchingFeedbackCount: false,
+                draftProjectsWithFeedbackCount: completeFetchingFeedbackCountAction.count
             }
         default:
             return state;

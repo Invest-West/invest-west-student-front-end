@@ -294,7 +294,8 @@ class Profile extends Component {
 
         return (
             <Container fluid style={{ padding: 0 }} >
-                <Row noGutters style={{ backgroundColor: colors.kick_starter_background_color_1 }} >
+                {/** View my profile button - commented out */}
+                {/*<Row noGutters style={{ backgroundColor: colors.kick_starter_background_color_1 }} >
                     <Col xs={12} sm={12} md={12} lg={12} style={{ padding: 20 }} >
                         <FlexView hAlignContent="right" vAlignContent="center" >
                             <NavLink
@@ -342,7 +343,7 @@ class Profile extends Component {
                     <Col xs={12} sm={12} md={12} lg={12} >
                         <Divider/>
                     </Col>
-                </Row>
+                </Row>*/}
 
                 {/** Personal details */}
                 <Row noGutters style={{ backgroundColor: colors.white }} >
@@ -404,38 +405,8 @@ class Profile extends Component {
                                             </FormControl>
                                         </Col>
 
-                                        {/** Course */}
-                                        <Col xs={12} sm={12} md={6} lg={{span: 6, order: 2}} style={{ marginBottom: 20 }} >
-                                            <FormControl fullWidth >
-                                                <FormLabel><b>Course</b></FormLabel>
-                                                <Select 
-                                                    name="course" 
-                                                    value={userEdited.course || "-1"} 
-                                                    onChange={this.handleEditUser(editUserActions.EDIT_PERSONAL_INFORMATION)} 
-                                                    input={<OutlinedInput/>} 
-                                                    margin="dense"
-                                                >
-                                                    <MenuItem value="-1">Please select</MenuItem>
-                                                    {
-                                                        !clubAttributes || !clubAttributes.Courses
-                                                            ?
-                                                            null
-                                                            :
-                                                            clubAttributes.Courses.map((course, index) => (
-                                                                <MenuItem key={index} value={course}>{course}</MenuItem>
-                                                            ))
-                                                    }
-                                                </Select>
-                                            </FormControl>
-                                        </Col>
-
-                                        {/** Divider */}
-                                        <Col xs={12} sm={12} md={12} lg={{span: 12, order: 3}} >
-                                            <Divider style={{ marginTop: 10, marginBottom: 20 }} />
-                                        </Col>
-
                                         {/** First name */}
-                                        <Col xs={12} sm={12} md={6} lg={{span: 6, order: 4}} style={{ marginBottom: 20 }} >
+                                        <Col xs={12} sm={12} md={6} lg={{span: 6, order: 2}} style={{ marginBottom: 20 }} >
                                             <FormControl fullWidth >
                                                 <FormLabel><b>First name</b></FormLabel>
                                                 <TextField name="firstName" placeholder="Enter first name" value={userEdited.firstName || ''} margin="dense" variant="outlined" onChange={this.handleEditUser(editUserActions.EDIT_PERSONAL_INFORMATION)} error={userEdited.firstName && userEdited.firstName.trim().length === 0} />
@@ -443,7 +414,7 @@ class Profile extends Component {
                                         </Col>
 
                                         {/** Last name */}
-                                        <Col xs={12} sm={12} md={6} lg={{span: 6, order: 5}} style={{ marginBottom: 20 }} >
+                                        <Col xs={12} sm={12} md={6} lg={{span: 6, order: 3}} style={{ marginBottom: 20 }} >
                                             <FormControl fullWidth >
                                                 <FormLabel><b>Last name</b></FormLabel>
                                                 <TextField name="lastName" placeholder="Enter last name" value={userEdited.lastName || ''} margin="dense" variant="outlined" onChange={this.handleEditUser(editUserActions.EDIT_PERSONAL_INFORMATION)} error={userEdited.lastName && userEdited.lastName.trim().length === 0} />
@@ -451,12 +422,12 @@ class Profile extends Component {
                                         </Col>
 
                                         {/** Divider */}
-                                        <Col xs={12} sm={12} md={12} lg={{span: 12, order: 6}} >
+                                        <Col xs={12} sm={12} md={12} lg={{span: 12, order: 4}} >
                                             <Divider style={{ marginTop: 10, marginBottom: 20 }} />
                                         </Col>
 
                                         {/** Email */}
-                                        <Col xs={12} sm={12} md={12} lg={{span: 12, order: 7}} style={{ marginBottom: 20 }} >
+                                        <Col xs={12} sm={12} md={12} lg={{span: 12, order: 5}} style={{ marginBottom: 20 }} >
                                             <FormControl fullWidth >
                                                 <FormLabel><b>Email</b></FormLabel>
                                                 <TextField
@@ -473,12 +444,12 @@ class Profile extends Component {
                                         </Col>
 
                                         {/** Divider */}
-                                        <Col xs={12} sm={12} md={12} lg={{span: 12, order: 7}} >
+                                        <Col xs={12} sm={12} md={12} lg={{span: 12, order: 6}} >
                                             <Divider style={{ marginTop: 10, marginBottom: 20 }} />
                                         </Col>
 
                                         {/** LinkedIn */}
-                                        <Col xs={12} sm={12} md={12} lg={{span: 12, order: 8}} style={{ marginBottom: 20 }} >
+                                        <Col xs={12} sm={12} md={12} lg={{span: 12, order: 7}} style={{ marginBottom: 20 }} >
                                             <FormControl fullWidth >
                                                 <FormLabel><b>LinkedIn</b></FormLabel>
                                                 <TextField
@@ -499,6 +470,67 @@ class Profile extends Component {
                                                     <FormHelperText className={css(sharedStyles.error_text)} >Invalid LinkedIn URL</FormHelperText>
                                             }
                                         </Col>
+
+                                        {/** Investor-specific fields */}
+                                        {
+                                            userEdited.type === DB_CONST.TYPE_INVESTOR
+                                                ?
+                                                <>
+                                                    {/** Divider */}
+                                                    <Col xs={12} sm={12} md={12} lg={{span: 12, order: 8}} >
+                                                        <Divider style={{ marginTop: 10, marginBottom: 20 }} />
+                                                    </Col>
+
+                                                    {/** Company */}
+                                                    <Col xs={12} sm={12} md={6} lg={{span: 6, order: 9}} style={{ marginBottom: 20 }} >
+                                                        <FormControl fullWidth >
+                                                            <FormLabel><b>Company</b></FormLabel>
+                                                            <TextField
+                                                                name="company"
+                                                                placeholder="Enter your company"
+                                                                value={userEdited.hasOwnProperty('company') ? userEdited.company : ''}
+                                                                margin="dense"
+                                                                variant="outlined"
+                                                                onChange={this.handleEditUser(editUserActions.EDIT_PERSONAL_INFORMATION)}
+                                                            />
+                                                        </FormControl>
+                                                    </Col>
+
+                                                    {/** Company Name */}
+                                                    <Col xs={12} sm={12} md={6} lg={{span: 6, order: 10}} style={{ marginBottom: 20 }} >
+                                                        <FormControl fullWidth >
+                                                            <FormLabel><b>Company Name</b></FormLabel>
+                                                            <TextField
+                                                                name="companyName"
+                                                                placeholder="Enter company name"
+                                                                value={userEdited.hasOwnProperty('companyName') ? userEdited.companyName : ''}
+                                                                margin="dense"
+                                                                variant="outlined"
+                                                                onChange={this.handleEditUser(editUserActions.EDIT_PERSONAL_INFORMATION)}
+                                                            />
+                                                        </FormControl>
+                                                    </Col>
+
+                                                    {/** Description */}
+                                                    <Col xs={12} sm={12} md={12} lg={{span: 12, order: 11}} style={{ marginBottom: 20 }} >
+                                                        <FormControl fullWidth >
+                                                            <FormLabel><b>Description</b></FormLabel>
+                                                            <TextField
+                                                                name="description"
+                                                                placeholder="Enter description"
+                                                                value={userEdited.hasOwnProperty('description') ? userEdited.description : ''}
+                                                                margin="dense"
+                                                                variant="outlined"
+                                                                multiline
+                                                                rows={4}
+                                                                onChange={this.handleEditUser(editUserActions.EDIT_PERSONAL_INFORMATION)}
+                                                            />
+                                                        </FormControl>
+                                                    </Col>
+                                                </>
+                                                :
+                                                null
+                                        }
                                     </Row>
 
                                     <FlexView hAlignContent="right" marginTop={30} >
@@ -533,6 +565,9 @@ class Profile extends Component {
                                                             ||
                                                             (userEdited.linkedin && originalUser.linkedin && !utils.isValidLinkedInURL(userEdited.linkedin))
                                                         )
+                                                        && (userEdited.company === originalUser.company || (!userEdited.company && !originalUser.company))
+                                                        && (userEdited.companyName === originalUser.companyName || (!userEdited.companyName && !originalUser.companyName))
+                                                        && (userEdited.description === originalUser.description || (!userEdited.description && !originalUser.description))
                                                     )
                                                 }
                                                 onClick={() => this.props.commitUserProfileChanges(editUserActions.COMMIT_PERSONAL_INFORMATION_CHANGES)}

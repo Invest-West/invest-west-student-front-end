@@ -10,25 +10,31 @@ import {
     isLoadingData, isRemovingAccessRequest, isSendingAccessRequest,
     successfullyLoadedData
 } from "./GroupDetailsReducer";
-import {Box, Button, colors, Divider, Paper, Typography, Link} from "@material-ui/core";
+import {Box, Button, colors, Divider, Paper, Typography, Link, TextField, IconButton} from "@material-ui/core";
 import {RouteComponentProps} from "react-router-dom";
 import {RouteParams} from "../../router/router";
 import {Col, Image, Row} from "react-bootstrap";
 import {BeatLoader} from "react-spinners";
 import {getGroupRouteTheme, ManageGroupUrlState} from "../../redux-store/reducers/manageGroupUrlReducer";
 import {loadData, removeAccessRequest, sendAccessRequest} from "./GroupDetailsActions";
+import {validateGroupUrl, resetGroupUrlState} from "../../redux-store/actions/manageGroupUrlActions";
 import {getGroupLogo} from "../../models/group_properties";
 import {AuthenticationState} from "../../redux-store/reducers/authenticationReducer";
 import Admin, {isAdmin} from "../../models/admin";
 import {dateInReadableFormat} from "../../utils/utils";
 import GroupOfMembership, {getHomeGroup} from "../../models/group_of_membership";
-import {CheckCircle} from "@material-ui/icons";
+import {CheckCircle, Edit as EditIcon} from "@material-ui/icons";
 import CustomLink from "../../shared-js-css-styles/CustomLink";
 import * as appColors from "../../values/colors";
 import {MediaQueryState} from "../../redux-store/reducers/mediaQueryReducer";
 import {css} from "aphrodite";
 import sharedStyles from "../../shared-js-css-styles/SharedStyles";
 import Footer from "../../shared-components/footer/Footer";
+import firebase from "../../firebase/firebaseApp";
+import * as DB_CONST from "../../firebase/databaseConsts";
+import {openFeedbackSnackbar} from "../../shared-components/feedback-snackbar/FeedbackSnackbarActions";
+import {FeedbackSnackbarTypes} from "../../shared-components/feedback-snackbar/FeedbackSnackbarReducer";
+import EditGroupImageDialog from "../admin/components/EditGroupImageDialog";
 
 interface GroupDetailsProps {
     MediaQueryState: MediaQueryState;
@@ -38,6 +44,16 @@ interface GroupDetailsProps {
     loadData: (viewedGroupUserName: string) => any;
     sendAccessRequest: () => any;
     removeAccessRequest: () => any;
+    openFeedbackSnackbar: (type: FeedbackSnackbarTypes, message: string) => any;
+    validateGroupUrl: (path: string, groupUserName: string | null, courseUserName?: string | null) => any;
+    resetGroupUrlState: () => any;
+}
+
+interface GroupDetailsLocalComponentState {
+    isEditingDescription: boolean;
+    editedDescription: string;
+    isSavingDescription: boolean;
+    editLogoDialogOpen: boolean;
 }
 
 const mapStateToProps = (state: AppState) => {
@@ -53,14 +69,142 @@ const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
     return {
         loadData: (viewedGroupUserName: string) => dispatch(loadData(viewedGroupUserName)),
         sendAccessRequest: () => dispatch(sendAccessRequest()),
-        removeAccessRequest: () => dispatch(removeAccessRequest())
+        removeAccessRequest: () => dispatch(removeAccessRequest()),
+        openFeedbackSnackbar: (type: FeedbackSnackbarTypes, message: string) => dispatch(openFeedbackSnackbar(type, message)),
+        validateGroupUrl: (path: string, groupUserName: string | null, courseUserName?: string | null) => dispatch(validateGroupUrl(path, groupUserName, courseUserName)),
+        resetGroupUrlState: () => dispatch(resetGroupUrlState())
     }
 }
 
-class GroupDetails extends Component<GroupDetailsProps & Readonly<RouteComponentProps<RouteParams>>, any> {
+class GroupDetails extends Component<GroupDetailsProps & Readonly<RouteComponentProps<RouteParams>>, GroupDetailsLocalComponentState> {
+
+    constructor(props: GroupDetailsProps & Readonly<RouteComponentProps<RouteParams>>) {
+        super(props);
+        this.state = {
+            isEditingDescription: false,
+            editedDescription: '',
+            isSavingDescription: false,
+            editLogoDialogOpen: false
+        };
+    }
 
     componentDidMount() {
-        this.props.loadData(this.props.match.params.viewedGroupUserName);
+        const viewedGroupUserName = this.props.match.params.viewedGroupUserName;
+        if (viewedGroupUserName) {
+            this.props.loadData(viewedGroupUserName);
+        }
+    }
+
+    handleStartEditingDescription = () => {
+        const { GroupDetailsLocalState } = this.props;
+        this.setState({
+            isEditingDescription: true,
+            editedDescription: GroupDetailsLocalState.group?.description || ''
+        });
+    }
+
+    handleCancelEditingDescription = () => {
+        this.setState({
+            isEditingDescription: false,
+            editedDescription: ''
+        });
+    }
+
+    handleDescriptionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        this.setState({
+            editedDescription: event.target.value
+        });
+    }
+
+    handleSaveDescription = async () => {
+        const { GroupDetailsLocalState, openFeedbackSnackbar } = this.props;
+        const { editedDescription } = this.state;
+
+        if (!GroupDetailsLocalState.group) {
+            return;
+        }
+
+        this.setState({ isSavingDescription: true });
+
+        try {
+            // Check if this is a course (in Courses node) or a university (in GroupProperties node)
+            const coursesSnapshot = await firebase
+                .database()
+                .ref(DB_CONST.COURSES_CHILD)
+                .child(GroupDetailsLocalState.group.anid)
+                .once('value');
+
+            if (coursesSnapshot.exists()) {
+                // Update in Courses node
+                await firebase
+                    .database()
+                    .ref(DB_CONST.COURSES_CHILD)
+                    .child(GroupDetailsLocalState.group.anid)
+                    .update({ description: editedDescription });
+            } else {
+                // Update in GroupProperties node
+                await firebase
+                    .database()
+                    .ref(DB_CONST.GROUP_PROPERTIES_CHILD)
+                    .child(GroupDetailsLocalState.group.anid)
+                    .update({ description: editedDescription });
+            }
+
+            openFeedbackSnackbar(FeedbackSnackbarTypes.Success, 'Description updated successfully!');
+
+            this.setState({
+                isEditingDescription: false,
+                isSavingDescription: false,
+                editedDescription: ''
+            });
+
+            // Reload data to reflect changes
+            const viewedGroupUserName = this.props.match.params.viewedGroupUserName;
+            if (viewedGroupUserName) {
+                this.props.loadData(viewedGroupUserName);
+            }
+        } catch (error) {
+            console.error('Error updating description:', error);
+            openFeedbackSnackbar(FeedbackSnackbarTypes.Error, 'Failed to update description');
+            this.setState({ isSavingDescription: false });
+        }
+    }
+
+    handleOpenEditLogoDialog = () => {
+        this.setState({ editLogoDialogOpen: true });
+    }
+
+    handleCloseEditLogoDialog = () => {
+        this.setState({ editLogoDialogOpen: false });
+    }
+
+    handleLogoUpdateSuccess = () => {
+        const { openFeedbackSnackbar, validateGroupUrl, resetGroupUrlState } = this.props;
+        openFeedbackSnackbar(FeedbackSnackbarTypes.Success, 'Logo updated successfully!');
+
+        // Reload data to reflect changes
+        const viewedGroupUserName = this.props.match.params.viewedGroupUserName;
+        const viewedCourseUserName = this.props.match.params.viewedCourseUserName;
+
+        console.log('[LOGO UPDATE] Starting refresh...', { viewedGroupUserName, viewedCourseUserName });
+
+        if (viewedGroupUserName) {
+            // Reload GroupDetailsLocalState
+            console.log('[LOGO UPDATE] Calling loadData...');
+            this.props.loadData(viewedGroupUserName);
+
+            // Force refresh of ManageGroupUrlState by resetting first, then validating
+            console.log('[LOGO UPDATE] Resetting group URL state...');
+            resetGroupUrlState();
+
+            // Wait a brief moment for the reset to complete, then validate
+            setTimeout(() => {
+                console.log('[LOGO UPDATE] Calling validateGroupUrl...');
+                validateGroupUrl(this.props.location.pathname, viewedGroupUserName, viewedCourseUserName);
+            }, 100);
+        }
+
+        this.setState({ editLogoDialogOpen: false });
     }
 
     render() {
@@ -120,10 +264,22 @@ class GroupDetails extends Component<GroupDetailsProps & Readonly<RouteComponent
                                 <Row noGutters>
                                     {/** Logo section */}
                                     <Col xs={{span: 12, order: 1}} sm={{span: 12, order: 1}} md={{span: 12, order: 1}} lg={{span: 3, order: 1}}>
-                                        <Box display="flex"justifyContent="center" alignItems="center">
+                                        <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center">
                                             <Link href={GroupDetailsLocalState.group?.website ?? ""} target="_blank">
                                                 <Image alt={`${GroupDetailsLocalState.group?.displayName} logo`} src={getGroupLogo(GroupDetailsLocalState.group ?? null) ?? undefined} style={{width: "100%", height: "auto", padding: 20, objectFit: "scale-down"}}/>
                                             </Link>
+                                            {currentAdmin && (currentAdmin.superAdmin || currentAdmin.superGroupAdmin) && (
+                                                <Button
+                                                    variant="outlined"
+                                                    size="small"
+                                                    startIcon={<EditIcon />}
+                                                    onClick={this.handleOpenEditLogoDialog}
+                                                    className={css(sharedStyles.no_text_transform)}
+                                                    style={{ marginTop: 10 }}
+                                                >
+                                                    Edit Logo
+                                                </Button>
+                                            )}
                                         </Box>
                                     </Col>
 
@@ -193,11 +349,58 @@ class GroupDetails extends Component<GroupDetailsProps & Readonly<RouteComponent
                     <Box marginTop="25px">
                         <Paper>
                             <Box padding="20px">
-                                <Typography variant="h6">About</Typography>
-
-                                <Box marginTop="18px" whiteSpace="pre-line">
-                                    <Typography variant="body1" align="left">{GroupDetailsLocalState.group?.description}</Typography>
+                                <Box display="flex" justifyContent="space-between" alignItems="center">
+                                    <Typography variant="h6">About</Typography>
+                                    {currentAdmin && !this.state.isEditingDescription && (
+                                        <IconButton
+                                            size="small"
+                                            onClick={this.handleStartEditingDescription}
+                                            title="Edit description"
+                                        >
+                                            <EditIcon fontSize="small" />
+                                        </IconButton>
+                                    )}
                                 </Box>
+
+                                {this.state.isEditingDescription ? (
+                                    <>
+                                        <Box marginTop="18px">
+                                            <TextField
+                                                fullWidth
+                                                multiline
+                                                rows={6}
+                                                variant="outlined"
+                                                value={this.state.editedDescription}
+                                                onChange={this.handleDescriptionChange}
+                                                disabled={this.state.isSavingDescription}
+                                            />
+                                        </Box>
+                                        <Box marginTop="18px" display="flex" justifyContent="flex-end">
+                                            <Button
+                                                variant="outlined"
+                                                onClick={this.handleCancelEditingDescription}
+                                                disabled={this.state.isSavingDescription}
+                                                className={css(sharedStyles.no_text_transform)}
+                                                style={{ marginRight: 8 }}
+                                            >
+                                                Cancel
+                                            </Button>
+                                            <Button
+                                                variant="contained"
+                                                color="primary"
+                                                onClick={this.handleSaveDescription}
+                                                disabled={this.state.isSavingDescription || this.state.editedDescription === GroupDetailsLocalState.group?.description}
+                                                className={css(sharedStyles.no_text_transform)}
+                                            >
+                                                {this.state.isSavingDescription ? 'Saving...' : 'Save'}
+                                            </Button>
+                                        </Box>
+                                    </>
+                                ) : (
+                                    <Box marginTop="18px" whiteSpace="pre-line">
+                                        <Typography variant="body1" align="left">{GroupDetailsLocalState.group?.description}</Typography>
+                                    </Box>
+                                )}
 
                                 <Box marginTop="18px">
                                     <Typography variant="body1" align="left">For more information, visit us at:&nbsp;
@@ -231,7 +434,7 @@ class GroupDetails extends Component<GroupDetailsProps & Readonly<RouteComponent
                                     <Row>
                                         <Col xs={12} sm={12} md={6} lg={6}>
                                             <Box padding="18px">
-                                                <Typography variant="h4" align="left">{GroupDetailsLocalState.members?.length}</Typography>
+                                                <Typography variant="h4" align="left">{GroupDetailsLocalState.members?.length ?? 0}</Typography>
                                                     <Box height="2px"/>
                                                 <Typography variant="body1" align="left">Students</Typography>
                                             </Box>
@@ -244,7 +447,7 @@ class GroupDetails extends Component<GroupDetailsProps & Readonly<RouteComponent
                                                 </Box>
 
                                                 <Box padding="18px">
-                                                    <Typography variant="h4" align="left">{GroupDetailsLocalState.offers?.length}</Typography>
+                                                    <Typography variant="h4" align="left">{GroupDetailsLocalState.offers?.length ?? 0}</Typography>
 
                                                     <Box height="2px"/>
 
@@ -252,6 +455,37 @@ class GroupDetails extends Component<GroupDetailsProps & Readonly<RouteComponent
                                                 </Box>
                                             </Box>
                                         </Col>
+                                    </Row>
+
+                                    <Row>
+                                        <Col xs={12} sm={12} md={6} lg={6}>
+                                            <Box padding="18px" borderTop={`1px solid ${colors.grey["300"]}`}>
+                                                <Typography variant="h4" align="left">{GroupDetailsLocalState.admins?.length ?? 0}</Typography>
+                                                    <Box height="2px"/>
+                                                <Typography variant="body1" align="left">Lecturers / Admins</Typography>
+                                            </Box>
+                                        </Col>
+
+                                        {(GroupDetailsLocalState.group?.subGroups && GroupDetailsLocalState.group.subGroups.length > 0) ||
+                                         (GroupDetailsLocalState.group?.childGroups && GroupDetailsLocalState.group.childGroups.length > 0) ? (
+                                            <Col xs={12} sm={12} md={6} lg={6}>
+                                                <Box display="flex" flexDirection="row">
+                                                    <Box>
+                                                        <Divider orientation="vertical"/>
+                                                    </Box>
+
+                                                    <Box padding="18px" borderTop={`1px solid ${colors.grey["300"]}`}>
+                                                        <Typography variant="h4" align="left">
+                                                            {GroupDetailsLocalState.group?.childGroups?.length ?? GroupDetailsLocalState.group?.subGroups?.length ?? 0}
+                                                        </Typography>
+
+                                                        <Box height="2px"/>
+
+                                                        <Typography variant="body1" align="left">Courses</Typography>
+                                                    </Box>
+                                                </Box>
+                                            </Col>
+                                        ) : null}
                                     </Row>
                                 </Box>
                             </Box>
@@ -266,6 +500,17 @@ class GroupDetails extends Component<GroupDetailsProps & Readonly<RouteComponent
                     <Footer/>
                 </Col>
             </Row>
+
+            {/** Edit Logo Dialog */}
+            {GroupDetailsLocalState.group && (
+                <EditGroupImageDialog
+                    open={this.state.editLogoDialogOpen}
+                    groupUserName={GroupDetailsLocalState.group.groupUserName}
+                    currentImageUrl={getGroupLogo(GroupDetailsLocalState.group) || undefined}
+                    onClose={this.handleCloseEditLogoDialog}
+                    onSuccess={this.handleLogoUpdateSuccess}
+                />
+            )}
         </Box>;
     }
 }

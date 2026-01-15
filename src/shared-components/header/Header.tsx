@@ -120,20 +120,32 @@ class Header extends Component<HeaderProps, {}> {
                                         alt="logo"
                                         src={
                                             (() => {
+                                                // If user is not authenticated, always use universal logo
+                                                if (!successfullyAuthenticated(AuthenticationState)) {
+                                                    console.log('[HEADER] Using universal logo (not authenticated):', defaultLogo);
+                                                    return defaultLogo;
+                                                }
+
+                                                // For authenticated users, show group-specific logo
                                                 const isSystemPublic = Routes.isSystemPublicRoute(routePath);
                                                 const isError = Routes.isErrorRoute(routePath);
-                                                console.log('Header Debug:', { routePath, isSystemPublic, isError });
-                                                
+                                                console.log('[HEADER] Rendering logo for authenticated user...', {
+                                                    routePath,
+                                                    isSystemPublic,
+                                                    isError,
+                                                    hasGroup: !!ManageGroupUrlState.group,
+                                                    plainLogoArray: ManageGroupUrlState.group?.plainLogo
+                                                });
+
                                                 if (isError || isSystemPublic) {
-                                                    console.log('Using system logo:', defaultLogo);
+                                                    console.log('[HEADER] Using system logo:', defaultLogo);
                                                     return defaultLogo;
                                                 } else if (ManageGroupUrlState.group && getGroupLogo(ManageGroupUrlState.group)) {
                                                     const groupLogo = getGroupLogo(ManageGroupUrlState.group);
-                                                    console.log('Using group logo:', groupLogo);
                                                     // Ensure groupLogo is never null
                                                     return groupLogo ?? undefined;
                                                 } else {
-                                                    console.log('Using default logo:', defaultLogo);
+                                                    console.log('[HEADER] Using default logo (no group or no logo):', defaultLogo);
                                                     return defaultLogo;
                                                 }
                                             })()

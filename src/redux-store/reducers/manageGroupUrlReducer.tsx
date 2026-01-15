@@ -14,6 +14,8 @@ import {defaultTheme} from "../../values/defaultThemes";
 export interface ManageGroupUrlState {
     routePath: string | undefined;
     groupNameFromUrl: string | null | undefined;
+    courseNameFromUrl: string | null | undefined;
+    courseUserName: string | null | undefined;
 
     group: GroupProperties | null;
     groupLoaded: boolean;
@@ -29,6 +31,8 @@ export interface ManageGroupUrlState {
 const initialState: ManageGroupUrlState = {
     routePath: undefined,
     groupNameFromUrl: undefined,
+    courseNameFromUrl: undefined,
+    courseUserName: undefined,
 
     group: null,
     groupLoaded: false,
@@ -70,7 +74,9 @@ const manageGroupUrlReducer = (state: ManageGroupUrlState = initialState, action
             return {
                 ...state,
                 routePath: setGroupUrlAction.path,
-                groupNameFromUrl: setGroupUrlAction.groupUserName
+                groupNameFromUrl: setGroupUrlAction.groupUserName,
+                courseNameFromUrl: setGroupUrlAction.courseUserName,
+                courseUserName: setGroupUrlAction.courseUserName
             }
         case ManageGroupUrlEvents.ValidatingGroupUrl:
             return {

@@ -3,12 +3,12 @@ import {Col, Container, Row} from 'react-bootstrap';
 import FlexView from 'react-flexview';
 import {css, StyleSheet} from 'aphrodite';
 import {
+    Accordion,
+    AccordionDetails,
+    AccordionSummary,
     Button,
     Checkbox,
     Divider,
-    ExpansionPanel,
-    ExpansionPanelDetails,
-    ExpansionPanelSummary,
     FormControl,
     FormControlLabel,
     FormHelperText,
@@ -34,6 +34,8 @@ import * as superAdminSettingsActions from '../../../redux-store/actions/superAd
 import ManageSectors from "./manage-sectors/ManageSectors";
 import ManageCourses from "./manage-courses/ManageCourses";
 import FeedbackSnackbarNew from "../../../shared-components/feedback-snackbar/FeedbackSnackbarNew";
+import EmailTemplateManager from "./email-templates/EmailTemplateManager";
+import SMTPSettings from "./email-templates/SMTPSettings";
 
 const mapStateToProps = state => {
     return {
@@ -224,12 +226,12 @@ class SuperAdminSettings extends Component {
                                     null
                                     :
                                     clubAttributesEdited[DB_CONST.PLEDGE_FAQS_CHILD].map(FAQ => (
-                                        <ExpansionPanel key={FAQ.id} elevation={0} className={css(styles.frequently_asked_question_box)} expanded={(expandedPledgeFAQ && FAQ.id === expandedPledgeFAQ.id) ? true : false} onChange={this.handleExpandPledgeFAQPanel(FAQ)}>
-                                            <ExpansionPanelSummary expandIcon={<ExpandMoreIcon/>}>
+                                        <Accordion key={FAQ.id} elevation={0} className={css(styles.frequently_asked_question_box)} expanded={(expandedPledgeFAQ && FAQ.id === expandedPledgeFAQ.id) ? true : false} onChange={this.handleExpandPledgeFAQPanel(FAQ)}>
+                                            <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                                                 <Typography variant="body2" align="left"><b>{FAQ.question}</b></Typography>
-                                            </ExpansionPanelSummary>
+                                            </AccordionSummary>
 
-                                            <ExpansionPanelDetails>
+                                            <AccordionDetails>
                                                 <FlexView column width="100%">
                                                     <Typography variant="body2" align="left">{FAQ.answer}</Typography>
 
@@ -269,8 +271,8 @@ class SuperAdminSettings extends Component {
                                                             null
                                                     }
                                                 </FlexView>
-                                            </ExpansionPanelDetails>
-                                        </ExpansionPanel>
+                                            </AccordionDetails>
+                                        </Accordion>
                                     ))
                             }
                         </FlexView>
@@ -416,6 +418,23 @@ class SuperAdminSettings extends Component {
                             <FlexView marginTop={15} width="100%" hAlignContent="right">
                                 <Button variant="contained" color="primary" onClick={() => saveEditedQuill('marketingPreferences')} style={{marginLeft: 12}}>Save</Button>
                             </FlexView>
+                        </FlexView>
+                    </Col>
+
+                    {/** Divider */}
+                    <Col xs={12} sm={12} md={12} lg={12}>
+                        <Divider style={{marginTop: 40, marginBottom: 40, height: 3, backgroundColor: colors.primaryColor}}/>
+                    </Col>
+
+                    {/** Email Settings */}
+                    <Col xs={12} sm={12} md={12} lg={12}>
+                        <FlexView column>
+                            <Typography variant="h6" color="primary">Email Settings</Typography>
+                            <Typography variant="body2" color="textSecondary" style={{marginTop: 10, marginBottom: 20}}>
+                                Configure SMTP server settings and manage email templates.
+                            </Typography>
+                            <SMTPSettings />
+                            <EmailTemplateManager />
                         </FlexView>
                     </Col>
                 </Row>

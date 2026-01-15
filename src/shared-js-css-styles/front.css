@@ -121,6 +121,37 @@
       justify-content: flex-end; 
     }
 
+    .navbar-center,
+    .navbar-right {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100vh;
+      background: #4F6D7A;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2rem;
+      z-index: 999;
+    }
+
+    .navbar-center.mobile-active,
+    .navbar-right.mobile-active {
+      display: flex;
+    }
+
+    .navbar-center a,
+    .navbar-right a {
+      font-size: 1.5rem;
+      padding: 1rem;
+    }
+
+    .burger-menu {
+      display: flex;
+    }
+
     .hiw-hero-image {
       display: none;
     }

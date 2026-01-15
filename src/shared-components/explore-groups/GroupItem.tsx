@@ -15,7 +15,7 @@ import {
     isSendingAccessRequest
 } from "./ExploreGroupsReducer";
 import GroupOfMembership, {getHomeGroup} from "../../models/group_of_membership";
-import {CheckCircle} from "@material-ui/icons";
+import {CheckCircle, School} from "@material-ui/icons";
 import {ThunkDispatch} from "redux-thunk";
 import {AnyAction} from "redux";
 import {removeAccessRequest, sendAccessRequest} from "./ExploreGroupsActions";
@@ -27,12 +27,18 @@ import * as DB_CONST from "../../firebase/databaseConsts";
 
 interface GroupItemProps {
     group: GroupProperties;
+    isSubGroup?: boolean; // New prop to render as a course (compact layout)
+}
+
+interface GroupItemConnectedProps {
     ManageGroupUrlState: ManageGroupUrlState;
     AuthenticationState: AuthenticationState;
     ExploreGroupsLocalState: ExploreGroupsState;
     sendAccessRequest: (groupID: string) => any;
     removeAccessRequest: (groupID: string) => any;
 }
+
+type GroupItemFullProps = GroupItemProps & GroupItemConnectedProps;
 
 const mapStateToProps = (state: AppState) => {
     return {
@@ -49,7 +55,7 @@ const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
     }
 }
 
-class GroupItem extends Component<GroupItemProps, any> {
+class GroupItem extends Component<GroupItemFullProps, any> {
     render() {
         const {
             group,
@@ -57,7 +63,8 @@ class GroupItem extends Component<GroupItemProps, any> {
             AuthenticationState,
             ExploreGroupsLocalState,
             sendAccessRequest,
-            removeAccessRequest
+            removeAccessRequest,
+            isSubGroup = false
         } = this.props;
 
         const currentUser = AuthenticationState.currentUser;
@@ -65,6 +72,9 @@ class GroupItem extends Component<GroupItemProps, any> {
         if (!currentUser) {
             return null;
         }
+
+        // Check if this is a virtual course group
+        const isVirtualCourse = group.anid.startsWith('virtual-course-');
 
         let groupMember: GroupOfMembership | undefined = AuthenticationState.groupsOfMembership.find(
             groupOfMembership => groupOfMembership.group.anid === group.anid);
@@ -76,16 +86,28 @@ class GroupItem extends Component<GroupItemProps, any> {
         }
 
         return <Box
-            marginY="18px"
+            marginY={isSubGroup ? "8px" : "18px"}
         >
-            <Card>
-                <CustomLink
-                    url={Routes.constructGroupDetailRoute(ManageGroupUrlState.groupNameFromUrl ?? null, group.groupUserName)}
-                    color="black"
-                    activeColor="none"
-                    activeUnderline={false}
-                    component="nav-link"
-                    childComponent={
+            <Card elevation={isSubGroup ? 1 : undefined} style={isSubGroup ? { backgroundColor: '#fafafa' } : undefined}>
+                {isVirtualCourse ? (
+                    // Render virtual courses as non-clickable display items
+                    <Box padding={2}>
+                        <Box display="flex" alignItems="center" style={{ gap: 8 }}>
+                            <School style={{ fontSize: 20, color: '#666' }} />
+                            <Typography variant="h6">{group.displayName}</Typography>
+                        </Box>
+                        <Typography variant="body2" color="textSecondary" style={{ marginTop: 8 }}>
+                            {group.description}
+                        </Typography>
+                    </Box>
+                ) : (
+                    <CustomLink
+                        url={Routes.constructGroupDetailRoute(ManageGroupUrlState.groupNameFromUrl ?? null, ManageGroupUrlState.courseNameFromUrl ?? null, group.groupUserName)}
+                        color="black"
+                        activeColor="none"
+                        activeUnderline={false}
+                        component="nav-link"
+                        childComponent={
                         <CardActionArea
                             onClick={
                                 () => {
@@ -136,9 +158,10 @@ class GroupItem extends Component<GroupItemProps, any> {
                         </CardActionArea>
                     }
                 />
+                )}
 
                 {
-                    isAdmin(currentUser)
+                    isVirtualCourse || isAdmin(currentUser)
                         ? null
                         : groupMember
                         ? null

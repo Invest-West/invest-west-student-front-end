@@ -78,6 +78,25 @@ export const fetchOffers: ActionCreator<any> = () => {
             groupFilter,
         } = getState().ExploreOffersLocalState;
 
+        console.log('[ExploreOffersActions] fetchOffers called with state:', {
+            groupFilter,
+            searchFilter,
+            visibilityFilter,
+            sectorFilter,
+            phaseFilter
+        });
+
+        // Get group and course info from URL
+        const { ManageGroupUrlState } = getState();
+        const groupNameFromUrl = ManageGroupUrlState.groupNameFromUrl;
+        const courseNameFromUrl = ManageGroupUrlState.courseNameFromUrl;
+
+        console.log('[ExploreOffersActions] URL info from ManageGroupUrlState:', {
+            groupNameFromUrl,
+            courseNameFromUrl,
+            fullState: ManageGroupUrlState
+        });
+
         // Determine orderBy based on phaseFilter and potentially other conditions
         let orderBy;
         if (groupFilter === "all") {
@@ -87,10 +106,19 @@ export const fetchOffers: ActionCreator<any> = () => {
             orderBy = phaseFilter === FetchProjectsPhaseOptions.ExpiredPitch ? FetchProjectsOrderByOptions.Group : FetchProjectsOrderByOptions.Phase;
         }
 
+        // Don't filter by group when on course-based URLs - show all projects
+        let effectiveGroupFilter = groupFilter;
+        // Check if the groupFilter is a groupUserName that should be undefined for API
+        // The backend now accepts both anid and groupUserName, but we should still log this
+        if (effectiveGroupFilter && effectiveGroupFilter !== "all") {
+            console.log('[ExploreOffersActions] WARNING: Group filter is set to:', effectiveGroupFilter,
+                '- this should be either "all" or a Firebase anid for best compatibility');
+        }
+
         const fetchOffersOptions: FetchProjectsOptions = {
             search: searchFilter.trim().length === 0 ? undefined : searchFilter,
             visibility: visibilityFilter,
-            group: groupFilter === "all" ? undefined : groupFilter,
+            group: effectiveGroupFilter === "all" ? undefined : effectiveGroupFilter,
             sector: sectorFilter === "all" ? undefined : sectorFilter,
             phase: phaseFilter,
             orderBy,
@@ -102,7 +130,6 @@ export const fetchOffers: ActionCreator<any> = () => {
         try {
             const cachedOffers = apiCache.get<ProjectInstance[]>(cacheKey);
             if (cachedOffers) {
-                console.log('Using cached offers data from CacheManager');
                 monitorCacheHit('api');
                 dispatch({
                     type: ExploreOffersEvents.CompleteFetchingOffers,
@@ -116,10 +143,6 @@ export const fetchOffers: ActionCreator<any> = () => {
             dispatch({ type: ExploreOffersEvents.FetchingOffers });
 
             const response = await new OfferRepository().fetchOffers(fetchOffersOptions);
-            console.log("API Response:", response);
-            console.log("Response data:", response.data);
-            console.log("Response data type:", typeof response.data);
-            console.log("Response data length:", response.data ? response.data.length : 'no data');
 
             // Cache the response with smart TTL based on filter complexity
             const ttl = searchFilter.trim().length > 0 ? 2 * 60 * 1000 : 5 * 60 * 1000; // 2min for search, 5min for browse
@@ -130,7 +153,6 @@ export const fetchOffers: ActionCreator<any> = () => {
                 offerInstances: response.data,
             });
         } catch (error) {
-            console.log("Error fetching offers:", error);
             dispatch({
                 type: ExploreOffersEvents.CompleteFetchingOffers,
                 error: error.toString(),

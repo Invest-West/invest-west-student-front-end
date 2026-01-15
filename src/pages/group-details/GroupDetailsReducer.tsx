@@ -16,6 +16,7 @@ export interface GroupDetailsState {
     members?: InvitedUserWithProfile[];
     offers?: ProjectInstance[];
     accessRequestsInstances?: AccessRequestInstance[];
+    admins?: any[]; // Group admins/lecturers
 
     loadingData: boolean;
     dataLoaded: boolean;
@@ -96,6 +97,9 @@ const groupDetailsReducer = (state = initialState, action: GroupDetailsAction) =
                 offers: completeLoadingDataAction.offers !== undefined
                     ? [...completeLoadingDataAction.offers]
                     : state.offers,
+                admins: completeLoadingDataAction.admins !== undefined
+                    ? [...completeLoadingDataAction.admins]
+                    : state.admins,
                 accessRequestsInstances: completeLoadingDataAction.accessRequestInstances !== undefined
                     ? [...completeLoadingDataAction.accessRequestInstances]
                     : state.accessRequestsInstances,

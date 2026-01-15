@@ -59,7 +59,10 @@ const editUserReducer = (state = initState, action) => {
                     firstName: state.originalUser.firstName,
                     lastName: state.originalUser.lastName,
                     email: state.originalUser.email,
-                    linkedin: !state.originalUser.linkedin ? '' : state.originalUser.linkedin
+                    linkedin: !state.originalUser.linkedin ? '' : state.originalUser.linkedin,
+                    company: !state.originalUser.company ? '' : state.originalUser.company,
+                    companyName: !state.originalUser.companyName ? '' : state.originalUser.companyName,
+                    description: !state.originalUser.description ? '' : state.originalUser.description
                 }
             };
         case editUserActions.RESET_BUSINESS_PROFILE:

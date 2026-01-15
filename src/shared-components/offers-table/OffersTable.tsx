@@ -4,6 +4,7 @@ import {AppState} from "../../redux-store/reducers";
 import {
     Box,
     Button,
+    Chip,
     colors,
     IconButton,
     InputAdornment,
@@ -22,7 +23,7 @@ import {
     TableRow,
     Typography
 } from "@material-ui/core";
-import {Close, CreateOutlined, ImportExportOutlined, Refresh, Search} from "@material-ui/icons";
+import {Close, CreateOutlined, ImportExportOutlined, Refresh, Search, Warning} from "@material-ui/icons";
 import {MediaQueryState} from "../../redux-store/reducers/mediaQueryReducer";
 import {ManageSystemAttributesState} from "../../redux-store/reducers/manageSystemAttributesReducer";
 import {getGroupRouteTheme, ManageGroupUrlState} from "../../redux-store/reducers/manageGroupUrlReducer";
@@ -50,6 +51,7 @@ import {
     changePage,
     changeRowsPerPage,
     exportCsv,
+    fetchDraftProjectsWithFeedbackCount,
     fetchOffers,
     filterChanged,
     filterOffersByName,
@@ -74,6 +76,8 @@ import {FetchProjectsPhaseOptions} from "../../api/repositories/OfferRepository"
 import {
     PROJECT_STATUS_BEING_CHECKED,
     PROJECT_STATUS_DRAFT,
+    PROJECT_STATUS_REJECTED,
+    PROJECT_STATUS_PITCH_PHASE,
     PROJECT_VISIBILITY_PRIVATE,
     PROJECT_VISIBILITY_PUBLIC,
     PROJECT_VISIBILITY_RESTRICTED
@@ -97,6 +101,7 @@ interface OffersTableProps {
     changePage: (event: any, page: number) => any;
     changeRowsPerPage: (event: any) => any;
     exportCsv: () => any;
+    fetchDraftProjectsWithFeedbackCount: () => any;
 }
 
 const mapStateToProps = (state: AppState) => {
@@ -118,7 +123,8 @@ const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
         cancelFilteringOffersByName: () => dispatch(cancelFilteringOffersByName()),
         changePage: (event: any, page: number) => dispatch(changePage(event, page)),
         changeRowsPerPage: (event: any) => dispatch(changeRowsPerPage(event)),
-        exportCsv: () => dispatch(exportCsv())
+        exportCsv: () => dispatch(exportCsv()),
+        fetchDraftProjectsWithFeedbackCount: () => dispatch(fetchDraftProjectsWithFeedbackCount())
     }
 }
 
@@ -128,9 +134,21 @@ class OffersTable extends Component<OffersTableProps, any> {
         const {
             directTableUser,
             AuthenticationState,
-            setUser
+            setUser,
+            fetchDraftProjectsWithFeedbackCount
         } = this.props;
         setUser(directTableUser ?? AuthenticationState.currentUser ?? undefined);
+        // Fetch count of draft projects with feedback for issuers
+        fetchDraftProjectsWithFeedbackCount();
+    }
+
+    componentDidUpdate(prevProps: OffersTableProps) {
+        const {fetchDraftProjectsWithFeedbackCount, OffersTableLocalState} = this.props;
+
+        // Refetch feedback count when offers are fetched
+        if (prevProps.OffersTableLocalState.offersFetched !== OffersTableLocalState.offersFetched && OffersTableLocalState.offersFetched) {
+            fetchDraftProjectsWithFeedbackCount();
+        }
     }
 
     render() {
@@ -213,10 +231,10 @@ class OffersTable extends Component<OffersTableProps, any> {
                                             isIssuer(currentUser) || (currentAdmin && tableAdmin && currentAdmin.id === tableAdmin.id)
                                                 // issuer creates offer for themselves
                                                 // course admin creates offer for their own course
-                                                ? Routes.constructCreateProjectRoute(ManageGroupUrlState.groupNameFromUrl ?? null)
+                                                ? Routes.constructCreateProjectRoute(ManageGroupUrlState.groupNameFromUrl ?? null, ManageGroupUrlState.courseNameFromUrl ?? null)
                                                 : (currentAdmin && isIssuer(tableUser))
                                                 // course admin creates offer for an issuer in their course
-                                                ? Routes.constructCreateProjectRoute(ManageGroupUrlState.groupNameFromUrl ?? null, {
+                                                ? Routes.constructCreateProjectRoute(ManageGroupUrlState.groupNameFromUrl ?? null, ManageGroupUrlState.courseNameFromUrl ?? null, {
                                                     admin: currentAdmin.id,
                                                     issuer: tableUser.id
                                                 })
@@ -383,6 +401,8 @@ class OffersTable extends Component<OffersTableProps, any> {
                                             <MenuItem key={FetchProjectsPhaseOptions.TemporarilyClosed} value={FetchProjectsPhaseOptions.TemporarilyClosed}>Temporarily closed</MenuItem>
                                             <MenuItem key={FetchProjectsPhaseOptions.ExpiredPitch} value={FetchProjectsPhaseOptions.ExpiredPitch}>Expired</MenuItem>
                                             <MenuItem key={PROJECT_STATUS_DRAFT} value={PROJECT_STATUS_DRAFT} >Draft</MenuItem>
+                                            <MenuItem key={PROJECT_STATUS_PITCH_PHASE} value={PROJECT_STATUS_PITCH_PHASE} >Approved</MenuItem>
+                                            <MenuItem key={PROJECT_STATUS_REJECTED} value={PROJECT_STATUS_REJECTED} >Rejected</MenuItem>
                                         </Select>
                                     </Box>
                                 </Col>
@@ -441,10 +461,29 @@ class OffersTable extends Component<OffersTableProps, any> {
                                         </TableCell>
                                     </TableRow>
                                     // Render offers
-                                    : OffersTableLocalState.offerInstancesFilteredByName
-                                        .slice(OffersTableLocalState.currentPage * OffersTableLocalState.rowsPerPage, OffersTableLocalState.currentPage * OffersTableLocalState.rowsPerPage + OffersTableLocalState.rowsPerPage)
-                                        .map(
-                                            offerInstance => <TableRow
+                                    : (() => {
+                                        const projectsWithFeedback = OffersTableLocalState.offerInstancesFilteredByName.filter(p => p.rejectFeedbacks && p.rejectFeedbacks.length > 0);
+                                        if (projectsWithFeedback.length > 0) {
+                                            console.log('📊 Projects with feedback details:', projectsWithFeedback.map(p => ({
+                                                name: p.projectDetail.projectName,
+                                                feedbackCount: p.rejectFeedbacks?.length,
+                                                status: p.projectDetail.status
+                                            })));
+                                        }
+
+                                        return OffersTableLocalState.offerInstancesFilteredByName
+                                            .slice(OffersTableLocalState.currentPage * OffersTableLocalState.rowsPerPage, OffersTableLocalState.currentPage * OffersTableLocalState.rowsPerPage + OffersTableLocalState.rowsPerPage)
+                                            .map(
+                                                offerInstance => {
+                                                    // Debug: Log reject feedbacks for each rendered project
+                                                    console.log('🔍 Rendering project:', {
+                                                        projectName: offerInstance.projectDetail.projectName,
+                                                        hasRejectFeedbacks: !!offerInstance.rejectFeedbacks,
+                                                        feedbackCount: offerInstance.rejectFeedbacks?.length || 0,
+                                                        feedbacks: offerInstance.rejectFeedbacks
+                                                    });
+
+                                                return <TableRow
                                                 key={offerInstance.projectDetail.id}
                                                 hover
                                             >
@@ -462,16 +501,8 @@ class OffersTable extends Component<OffersTableProps, any> {
                                                             }
                                                             <Box width="15px" />
                                                             <CustomLink
-                                                                url={
-                                                                    isDraftProject(offerInstance.projectDetail)
-                                                                        ? Routes.constructCreateProjectRoute(ManageGroupUrlState.groupNameFromUrl ?? null, {edit: offerInstance.projectDetail.id})
-                                                                        : Routes.constructProjectDetailRoute(ManageGroupUrlState.groupNameFromUrl ?? null, offerInstance.projectDetail.id)
-                                                                }
-                                                                target={
-                                                                    isDraftProject(offerInstance.projectDetail)
-                                                                        ? "_blank"
-                                                                        : ""
-                                                                }
+                                                                url={Routes.constructProjectDetailRoute(ManageGroupUrlState.groupNameFromUrl ?? null, ManageGroupUrlState.courseNameFromUrl ?? null, offerInstance.projectDetail.id)}
+                                                                target=""
                                                                 color="black"
                                                                 activeColor={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main}
                                                                 activeUnderline={false}
@@ -506,16 +537,19 @@ class OffersTable extends Component<OffersTableProps, any> {
                                                                 </Box>
                                                         }
 
-                                                        {/** Edit button (only available for draft project) */}
+                                                        {/** Edit button (only available for draft project AND only for the issuer creator) */}
                                                         {
                                                             isInvestor(currentUser)
                                                                 ? null
                                                                 : !isDraftProject(offerInstance.projectDetail)
                                                                 ? null
+                                                                // Only show edit if current user is an issuer AND they created this project
+                                                                : !(isIssuer(currentUser) && offerInstance.issuer && currentUser.id === offerInstance.issuer.id)
+                                                                ? null
                                                                 : <Box marginTop="18px" >
                                                                     <CustomLink
                                                                         url={
-                                                                            Routes.constructCreateProjectRoute(ManageGroupUrlState.groupNameFromUrl ?? null, {edit: offerInstance.projectDetail.id})
+                                                                            Routes.constructCreateProjectRoute(ManageGroupUrlState.groupNameFromUrl ?? null, ManageGroupUrlState.courseNameFromUrl ?? null, {edit: offerInstance.projectDetail.id})
                                                                         }
                                                                         target="_blank"
                                                                         color="none"
@@ -565,24 +599,47 @@ class OffersTable extends Component<OffersTableProps, any> {
 
                                                 {/** Status */}
                                                 <TableCell colSpan={1} >
-                                                    <Typography variant="body2" align="left" >
+                                                    <Box display="flex" flexDirection="column" >
+                                                        <Typography variant="body2" align="left" >
+                                                            {
+                                                                isDraftProject(offerInstance.projectDetail)
+                                                                    ? "Draft"
+                                                                    : isProjectWaitingToGoLive(offerInstance.projectDetail)
+                                                                    ? "Submitted. Awaiting course admin review"
+                                                                    : isProjectInLivePitchPhase(offerInstance.projectDetail)
+                                                                        ? isProjectTemporarilyClosed(offerInstance.projectDetail)
+                                                                            ? "Temporarily closed"
+                                                                            : "Live"
+                                                                        : isProjectPitchExpiredWaitingForAdminToCheck(offerInstance.projectDetail)
+                                                                            ? "Expired. Awaiting course admin review"
+                                                                            : "Closed"
+                                                            }
+                                                        </Typography>
                                                         {
-                                                            isDraftProject(offerInstance.projectDetail)
-                                                                ? "Draft"
-                                                                : isProjectWaitingToGoLive(offerInstance.projectDetail)
-                                                                ? "Submitted. Awaiting course admin review"
-                                                                : isProjectInLivePitchPhase(offerInstance.projectDetail)
-                                                                    ? isProjectTemporarilyClosed(offerInstance.projectDetail)
-                                                                        ? "Temporarily closed"
-                                                                        : "Live"
-                                                                    : isProjectPitchExpiredWaitingForAdminToCheck(offerInstance.projectDetail)
-                                                                        ? "Expired. Awaiting course admin review"
-                                                                        : "Closed"
+                                                            // Show admin feedback badge if there are reject feedbacks (but not for admins)
+                                                            !currentAdmin && offerInstance.rejectFeedbacks && offerInstance.rejectFeedbacks.length > 0
+                                                                ? <Box marginTop="12px" >
+                                                                    <Chip
+                                                                        icon={<Warning />}
+                                                                        label="Admin feedback - action required"
+                                                                        size="small"
+                                                                        style={{
+                                                                            backgroundColor: '#fff8e1',
+                                                                            color: '#f57c00',
+                                                                            borderColor: '#ff9800',
+                                                                            fontWeight: 600
+                                                                        }}
+                                                                        variant="outlined"
+                                                                    />
+                                                                </Box>
+                                                                : null
                                                         }
-                                                    </Typography>
+                                                    </Box>
                                                 </TableCell>
                                             </TableRow>
-                                        )
+                                            }
+                                        );
+                                    })()
                     }
                 </TableBody>
 

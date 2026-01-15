@@ -11,7 +11,6 @@ interface CarouselOfferItemProps {
 }
 
 const CarouselOfferItem: React.FC<CarouselOfferItemProps> = ({ offer, onClick }) => {
-    console.log('CarouselOfferItem rendering:', offer.projectDetail.projectName);
     const pitchCover = getPitchCover(offer.projectDetail);
     console.log('CarouselOfferItem pitchCover:', pitchCover);
     

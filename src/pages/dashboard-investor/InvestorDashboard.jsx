@@ -114,7 +114,19 @@ class InvestorDashboard extends Component {
         }
 
         setGroupUserNameFromParams(match.params.hasOwnProperty('groupUserName') ? match.params.groupUserName : null);
-        setExpectedAndCurrentPathsForChecking(match.params.hasOwnProperty('groupUserName') ? ROUTES.DASHBOARD_INVESTOR : ROUTES.DASHBOARD_INVESTOR_INVEST_WEST_SUPER, match.path);
+        // Determine expected path based on URL structure
+        let expectedPath;
+        if (match.params.hasOwnProperty('courseUserName')) {
+            // Course-based route: /groups/:groupUserName/:courseUserName/dashboard/investor
+            expectedPath = '/groups/:groupUserName/:courseUserName/dashboard/investor';
+        } else if (match.params.hasOwnProperty('groupUserName')) {
+            // Group-based route: /groups/:groupUserName/dashboard/investor
+            expectedPath = ROUTES.DASHBOARD_INVESTOR;
+        } else {
+            // Super admin route
+            expectedPath = ROUTES.DASHBOARD_INVESTOR_INVEST_WEST_SUPER;
+        }
+        setExpectedAndCurrentPathsForChecking(expectedPath, match.path);
 
         loadAngelNetwork();
 

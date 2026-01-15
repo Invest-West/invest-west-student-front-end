@@ -227,9 +227,6 @@ class CreatePitchPageMain extends Component {
             // call load data here when the save progress button is hit for the first time --> navigate to edit mode
             this.loadData();
         }
-        console.log('Page loaded. Authentication status:', this.props.AuthenticationState.isAuthenticated ? 'Authenticated' : 'Not Authenticated');
-        console.log('Current user on page load:', this.props.AuthenticationState.currentUser);
-        console.log(`Data request status on page load: ${this.state.requestToLoadData ? 'Pending' : 'Not Requested'}`);
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
@@ -318,13 +315,11 @@ class CreatePitchPageMain extends Component {
         // --> still in edit mode
         if (projectID) {
             this.props.history.push({
-                pathname:
-                    ManageGroupUrlState.groupNameFromUrl
-                        ?
-                        ROUTES.CREATE_OFFER
-                            .replace(":groupUserName", ManageGroupUrlState.groupNameFromUrl)
-                        :
-                        ROUTES.CREATE_OFFER_INVEST_WEST_SUPER,
+                pathname: Routes.constructCreateProjectRoute(
+                    ManageGroupUrlState.groupNameFromUrl ?? null,
+                    ManageGroupUrlState.courseNameFromUrl ?? null,
+                    { edit: projectID }
+                ).split('?')[0], // Remove query params since we're setting them separately
                 search: `?edit=${projectID}`,
                 state: {
                     activeStep: activeStep
@@ -334,13 +329,10 @@ class CreatePitchPageMain extends Component {
         // projectID null --> create mode
         else {
             this.props.history.push({
-                pathname:
-                    ManageGroupUrlState.groupNameFromUrl
-                        ?
-                        ROUTES.CREATE_OFFER
-                            .replace(":groupUserName", ManageGroupUrlState.groupNameFromUrl)
-                        :
-                        ROUTES.CREATE_OFFER_INVEST_WEST_SUPER,
+                pathname: Routes.constructCreateProjectRoute(
+                    ManageGroupUrlState.groupNameFromUrl ?? null,
+                    ManageGroupUrlState.courseNameFromUrl ?? null
+                ),
                 state: {
                     activeStep: activeStep
                 }
@@ -353,6 +345,14 @@ class CreatePitchPageMain extends Component {
      * Load data
      */
     loadData = () => {
+        const params = queryString.parse(this.props.location.search);
+        console.log('[CREATE-PROJECT DEBUG] loadData called:', {
+            editParam: params.edit,
+            currentURL: window.location.href,
+            projectEditedLoaded: this.state.projectEditedLoaded,
+            projectIDToBeLoadedAfterSavingFirstTime: this.state.projectIDToBeLoadedAfterSavingFirstTime
+        });
+
         const {
             ManageGroupUrlState,
             AuthenticationState,
@@ -365,6 +365,7 @@ class CreatePitchPageMain extends Component {
         } = this.state;
 
         if (isValidatingGroupUrl(ManageGroupUrlState) || isAuthenticating(AuthenticationState)) {
+            console.log('[CREATE-PROJECT DEBUG] Waiting for group validation or authentication');
             return;
         }
 
@@ -388,6 +389,13 @@ class CreatePitchPageMain extends Component {
             } else {
                 // New project creation - handle initialization for investors
                 if (!projectEditedLoaded) {
+                    console.log('[CREATE-PROJECT DEBUG] Setting groupIssuerCreateOfferFor from ManageGroupUrlState:', {
+                        group: ManageGroupUrlState.group,
+                        groupAnid: ManageGroupUrlState.group ? ManageGroupUrlState.group.anid : 'null',
+                        groupUserName: ManageGroupUrlState.groupNameFromUrl,
+                        courseUserName: ManageGroupUrlState.courseNameFromUrl
+                    });
+
                     this.setState({
                         projectEditedLoaded: true,
                         projectIDToBeLoadedAfterSavingFirstTime: null,
@@ -424,14 +432,12 @@ class CreatePitchPageMain extends Component {
             requestToLoadData: false
         });
 
-        // get project id from the URL
-        const params = queryString.parse(this.props.location.search);
-
         // in edit mode
         if (params.edit || projectIDToBeLoadedAfterSavingFirstTime) {
+            const projectIdToLoad = !params.edit ? projectIDToBeLoadedAfterSavingFirstTime : params.edit;
             // load the project
             realtimeDBUtils
-                .loadAParticularProject(!params.edit ? projectIDToBeLoadedAfterSavingFirstTime : params.edit)
+                .loadAParticularProject(projectIdToLoad)
                 .then(project => {
 
                     // allow the group admin and investors to change the visibility of the project
@@ -549,8 +555,9 @@ class CreatePitchPageMain extends Component {
                     });
                 })
                 .catch(error => {
-                    console.error('Error loading project data:', error);
-                    //console.log('Current state at error:', this.state);
+                    console.error('💥 ERROR in CreateProject loadData catch block:', error);
+                    console.error('💥 ERROR Stack trace:', new Error().stack);
+                    console.error('💥 ERROR Current state at error:', this.state);
                     this.setState({
                         projectEditedLoaded: true,
                         projectIDToBeLoadedAfterSavingFirstTime: null,
@@ -667,9 +674,8 @@ class CreatePitchPageMain extends Component {
                 }
 
                 // if one of the required fields in the General information part is missing, ask the user to fill them
-                // Note: project description and expiry date are now optional
+                // Note: project description, expiry date, and course are now optional
                 if (pitchSector.trim().length === 0
-                    || pitchCourse.trim().length === 0
                     || pitchProjectName.trim().length === 0
                     //|| financialRound.trim().length === 0
                     || (ManageGroupUrlState.groupNameFromUrl === "qib" && qibSpecialNews.trim().length === 0)
@@ -1104,8 +1110,11 @@ class CreatePitchPageMain extends Component {
             // edit mode
             if (params.edit) {
                 this.props.history.push({
-                    pathname: ROUTES.CREATE_OFFER
-                        .replace(":groupUserName", AuthenticationState.groupsOfMembership[index].group.groupUserName),
+                    pathname: Routes.constructCreateProjectRoute(
+                        AuthenticationState.groupsOfMembership[index].group.groupUserName,
+                        null, // No course info available in this context, fallback to group route
+                        { edit: params.edit }
+                    ).split('?')[0], // Remove query params since we're setting them separately
                     search: `?edit=${params.edit}`,
                     state: {
                         activeStep: this.state.createProject.activeStep,
@@ -1117,8 +1126,10 @@ class CreatePitchPageMain extends Component {
             // create mode
             else {
                 this.props.history.push({
-                    pathname: ROUTES.CREATE_OFFER
-                        .replace(":groupUserName", AuthenticationState.groupsOfMembership[index].group.groupUserName),
+                    pathname: Routes.constructCreateProjectRoute(
+                        AuthenticationState.groupsOfMembership[index].group.groupUserName,
+                        null // No course info available in this context, fallback to group route
+                    ),
                     state: {
                         activeStep: this.state.createProject.activeStep,
                         groupIssuerCreateOfferFor: value,
@@ -1601,6 +1612,21 @@ class CreatePitchPageMain extends Component {
                                                 }
                                                 // a draft offer is published
                                                 else {
+                                                    // Clear any reject feedbacks when the project is resubmitted
+                                                    // This marks the admin feedback as "dealt with"
+                                                    this.firebaseDB
+                                                        .ref(DB_CONST.PROJECT_REJECT_FEEDBACKS_CHILD)
+                                                        .orderByChild("projectID")
+                                                        .equalTo(projectEdited.id)
+                                                        .once('value', snapshots => {
+                                                            snapshots.forEach(snapshot => {
+                                                                snapshot.ref.remove();
+                                                            });
+                                                        })
+                                                        .catch(error => {
+                                                            console.error("Error clearing reject feedbacks:", error);
+                                                        });
+
                                                     // don't need to check for prior TCs acceptance because this is create new mode
                                                     const acceptedTCsObj = {
                                                         issuerID: AuthenticationState.currentUser.id,
@@ -1614,19 +1640,25 @@ class CreatePitchPageMain extends Component {
                                                         .ref(DB_CONST.ACCEPTED_CREATE_PITCH_TERM_AND_CONDITIONS_CHILD)
                                                         .push(acceptedTCsObj)
                                                         .then(async () => {
-                                                            await new Api().request(
-                                                                "post",
-                                                                ApiRoutes.sendEmailRoute,
-                                                                {
-                                                                    queryParameters: null,
-                                                                    requestBody: {
-                                                                        emailType: 3,
-                                                                        emailInfo: {
-                                                                            projectID: projectEdited.id
+                                                            try {
+                                                                await new Api().request(
+                                                                    "post",
+                                                                    ApiRoutes.sendEmailRoute,
+                                                                    {
+                                                                        queryParameters: null,
+                                                                        requestBody: {
+                                                                            emailType: 3,
+                                                                            emailInfo: {
+                                                                                projectID: projectEdited.id
+                                                                            }
                                                                         }
                                                                     }
-                                                                }
-                                                            );
+                                                                );
+                                                            } catch (error) {
+                                                                // Log error but don't block the publish process
+                                                                // The project is already published, email is just a notification
+                                                                console.error("Failed to send pitch published email:", error);
+                                                            }
 
                                                             // track activity for creating a new project from a draft one
                                                             realtimeDBUtils
@@ -2381,7 +2413,6 @@ class CreatePitchPageMain extends Component {
         if (activeStep === STEP_PITCH_GENERAL_INFORMATION) {
             // check if at least one field is filled
             if (pitchSector.trim().length === 0
-                && pitchCourse.trim().length === 0
                 && pitchProjectName.trim().length === 0
                 && pitchProjectDescription.trim().length === 0
                 && pitchExpiryDate === null
@@ -2655,6 +2686,15 @@ class CreatePitchPageMain extends Component {
                     && AuthenticationState.currentUser.id !== projectEdited.issuerID
                 )
             ) {
+                console.log('[CREATE-PROJECT DEBUG] Showing 404 because:', {
+                    projectEdited: !!projectEdited,
+                    projectEditedLoaded: projectEditedLoaded,
+                    currentUser: AuthenticationState.currentUser,
+                    projectIssuerID: projectEdited?.issuerID,
+                    isIssuer: AuthenticationState.currentUser?.type === DB_CONST.TYPE_ISSUER,
+                    ownsProject: AuthenticationState.currentUser?.id === projectEdited?.issuerID,
+                    editParam: queryString.parse(this.props.location.search).edit
+                });
                 return (
                     <PageNotFoundWhole/>
                 );
@@ -2670,10 +2710,18 @@ class CreatePitchPageMain extends Component {
             }
 
             // current user is a group admin that does not own the project
+            // Check if project belongs to the current group context (handle both old 'invest-west' and new course-specific URLs)
+            const currentGroupUserName = ManageGroupUrlState.group ? ManageGroupUrlState.group.groupUserName : null;
+            const currentGroupAnid = ManageGroupUrlState.group ? ManageGroupUrlState.group.anid : null;
+            const projectBelongsToCurrentGroup = projectEdited.anid === currentGroupUserName
+                || projectEdited.anid === currentGroupAnid
+                || (currentGroupUserName === 'invest-west' && projectEdited.anid === 'invest-west')
+                || (currentGroupUserName === 'invest-west' && projectEdited.anid === '-M2I40dBdzdI89yDCaAn');
+
             if (projectEdited
                 && AuthenticationState.currentUser.type === DB_CONST.TYPE_ADMIN
                 && !AuthenticationState.currentUser.superAdmin
-                && AuthenticationState.currentUser.anid !== projectEdited.anid
+                && !projectBelongsToCurrentGroup
             ) {
                 return <FlexView marginTop={50} hAlignContent="center">
                     <Typography variant="h4" align="center">
@@ -3019,9 +3067,9 @@ class CreateProject extends Component {
                                     </FlexView>
 
                                     {/**
-                                     * Choosing course
+                                     * Choosing course - REMOVED
                                      */}
-                                    <FlexView marginTop={30}>
+                                    {/*<FlexView marginTop={30}>
                                         <FormControl
                                             fullWidth
                                             required
@@ -3031,18 +3079,18 @@ class CreateProject extends Component {
                                             }
                                         >
                                             <FormLabel>Choose course</FormLabel>
-                                            <Select 
-                                                name="pitchCourse" 
+                                            <Select
+                                                name="pitchCourse"
                                                 value={
-                                                    createProjectState.pitchCourse && 
-                                                    clubAttributes && 
-                                                    clubAttributes.Courses && 
+                                                    createProjectState.pitchCourse &&
+                                                    clubAttributes &&
+                                                    clubAttributes.Courses &&
                                                     (clubAttributes.Courses.includes(createProjectState.pitchCourse) || createProjectState.pitchCourse === "-")
-                                                        ? createProjectState.pitchCourse 
+                                                        ? createProjectState.pitchCourse
                                                         : "-"
-                                                } 
-                                                margin="dense" 
-                                                input={<OutlinedInput/>} 
+                                                }
+                                                margin="dense"
+                                                input={<OutlinedInput/>}
                                                 onChange={this.onInputChanged}
                                             >
                                                 <MenuItem key={-1} value="-">
@@ -3059,7 +3107,7 @@ class CreateProject extends Component {
                                                 }
                                             </Select>
                                         </FormControl>
-                                    </FlexView>
+                                    </FlexView>*/}
 
                                     {
                                         /**
