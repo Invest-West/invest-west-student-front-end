@@ -35,6 +35,7 @@ import * as DB_CONST from "../../firebase/databaseConsts";
 import {openFeedbackSnackbar} from "../../shared-components/feedback-snackbar/FeedbackSnackbarActions";
 import {FeedbackSnackbarTypes} from "../../shared-components/feedback-snackbar/FeedbackSnackbarReducer";
 import EditGroupImageDialog from "../admin/components/EditGroupImageDialog";
+import EditCourseNameDialog from "../admin/components/manage-courses/EditCourseNameDialog";
 
 interface GroupDetailsProps {
     MediaQueryState: MediaQueryState;
@@ -54,6 +55,7 @@ interface GroupDetailsLocalComponentState {
     editedDescription: string;
     isSavingDescription: boolean;
     editLogoDialogOpen: boolean;
+    editNameDialogOpen: boolean;
 }
 
 const mapStateToProps = (state: AppState) => {
@@ -84,7 +86,8 @@ class GroupDetails extends Component<GroupDetailsProps & Readonly<RouteComponent
             isEditingDescription: false,
             editedDescription: '',
             isSavingDescription: false,
-            editLogoDialogOpen: false
+            editLogoDialogOpen: false,
+            editNameDialogOpen: false
         };
     }
 
@@ -207,6 +210,47 @@ class GroupDetails extends Component<GroupDetailsProps & Readonly<RouteComponent
         this.setState({ editLogoDialogOpen: false });
     }
 
+    handleOpenEditNameDialog = () => {
+        this.setState({ editNameDialogOpen: true });
+    }
+
+    handleCloseEditNameDialog = () => {
+        this.setState({ editNameDialogOpen: false });
+    }
+
+    handleNameUpdateSuccess = (newName: string) => {
+        const { openFeedbackSnackbar, validateGroupUrl, resetGroupUrlState } = this.props;
+        openFeedbackSnackbar(FeedbackSnackbarTypes.Success, 'Course name updated successfully!');
+
+        // Reload data to reflect changes
+        const viewedGroupUserName = this.props.match.params.viewedGroupUserName;
+        const viewedCourseUserName = this.props.match.params.viewedCourseUserName;
+
+        if (viewedGroupUserName) {
+            this.props.loadData(viewedGroupUserName);
+            resetGroupUrlState();
+            setTimeout(() => {
+                validateGroupUrl(this.props.location.pathname, viewedGroupUserName, viewedCourseUserName);
+            }, 100);
+        }
+
+        this.setState({ editNameDialogOpen: false });
+    }
+
+    // Check if the current group is a course (has a parent group)
+    isCourse = () => {
+        const { GroupDetailsLocalState } = this.props;
+        return GroupDetailsLocalState.group?.parentGroupId != null ||
+               GroupDetailsLocalState.group?.groupType === 'course';
+    }
+
+    // Get the parent group's username for API calls
+    getParentGroupUserName = () => {
+        const { ManageGroupUrlState } = this.props;
+        // If we're viewing a course, groupNameFromUrl is the parent university
+        return ManageGroupUrlState.groupNameFromUrl || '';
+    }
+
     render() {
         const {
             MediaQueryState,
@@ -287,6 +331,20 @@ class GroupDetails extends Component<GroupDetailsProps & Readonly<RouteComponent
                                     <Col xs={{span: 12, order: 2}} sm={{span: 12, order: 2}} md={{span: 12, order: 2}} lg={{span: 9, order: 2}}>
                                         <Box display="flex" flexDirection="column" height="100%" justifyContent="center" alignItems="center">
                                             <Typography align="center" variant="h4">{GroupDetailsLocalState.group?.displayName}</Typography>
+
+                                            {/* Edit Name button - only for super admins viewing a course */}
+                                            {currentAdmin && (currentAdmin.superAdmin || currentAdmin.superGroupAdmin) && this.isCourse() && (
+                                                <Button
+                                                    variant="outlined"
+                                                    size="small"
+                                                    startIcon={<EditIcon />}
+                                                    onClick={this.handleOpenEditNameDialog}
+                                                    className={css(sharedStyles.no_text_transform)}
+                                                    style={{ marginTop: 10 }}
+                                                >
+                                                    Edit Name
+                                                </Button>
+                                            )}
 
                                             {/** Home/platform member + joined date (available for investor and issuer) */}
                                             {
@@ -509,6 +567,18 @@ class GroupDetails extends Component<GroupDetailsProps & Readonly<RouteComponent
                     currentImageUrl={getGroupLogo(GroupDetailsLocalState.group) || undefined}
                     onClose={this.handleCloseEditLogoDialog}
                     onSuccess={this.handleLogoUpdateSuccess}
+                />
+            )}
+
+            {/** Edit Course Name Dialog */}
+            {GroupDetailsLocalState.group && this.isCourse() && (
+                <EditCourseNameDialog
+                    open={this.state.editNameDialogOpen}
+                    groupUserName={this.getParentGroupUserName()}
+                    courseUserName={GroupDetailsLocalState.group.groupUserName}
+                    currentName={GroupDetailsLocalState.group.displayName}
+                    onClose={this.handleCloseEditNameDialog}
+                    onSuccess={this.handleNameUpdateSuccess}
                 />
             )}
         </Box>;
