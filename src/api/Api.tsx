@@ -41,6 +41,8 @@ export class ApiRoutes {
     static updateGroupLogo = ApiRoutes.groupsBaseRoute + "/:groupUserName/update-logo";
     static updateCourseImage = ApiRoutes.groupsBaseRoute + "/:groupUserName/courses/:courseUserName/update-image";
     static updateCourseName = ApiRoutes.groupsBaseRoute + "/:groupUserName/courses/:courseUserName/update-name";
+    static deleteUniversity = ApiRoutes.groupsBaseRoute + "/:groupUserName/delete";
+    static deleteCourse = ApiRoutes.groupsBaseRoute + "/:groupUserName/courses/:courseUserName/delete";
     static addMembersToGroup = ApiRoutes.groupsBaseRoute + "/:group/add-members";
     static listGroupMembers = ApiRoutes.groupsBaseRoute + "/:group/list-members";
 

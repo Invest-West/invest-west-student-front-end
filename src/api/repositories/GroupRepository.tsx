@@ -183,4 +183,34 @@ export default class GroupRepository {
                 }
             );
     }
+
+    /**
+     * Delete a university (super admin only)
+     * This will delete the university and all associated courses
+     *
+     * @param groupUserName - University groupUserName
+     */
+    public async deleteUniversity(groupUserName: string) {
+        return await new Api()
+            .request(
+                "delete",
+                ApiRoutes.deleteUniversity.replace(":groupUserName", groupUserName)
+            );
+    }
+
+    /**
+     * Delete a course (super admin only)
+     *
+     * @param groupUserName - University groupUserName
+     * @param courseUserName - Course groupUserName
+     */
+    public async deleteCourse(groupUserName: string, courseUserName: string) {
+        return await new Api()
+            .request(
+                "delete",
+                ApiRoutes.deleteCourse
+                    .replace(":groupUserName", groupUserName)
+                    .replace(":courseUserName", courseUserName)
+            );
+    }
 }

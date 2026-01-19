@@ -10,7 +10,12 @@ const initState = {
 
     searchText: '', // string typed to search angel networks by name
     inSearchMode: false, // when the search button is clicked --> show X icon to exit search mode
-    matchedAngelNetworks: [] // angel networks that match
+    matchedAngelNetworks: [], // angel networks that match
+
+    // Delete state
+    deletingUniversityId: null,
+    deletingCourseId: null,
+    deleteError: null
 };
 
 const angelNetworksReducer = (state = initState, action) => {
@@ -58,6 +63,45 @@ const angelNetworksReducer = (state = initState, action) => {
             return {
                 ...state,
                 angelNetworks: [...action.angelNetworks]
+            };
+        // Delete university actions
+        case angelNetworksActions.DELETING_UNIVERSITY:
+            return {
+                ...state,
+                deletingUniversityId: action.universityId,
+                deleteError: null
+            };
+        case angelNetworksActions.DELETED_UNIVERSITY:
+            return {
+                ...state,
+                deletingUniversityId: null,
+                angelNetworks: [...action.angelNetworks],
+                deleteError: null
+            };
+        case angelNetworksActions.DELETE_UNIVERSITY_ERROR:
+            return {
+                ...state,
+                deletingUniversityId: null,
+                deleteError: action.error
+            };
+        // Delete course actions
+        case angelNetworksActions.DELETING_COURSE:
+            return {
+                ...state,
+                deletingCourseId: action.courseId,
+                deleteError: null
+            };
+        case angelNetworksActions.DELETED_COURSE:
+            return {
+                ...state,
+                deletingCourseId: null,
+                deleteError: null
+            };
+        case angelNetworksActions.DELETE_COURSE_ERROR:
+            return {
+                ...state,
+                deletingCourseId: null,
+                deleteError: action.error
             };
         default:
             return state;

@@ -180,6 +180,24 @@ export const startListeningForAngelNetworksChanged = () => {
                         });
                     }
                 });
+
+            // Handle university deletion - remove from state when deleted from Firebase
+            angelNetworksListener
+                .on('child_removed', snapshot => {
+                    let removedAngelNetwork = snapshot.val();
+
+                    let angelNetworks = [...getState().manageAngelNetworks.angelNetworks];
+                    let filteredAngelNetworks = angelNetworks.filter(
+                        existingAN => existingAN.anid !== removedAngelNetwork.anid
+                    );
+
+                    if (filteredAngelNetworks.length !== angelNetworks.length) {
+                        dispatch({
+                            type: ANGEL_NETWORKS_IN_TABLE_CHANGED,
+                            angelNetworks: filteredAngelNetworks
+                        });
+                    }
+                });
         }
     }
 };
@@ -189,7 +207,79 @@ export const stopListeningForAngelNetworksChanged = () => {
         if (angelNetworksListener) {
             angelNetworksListener.off('child_added');
             angelNetworksListener.off('child_changed');
+            angelNetworksListener.off('child_removed');
             angelNetworksListener = null;
         }
     }
+};
+
+// Delete actions -----------------------------------------------------------------------------------------------------------
+
+export const DELETING_UNIVERSITY = 'DELETING_UNIVERSITY';
+export const DELETED_UNIVERSITY = 'DELETED_UNIVERSITY';
+export const DELETE_UNIVERSITY_ERROR = 'DELETE_UNIVERSITY_ERROR';
+
+export const deleteUniversity = (groupUserName, universityId) => {
+    return async (dispatch, getState) => {
+        dispatch({ type: DELETING_UNIVERSITY, universityId });
+
+        try {
+            const GroupRepository = require('../../api/repositories/GroupRepository').default;
+            await new GroupRepository().deleteUniversity(groupUserName);
+
+            // Remove from local state
+            const angelNetworks = getState().manageAngelNetworks.angelNetworks.filter(
+                network => network.anid !== universityId
+            );
+
+            dispatch({
+                type: DELETED_UNIVERSITY,
+                angelNetworks,
+                universityId
+            });
+
+            return { success: true };
+        } catch (error) {
+            console.error('Error deleting university:', error);
+            dispatch({
+                type: DELETE_UNIVERSITY_ERROR,
+                error: error.message,
+                universityId
+            });
+            return { success: false, error: error.message };
+        }
+    };
+};
+
+export const DELETING_COURSE = 'DELETING_COURSE';
+export const DELETED_COURSE = 'DELETED_COURSE';
+export const DELETE_COURSE_ERROR = 'DELETE_COURSE_ERROR';
+
+export const deleteCourse = (groupUserName, courseUserName, courseId) => {
+    return async (dispatch, getState) => {
+        dispatch({ type: DELETING_COURSE, courseId });
+
+        try {
+            const GroupRepository = require('../../api/repositories/GroupRepository').default;
+            await new GroupRepository().deleteCourse(groupUserName, courseUserName);
+
+            dispatch({
+                type: DELETED_COURSE,
+                courseId
+            });
+
+            // Reload angel networks to reflect changes
+            dispatch(loadAngelNetworks());
+
+            return { success: true };
+        } catch (error) {
+            console.error('Error deleting course:', error);
+            dispatch({
+                type: DELETE_COURSE_ERROR,
+                error: error.message,
+                courseId
+            });
+            return { success: false, error: error.message };
+        }
+    };
 };
