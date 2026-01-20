@@ -143,6 +143,24 @@ export default class GroupRepository {
     }
 
     /**
+     * Update university name (super admin or super group admin only)
+     *
+     * @param groupUserName - University groupUserName
+     * @param newName - New university name
+     */
+    public async updateUniversityName(groupUserName: string, newName: string) {
+        return await new Api()
+            .request(
+                "put",
+                ApiRoutes.updateUniversityName.replace(":groupUserName", groupUserName),
+                {
+                    requestBody: { newName },
+                    queryParameters: null
+                }
+            );
+    }
+
+    /**
      * Update course image (system admin only)
      *
      * @param groupUserName - University groupUserName

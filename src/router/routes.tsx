@@ -117,6 +117,7 @@ export default class Routes {
             && route !== Routes.groupHiw
             && route !== Routes.courseHiw
             && route !== Routes.nonGroupSignIn
+            && route !== Routes.superAdminSignIn
             && route !== Routes.nonGroupContact
             && route !== Routes.nonGroupExploreFront
             && route !== Routes.groupExploreFront

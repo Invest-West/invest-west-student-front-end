@@ -3,6 +3,32 @@ import firebase from "../firebase/firebaseApp";
 import HttpResponseError from "./ResponseError";
 
 /**
+ * Wait for Firebase auth to be ready and return the current user
+ * This ensures we don't make API calls before Firebase has restored the auth state
+ */
+const waitForFirebaseAuth = (): Promise<firebase.default.User | null> => {
+    return new Promise((resolve) => {
+        const currentUser = firebase.auth().currentUser;
+        if (currentUser) {
+            resolve(currentUser);
+            return;
+        }
+
+        // If no current user, wait for auth state to change (max 5 seconds)
+        const timeout = setTimeout(() => {
+            unsubscribe();
+            resolve(null);
+        }, 5000);
+
+        const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
+            clearTimeout(timeout);
+            unsubscribe();
+            resolve(user);
+        });
+    });
+};
+
+/**
  * Api routes
  */
 
@@ -39,6 +65,7 @@ export class ApiRoutes {
     static listGroups = ApiRoutes.groupsBaseRoute + "/list";
     static retrieveGroup = ApiRoutes.groupsBaseRoute + "/:groupUserName";
     static updateGroupLogo = ApiRoutes.groupsBaseRoute + "/:groupUserName/update-logo";
+    static updateUniversityName = ApiRoutes.groupsBaseRoute + "/:groupUserName/update-name";
     static updateCourseImage = ApiRoutes.groupsBaseRoute + "/:groupUserName/courses/:courseUserName/update-image";
     static updateCourseName = ApiRoutes.groupsBaseRoute + "/:groupUserName/courses/:courseUserName/update-name";
     static deleteUniversity = ApiRoutes.groupsBaseRoute + "/:groupUserName/delete";
@@ -192,7 +219,8 @@ export default class Api {
                 : null
         );
 
-        let currentUser: firebase.default.User | null = firebase.auth().currentUser;
+        // Wait for Firebase auth to be ready before making the request
+        let currentUser: firebase.default.User | null = await waitForFirebaseAuth();
 
         try {
             let idToken: string | null = null;
