@@ -30,6 +30,9 @@ import ResetPassword from "../pages/reset-password/ResetPassword";
 import ResourceDetail from "../pages/resources/pages/ResourceDetail";
 import SignUpNew from "../pages/signup/SignUpNew";
 import CourseSetupPage from "../pages/setup/CourseSetupPage";
+import UniAdminSignup from "../pages/uni-admin-signup/UniAdminSignup";
+import CourseAdminSignup from "../pages/course-admin-signup/CourseAdminSignup";
+import AdminUpgradeResponse from "../pages/admin-upgrade-response/AdminUpgradeResponse";
 import {colors} from "@material-ui/core";
 
 /**
@@ -103,6 +106,22 @@ const AppRouter = () => (
                            <p>The issue is likely in GroupRoute validation logic.</p>
                        </div>;
                    }}/>
+
+            {/** University Admin Signup - public route for invited university admins */}
+            <Route path="/uni-admin-signup/:token" exact
+                // @ts-ignore
+                   render={props => <UniAdminSignup {...props} />}/>
+
+            {/** Course Admin Signup - public route for invited course admins/lecturers */}
+            <Route path="/course-admin-signup/:token" exact
+                // @ts-ignore
+                   render={props => <CourseAdminSignup {...props} />}/>
+
+            {/** Admin Upgrade Response - protected route for existing users to accept/decline admin role */}
+            <Route path="/admin-upgrade/:requestId" exact
+                // @ts-ignore
+                   render={props => <GroupRoute {...props} showHeader={true}
+                                                component={<AdminUpgradeResponse {...props}/>}/>}/>
 
             <Route path={Routes.courseSignUp} exact
                 // @ts-ignore

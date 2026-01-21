@@ -99,6 +99,10 @@ export default class Routes {
 
     static nonGroupAuthAction: string = "/auth/action";
 
+    // Course admin invite routes
+    static courseAdminSignup: string = "/course-admin-signup/:token";
+    static adminUpgradeResponse: string = "/admin-upgrade/:requestId";
+
     static error404: string = "/error/404";
 
     /**
@@ -141,7 +145,8 @@ export default class Routes {
             && route !== Routes.error404
             && route !== Routes.nonGroupViewOffer
             && route !== Routes.groupViewOffer
-            && route !== Routes.courseViewOffer;
+            && route !== Routes.courseViewOffer
+            && route !== Routes.courseAdminSignup;
     }
 
     /**

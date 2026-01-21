@@ -4,6 +4,7 @@ import Error from "../../models/error";
 import {AppState} from "../reducers";
 import GroupRepository from "../../api/repositories/GroupRepository";
 import { validateCourseUrlName, findCourseDisplayNameByUrl, courseDisplayNameToUrlName } from "../../utils/courseUtils";
+import Api from "../../api/Api";
 
 export enum ManageGroupUrlEvents {
     SetGroupUrl = "ManageGroupUrlEvents.SetGroupUrl",
@@ -128,27 +129,22 @@ export const validateGroupUrl: ActionCreator<any> = (path: string, groupUserName
                 // If courseUserName is provided, validate it exists in Firebase as a course entity
                 if (courseUserName) {
                     try {
-                        // Query Firebase for the course by groupUserName
-                        const courseGroup = await new GroupRepository().getCourseByUserName(courseUserName);
+                        // Query by parent group ID and course slug to ensure we get the correct course
+                        // (multiple universities may have courses with the same slug like "student-showcase")
+                        const courseGroup = await new GroupRepository().getCourseByParentAndSlug(
+                            investWestGroup.anid,
+                            courseUserName
+                        );
 
                         if (!courseGroup) {
-                            console.log(`[COURSE VALIDATION] ⚠️ Course not found in Firebase: ${courseUserName}`);
+                            console.log(`[COURSE VALIDATION] ⚠️ Course not found in Firebase: ${courseUserName} for parent ${investWestGroup.anid}`);
                             // Don't fail validation here - the course might exist but we can't read it
                             // due to Firebase security rules (not authenticated yet)
                             // Let the authentication and permission checks handle access control
                         } else {
-                            // Verify the course belongs to this parent group
-                            if (courseGroup.parentGroupId !== investWestGroup.anid) {
-                                console.log(`[COURSE VALIDATION] ❌ Course "${courseUserName}" does not belong to parent group "${groupUserName}"`);
-                                finishedLoadingGroupUrlAction.validGroupUrl = false;
-                                finishedLoadingGroupUrlAction.error = {
-                                    detail: `Course "${courseUserName}" is not part of ${investWestGroup.displayName}`
-                                };
-                                return dispatch(finishedLoadingGroupUrlAction);
-                            }
-
+                            console.log(`[COURSE VALIDATION] ✅ Course validated: "${courseUserName}" for group "${groupUserName}"`);
                         }
-                    } catch (error) {
+                    } catch (error: any) {
                         console.error('[COURSE VALIDATION] Error validating course:', error);
                         // Check if this is a permission/auth error (PERMISSION_DENIED from Firebase)
                         const isPermissionError = error.toString().includes('PERMISSION_DENIED') ||
@@ -178,28 +174,22 @@ export const validateGroupUrl: ActionCreator<any> = (path: string, groupUserName
                 // If group exists and courseUserName is provided, validate the course from Firebase
                 if (retrievedGroup && courseUserName) {
                     try {
-                        // Query Firebase for the course by groupUserName
-                        const courseGroup = await new GroupRepository().getCourseByUserName(courseUserName);
+                        // Query by parent group ID and course slug to ensure we get the correct course
+                        // (multiple universities may have courses with the same slug like "student-showcase")
+                        const courseGroup = await new GroupRepository().getCourseByParentAndSlug(
+                            retrievedGroup.anid,
+                            courseUserName
+                        );
 
                         if (!courseGroup) {
-                            console.log(`[COURSE VALIDATION] ⚠️ Course not found in Firebase: ${courseUserName}`);
+                            console.log(`[COURSE VALIDATION] ⚠️ Course not found in Firebase: ${courseUserName} for parent ${retrievedGroup.anid}`);
                             // Don't fail validation here - the course might exist but we can't read it
                             // due to Firebase security rules (not authenticated yet)
                             // Let the authentication and permission checks handle access control
                         } else {
-                            // Verify the course belongs to this parent group
-                            if (courseGroup.parentGroupId !== retrievedGroup.anid) {
-                                finishedLoadingGroupUrlAction.group = retrievedGroup;
-                                finishedLoadingGroupUrlAction.validGroupUrl = false;
-                                finishedLoadingGroupUrlAction.error = {
-                                    detail: `Course "${courseUserName}" is not part of ${retrievedGroup.displayName}`
-                                };
-                                return dispatch(finishedLoadingGroupUrlAction);
-                            }
-
-                            console.log(`[COURSE VALIDATION] ✅ Course validated from Firebase: "${courseUserName}" for group "${groupUserName}"`);
+                            console.log(`[COURSE VALIDATION] ✅ Course validated: "${courseUserName}" for group "${groupUserName}"`);
                         }
-                    } catch (error) {
+                    } catch (error: any) {
                         console.error('[COURSE VALIDATION] Error validating course:', error);
                         // Check if this is a permission/auth error (PERMISSION_DENIED from Firebase)
                         const isPermissionError = error.toString().includes('PERMISSION_DENIED') ||
@@ -221,11 +211,66 @@ export const validateGroupUrl: ActionCreator<any> = (path: string, groupUserName
                 finishedLoadingGroupUrlAction.group = retrievedGroup;
                 finishedLoadingGroupUrlAction.validGroupUrl = retrievedGroup !== null;
                 return dispatch(finishedLoadingGroupUrlAction);
-            } catch (error) {
-                finishedLoadingGroupUrlAction.error = {
-                    detail: error.toString()
+            } catch (error: any) {
+                console.log(`[GROUP VALIDATION] Standard group retrieval failed for "${groupUserName}", trying public API fallback...`);
+
+                // Fallback to public API for route validation
+                // This handles cases where the university exists but isn't accessible via the standard auth-protected endpoints
+                try {
+                    let publicApiUrl: string;
+                    if (courseUserName) {
+                        publicApiUrl = `/public/uni/${groupUserName}/${courseUserName}`;
+                    } else {
+                        publicApiUrl = `/public/uni/${groupUserName}`;
+                    }
+
+                    console.log(`[GROUP VALIDATION] Calling public API: ${publicApiUrl}`);
+                    const publicResponse = await Api.doGet(publicApiUrl);
+                    const publicData = publicResponse.data;
+
+                    if (publicData.valid || publicData.found) {
+                        console.log(`[GROUP VALIDATION] ✅ Public API validation succeeded for "${groupUserName}"`);
+
+                        // Construct a GroupProperties object from the public API response
+                        const publicGroup: GroupProperties = {
+                            anid: publicData.university?.id || '',
+                            dateAdded: Date.now(),
+                            description: publicData.university?.name || '',
+                            displayName: publicData.university?.name || groupUserName,
+                            displayNameLower: (publicData.university?.name || groupUserName).toLowerCase(),
+                            groupUserName: publicData.university?.slug || groupUserName,
+                            isInvestWest: false,
+                            status: 1,
+                            plainLogo: publicData.university?.logo ? [{
+                                storageID: 0,
+                                url: publicData.university.logo,
+                                removed: false
+                            }] : [],
+                            settings: {
+                                primaryColor: '#1976d2',
+                                secondaryColor: '#dc004e',
+                                projectVisibility: 1,
+                                makeInvestorsContactDetailsVisibleToIssuers: false
+                            }
+                        };
+
+                        finishedLoadingGroupUrlAction.group = publicGroup;
+                        finishedLoadingGroupUrlAction.validGroupUrl = true;
+                        return dispatch(finishedLoadingGroupUrlAction);
+                    } else {
+                        console.log(`[GROUP VALIDATION] ❌ Public API validation failed for "${groupUserName}": ${publicData.error}`);
+                        finishedLoadingGroupUrlAction.error = {
+                            detail: publicData.error || `University "${groupUserName}" not found`
+                        };
+                        return dispatch(finishedLoadingGroupUrlAction);
+                    }
+                } catch (publicError: any) {
+                    console.error('[GROUP VALIDATION] Public API fallback also failed:', publicError);
+                    finishedLoadingGroupUrlAction.error = {
+                        detail: error.toString()
+                    };
+                    return dispatch(finishedLoadingGroupUrlAction);
                 }
-                return dispatch(finishedLoadingGroupUrlAction);
             }
         }
     }

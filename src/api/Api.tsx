@@ -102,6 +102,15 @@ export class ApiRoutes {
     static uploadSingleFileRoute = ApiRoutes.fileBaseRoute + "/upload-single";
 
     static testRoute = "/test";
+
+    // Course admin invite routes
+    static courseAdminInviteBaseRoute = "/course-admin-invite";
+    static requestAdminAccessRoute = ApiRoutes.courseAdminInviteBaseRoute + "/request-access";
+    static validateCourseAdminInviteRoute = ApiRoutes.courseAdminInviteBaseRoute + "/validate/:token";
+    static completeCourseAdminSignupRoute = ApiRoutes.courseAdminInviteBaseRoute + "/complete";
+    static validateUpgradeRequestRoute = ApiRoutes.courseAdminInviteBaseRoute + "/upgrade-request/validate/:requestId";
+    static respondToUpgradeRequestRoute = ApiRoutes.courseAdminInviteBaseRoute + "/upgrade-request/respond";
+    static getMyUpgradeRequestsRoute = ApiRoutes.courseAdminInviteBaseRoute + "/my-upgrade-requests";
 }
 
 export interface RequestOptionalParams {

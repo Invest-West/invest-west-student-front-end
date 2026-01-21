@@ -52,6 +52,8 @@ import signUpReducer, {SignUpState} from "../../pages/signup/SignUpReducer";
 import manageSectorsReducer, {ManageSectorsState} from "../../pages/admin/components/manage-sectors/ManageSectorsReducer";
 import manageCoursesReducer, {ManageCoursesState} from "../../pages/admin/components/manage-courses/ManageCoursesReducer";
 import emailTemplateReducer, {EmailTemplateState} from "./emailTemplateReducer";
+import uniAdminSignupReducer, {UniAdminSignupState} from "../../pages/uni-admin-signup/UniAdminSignupReducer";
+import courseAdminInviteReducer, {CourseAdminInviteState} from "./courseAdminInviteReducer";
 
 export interface AppState {
     MediaQueryState: MediaQueryState;
@@ -79,6 +81,10 @@ export interface AppState {
     ProfileLocalState: ProfileState;
 
     EmailTemplateState: EmailTemplateState;
+
+    UniAdminSignupLocalState: UniAdminSignupState;
+
+    CourseAdminInviteLocalState: CourseAdminInviteState;
 
     // mitigation plan for the old states of old reducers
     [oldReducers: string]: any;
@@ -110,6 +116,10 @@ const rootReducer = combineReducers<AppState>({
     ProfileLocalState: profileReducer,
 
     EmailTemplateState: emailTemplateReducer,
+
+    UniAdminSignupLocalState: uniAdminSignupReducer,
+
+    CourseAdminInviteLocalState: courseAdminInviteReducer,
 
     // Old reducers --------------------------
     auth: authReducer,
