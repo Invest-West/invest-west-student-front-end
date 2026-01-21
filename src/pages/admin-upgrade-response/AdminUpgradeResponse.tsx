@@ -29,8 +29,14 @@ import {
     isRespondingToUpgrade
 } from "../../redux-store/reducers/courseAdminInviteReducer";
 import { MediaQueryState } from "../../redux-store/reducers/mediaQueryReducer";
-import { AuthenticationState } from "../../redux-store/reducers/authenticationReducer";
+import {
+    AuthenticationState,
+    AuthenticationStatus,
+    authIsNotInitialized,
+    isAuthenticating
+} from "../../redux-store/reducers/authenticationReducer";
 import Footer from "../../shared-components/footer/Footer";
+import { safeSetItem } from "../../utils/browser";
 
 /**
  * Route parameters
@@ -98,30 +104,52 @@ class AdminUpgradeResponse extends Component<AdminUpgradeResponseProps & RouteCo
     }
 
     componentDidMount() {
-        const { validateUpgradeRequest, AuthenticationState } = this.props;
-        const { requestId } = this.state;
-
-        // Check if user is authenticated
-        if (!AuthenticationState.currentUser) {
-            // Redirect to sign in with return URL
-            const returnUrl = encodeURIComponent(window.location.pathname);
-            this.props.history.push(`/sign-in?returnUrl=${returnUrl}`);
-            return;
-        }
-
-        // Validate the request
-        if (requestId) {
-            validateUpgradeRequest(requestId);
-        }
+        this.handleAuthStateChange();
     }
 
     componentDidUpdate(prevProps: AdminUpgradeResponseProps & RouteComponentProps<RouteParams>) {
-        const { AuthenticationState, validateUpgradeRequest } = this.props;
+        const { AuthenticationState: prevAuthState } = prevProps;
+        const { AuthenticationState: currentAuthState } = this.props;
+
+        // Handle auth state changes
+        if (prevAuthState.status !== currentAuthState.status) {
+            this.handleAuthStateChange();
+        }
+    }
+
+    /**
+     * Handle authentication state changes
+     * - Wait for auth to initialize
+     * - Redirect to sign-in if unauthenticated
+     * - Validate request if authenticated
+     */
+    handleAuthStateChange = () => {
+        const { validateUpgradeRequest, AuthenticationState } = this.props;
         const { requestId } = this.state;
 
-        // If user just logged in, validate the request
-        if (!prevProps.AuthenticationState.currentUser && AuthenticationState.currentUser && requestId) {
-            validateUpgradeRequest(requestId);
+        // Wait for auth to initialize - don't do anything yet
+        if (authIsNotInitialized(AuthenticationState) || isAuthenticating(AuthenticationState)) {
+            return;
+        }
+
+        // Auth is now initialized - check if user is authenticated
+        if (AuthenticationState.status === AuthenticationStatus.Unauthenticated) {
+            // Store the current URL so user is redirected back after sign-in
+            safeSetItem('redirectToAfterAuth', window.location.pathname);
+            // Redirect to sign in
+            this.props.history.push('/sign-in');
+            return;
+        }
+
+        // User is authenticated - validate the request if we haven't already
+        if (AuthenticationState.currentUser && requestId) {
+            const { CourseAdminInviteLocalState } = this.props;
+            // Only validate if we haven't started validating yet
+            if (!CourseAdminInviteLocalState.validatingUpgrade &&
+                !CourseAdminInviteLocalState.upgradeRequestValid &&
+                !CourseAdminInviteLocalState.upgradeRequestError) {
+                validateUpgradeRequest(requestId);
+            }
         }
     }
 
@@ -166,7 +194,30 @@ class AdminUpgradeResponse extends Component<AdminUpgradeResponseProps & RouteCo
             return this.renderError("No request ID provided", "Please use the link from your email.");
         }
 
-        // Not authenticated
+        // Auth is still initializing - show loading
+        if (authIsNotInitialized(AuthenticationState) || isAuthenticating(AuthenticationState)) {
+            return (
+                <Box>
+                    <BarLoader
+                        color="#1976d2"
+                        width="100%"
+                        height={4}
+                    />
+                    <Box
+                        display="flex"
+                        justifyContent="center"
+                        alignItems="center"
+                        minHeight="50vh"
+                    >
+                        <Typography variant="h6" color="textSecondary">
+                            Checking authentication...
+                        </Typography>
+                    </Box>
+                </Box>
+            );
+        }
+
+        // Not authenticated (will redirect in handleAuthStateChange, but show message briefly)
         if (!AuthenticationState.currentUser) {
             return (
                 <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
