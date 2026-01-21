@@ -39,7 +39,7 @@ import sharedStyles, {StyledTableCell} from '../../../shared-js-css-styles/Share
 
 import {connect} from 'react-redux';
 import * as groupAdminsTableActions from '../../../redux-store/actions/groupAdminsTableActions';
-import AddAdminAccessRequestDialog from './AddAdminAccessRequestDialog';
+import RequestAdminAccessDialog from './RequestAdminAccessDialog';
 
 const mapStateToProps = state => {
     return {
@@ -366,12 +366,12 @@ class GroupAdminsTable extends Component {
                     </Table>
                 </Paper>
 
-                {/* Admin Access Request Dialog for normal admins */}
+                {/* Admin Access Request Dialog for admins */}
                 {tableGroup && (
-                    <AddAdminAccessRequestDialog
+                    <RequestAdminAccessDialog
                         open={this.state.accessRequestDialogOpen}
-                        groupId={tableGroup.anid}
-                        groupName={tableGroup.displayName}
+                        universityId={tableGroup.anid}
+                        universityName={tableGroup.displayName}
                         onClose={this.toggleAccessRequestDialog}
                         onSuccess={this.handleRequestSuccess}
                     />

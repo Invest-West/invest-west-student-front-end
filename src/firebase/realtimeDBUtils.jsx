@@ -2231,6 +2231,25 @@ export const makeProjectGoLiveDecision = async (admin, project, decisionObj) => 
                 .child(project.id)
                 .update(project);
 
+            // If project is approved (goes live), clear all reject feedbacks
+            if (decisionObj.decision) {
+                try {
+                    await new Api().request(
+                        "post",
+                        ApiRoutes.clearProjectRejectFeedbacksRoute,
+                        {
+                            queryParameters: null,
+                            requestBody: {
+                                projectID: project.id
+                            }
+                        }
+                    );
+                } catch (clearFeedbackError) {
+                    console.error("Error clearing reject feedbacks on project approval:", clearFeedbackError);
+                    // Continue even if clearing feedbacks fails - the project is already approved
+                }
+            }
+
             let activitySummary =
                 decisionObj.decision
                     ?

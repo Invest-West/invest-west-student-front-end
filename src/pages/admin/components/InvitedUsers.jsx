@@ -243,7 +243,10 @@ class InvitedUsers extends Component {
                         }
                     }
                 } catch (error) {
-                    console.warn(`Failed to fetch last login date for user ${user.email}:`, error);
+                    // Silently ignore 404 errors - user may not exist yet or was deleted
+                    if (!error.toString().includes('404')) {
+                        console.warn(`Failed to fetch last login date for user ${user.email}:`, error);
+                    }
                 }
             }
 

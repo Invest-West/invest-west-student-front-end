@@ -1612,20 +1612,20 @@ class CreatePitchPageMain extends Component {
                                                 }
                                                 // a draft offer is published
                                                 else {
-                                                    // Clear any reject feedbacks when the project is resubmitted
-                                                    // This marks the admin feedback as "dealt with"
-                                                    this.firebaseDB
-                                                        .ref(DB_CONST.PROJECT_REJECT_FEEDBACKS_CHILD)
-                                                        .orderByChild("projectID")
-                                                        .equalTo(projectEdited.id)
-                                                        .once('value', snapshots => {
-                                                            snapshots.forEach(snapshot => {
-                                                                snapshot.ref.remove();
-                                                            });
-                                                        })
-                                                        .catch(error => {
-                                                            console.error("Error clearing reject feedbacks:", error);
-                                                        });
+                                                    // Notify admins that the project has been resubmitted
+                                                    // Feedbacks are NOT cleared here - they stay visible until admin approves the project
+                                                    new Api().request(
+                                                        "post",
+                                                        ApiRoutes.notifyAdminsOfResubmissionRoute,
+                                                        {
+                                                            queryParameters: null,
+                                                            requestBody: {
+                                                                projectID: projectEdited.id
+                                                            }
+                                                        }
+                                                    ).catch(error => {
+                                                        console.error("Error notifying admins of resubmission:", error);
+                                                    });
 
                                                     // don't need to check for prior TCs acceptance because this is create new mode
                                                     const acceptedTCsObj = {
