@@ -618,9 +618,9 @@ class InvitedUsers extends Component {
                         </FormControl>
                     </Col>
 
-                    {/** Group members */}
+                    {/** Group members - shown to regular admins and superGroupAdmins */}
                     {
-                        !(admin.superAdmin || admin.superGroupAdmin)
+                        !admin.superAdmin
                             ?
                             <Col xs={12} sm={12} md={4} lg={3}>
                                 <FlexView vAlignContent="center">
@@ -652,6 +652,13 @@ class InvitedUsers extends Component {
                                 </FlexView>
                             </Col>
                             :
+                            null
+                    }
+
+                    {/** University filter - only shown to super admins */}
+                    {
+                        admin.superAdmin
+                            ?
                             <Col xs={12} sm={12} md={4} lg={3}>
                                 <FormControl fullWidth>
                                     <InputLabel>
@@ -686,6 +693,8 @@ class InvitedUsers extends Component {
                                     </Select>
                                 </FormControl>
                             </Col>
+                            :
+                            null
                     }
                 </Row>
 
@@ -794,11 +803,11 @@ class InvitedUsers extends Component {
 
                             <InfoOverlay placement="right"
                                 message={
-                                    (admin.superAdmin || admin.superGroupAdmin)
+                                    admin.superAdmin
                                         ?
                                         "Export all the users in the system to a .csv file."
                                         :
-                                        "Export all the members in your course to a .csv file."
+                                        "Export all the members in your university to a .csv file."
                                 }
                             />
                         </FlexView>
@@ -847,7 +856,7 @@ class InvitedUsers extends Component {
                                 </FlexView>
                             </TableCell>
                             {
-                                !(admin.superAdmin || admin.superGroupAdmin)
+                                !admin.superAdmin
                                     ?
                                     null
                                     :
@@ -1059,9 +1068,9 @@ class InvitedUsers extends Component {
                                                 </FlexView>
                                     }
 
-                                    {/** Display enrolled course or platform member status */}
+                                    {/** Display enrolled course or platform member status - shown to non-super admins */}
                                     {
-                                        (admin.superAdmin || admin.superGroupAdmin)
+                                        admin.superAdmin
                                             ?
                                             null
                                             :
@@ -1086,9 +1095,9 @@ class InvitedUsers extends Component {
                                 </FlexView>
                             </TableCell>
 
-                            {/** Group the user belongs to - available only for super admins and super group admins */}
+                            {/** Group the user belongs to - available only for super admins */}
                             {
-                                !(admin.superAdmin || admin.superGroupAdmin)
+                                !admin.superAdmin
                                     ?
                                     null
                                     :

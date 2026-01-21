@@ -284,9 +284,9 @@ class AdminDashboard extends Component {
         if (params.tab === HOME_TAB) {
             return (
                 <Row noGutters style={{marginBottom: 30}}>
-                    {/* Manage courses */}
+                    {/* Manage universities - Super admins only */}
                     {
-                        !(currentAdmin && (currentAdmin.superAdmin || currentAdmin.superGroupAdmin))
+                        !(currentAdmin && currentAdmin.superAdmin)
                             ?
                             null
                             :
