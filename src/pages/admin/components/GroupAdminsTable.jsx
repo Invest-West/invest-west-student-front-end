@@ -46,6 +46,7 @@ const mapStateToProps = state => {
         groupUserName: state.manageGroupFromParams.groupUserName,
         groupProperties: state.manageGroupFromParams.groupProperties,
         shouldLoadOtherData: state.manageGroupFromParams.shouldLoadOtherData,
+        groupPropertiesLoaded: state.manageGroupFromParams.groupPropertiesLoaded,
         currentUser: state.auth.user,
         tableGroup: state.manageGroupAdminsTable.tableGroup,
         groupAdmins: state.manageGroupAdminsTable.groupAdmins,
@@ -110,14 +111,23 @@ class GroupAdminsTable extends Component {
     loadData = () => {
         const {
             shouldLoadOtherData,
+            groupPropertiesLoaded,
             tableGroup,
+            currentUser,
             loadingGroupAdmins,
             groupAdminsLoaded,
             loadGroupAdmins
         } = this.props;
 
-        if (shouldLoadOtherData) {
-            if (tableGroup && !loadingGroupAdmins && !groupAdminsLoaded) {
+        if (shouldLoadOtherData && !loadingGroupAdmins && !groupAdminsLoaded) {
+            // Super admins can load all admins without a specific tableGroup
+            // Other admins need tableGroup to be set (their university)
+            const isSuperAdmin = currentUser && currentUser.superAdmin;
+            if (isSuperAdmin || tableGroup) {
+                loadGroupAdmins();
+            } else if (groupPropertiesLoaded && !tableGroup) {
+                // If group properties are loaded but tableGroup is still null,
+                // this is a super group admin viewing their university - load anyway
                 loadGroupAdmins();
             }
         }
@@ -129,15 +139,12 @@ class GroupAdminsTable extends Component {
     addListeners = () => {
         const {
             shouldLoadOtherData,
-            groupAdmins,
             groupAdminsLoaded,
             startListeningForGroupAdminsChanged
         } = this.props;
 
-        if (shouldLoadOtherData) {
-            if (groupAdmins && groupAdminsLoaded) {
-                startListeningForGroupAdminsChanged();
-            }
+        if (shouldLoadOtherData && groupAdminsLoaded) {
+            startListeningForGroupAdminsChanged();
         }
     };
 

@@ -12,6 +12,7 @@ import PageNotFoundWhole from '../../shared-components/page-not-found/PageNotFou
 import SidebarContent, {
     CHANGE_PASSWORD_TAB,
     EXPLORE_GROUPS_TAB,
+    EXPLORE_COURSES_TAB,
     HOME_TAB,
     PROFILE_TAB,
     RESOURCES_TAB,
@@ -214,13 +215,17 @@ class InvestorDashboard extends Component {
         }
 
         /**
-         * EXPLORE GROUPS TAB
+         * EXPLORE GROUPS TAB (for super admins - shows all universities)
          */
         if (params.tab === EXPLORE_GROUPS_TAB) {
-            // return (
-            //     <ExploreGroupsTab/>
-            // );
             return <ExploreGroups/>;
+        }
+
+        /**
+         * EXPLORE COURSES TAB (for non-super admins - shows only their university's courses)
+         */
+        if (params.tab === EXPLORE_COURSES_TAB) {
+            return <ExploreGroups coursesOnlyMode={true} />;
         }
 
         /**
@@ -406,6 +411,9 @@ class InvestorDashboard extends Component {
                 break;
             case EXPLORE_GROUPS_TAB:
                 title = EXPLORE_GROUPS_TAB;
+                break;
+            case EXPLORE_COURSES_TAB:
+                title = EXPLORE_COURSES_TAB;
                 break;
             default:
                 return;

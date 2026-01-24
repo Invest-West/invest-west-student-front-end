@@ -15,6 +15,7 @@ import firebase from '../../firebase/firebaseApp';
 import SidebarContent, {
     CHANGE_PASSWORD_TAB,
     EXPLORE_GROUPS_TAB,
+    EXPLORE_COURSES_TAB,
     EXPLORE_OFFERS_TAB,
     RESOURCES_TAB,
     GROUP_ACTIVITIES_TAB,
@@ -563,13 +564,17 @@ class AdminDashboard extends Component {
         }
 
         /**
-         * EXPLORE GROUPS TAB
+         * EXPLORE GROUPS TAB (for super admins - shows all universities)
          */
         if (params.tab === EXPLORE_GROUPS_TAB) {
-            // return (
-            //     <ExploreGroups/>
-            // );
             return <ExploreGroups/>;
+        }
+
+        /**
+         * EXPLORE COURSES TAB (for non-super admins - shows only their university's courses)
+         */
+        if (params.tab === EXPLORE_COURSES_TAB) {
+            return <ExploreGroups coursesOnlyMode={true} />;
         }
     };
 
@@ -761,6 +766,9 @@ class AdminDashboard extends Component {
                 break;
             case EXPLORE_GROUPS_TAB:
                 title = EXPLORE_GROUPS_TAB;
+                break;
+            case EXPLORE_COURSES_TAB:
+                title = EXPLORE_COURSES_TAB;
                 break;
             case EXPLORE_OFFERS_TAB:
                 title = EXPLORE_OFFERS_TAB;

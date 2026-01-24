@@ -134,8 +134,22 @@ export const fetchOffers: ActionCreator<any> = () => {
 
         const currentUser = getState().AuthenticationState.currentUser;
 
-        if (!currentUser || !tableUser) {
-            return;
+        if (!currentUser) {
+            const errorAction: CompleteFetchingOffersAction = {
+                type: OffersTableEvents.CompleteFetchingOffers,
+                offerInstances: [],
+                error: "User not authenticated. Please sign in again."
+            };
+            return dispatch(errorAction);
+        }
+
+        if (!tableUser) {
+            const errorAction: CompleteFetchingOffersAction = {
+                type: OffersTableEvents.CompleteFetchingOffers,
+                offerInstances: [],
+                error: "Table user not set. Please refresh the page."
+            };
+            return dispatch(errorAction);
         }
 
         const currentAdmin: Admin | null = isAdmin(currentUser);
@@ -203,22 +217,19 @@ export const fetchOffers: ActionCreator<any> = () => {
             const response = await new OfferRepository().fetchOffers(fetchOffersOptions);
             completeAction.offerInstances = response.data;
 
-            // Debug: Log projects with feedback
-            const projectsWithFeedback = response.data.filter((p: ProjectInstance) => p.rejectFeedbacks && p.rejectFeedbacks.length > 0);
-            console.log('🔵 OffersTableActions - Projects fetched from API:', {
-                totalProjects: response.data.length,
-                projectsWithFeedback: projectsWithFeedback.length,
-                feedbackDetails: projectsWithFeedback.map((p: ProjectInstance) => ({
-                    name: p.projectDetail.projectName,
-                    feedbackCount: p.rejectFeedbacks.length,
-                    feedbacks: p.rejectFeedbacks
-                }))
-            });
-
             dispatch(completeAction);
             return dispatch(filterOffersByName());
-        } catch (error) {
-            completeAction.error = error.toString();
+        } catch (error: any) {
+            // Provide more meaningful error messages
+            if (error.response) {
+                // Server responded with an error
+                completeAction.error = error.response.data?.message || `Server error: ${error.response.status}`;
+            } else if (error.request) {
+                // Request was made but no response
+                completeAction.error = "Unable to connect to server. Please check your connection.";
+            } else {
+                completeAction.error = error.message || "An unexpected error occurred.";
+            }
             return dispatch(completeAction);
         }
     }
@@ -369,15 +380,6 @@ export const fetchDraftProjectsWithFeedbackCount: ActionCreator<any> = () => {
             });
 
             completeAction.count = draftProjectsWithFeedback.length;
-
-            console.log('📬 Feedback Count Check:', {
-                totalProjects: response.data.length,
-                draftProjectsWithFeedback: draftProjectsWithFeedback.length,
-                projects: draftProjectsWithFeedback.map((p: ProjectInstance) => ({
-                    name: p.projectDetail.projectName,
-                    feedbackCount: p.rejectFeedbacks.length
-                }))
-            });
 
             return dispatch(completeAction);
         } catch (error) {

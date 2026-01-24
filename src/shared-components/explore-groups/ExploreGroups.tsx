@@ -40,12 +40,16 @@ import {
 import {BeatLoader} from "react-spinners";
 import GroupItem from "./GroupItem";
 import UniversityGroupItem from "./UniversityGroupItem";
-import {buildHierarchicalGroups, isUniversity, isCourse} from "../../models/group_properties";
+import GroupProperties, {buildHierarchicalGroups, isUniversity, isCourse} from "../../models/group_properties";
 import {isAdmin} from "../../models/admin";
 import {MediaQueryState} from "../../redux-store/reducers/mediaQueryReducer";
 import {Pagination} from "@material-ui/lab";
 
-interface ExploreGroupsProps {
+interface ExploreGroupsOwnProps {
+    coursesOnlyMode?: boolean;
+}
+
+interface ExploreGroupsProps extends ExploreGroupsOwnProps {
     MediaQueryState: MediaQueryState;
     ManageGroupUrlState: ManageGroupUrlState;
     AuthenticationState: AuthenticationState;
@@ -88,6 +92,29 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
         }
     }
 
+    /**
+     * Get the current user's university ID for coursesOnlyMode
+     */
+    getCurrentUserUniversityId(): string | null {
+        const { AuthenticationState } = this.props;
+        const groupsOfMembership = AuthenticationState.groupsOfMembership || [];
+
+        // Find the user's university (parent group)
+        for (const membership of groupsOfMembership) {
+            const group = membership.group;
+            // If this is a university (no parent), use its ID
+            if (isUniversity(group)) {
+                return group.anid;
+            }
+            // If this is a course, use its parent university ID
+            if (isCourse(group) && group.parentGroupId) {
+                return group.parentGroupId;
+            }
+        }
+
+        return null;
+    }
+
     render() {
         const {
             MediaQueryState,
@@ -98,7 +125,8 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
             filterChanged,
             filterGroupsByName,
             cancelFilteringGroupsByName,
-            paginationChanged
+            paginationChanged,
+            coursesOnlyMode
         } = this.props;
 
         if (!AuthenticationState.currentUser) {
@@ -107,6 +135,17 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
 
         const paginationPages = calculatePaginationPages(ExploreGroupsLocalState);
         const paginationIndices = calculatePaginationIndices(ExploreGroupsLocalState);
+
+        // Determine title and placeholder based on mode
+        const headerTitle = coursesOnlyMode
+            ? "Courses in your University"
+            : "Universities on Student network";
+        const searchPlaceholder = coursesOnlyMode
+            ? "Search course by name"
+            : "Search university by name";
+        const noResultsMessage = coursesOnlyMode
+            ? "There are no courses available using your current filter criteria"
+            : "There are no universities available using your current filter criteria";
 
         return <Box paddingX={MediaQueryState.isMobile ? "20px" : "56px"} paddingY={MediaQueryState.isMobile ? "15px" : "40px"} >
             <Row noGutters >
@@ -120,7 +159,7 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
                             color="white"
                             paddingY="28px"
                         >
-                            <Typography variant="h6" align="center">Universitys on Student network</Typography>
+                            <Typography variant="h6" align="center">{headerTitle}</Typography>
 
                             <Box height="28px" />
 
@@ -129,7 +168,7 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
                                     fullWidth
                                     name="nameFilter"
                                     value={ExploreGroupsLocalState.nameFilter}
-                                    placeholder="Search university by name"
+                                    placeholder={searchPlaceholder}
                                     onChange={filterChanged}
                                     disabled={!successfullyFetchedGroups(ExploreGroupsLocalState)}
                                     startAdornment={
@@ -158,9 +197,9 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
                 </Col>
             </Row>
 
-            {/** Filters (only available for issuer and investor) */}
+            {/** Filters (only available for issuer and investor, and not in coursesOnlyMode) */}
             {
-                isAdmin(AuthenticationState.currentUser)
+                (isAdmin(AuthenticationState.currentUser) || coursesOnlyMode)
                     ? null
                     : <Row noGutters >
                         <Col xs={8} sm={8} md={3} lg={2} >
@@ -208,12 +247,15 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
                     ? null
                     : !hasGroupsForCurrentFilters(ExploreGroupsLocalState)
                     ? <Box marginY="80px" >
-                        <Typography align="center" variant="h5" > There are no universities available using your current filter criteria </Typography>
+                        <Typography align="center" variant="h5" >{noResultsMessage}</Typography>
                     </Box>
                     : <Box marginTop="30px" >
                         <Row noGutters >
                             <Col xs={12} sm={12} md={12} lg={12} >
-                                {this.renderHierarchicalGroups()}
+                                {coursesOnlyMode
+                                    ? this.renderCoursesOnly()
+                                    : this.renderHierarchicalGroups()
+                                }
                             </Col>
                         </Row>
                     </Box>
@@ -236,6 +278,9 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
         </Box>;
     }
 
+    /**
+     * Render all universities with their courses (full hierarchy)
+     */
     renderHierarchicalGroups() {
         const {
             ExploreGroupsLocalState,
@@ -255,6 +300,75 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
             <UniversityGroupItem
                 key={university.anid}
                 university={university}
+            />
+        ));
+    }
+
+    /**
+     * Render only courses for the current user's university (coursesOnlyMode)
+     */
+    renderCoursesOnly() {
+        const {
+            ExploreGroupsLocalState,
+            ManageGroupUrlState,
+            AuthenticationState
+        } = this.props;
+
+        if (!ExploreGroupsLocalState.groups) {
+            return null;
+        }
+
+        // Get the user's university ID
+        const userUniversityId = this.getCurrentUserUniversityId();
+
+        if (!userUniversityId) {
+            return (
+                <Box marginY="80px">
+                    <Typography align="center" variant="h5">
+                        Unable to determine your university. Please contact support.
+                    </Typography>
+                </Box>
+            );
+        }
+
+        // Build hierarchical groups and find the user's university
+        const hierarchicalGroups = buildHierarchicalGroups(ExploreGroupsLocalState.groups);
+        const userUniversity = hierarchicalGroups.find(uni => uni.anid === userUniversityId);
+
+        if (!userUniversity || !userUniversity.childGroups || userUniversity.childGroups.length === 0) {
+            return (
+                <Box marginY="80px">
+                    <Typography align="center" variant="h5">
+                        No courses available in your university
+                    </Typography>
+                </Box>
+            );
+        }
+
+        // Filter courses by name if nameFilter is applied
+        let filteredCourses = userUniversity.childGroups;
+        const nameFilter = ExploreGroupsLocalState.nameFilter?.toLowerCase().trim();
+        if (nameFilter) {
+            filteredCourses = filteredCourses.filter((course: GroupProperties) =>
+                course.displayName.toLowerCase().includes(nameFilter)
+            );
+        }
+
+        if (filteredCourses.length === 0) {
+            return (
+                <Box marginY="80px">
+                    <Typography align="center" variant="h5">
+                        No courses match your search criteria
+                    </Typography>
+                </Box>
+            );
+        }
+
+        // Render courses directly (without the university wrapper)
+        return filteredCourses.map((course: GroupProperties) => (
+            <GroupItem
+                key={course.anid}
+                group={course}
             />
         ));
     }
