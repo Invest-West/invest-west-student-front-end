@@ -10,17 +10,48 @@ events {
 http {
   types_hash_max_size 2048;
   include mime.types;
+
+  # Redirect www to non-www (canonical domain)
   server {
     listen {{ $.PORT }};
-    server_name  _;
+    server_name www.studentshowcase.co.uk;
+    return 301 https://studentshowcase.co.uk$request_uri;
+  }
+
+  # Main server block
+  server {
+    listen {{ $.PORT }};
+    server_name studentshowcase.co.uk _;
+
     {{ if ne $.NGINX_ROOT "" }}
       root /app/www/{{ $.NGINX_ROOT }};
     {{ else }}
       root /app/www/build;
     {{ end }}
+
     index index.html;
     port_in_redirect off;
 
+    # Static assets with permissive CORS (manifest.json, js, css, images, fonts)
+    location ~* \.(json|js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2|ttf|eot)$ {
+      add_header 'Access-Control-Allow-Origin' '*' always;
+      add_header 'Access-Control-Allow-Methods' 'GET, OPTIONS' always;
+      add_header 'Access-Control-Allow-Headers' 'DNT,User-Agent,X-Requested-With,If-Modified-Since,Cache-Control,Content-Type,Range' always;
+
+      # Handle preflight OPTIONS requests
+      if ($request_method = 'OPTIONS') {
+        add_header 'Access-Control-Allow-Origin' '*';
+        add_header 'Access-Control-Allow-Methods' 'GET, OPTIONS';
+        add_header 'Access-Control-Max-Age' 1728000;
+        add_header 'Content-Type' 'text/plain; charset=utf-8';
+        add_header 'Content-Length' 0;
+        return 204;
+      }
+
+      try_files $uri $uri/ =404;
+    }
+
+    # Main location - React Router support
     location / {
       try_files $uri $uri/ /index.html;
     }
