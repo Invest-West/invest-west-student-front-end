@@ -548,29 +548,28 @@ class InvitedUsers extends Component {
             <FlexView column width="100%">
                 <Divider style={{marginBottom: 30}}/>
 
-                {/** Invite/Upgrade users section - different UI for super admins vs regular admins */}
+                {/** Invite/Upgrade users section */}
                 <Row style={{marginBottom: 30}}>
-                    {/** For regular admins: Show Copy URL and Invite Multiple Users */}
+                    {/** For regular admins: Show Copy URL button */}
                     {
                         !(admin.superAdmin || admin.superGroupAdmin)
                             ?
-                            <>
-                                <Col xs={12} md={6} lg={6} style={{marginBottom: 20}}>
-                                    <Button color="primary" variant="outlined" className={css(sharedStyles.no_text_transform)} onClick={this.copySignupUrl}>
-                                        <FileCopyIcon style={{ marginRight: 10, width: 20, height: "auto"}}/>Copy signup URL</Button>
-                                </Col>
-                                <Col xs={12} sm={12} md={12} lg={12}>
-                                    <InviteMultipleUsers/>
-                                </Col>
-                            </>
+                            <Col xs={12} md={6} lg={6} style={{marginBottom: 20}}>
+                                <Button color="primary" variant="outlined" className={css(sharedStyles.no_text_transform)} onClick={this.copySignupUrl}>
+                                    <FileCopyIcon style={{ marginRight: 10, width: 20, height: "auto"}}/>Copy signup URL</Button>
+                            </Col>
                             :
                             null
                     }
-                    {/** For super admins and super group admins: Show Upgrade User to Admin */}
+                    {/** Invite Multiple Users - available to all admins */}
+                    <Col xs={12} sm={12} md={12} lg={12}>
+                        <InviteMultipleUsers/>
+                    </Col>
+                    {/** For super admins and super group admins: Also show Upgrade User to Admin */}
                     {
                         (admin.superAdmin || admin.superGroupAdmin)
                             ?
-                            <Col xs={12} sm={12} md={12} lg={12}>
+                            <Col xs={12} sm={12} md={12} lg={12} style={{marginTop: 20}}>
                                 <UpgradeUserToAdmin/>
                             </Col>
                             :
