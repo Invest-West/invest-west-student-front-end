@@ -60,6 +60,30 @@ export interface SignUpData {
     }
 
     /**
+     * Invite student - creates Firebase Auth account, Users record, InvitedUsers record, sends email with password
+     *
+     * @param data
+     */
+    public async inviteStudent(data: {
+        email: string;
+        userType: number;
+        groupID: string;
+        groupDisplayName: string;
+        groupUserName: string;
+        groupLogo: string;
+    }) {
+        return await new Api()
+            .request(
+                "post",
+                ApiRoutes.inviteStudentRoute,
+                {
+                    queryParameters: null,
+                    requestBody: data
+                }
+            );
+    }
+
+    /**
      * Update user
      *
      * @param data

@@ -59,6 +59,7 @@ export class ApiRoutes {
     static retrieveInvitedUser = ApiRoutes.usersBaseRoute + "/:invitedUserID/retrieve-invited";
     static updateUser = ApiRoutes.usersBaseRoute + "/update";
     static listGroupsOfMembership = ApiRoutes.usersBaseRoute + "/:uid/groups-of-membership";
+    static inviteStudentRoute = ApiRoutes.usersBaseRoute + "/invite";
     static exportUsersCsvRoute = ApiRoutes.usersBaseRoute + "/export";
 
     static groupsBaseRoute = "/groups";

@@ -1,8 +1,6 @@
 import React, {Component} from "react";
 import {connect} from "react-redux";
 import {AppState} from "../../../redux-store/reducers";
-import {ThunkDispatch} from "redux-thunk";
-import {AnyAction} from "redux";
 import {
     Box,
     Button,
@@ -37,12 +35,9 @@ import DeleteIcon from "@material-ui/icons/Delete";
 import SendIcon from "@material-ui/icons/Send";
 import FlexView from "react-flexview";
 import {BeatLoader} from "react-spinners";
-import * as colors from "../../../values/colors";
 import * as DB_CONST from "../../../firebase/databaseConsts";
-import * as emailUtils from "../../../utils/emailUtils";
-import * as realtimeDBUtils from "../../../firebase/realtimeDBUtils";
-import firebase from "../../../firebase/firebaseApp";
 import * as utils from "../../../utils/utils";
+import UserRepository from "../../../api/repositories/UserRepository";
 
 export const INVITE_STATUS_NONE = 0;
 export const INVITE_STATUS_SENDING = 1;
@@ -211,7 +206,6 @@ class InviteMultipleUsers extends Component<InviteMultipleUsersProps, InviteMult
 
     sendInvitations = async () => {
         const {emailList} = this.state;
-        const {currentAdmin} = this.props;
 
         // Get the active group (from URL params or super admin selection)
         const activeGroup = this.getActiveGroup();
@@ -222,6 +216,8 @@ class InviteMultipleUsers extends Component<InviteMultipleUsersProps, InviteMult
         }
 
         this.setState({sending: true});
+
+        const userRepository = new UserRepository();
 
         // Process each email invitation
         const updatedList = [...emailList];
@@ -234,82 +230,16 @@ class InviteMultipleUsers extends Component<InviteMultipleUsersProps, InviteMult
             this.setState({emailList: updatedList});
 
             try {
-                // Check if user was already invited
-                const existingInvites = await realtimeDBUtils.loadInvitedUsers(activeGroup?.anid);
-                const alreadyInvited = existingInvites.find(
-                    (invitedUser: any) => invitedUser.email.toLowerCase() === invite.email.toLowerCase()
-                );
-
-                if (alreadyInvited) {
-                    updatedList[i] = {
-                        ...invite,
-                        status: INVITE_STATUS_ERROR,
-                        statusMessage: 'Already invited'
-                    };
-                    this.setState({emailList: updatedList});
-                    continue;
-                }
-
-                // Generate invitation ID
-                const invitationID = firebase.database().ref().child('invitedUsers').push().key;
-
-                // Build signup URL
-                const signupURL = `${window.location.origin}/groups/${activeGroupUserName}/signup?invitedUserID=${invitationID}`;
-
-                // Create invited user object
-                const invitedUser = {
-                    id: invitationID,
+                // Call backend to create Firebase Auth account, Users record,
+                // InvitedUsers record, and send email with generated password
+                await userRepository.inviteStudent({
                     email: invite.email,
-                    firstName: '',
-                    lastName: '',
-                    title: '',
-                    type: invite.userType,
-                    status: DB_CONST.INVITED_USER_NOT_REGISTERED,
-                    invitedBy: activeGroup?.anid,
-                    invitedDate: Date.now(),
-                    Invitor: {
-                        anid: activeGroup?.anid,
-                        displayName: activeGroup?.displayName,
-                        groupUserName: activeGroup?.groupUserName
-                    }
-                };
-
-                // Save to Firebase
-                await firebase
-                    .database()
-                    .ref(DB_CONST.INVITED_USERS_CHILD)
-                    .child(invitationID!)
-                    .set(invitedUser);
-
-                // Send email
-                // Get the user type as a readable string
-                const userTypeString = invite.userType === DB_CONST.TYPE_ISSUER ? 'Student' : 'Project Viewer';
-
-                await emailUtils.sendEmail({
-                    serverURL: process.env.REACT_APP_BACK_END_BASE_URL,
-                    emailType: emailUtils.EMAIL_INVITATION,
-                    data: {
-                        groupName: activeGroup?.displayName,
-                        groupLogo: utils.getLogoFromGroup(utils.GET_PLAIN_LOGO, activeGroup) || '',
-                        groupWebsite: activeGroup?.website || '',
-                        groupContactUs: `${window.location.origin}/groups/${activeGroupUserName}/contact-us`,
-                        sender: currentAdmin?.email,
-                        receiver: invite.email,
-                        receiverName: '', // Name not known at invitation time - template will show email instead
-                        userType: userTypeString,
-                        signupURL: signupURL
-                    }
+                    userType: invite.userType,
+                    groupID: activeGroup.anid,
+                    groupDisplayName: activeGroup.displayName,
+                    groupUserName: activeGroupUserName || activeGroup.groupUserName,
+                    groupLogo: utils.getLogoFromGroup(utils.GET_PLAIN_LOGO, activeGroup) || ''
                 });
-
-                // Track activity
-                await realtimeDBUtils
-                    .trackActivity({
-                        userID: currentAdmin.id,
-                        activityType: DB_CONST.ACTIVITY_TYPE_POST,
-                        interactedObjectLocation: DB_CONST.INVITED_USERS_CHILD,
-                        interactedObjectID: invitedUser.id,
-                        activitySummary: `invited ${invite.email} to join ${activeGroup?.displayName} as a ${invite.userType === DB_CONST.TYPE_ISSUER ? 'student' : 'project viewer'}`
-                    });
 
                 // Update status to success
                 updatedList[i] = {
@@ -363,7 +293,7 @@ class InviteMultipleUsers extends Component<InviteMultipleUsersProps, InviteMult
                 <Box height="15px" />
 
                 <Typography variant="body2" color="textSecondary" paragraph>
-                    Send email invitations to multiple users at once. Users will receive an email with a signup link to join {isSuperAdmin ? 'a university' : 'your course'}.
+                    Send email invitations to multiple users at once. Users will receive an email with their login credentials to join {isSuperAdmin ? 'a university' : 'your course'}.
                 </Typography>
 
                 <Button
