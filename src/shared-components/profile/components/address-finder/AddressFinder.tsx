@@ -1,25 +1,21 @@
-import React, {Component} from "react";
-import {connect} from "react-redux";
-import {ThunkDispatch} from "redux-thunk";
-import {AnyAction} from "redux";
-import {AppState} from "../../../../redux-store/reducers";
+import { Component } from 'react';
+import { connect } from 'react-redux';
+import { ThunkDispatch } from 'redux-thunk';
+import { AnyAction } from 'redux';
+import { AppState } from '../../../../redux-store/reducers';
 
 const mapStateToProps = (state: AppState) => {
-    return {
-
-    }
-}
+  return {};
+};
 
 const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
-    return {
-
-    }
-}
+  return {};
+};
 
 class AddressFinder extends Component<any, any> {
-    render() {
-        return undefined;
-    }
+  render() {
+    return undefined;
+  }
 }
 
 export default connect(mapStateToProps, mapDispatchToProps)(AddressFinder);

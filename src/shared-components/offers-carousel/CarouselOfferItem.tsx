@@ -1,26 +1,24 @@
 import React from 'react';
-import { ProjectInstance, getPitchCover, isImagePitchCover } from '../../models/project';
-import { Box, Typography, Card, CardContent, CardMedia } from '@material-ui/core';
-import { Image } from 'react-bootstrap';
-import ReactPlayer from 'react-player';
-import * as appColors from '../../values/colors';
+import { ProjectInstance, getPitchCover } from '../../models/project';
 
 interface CarouselOfferItemProps {
-    offer: ProjectInstance;
-    onClick: () => void;
+  offer: ProjectInstance;
+  onClick: () => void;
 }
 
 const CarouselOfferItem: React.FC<CarouselOfferItemProps> = ({ offer, onClick }) => {
-    const pitchCover = getPitchCover(offer.projectDetail);
-    console.log('CarouselOfferItem pitchCover:', pitchCover);
-    
-    return (
-        <div style={{ background: 'lightblue', padding: '10px', margin: '5px', border: '1px solid blue' }}>
-            <h3>DEBUG: {offer.projectDetail.projectName}</h3>
-            <p>ID: {offer.projectDetail.id}</p>
-            <p>Description: {offer.projectDetail.description}</p>
-        </div>
-        /*<Card 
+  const pitchCover = getPitchCover(offer.projectDetail);
+  console.log('CarouselOfferItem pitchCover:', pitchCover);
+
+  return (
+    <div
+      style={{ background: 'lightblue', padding: '10px', margin: '5px', border: '1px solid blue' }}
+    >
+      <h3>DEBUG: {offer.projectDetail.projectName}</h3>
+      <p>ID: {offer.projectDetail.id}</p>
+      <p>Description: {offer.projectDetail.description}</p>
+    </div>
+    /*<Card 
             onClick={onClick}
             style={{ 
                 cursor: 'pointer', 
@@ -117,7 +115,7 @@ const CarouselOfferItem: React.FC<CarouselOfferItemProps> = ({ offer, onClick })
                 )}
             </CardContent>
         </Card>*/
-    );
+  );
 };
 
 export default CarouselOfferItem;

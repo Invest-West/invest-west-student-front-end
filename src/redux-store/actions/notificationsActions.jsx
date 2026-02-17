@@ -6,111 +6,110 @@ export const TOGGLE_NOTIFICATIONS = 'TOGGLE_NOTIFICATIONS';
 export const CALLED_LAST = 'CALLED_LAST';
 export const CALLED_BEFORE_LAST = 'CALLED_BEFORE_LAST';
 export const toggleNotifications = (event) => {
-    return (dispatch, getState) => {
-        const notificationsAnchorEl = getState().manageNotifications.notificationsAnchorEl;
-        const notificationBellRef = getState().manageNotifications.notificationBellRef;
+  return (dispatch, getState) => {
+    const notificationsAnchorEl = getState().manageNotifications.notificationsAnchorEl;
+    const notificationBellRef = getState().manageNotifications.notificationBellRef;
 
-        const openPanel = () => {
-            dispatch({
-                type: TOGGLE_NOTIFICATIONS,
-                notificationsAnchorEl: notificationBellRef
-            });
-        }
+    const openPanel = () => {
+      dispatch({
+        type: TOGGLE_NOTIFICATIONS,
+        notificationsAnchorEl: notificationBellRef,
+      });
+    };
 
-        const closePanel = () => {
-            dispatch({
-                type: TOGGLE_NOTIFICATIONS,
-                notificationsAnchorEl: null
-            });
-        }
+    const closePanel = () => {
+      dispatch({
+        type: TOGGLE_NOTIFICATIONS,
+        notificationsAnchorEl: null,
+      });
+    };
 
-        if (!notificationsAnchorEl) {
-            openPanel();
-        }
-        else {
-            closePanel();
-        }
+    if (!notificationsAnchorEl) {
+      openPanel();
+    } else {
+      closePanel();
     }
+  };
 };
 
 export const NOTIFICATIONBELL_REF = 'NOTIFICATIONBELL_REF';
-export const notificationRefUpdated = ref => {
-    return (dispatch, getState) => {
-        dispatch({
-            type: NOTIFICATIONBELL_REF,
-            notificationBellRef: ref
-        });
-    }
+export const notificationRefUpdated = (ref) => {
+  return (dispatch, getState) => {
+    dispatch({
+      type: NOTIFICATIONBELL_REF,
+      notificationBellRef: ref,
+    });
+  };
 };
 
 export const LOADING_NOTIFICATIONS = 'LOADING_NOTIFICATIONS';
 export const FINISHED_LOADING_NOTIFICATIONS = 'FINISHED_LOADING_NOTIFICATIONS';
 export const loadNotifications = () => {
-    return (dispatch, getState) => {
-        const user = getState().auth.user;
+  return (dispatch, getState) => {
+    const user = getState().auth.user;
 
-        if (!user) {
-            return;
-        }
-
-        const userId = user.hasOwnProperty('anid') ? user.anid : user.id;
-
-        dispatch({
-            type: LOADING_NOTIFICATIONS
-        });
-
-        realtimeDBUtils
-            .loadNotifications(userId)
-            .then(notifications => {
-                dispatch({
-                    type: FINISHED_LOADING_NOTIFICATIONS,
-                    notifications
-                });
-            })
-            .catch(error => {
-                dispatch({
-                    type: FINISHED_LOADING_NOTIFICATIONS,
-                    notifications: []
-                });
-            });
+    if (!user) {
+      return;
     }
+
+    const userId = user.hasOwnProperty('anid') ? user.anid : user.id;
+
+    dispatch({
+      type: LOADING_NOTIFICATIONS,
+    });
+
+    realtimeDBUtils
+      .loadNotifications(userId)
+      .then((notifications) => {
+        dispatch({
+          type: FINISHED_LOADING_NOTIFICATIONS,
+          notifications,
+        });
+      })
+      .catch((error) => {
+        dispatch({
+          type: FINISHED_LOADING_NOTIFICATIONS,
+          notifications: [],
+        });
+      });
+  };
 };
 
-export const deleteANotification = notification => {
-    return (dispatch, getState) => {
-        firebase
-            .database()
-            .ref(DB_CONST.NOTIFICATIONS_CHILD)
-            .child(notification.id)
-            .remove()
-            .then(() => {
-                // Don't close the panel - let the real-time listener update the UI
-            })
-            .catch(error => {
-                console.error("Error deleting notification:", error);
-            });
-    }
+export const deleteANotification = (notification) => {
+  return (dispatch, getState) => {
+    firebase
+      .database()
+      .ref(DB_CONST.NOTIFICATIONS_CHILD)
+      .child(notification.id)
+      .remove()
+      .then(() => {
+        // Don't close the panel - let the real-time listener update the UI
+      })
+      .catch((error) => {
+        console.error('Error deleting notification:', error);
+      });
+  };
 };
 
 export const deleteAllNotifications = () => {
-    return (dispatch, getState) => {
-        const user = getState().auth.user;
+  return (dispatch, getState) => {
+    const user = getState().auth.user;
 
-        if (!user) {
-            return;
-        }
-
-        const userId = user.hasOwnProperty('anid') ? user.anid : user.id;
-
-        realtimeDBUtils
-            .deleteAllNotifications(userId)
-            .then(() => {
-                // Don't close the panel - let the real-time listener update the UI
-            })
-            .catch(error => {
-                console.error("Error deleting all notifications:", error);
-            });
+    if (!user) {
+      return;
     }
+
+    const userId = user.hasOwnProperty('anid') ? user.anid : user.id;
+
+    realtimeDBUtils
+      .deleteAllNotifications(userId)
+      .then(() => {
+        // Don't close the panel - let the real-time listener update the UI
+      })
+      .catch((error) => {
+        console.error('Error deleting all notifications:', error);
+      });
+  };
 };
 
 // Listener ------------------------------------------------------------------------------------------------------------
@@ -119,63 +118,64 @@ let notificationsListener = null;
 
 export const NOTIFICATIONS_LIST_CHANGED = 'NOTIFICATIONS_LIST_CHANGED';
 export const startListeningForNotificationsChanged = () => {
-    return (dispatch, getState) => {
-        if (!notificationsListener) {
+  return (dispatch, getState) => {
+    if (!notificationsListener) {
+      const user = getState().auth.user;
 
-            const user = getState().auth.user;
+      if (!user) {
+        return;
+      }
 
-            if (!user) {
-                return;
-            }
+      const userId = user.hasOwnProperty('anid') ? user.anid : user.id;
 
-            const userId = user.hasOwnProperty('anid') ? user.anid : user.id;
+      notificationsListener = firebase
+        .database()
+        .ref(DB_CONST.NOTIFICATIONS_CHILD)
+        .orderByChild('userID')
+        .equalTo(userId);
 
-            notificationsListener = firebase
-                .database()
-                .ref(DB_CONST.NOTIFICATIONS_CHILD)
-                .orderByChild('userID')
-                .equalTo(userId);
+      notificationsListener.on('child_added', (snapshot) => {
+        const notification = snapshot.val();
 
-            notificationsListener
-                .on('child_added', snapshot => {
-                    let notification = snapshot.val();
+        const notifications = [...getState().manageNotifications.notifications];
+        const notificationIndex = notifications.findIndex(
+          (existingNotification) => existingNotification.id === notification.id
+        );
 
-                    let notifications = [...getState().manageNotifications.notifications];
-                    let notificationIndex = notifications.findIndex(existingNotification => existingNotification.id === notification.id);
-
-                    if (notificationIndex === -1) {
-                        dispatch({
-                            type: NOTIFICATIONS_LIST_CHANGED,
-                            notifications: [...notifications, notification]
-                        });
-                    }
-                });
-
-            notificationsListener
-                .on('child_removed', snapshot => {
-                    let notification = snapshot.val();
-
-                    let notifications = [...getState().manageNotifications.notifications];
-                    let notificationIndex = notifications.findIndex(existingNotification => existingNotification.id === notification.id);
-
-                    if (notificationIndex !== -1) {
-                        notifications.splice(notificationIndex, 1);
-                        dispatch({
-                            type: NOTIFICATIONS_LIST_CHANGED,
-                            notifications
-                        });
-                    }
-                });
+        if (notificationIndex === -1) {
+          dispatch({
+            type: NOTIFICATIONS_LIST_CHANGED,
+            notifications: [...notifications, notification],
+          });
         }
+      });
+
+      notificationsListener.on('child_removed', (snapshot) => {
+        const notification = snapshot.val();
+
+        const notifications = [...getState().manageNotifications.notifications];
+        const notificationIndex = notifications.findIndex(
+          (existingNotification) => existingNotification.id === notification.id
+        );
+
+        if (notificationIndex !== -1) {
+          notifications.splice(notificationIndex, 1);
+          dispatch({
+            type: NOTIFICATIONS_LIST_CHANGED,
+            notifications,
+          });
+        }
+      });
     }
+  };
 };
 
 export const stopListeningForNotificationsChanged = () => {
-    return (dispatch, getState) => {
-        if (notificationsListener) {
-            notificationsListener.off('child_added');
-            notificationsListener.off('child_removed');
-            notificationsListener = null;
-        }
+  return (dispatch, getState) => {
+    if (notificationsListener) {
+      notificationsListener.off('child_added');
+      notificationsListener.off('child_removed');
+      notificationsListener = null;
     }
+  };
 };

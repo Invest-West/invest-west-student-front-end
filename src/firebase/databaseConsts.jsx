@@ -9,76 +9,77 @@
  */
 
 // Groups node
-export const GROUP_PROPERTIES_CHILD = "AngelNetworkProperties";
+export const GROUP_PROPERTIES_CHILD = 'AngelNetworkProperties';
 
 // Courses node (separate from groups for cleaner architecture)
-export const COURSES_CHILD = "Courses";
+export const COURSES_CHILD = 'Courses';
 
 // Admins node
-export const ADMINISTRATORS_CHILD = "Administrators";
+export const ADMINISTRATORS_CHILD = 'Administrators';
 
 // System's attributes node
-export const CLUB_ATTRIBUTES_CHILD = "ClubAttributes";
+export const CLUB_ATTRIBUTES_CHILD = 'ClubAttributes';
 
 // Users node
-export const USERS_CHILD = "Users";
+export const USERS_CHILD = 'Users';
 
 // Projects node
-export const PROJECTS_CHILD = "Projects";
+export const PROJECTS_CHILD = 'Projects';
 
 // Project reject feedbacks node
-export const PROJECT_REJECT_FEEDBACKS_CHILD = "ProjectRejectFeedbacks";
+export const PROJECT_REJECT_FEEDBACKS_CHILD = 'ProjectRejectFeedbacks';
 
 // Activities log node
-export const ACTIVITIES_LOG_CHILD = "ActivitiesLog";
+export const ACTIVITIES_LOG_CHILD = 'ActivitiesLog';
 
 // Access requests to a group node
-export const REQUESTS_TO_JOIN_CHILD = "RequestsToJoin";
+export const REQUESTS_TO_JOIN_CHILD = 'RequestsToJoin';
 
 // Course creation requests node
-export const COURSE_REQUESTS_CHILD = "CourseRequests";
+export const COURSE_REQUESTS_CHILD = 'CourseRequests';
 
 // Contact us enquiries node
-export const CONTACT_US_ENQUIRIES_CHILD = "ContactUsEnquiries";
+export const CONTACT_US_ENQUIRIES_CHILD = 'ContactUsEnquiries';
 
 // Marketing preferences node
-export const MARKETING_PREFERENCES_CHILD = "MarketingPreferences";
+export const MARKETING_PREFERENCES_CHILD = 'MarketingPreferences';
 
 // Invited users node
-export const INVITED_USERS_CHILD = "InvitedUsers";
+export const INVITED_USERS_CHILD = 'InvitedUsers';
 
 // Business profile node
-export const BUSINESS_PROFILE_CHILD = "BusinessProfile";
+export const BUSINESS_PROFILE_CHILD = 'BusinessProfile';
 
 // Accepted create pitch T&Cs node
-export const ACCEPTED_CREATE_PITCH_TERM_AND_CONDITIONS_CHILD = "AcceptedCreatePitchTermsAndConditions";
+export const ACCEPTED_CREATE_PITCH_TERM_AND_CONDITIONS_CHILD =
+  'AcceptedCreatePitchTermsAndConditions';
 
 // Project comments node
-export const COMMENTS_CHILD = "Comments";
+export const COMMENTS_CHILD = 'Comments';
 
 // Project comment replies node
-export const COMMENT_REPLIES_CHILD = "CommentReplies";
+export const COMMENT_REPLIES_CHILD = 'CommentReplies';
 
 // Pledges node
-export const PLEDGES_CHILD = "Pledges";
+export const PLEDGES_CHILD = 'Pledges';
 
 // Project votes node
-export const VOTES_CHILD = "Votes";
+export const VOTES_CHILD = 'Votes';
 
 // Pledge FAQs node
-export const PLEDGE_FAQS_CHILD = "PledgeFAQs";
+export const PLEDGE_FAQS_CHILD = 'PledgeFAQs';
 
 // Notifications node
-export const NOTIFICATIONS_CHILD = "Notifications";
+export const NOTIFICATIONS_CHILD = 'Notifications';
 
 // Forums node
-export const FORUMS_CHILD = "Forums";
+export const FORUMS_CHILD = 'Forums';
 
 // Forum threads node
-export const FORUM_THREADS_CHILD = "ForumThreads";
+export const FORUM_THREADS_CHILD = 'ForumThreads';
 
 // Forum thread replies node
-export const FORUM_THREAD_REPLIES_CHILD = "ForumThreadReplies";
+export const FORUM_THREAD_REPLIES_CHILD = 'ForumThreadReplies';
 /**
  * ./// ----------------------------------------------------------------------------------------------------------------
  */
@@ -90,22 +91,22 @@ export const FORUM_THREAD_REPLIES_CHILD = "ForumThreadReplies";
  */
 
 // Plain logos directory
-export const PLAIN_LOGOS_CHILD = "PlainLogos";
+export const PLAIN_LOGOS_CHILD = 'PlainLogos';
 
 // Logos with text directory
-export const LOGOS_WITH_TEXT_CHILD = "LogosWithText";
+export const LOGOS_WITH_TEXT_CHILD = 'LogosWithText';
 
 // Legal documents directory
-export const LEGAL_DOCUMENTS_CHILD = "LegalDocuments";
+export const LEGAL_DOCUMENTS_CHILD = 'LegalDocuments';
 
 // Logos directory
-export const LOGOS_CHILD = "Logos";
+export const LOGOS_CHILD = 'Logos';
 
 // Videos directory
-export const INTRO_VIDEOS_CHILD = "Videos";
+export const INTRO_VIDEOS_CHILD = 'Videos';
 
 // Profile pictures directory
-export const PROFILE_PICTURES_CHILD = "ProfilePictures";
+export const PROFILE_PICTURES_CHILD = 'ProfilePictures';
 /**
  * ./// ----------------------------------------------------------------------------------------------------------------
  */
@@ -115,17 +116,17 @@ export const PROFILE_PICTURES_CHILD = "ProfilePictures";
  *
  * @type {string}
  */
-export const PROJECT_SUPPORTING_DOCUMENTS_CHILD = "supportingDocuments";
+export const PROJECT_SUPPORTING_DOCUMENTS_CHILD = 'supportingDocuments';
 
-export const PROJECT_PRESENTATION_DOCUMENT_CHILD = "presentationDocument";
+export const PROJECT_PRESENTATION_DOCUMENT_CHILD = 'presentationDocument';
 
-export const PROFILE_PICTURE_CHILD = "profilePicture";
+export const PROFILE_PICTURE_CHILD = 'profilePicture';
 
-export const PROJECT_COVER_CHILD = "cover";
+export const PROJECT_COVER_CHILD = 'cover';
 
-export const LOGO_CHILD = "logo";
+export const LOGO_CHILD = 'logo';
 
-export const INTRO_VIDEO_CHILD = "video";
+export const INTRO_VIDEO_CHILD = 'video';
 /**
  * ./// ----------------------------------------------------------------------------------------------------------------
  */
@@ -284,20 +285,20 @@ export const EDIT_A_PLEDGE = 2;
  *
  * @type {string[]}
  */
-export const USER_TITLES = ["Please select", "Ms.", "Mrs.", "Miss", "Mr.", "Mx", "Dr.", "Prof."];
+export const USER_TITLES = ['Please select', 'Ms.', 'Mrs.', 'Miss', 'Mr.', 'Mx', 'Dr.', 'Prof.'];
 
-export const HEAR_ABOUT = ["Please select", "Google", "Newsletter", "Linkedin", "Event"];
+export const HEAR_ABOUT = ['Please select', 'Google', 'Newsletter', 'Linkedin', 'Event'];
 
 /**
  * FINANCIAL ROUNDS ----------------------------------------------------------------------------------------------------
  *
  * @type {string[]}
  */
-export const FINANCIAL_ROUNDS = ["Yes", "No"];
+export const FINANCIAL_ROUNDS = ['Yes', 'No'];
 
-export const EIS_BADGE = ["Yes", "No"];
+export const EIS_BADGE = ['Yes', 'No'];
 
-export const SEIS_BADGE = ["Yes", "No"];
+export const SEIS_BADGE = ['Yes', 'No'];
 
 /**
  * ./// ----------------------------------------------------------------------------------------------------------------
@@ -328,7 +329,7 @@ export const MAX_VIDEO_OR_IMAGE_SIZE_IN_BYTES = 30000000;
 export const MAX_LEGAL_DOCUMENTS_UPLOAD_FOR_ISSUER = 2;
 export const MAX_FILES_FOR_PITCH_SUPPORTING_DOCUMENTS = 10;
 
-export const STORAGE_FILE_NAME_ID_SPLIT = "-invest-west-";
+export const STORAGE_FILE_NAME_ID_SPLIT = '-invest-west-';
 /**
  * ./// ----------------------------------------------------------------------------------------------------------------
  */

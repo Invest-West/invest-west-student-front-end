@@ -11,13 +11,13 @@
  * "Student Showcase" -> "student-showcase"
  */
 export const courseDisplayNameToUrlName = (displayName: string): string => {
-    if (!displayName) {
-        return '';
-    }
-    return displayName
-        .toLowerCase()
-        .replace(/\s+/g, '-')  // Replace spaces with hyphens
-        .replace(/[^a-z0-9-]/g, ''); // Remove special characters except hyphens
+  if (!displayName) {
+    return '';
+  }
+  return displayName
+    .toLowerCase()
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/[^a-z0-9-]/g, ''); // Remove special characters except hyphens
 };
 
 /**
@@ -26,23 +26,23 @@ export const courseDisplayNameToUrlName = (displayName: string): string => {
  * "student-showcase" -> "Student Showcase"
  */
 export const courseUrlNameToDisplayName = (urlName: string): string => {
-    if (!urlName) {
-        return '';
-    }
-    return urlName
-        .split('-')
-        .map(word => {
-            // Handle special cases like MSc, PhD, etc.
-            if (word.toLowerCase() === 'msc') return 'MSc';
-            if (word.toLowerCase() === 'phd') return 'PhD';
-            if (word.toLowerCase() === 'bsc') return 'BSc';
-            if (word.toLowerCase() === 'ba') return 'BA';
-            if (word.toLowerCase() === 'ma') return 'MA';
+  if (!urlName) {
+    return '';
+  }
+  return urlName
+    .split('-')
+    .map((word) => {
+      // Handle special cases like MSc, PhD, etc.
+      if (word.toLowerCase() === 'msc') return 'MSc';
+      if (word.toLowerCase() === 'phd') return 'PhD';
+      if (word.toLowerCase() === 'bsc') return 'BSc';
+      if (word.toLowerCase() === 'ba') return 'BA';
+      if (word.toLowerCase() === 'ma') return 'MA';
 
-            // Capitalize first letter of each word
-            return word.charAt(0).toUpperCase() + word.slice(1);
-        })
-        .join(' ');
+      // Capitalize first letter of each word
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(' ');
 };
 
 /**
@@ -51,27 +51,34 @@ export const courseUrlNameToDisplayName = (urlName: string): string => {
  * @param availableCourses - Array of available course display names
  * @returns The matching course display name or null if not found
  */
-export const findCourseDisplayNameByUrl = (urlName: string, availableCourses: string[]): string | null => {
-    if (!urlName || !availableCourses) return null;
+export const findCourseDisplayNameByUrl = (
+  urlName: string,
+  availableCourses: string[]
+): string | null => {
+  if (!urlName || !availableCourses) return null;
 
-    // Filter out any null/undefined values from the array
-    const validCourses = availableCourses.filter(course => course != null && course.trim().length > 0);
+  // Filter out any null/undefined values from the array
+  const validCourses = availableCourses.filter(
+    (course) => course != null && course.trim().length > 0
+  );
 
-    // First, try exact match by converting display names to URL names
-    const matchingCourse = validCourses.find(course =>
-        courseDisplayNameToUrlName(course) === urlName.toLowerCase()
-    );
+  // First, try exact match by converting display names to URL names
+  const matchingCourse = validCourses.find(
+    (course) => courseDisplayNameToUrlName(course) === urlName.toLowerCase()
+  );
 
-    if (matchingCourse) {
-        return matchingCourse;
-    }
+  if (matchingCourse) {
+    return matchingCourse;
+  }
 
-    // If no exact match, try case-insensitive search with normalization
-    const normalizedUrl = urlName.toLowerCase().trim();
-    return validCourses.find(course => {
-        const courseUrlName = courseDisplayNameToUrlName(course);
-        return courseUrlName === normalizedUrl;
-    }) || null;
+  // If no exact match, try case-insensitive search with normalization
+  const normalizedUrl = urlName.toLowerCase().trim();
+  return (
+    validCourses.find((course) => {
+      const courseUrlName = courseDisplayNameToUrlName(course);
+      return courseUrlName === normalizedUrl;
+    }) || null
+  );
 };
 
 /**
@@ -81,7 +88,7 @@ export const findCourseDisplayNameByUrl = (urlName: string, availableCourses: st
  * @returns true if the course exists, false otherwise
  */
 export const validateCourseUrlName = (urlName: string, availableCourses: string[]): boolean => {
-    return findCourseDisplayNameByUrl(urlName, availableCourses) !== null;
+  return findCourseDisplayNameByUrl(urlName, availableCourses) !== null;
 };
 
 /**
@@ -90,23 +97,23 @@ export const validateCourseUrlName = (urlName: string, availableCourses: string[
  * @returns Array of URL-friendly course names
  */
 export const getAvailableCourseUrlNames = (availableCourses: string[]): string[] => {
-    if (!availableCourses) return [];
-    return availableCourses
-        .filter(course => course != null && course.trim().length > 0)
-        .map(courseDisplayNameToUrlName);
+  if (!availableCourses) return [];
+  return availableCourses
+    .filter((course) => course != null && course.trim().length > 0)
+    .map(courseDisplayNameToUrlName);
 };
 
 /**
  * Course object interface
  */
 export interface CourseObject {
-    anid: string;
-    displayName: string;
-    courseUserName: string;
-    description: string;
-    isDefault: boolean;
-    status: number;
-    dateAdded: number;
+  anid: string;
+  displayName: string;
+  courseUserName: string;
+  description: string;
+  isDefault: boolean;
+  status: number;
+  dateAdded: number;
 }
 
 /**
@@ -114,9 +121,9 @@ export interface CourseObject {
  * @returns Unique course identifier
  */
 export const generateCourseAnid = (): string => {
-    const timestamp = Date.now();
-    const random = Math.random().toString(36).substring(2, 8);
-    return `course_${timestamp}_${random}`;
+  const timestamp = Date.now();
+  const random = Math.random().toString(36).substring(2, 8);
+  return `course_${timestamp}_${random}`;
 };
 
 /**
@@ -126,16 +133,20 @@ export const generateCourseAnid = (): string => {
  * @param isDefault - Whether this is the default course
  * @returns Complete course object
  */
-export const createCourseObject = (displayName: string, description: string = '', isDefault: boolean = false): CourseObject => {
-    return {
-        anid: generateCourseAnid(),
-        displayName,
-        courseUserName: courseDisplayNameToUrlName(displayName),
-        description,
-        isDefault,
-        status: 1, // Active
-        dateAdded: Date.now()
-    };
+export const createCourseObject = (
+  displayName: string,
+  description: string = '',
+  isDefault: boolean = false
+): CourseObject => {
+  return {
+    anid: generateCourseAnid(),
+    displayName,
+    courseUserName: courseDisplayNameToUrlName(displayName),
+    description,
+    isDefault,
+    status: 1, // Active
+    dateAdded: Date.now(),
+  };
 };
 
 /**
@@ -143,25 +154,27 @@ export const createCourseObject = (displayName: string, description: string = ''
  * @param availableCourses - Array of course display names
  * @returns Courses object with courseUserName keys
  */
-export const convertAvailableCoursesToStructured = (availableCourses: string[] = []): Record<string, CourseObject> => {
-    const courses: Record<string, CourseObject> = {};
+export const convertAvailableCoursesToStructured = (
+  availableCourses: string[] = []
+): Record<string, CourseObject> => {
+  const courses: Record<string, CourseObject> = {};
 
-    // Always add student-showcase as default
-    courses['student-showcase'] = createCourseObject(
-        'Student Showcase',
-        'Showcase platform for student projects and investment opportunities',
-        true
-    );
+  // Always add student-showcase as default
+  courses['student-showcase'] = createCourseObject(
+    'Student Showcase',
+    'Showcase platform for student projects and investment opportunities',
+    true
+  );
 
-    // Add existing courses
-    availableCourses.forEach(courseName => {
-        if (courseName && courseName !== 'Student Showcase') {
-            const courseUserName = courseDisplayNameToUrlName(courseName);
-            courses[courseUserName] = createCourseObject(courseName);
-        }
-    });
+  // Add existing courses
+  availableCourses.forEach((courseName) => {
+    if (courseName && courseName !== 'Student Showcase') {
+      const courseUserName = courseDisplayNameToUrlName(courseName);
+      courses[courseUserName] = createCourseObject(courseName);
+    }
+  });
 
-    return courses;
+  return courses;
 };
 
 /**
@@ -169,8 +182,10 @@ export const convertAvailableCoursesToStructured = (availableCourses: string[] =
  * @param courses - Courses object
  * @returns Default course or null if not found
  */
-export const getDefaultCourse = (courses: Record<string, CourseObject> = {}): CourseObject | null => {
-    return Object.values(courses).find(course => course.isDefault) || null;
+export const getDefaultCourse = (
+  courses: Record<string, CourseObject> = {}
+): CourseObject | null => {
+  return Object.values(courses).find((course) => course.isDefault) || null;
 };
 
 /**
@@ -179,6 +194,9 @@ export const getDefaultCourse = (courses: Record<string, CourseObject> = {}): Co
  * @param courseUserName - URL-safe course name
  * @returns Course object or null if not found
  */
-export const getCourseByUserName = (courses: Record<string, CourseObject> = {}, courseUserName: string): CourseObject | null => {
-    return courses[courseUserName] || null;
+export const getCourseByUserName = (
+  courses: Record<string, CourseObject> = {},
+  courseUserName: string
+): CourseObject | null => {
+  return courses[courseUserName] || null;
 };

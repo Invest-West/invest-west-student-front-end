@@ -9,149 +9,147 @@ import '../shared-css/ReactQuillSizes.scss';
  * Makes it easy to use consistent sizing across your application
  */
 export default class SizedReactQuill extends Component {
-    static propTypes = {
-        size: PropTypes.oneOf(['small', 'medium', 'large', 'fixed', 'responsive', 'custom']),
-        height: PropTypes.string, // Only used when size is 'custom'
-        width: PropTypes.string,
-        value: PropTypes.any,
-        onChange: PropTypes.func,
-        modules: PropTypes.object,
-        placeholder: PropTypes.string,
-        theme: PropTypes.string,
-        readOnly: PropTypes.bool,
-        style: PropTypes.object,
-        className: PropTypes.string
-    };
+  static propTypes = {
+    size: PropTypes.oneOf(['small', 'medium', 'large', 'fixed', 'responsive', 'custom']),
+    height: PropTypes.string, // Only used when size is 'custom'
+    width: PropTypes.string,
+    value: PropTypes.any,
+    onChange: PropTypes.func,
+    modules: PropTypes.object,
+    placeholder: PropTypes.string,
+    theme: PropTypes.string,
+    readOnly: PropTypes.bool,
+    style: PropTypes.object,
+    className: PropTypes.string,
+  };
 
-    static defaultProps = {
-        size: 'medium',
-        theme: 'snow',
-        readOnly: false,
-        placeholder: 'Enter your text here...'
-    };
+  static defaultProps = {
+    size: 'medium',
+    theme: 'snow',
+    readOnly: false,
+    placeholder: 'Enter your text here...',
+  };
 
-    // Default module configurations for different use cases
-    getModules = () => {
-        const { modules } = this.props;
-        
-        // If modules are provided, use them
-        if (modules) return modules;
+  // Default module configurations for different use cases
+  getModules = () => {
+    const { modules } = this.props;
 
-        // Default modules based on size
-        switch (this.props.size) {
-            case 'small':
-                return {
-                    toolbar: [
-                        ['bold', 'italic', 'underline'],
-                        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                        ['link']
-                    ]
-                };
-            case 'medium':
-            case 'large':
-            case 'fixed':
-            case 'responsive':
-            default:
-                return {
-                    toolbar: [
-                        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-                        ['bold', 'italic', 'underline', 'strike'],
-                        ['blockquote'],
-                        [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }, { 'align': [] }],
-                        [{ 'script': 'sub' }, { 'script': 'super' }],
-                        [{ 'color': [] }, { 'background': [] }],
-                        ['link', 'image'],
-                        ['clean']
-                    ]
-                };
-        }
-    };
+    // If modules are provided, use them
+    if (modules) return modules;
 
-    // Get CSS class based on size
-    getSizeClass = () => {
-        const { size } = this.props;
-        
-        switch (size) {
-            case 'small':
-                return 'quill-small quill-compact';
-            case 'medium':
-                return 'quill-medium';
-            case 'large':
-                return 'quill-large';
-            case 'fixed':
-                return 'quill-fixed';
-            case 'responsive':
-                return 'quill-responsive quill-full-width';
-            case 'custom':
-                return 'quill-custom';
-            default:
-                return 'quill-medium';
-        }
-    };
-
-    // Get custom styles for 'custom' size
-    getCustomStyles = () => {
-        const { size, height, width, style } = this.props;
-        
-        if (size !== 'custom') return style || {};
-
-        const customStyles = {
-            ...(style || {}),
-            ...(height && { height }),
-            ...(width && { width })
+    // Default modules based on size
+    switch (this.props.size) {
+      case 'small':
+        return {
+          toolbar: [
+            ['bold', 'italic', 'underline'],
+            [{ list: 'ordered' }, { list: 'bullet' }],
+            ['link'],
+          ],
         };
+      case 'medium':
+      case 'large':
+      case 'fixed':
+      case 'responsive':
+      default:
+        return {
+          toolbar: [
+            [{ header: [1, 2, 3, 4, 5, 6, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            ['blockquote'],
+            [
+              { list: 'ordered' },
+              { list: 'bullet' },
+              { indent: '-1' },
+              { indent: '+1' },
+              { align: [] },
+            ],
+            [{ script: 'sub' }, { script: 'super' }],
+            [{ color: [] }, { background: [] }],
+            ['link', 'image'],
+            ['clean'],
+          ],
+        };
+    }
+  };
 
-        return customStyles;
+  // Get CSS class based on size
+  getSizeClass = () => {
+    const { size } = this.props;
+
+    switch (size) {
+      case 'small':
+        return 'quill-small quill-compact';
+      case 'medium':
+        return 'quill-medium';
+      case 'large':
+        return 'quill-large';
+      case 'fixed':
+        return 'quill-fixed';
+      case 'responsive':
+        return 'quill-responsive quill-full-width';
+      case 'custom':
+        return 'quill-custom';
+      default:
+        return 'quill-medium';
+    }
+  };
+
+  // Get custom styles for 'custom' size
+  getCustomStyles = () => {
+    const { size, height, width, style } = this.props;
+
+    if (size !== 'custom') return style || {};
+
+    const customStyles = {
+      ...(style || {}),
+      ...(height && { height }),
+      ...(width && { width }),
     };
 
-    render() {
-        const {
-            size,
-            height,
-            width,
-            value,
-            onChange,
-            placeholder,
-            theme,
-            readOnly,
-            className,
-            ...otherProps
-        } = this.props;
+    return customStyles;
+  };
 
-        const sizeClass = this.getSizeClass();
-        const customStyles = this.getCustomStyles();
-        const modules = this.getModules();
-        const combinedClassName = `${sizeClass} ${className || ''}`.trim();
+  render() {
+    const {
+      size,
+      height,
+      width,
+      value,
+      onChange,
+      placeholder,
+      theme,
+      readOnly,
+      className,
+      ...otherProps
+    } = this.props;
 
-        return (
-            <div className={combinedClassName} style={customStyles}>
-                <ReactQuill
-                    theme={theme}
-                    value={value}
-                    onChange={onChange}
-                    modules={modules}
-                    placeholder={placeholder}
-                    readOnly={readOnly}
-                    {...otherProps}
-                />
-            </div>
-        );
-    }
+    const sizeClass = this.getSizeClass();
+    const customStyles = this.getCustomStyles();
+    const modules = this.getModules();
+    const combinedClassName = `${sizeClass} ${className || ''}`.trim();
+
+    return (
+      <div className={combinedClassName} style={customStyles}>
+        <ReactQuill
+          theme={theme}
+          value={value}
+          onChange={onChange}
+          modules={modules}
+          placeholder={placeholder}
+          readOnly={readOnly}
+          {...otherProps}
+        />
+      </div>
+    );
+  }
 }
 
 // Export convenience components for common use cases
-export const SmallQuill = (props) => (
-    <SizedReactQuill size="small" {...props} />
-);
+export const SmallQuill = (props) => <SizedReactQuill size="small" {...props} />;
 
-export const MediumQuill = (props) => (
-    <SizedReactQuill size="medium" {...props} />
-);
+export const MediumQuill = (props) => <SizedReactQuill size="medium" {...props} />;
 
-export const LargeQuill = (props) => (
-    <SizedReactQuill size="large" {...props} />
-);
+export const LargeQuill = (props) => <SizedReactQuill size="large" {...props} />;
 
-export const ResponsiveQuill = (props) => (
-    <SizedReactQuill size="responsive" {...props} />
-);
+export const ResponsiveQuill = (props) => <SizedReactQuill size="responsive" {...props} />;
