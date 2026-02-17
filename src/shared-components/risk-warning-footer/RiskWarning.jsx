@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { Col, Container, Row } from 'react-bootstrap';
 import { NavLink } from 'react-router-dom';
 import { css, StyleSheet } from 'aphrodite';
-import { Typography } from '@material-ui/core';
+import { Typography } from '@mui/material';
 
 import * as colors from '../../values/colors';
 import * as ROUTES from '../../router/routes';

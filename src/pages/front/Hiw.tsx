@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { AppState } from '../../redux-store/reducers';
 import { ManageGroupUrlState } from '../../redux-store/reducers/manageGroupUrlReducer';
 import { AuthenticationState } from '../../redux-store/reducers/authenticationReducer';
-import { RouteComponentProps, NavLink } from 'react-router-dom';
+import { NavLink, useParams } from 'react-router-dom';
 import { RouteParams } from '../../router/router';
 import { MediaQueryState } from '../../redux-store/reducers/mediaQueryReducer';
 import Routes from '../../router/routes';
@@ -19,6 +19,10 @@ import employHero from '../../img/employ_hero.svg';
 import employSignup from '../../img/employ_signup.svg';
 import employProject from '../../img/employ_project.svg';
 import employHire from '../../img/employ_hire.svg';
+
+interface HiwRouterProps {
+  params: Record<string, string | undefined>;
+}
 
 interface HiwProps {
   ManageGroupUrlState: ManageGroupUrlState;
@@ -39,8 +43,8 @@ interface HiwState {
   isMobileMenuOpen: boolean;
 }
 
-class Hiw extends Component<HiwProps & Readonly<RouteComponentProps<RouteParams>>, HiwState> {
-  constructor(props: HiwProps & Readonly<RouteComponentProps<RouteParams>>) {
+class HiwClass extends Component<HiwProps & HiwRouterProps, HiwState> {
+  constructor(props: HiwProps & HiwRouterProps) {
     super(props);
     this.state = {
       activeTab: 'academia',
@@ -73,16 +77,16 @@ class Hiw extends Component<HiwProps & Readonly<RouteComponentProps<RouteParams>
     const { ManageGroupUrlState, AuthenticationState } = this.props;
 
     const { activeTab, isMobileMenuOpen } = this.state;
-    const { match } = this.props;
+    const routeParams = this.props.params;
 
     // Construct proper routes based on whether we have a group or not
-    const aboutRoute = Routes.constructAboutRoute(match.params);
-    const hiwRoute = Routes.constructHiwRoute(match.params);
-    const contactRoute = Routes.constructContactRoute(match.params);
-    const exploreRoute = Routes.constructExploreRoute(match.params);
-    const signInRoute = Routes.constructSignInRoute(match.params);
+    const aboutRoute = Routes.constructAboutRoute(routeParams);
+    const hiwRoute = Routes.constructHiwRoute(routeParams);
+    const contactRoute = Routes.constructContactRoute(routeParams);
+    const exploreRoute = Routes.constructExploreRoute(routeParams);
+    const signInRoute = Routes.constructSignInRoute(routeParams);
     const homeRoute = Routes.constructHomeRoute(
-      match.params,
+      routeParams,
       ManageGroupUrlState,
       AuthenticationState
     );
@@ -278,4 +282,11 @@ class Hiw extends Component<HiwProps & Readonly<RouteComponentProps<RouteParams>
   }
 }
 
-export default connect(mapStateToProps)(Hiw);
+const ConnectedHiw = connect(mapStateToProps)(HiwClass);
+
+function Hiw() {
+  const params = useParams();
+  return <ConnectedHiw params={params} />;
+}
+
+export default Hiw;

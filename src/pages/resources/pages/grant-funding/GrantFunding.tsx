@@ -6,7 +6,7 @@ import { MediaQueryState } from '../../../../redux-store/reducers/mediaQueryRedu
 import { toggleContactResourceDialog } from '../../ResourcesActions';
 import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
-import { Box, Button, colors, Divider, Paper, Typography } from '@material-ui/core';
+import { Box, Button, colors, Divider, Paper, Typography } from '@mui/material';
 import { Col, Image, Row } from 'react-bootstrap';
 import CustomLink from '../../../../shared-js-css-styles/CustomLink';
 import { css } from 'aphrodite';

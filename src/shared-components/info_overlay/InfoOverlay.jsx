@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
-import InfoIcon from '@material-ui/icons/Info';
+import InfoIcon from '@mui/icons-material/Info';
 import * as colors from '../../values/colors';
 
 export default class InfoOverlay extends Component {

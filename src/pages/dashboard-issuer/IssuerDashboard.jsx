@@ -1,11 +1,12 @@
 import React, { Component } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import FlexView from 'react-flexview';
 import { css, StyleSheet } from 'aphrodite';
 import Sidebar from 'react-sidebar';
-import { Badge, IconButton, Typography } from '@material-ui/core';
-import NotificationsIcon from '@material-ui/icons/Notifications';
+import { Badge, IconButton, Typography } from '@mui/material';
+import NotificationsIcon from '@mui/icons-material/Notifications';
 import { Col, Container, Row } from 'react-bootstrap';
-import Menu from '@material-ui/icons/Menu';
+import Menu from '@mui/icons-material/Menu';
 import { HashLoader } from 'react-spinners';
 
 import firebase from '../../firebase/firebaseApp';
@@ -350,6 +351,7 @@ class IssuerDashboard extends Component {
                         <IconButton
                           className={css(sharedStyles.hamburger_button)}
                           onClick={() => toggleSidebar(true)}
+                          size="large"
                         >
                           <Menu />
                         </IconButton>
@@ -360,7 +362,7 @@ class IssuerDashboard extends Component {
                   <Col xs={2} sm={2} md={1} lg={1} style={{ paddingRight: 13 }}>
                     <FlexView vAlignContent="center" hAlignContent="right" width="100%">
                       <div ref={this.notificationBell}>
-                        <IconButton onClick={toggleNotifications}>
+                        <IconButton onClick={toggleNotifications} size="large">
                           <Badge
                             badgeContent={notifications.length}
                             color="secondary"
@@ -442,7 +444,29 @@ class IssuerDashboard extends Component {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(IssuerDashboard);
+const ConnectedIssuerDashboard = connect(mapStateToProps, mapDispatchToProps)(IssuerDashboard);
+
+function IssuerDashboardWrapper(props) {
+  const params = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const match = {
+    params: params,
+    path: location.pathname,
+    pathname: location.pathname,
+    url: location.pathname,
+  };
+  return (
+    <ConnectedIssuerDashboard
+      {...props}
+      match={match}
+      history={{ push: navigate }}
+      location={location}
+    />
+  );
+}
+
+export default IssuerDashboardWrapper;
 
 const styles = StyleSheet.create({
   page_title: {

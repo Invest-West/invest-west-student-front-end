@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import ReactQuill from 'react-quill';
+import ReactQuill from 'react-quill-new';
 import PropTypes from 'prop-types';
-import 'react-quill/dist/quill.snow.css';
+import 'react-quill-new/dist/quill.snow.css';
 import '../shared-css/ReactQuillSizes.scss';
 
 /**

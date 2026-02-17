@@ -1,7 +1,7 @@
 import React from 'react';
 import { StyleSheet } from 'aphrodite';
-import { TableCell, Slide } from '@material-ui/core';
-import { makeStyles } from '@material-ui/core/styles';
+import { TableCell, Slide } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 
 import * as appColors from '../values/colors';
 

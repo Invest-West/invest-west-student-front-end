@@ -3,10 +3,8 @@ import { connect } from 'react-redux';
 import { AppState } from '../../redux-store/reducers';
 import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
-import { RouteComponentProps } from 'react-router-dom';
-import { RouteParams } from '../../router/router';
 import Keltie from './pages/keltie/Keltie';
-import { Box, Card, Typography } from '@material-ui/core';
+import { Box, Card, Typography } from '@mui/material';
 import { Col, Row } from 'react-bootstrap';
 import {
   getGroupRouteTheme,
@@ -63,10 +61,7 @@ export const resources: Resource[] = [
   },
 ];
 
-class Resources extends Component<
-  ResourcesProps & Readonly<RouteComponentProps<RouteParams>>,
-  any
-> {
+class Resources extends Component<ResourcesProps, any> {
   render() {
     const { MediaQueryState, ManageGroupUrlState } = this.props;
 

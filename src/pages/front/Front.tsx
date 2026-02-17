@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { AppState } from '../../redux-store/reducers';
 import { ManageGroupUrlState } from '../../redux-store/reducers/manageGroupUrlReducer';
 import { AuthenticationState } from '../../redux-store/reducers/authenticationReducer';
-import { RouteComponentProps, NavLink } from 'react-router-dom';
+import { NavLink, useParams } from 'react-router-dom';
 import { RouteParams } from '../../router/router';
 import { MediaQueryState } from '../../redux-store/reducers/mediaQueryReducer';
 import Routes from '../../router/routes';
@@ -16,10 +16,14 @@ import {
 } from '../../shared-components/explore-offers/ExploreOffersReducer';
 import { FetchProjectsOrderByOptions } from '../../api/repositories/OfferRepository';
 import OffersCarousel from '../../shared-components/offers-carousel/OffersCarousel';
-import { Box } from '@material-ui/core';
+import { Box } from '@mui/material';
 
 // Import images
 import studentLogo from '../../img/student_logo.png';
+
+interface FrontRouterProps {
+  params: Record<string, string | undefined>;
+}
 
 interface FrontProps {
   ManageGroupUrlState: ManageGroupUrlState;
@@ -49,8 +53,8 @@ interface FrontState {
   isMobileMenuOpen: boolean;
 }
 
-class Front extends Component<FrontProps & Readonly<RouteComponentProps<RouteParams>>, FrontState> {
-  constructor(props: FrontProps & Readonly<RouteComponentProps<RouteParams>>) {
+class FrontClass extends Component<FrontProps & FrontRouterProps, FrontState> {
+  constructor(props: FrontProps & FrontRouterProps) {
     super(props);
     this.state = {
       activeTab: 'academia',
@@ -89,16 +93,16 @@ class Front extends Component<FrontProps & Readonly<RouteComponentProps<RoutePar
     const { ManageGroupUrlState, AuthenticationState, ExploreOffersLocalState } = this.props;
 
     const { isMobileMenuOpen } = this.state;
-    const { match } = this.props;
+    const routeParams = this.props.params;
 
     // Construct proper routes based on whether we have a group or not
-    const aboutRoute = Routes.constructAboutRoute(match.params);
-    const hiwRoute = Routes.constructHiwRoute(match.params);
-    const contactRoute = Routes.constructContactRoute(match.params);
-    const exploreRoute = Routes.constructExploreRoute(match.params);
-    const signInRoute = Routes.constructSignInRoute(match.params);
+    const aboutRoute = Routes.constructAboutRoute(routeParams);
+    const hiwRoute = Routes.constructHiwRoute(routeParams);
+    const contactRoute = Routes.constructContactRoute(routeParams);
+    const exploreRoute = Routes.constructExploreRoute(routeParams);
+    const signInRoute = Routes.constructSignInRoute(routeParams);
     const homeRoute = Routes.constructHomeRoute(
-      match.params,
+      routeParams,
       ManageGroupUrlState,
       AuthenticationState
     );
@@ -180,4 +184,11 @@ class Front extends Component<FrontProps & Readonly<RouteComponentProps<RoutePar
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(Front);
+const ConnectedFront = connect(mapStateToProps, mapDispatchToProps)(FrontClass);
+
+function Front() {
+  const params = useParams();
+  return <ConnectedFront params={params} />;
+}
+
+export default Front;

@@ -19,14 +19,14 @@ import {
 import CustomLink from '../../shared-js-css-styles/CustomLink';
 import '../../shared-js-css-styles/sharedStyles.scss';
 import Routes from '../../router/routes';
-import { Box, colors, Divider, Typography } from '@material-ui/core';
+import { Box, colors, Divider, Typography } from '@mui/material';
 import { Col, Container, Image, OverlayTrigger, Row, Tooltip } from 'react-bootstrap';
 import ReactPlayer from 'react-player';
 import User from '../../models/user';
 import * as utils from '../../utils/utils';
-import PublicIcon from '@material-ui/icons/Public';
-import RestrictedIcon from '@material-ui/icons/VpnLock';
-import PrivateIcon from '@material-ui/icons/LockOutlined';
+import PublicIcon from '@mui/icons-material/Public';
+import RestrictedIcon from '@mui/icons-material/VpnLock';
+import PrivateIcon from '@mui/icons-material/LockOutlined';
 
 const CoverMaxHeight = 180;
 

@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
-import { Dialog, DialogContent, DialogTitle, IconButton, Typography } from '@material-ui/core';
-import CloseIcon from '@material-ui/icons/Close';
+import { Dialog, DialogContent, DialogTitle, IconButton, Typography } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import ReactJson from 'react-json-view';
 import FlexView from 'react-flexview';
 import { Container, Row, Col } from 'react-bootstrap';
@@ -53,7 +53,7 @@ class JSONCompareChangesDialog extends Component {
               </Typography>
             </FlexView>
             <FlexView grow={1} hAlignContent="right">
-              <IconButton onClick={resetData}>
+              <IconButton onClick={resetData} size="large">
                 <CloseIcon />
               </IconButton>
             </FlexView>
@@ -106,7 +106,6 @@ class JSONCompareChangesDialog extends Component {
                       />
                     </FlexView>
                   </Col>
-
                   {/** JSON after */}
                   <Col xs={12} sm={12} md={6} lg={6}>
                     <FlexView column width="100%">

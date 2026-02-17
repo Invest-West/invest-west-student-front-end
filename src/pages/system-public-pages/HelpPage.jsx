@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { useParams, useLocation } from 'react-router-dom';
 import {
   Accordion,
   AccordionDetails,
@@ -7,12 +8,12 @@ import {
   Tab,
   Tabs,
   Typography,
-} from '@material-ui/core';
-import PublicIcon from '@material-ui/icons/Public';
-import RestrictedIcon from '@material-ui/icons/VpnLock';
-import PrivateIcon from '@material-ui/icons/LockOutlined';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import ContactSupportIcon from '@material-ui/icons/ContactSupport';
+} from '@mui/material';
+import PublicIcon from '@mui/icons-material/Public';
+import RestrictedIcon from '@mui/icons-material/VpnLock';
+import PrivateIcon from '@mui/icons-material/LockOutlined';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ContactSupportIcon from '@mui/icons-material/ContactSupport';
 import { Col, Container, Row } from 'react-bootstrap';
 import FlexView from 'react-flexview';
 import { css, StyleSheet } from 'aphrodite';
@@ -1507,7 +1508,20 @@ class HelpPage extends Component {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(HelpPage);
+const ConnectedHelpPage = connect(mapStateToProps, mapDispatchToProps)(HelpPage);
+
+function HelpPageWrapper(props) {
+  const params = useParams();
+  const location = useLocation();
+  const match = {
+    params: params,
+    path: location.pathname,
+    pathname: location.pathname,
+  };
+  return <ConnectedHelpPage {...props} match={match} location={location} />;
+}
+
+export default HelpPageWrapper;
 
 const styles = StyleSheet.create({
   image_style: {

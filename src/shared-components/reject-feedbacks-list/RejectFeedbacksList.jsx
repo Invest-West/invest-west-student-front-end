@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import FlexView from 'react-flexview';
 import { StyleSheet, css } from 'aphrodite';
-import { Paper, Typography, Divider, Avatar, Chip } from '@material-ui/core';
-import WarningIcon from '@material-ui/icons/Warning';
-import PersonIcon from '@material-ui/icons/Person';
+import { Paper, Typography, Divider, Avatar, Chip } from '@mui/material';
+import WarningIcon from '@mui/icons-material/Warning';
+import PersonIcon from '@mui/icons-material/Person';
 import * as colors from '../../values/colors';
 import * as utils from '../../utils/utils';
 

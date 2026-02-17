@@ -14,8 +14,8 @@ import {
   IconButton,
   Slider,
   Typography,
-  withStyles,
-} from '@material-ui/core';
+} from '@mui/material';
+import withStyles from '@mui/styles/withStyles';
 import {
   EditImageDialogModes,
   EditImageDialogState,
@@ -39,7 +39,7 @@ import {
 } from './EditImageDialogActions';
 import { css } from 'aphrodite';
 import sharedStyles from '../../../../shared-js-css-styles/SharedStyles';
-import { Close, Delete, Edit } from '@material-ui/icons';
+import { Close, Delete, Edit } from '@mui/icons-material';
 import * as appColors from '../../../../values/colors';
 import { Col, Image, Row } from 'react-bootstrap';
 
@@ -118,7 +118,7 @@ class EditImageDialog extends Component<EditImageDialogProps, any> {
               </Typography>
             </Box>
             <Box display="flex" flexGrow={1} justifyContent="flex-end">
-              <IconButton onClick={toggleDialog}>
+              <IconButton onClick={toggleDialog} size="large">
                 <Close />
               </IconButton>
             </Box>

@@ -14,15 +14,15 @@ import {
   FormHelperText,
   TextField,
   Typography,
-} from '@material-ui/core';
-import AddIcon from '@material-ui/icons/Add';
-import CloseIcon from '@material-ui/icons/Close';
-import CreateIcon from '@material-ui/icons/CreateOutlined';
-import DeleteIcon from '@material-ui/icons/DeleteOutlined';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+} from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import CloseIcon from '@mui/icons-material/Close';
+import CreateIcon from '@mui/icons-material/CreateOutlined';
+import DeleteIcon from '@mui/icons-material/DeleteOutlined';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 // React Quill - text editor
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 
 import * as ROUTES from '../../../router/routes';
 import sharedStyles from '../../../shared-js-css-styles/SharedStyles';
@@ -136,7 +136,7 @@ class SuperAdminSettings extends Component {
             </Typography>
 
             <FlexView marginTop={20}>
-              <FormControl>
+              <FormControl variant="standard">
                 <FormControlLabel
                   name="allowVideoUpload"
                   control={
@@ -278,7 +278,7 @@ class SuperAdminSettings extends Component {
                   fullWidth
                   required
                   multiline
-                  rowsMax={5}
+                  maxRows={5}
                   onChange={handleInputChanged}
                   style={{ marginTop: 10 }}
                 />
@@ -380,7 +380,7 @@ class SuperAdminSettings extends Component {
                                 fullWidth
                                 required
                                 multiline
-                                rowsMax={5}
+                                maxRows={5}
                                 error={editedPledgeAnswer.trim().length === 0}
                                 onChange={handleInputChanged}
                                 style={{ marginTop: 10 }}
@@ -581,7 +581,7 @@ class SuperAdminSettings extends Component {
                   value={clubAttributesEdited.riskWarningFooter}
                   onChange={handleInputChanged}
                   multiline
-                  rowsMax={10}
+                  maxRows={10}
                   rows={10}
                 />
               </FlexView>

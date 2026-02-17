@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { css, StyleSheet } from 'aphrodite';
 import Sidebar from 'react-sidebar';
 import FlexView from 'react-flexview';
@@ -11,10 +12,10 @@ import {
   Divider,
   IconButton,
   Typography,
-} from '@material-ui/core';
-import Menu from '@material-ui/icons/Menu';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import NotificationsIcon from '@material-ui/icons/Notifications';
+} from '@mui/material';
+import Menu from '@mui/icons-material/Menu';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import NotificationsIcon from '@mui/icons-material/Notifications';
 import HashLoader from 'react-spinners/HashLoader';
 import queryString from 'query-string';
 
@@ -665,6 +666,7 @@ class AdminDashboard extends Component {
                         <IconButton
                           className={css(sharedStyles.hamburger_button)}
                           onClick={() => toggleSidebar(true)}
+                          size="large"
                         >
                           <Menu />
                         </IconButton>
@@ -682,6 +684,7 @@ class AdminDashboard extends Component {
                             toggleNotifications(e);
                           }}
                           id="notification-button"
+                          size="large"
                         >
                           <Badge
                             badgeContent={notifications.length}
@@ -720,13 +723,10 @@ class AdminDashboard extends Component {
 
           {this.renderPageContent()}
         </Container>
-
         {/** Notifications box */}
         {notificationsAnchorEl !== null && <NotificationsBox />}
-
         {/** User invitation dialog */}
         <InvitationDialog />
-
         {/** Add angel network dialog */}
         <AddAngelNetWorkDialog />
       </Sidebar>
@@ -783,7 +783,29 @@ class AdminDashboard extends Component {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(AdminDashboard);
+const ConnectedAdminDashboard = connect(mapStateToProps, mapDispatchToProps)(AdminDashboard);
+
+function AdminDashboardWrapper(props) {
+  const params = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const match = {
+    params: params,
+    path: location.pathname,
+    pathname: location.pathname,
+    url: location.pathname,
+  };
+  return (
+    <ConnectedAdminDashboard
+      {...props}
+      match={match}
+      history={{ push: navigate }}
+      location={location}
+    />
+  );
+}
+
+export default AdminDashboardWrapper;
 
 const styles = StyleSheet.create({
   page_title: {

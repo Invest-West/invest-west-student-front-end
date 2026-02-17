@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { useParams, useLocation } from 'react-router-dom';
 import { Col, Container, Row } from 'react-bootstrap';
 import {
   Button,
@@ -10,7 +11,7 @@ import {
   Select,
   TextField,
   Typography,
-} from '@material-ui/core';
+} from '@mui/material';
 import FlexView from 'react-flexview';
 import { css } from 'aphrodite';
 import HashLoader from 'react-spinners/HashLoader';
@@ -320,7 +321,12 @@ class ContactUs extends Component {
                 </Typography>
 
                 <FlexView width="100%" marginTop={40}>
-                  <FormControl fullWidth required error={submitClick && name.trim().length === 0}>
+                  <FormControl
+                    variant="standard"
+                    fullWidth
+                    required
+                    error={submitClick && name.trim().length === 0}
+                  >
                     <FormLabel>Name</FormLabel>
                     <TextField
                       value={name}
@@ -335,6 +341,7 @@ class ContactUs extends Component {
 
                 <FlexView width="100%" marginTop={25}>
                   <FormControl
+                    variant="standard"
                     fullWidth
                     required
                     error={submitClick && companyName.trim().length === 0}
@@ -354,6 +361,7 @@ class ContactUs extends Component {
                 {!isIssuer && (
                   <FlexView width="100%" marginTop={25}>
                     <FormControl
+                      variant="standard"
                       fullWidth
                       required
                       error={submitClick && companyPosition.trim().length === 0}
@@ -373,6 +381,7 @@ class ContactUs extends Component {
 
                 <FlexView width="100%" marginTop={25}>
                   <FormControl
+                    variant="standard"
                     fullWidth
                     required
                     error={submitClick && companyEmail.trim().length === 0}
@@ -391,7 +400,12 @@ class ContactUs extends Component {
               </FlexView>
 
               <FlexView width="100%" marginTop={25}>
-                <FormControl fullWidth required error={submitClick && message.trim().length === 0}>
+                <FormControl
+                  variant="standard"
+                  fullWidth
+                  required
+                  error={submitClick && message.trim().length === 0}
+                >
                   <FormLabel>Message</FormLabel>
                   <TextField
                     value={message}
@@ -400,7 +414,7 @@ class ContactUs extends Component {
                     margin="dense"
                     multiline
                     rows={5}
-                    rowsMax={5}
+                    maxRows={5}
                     onChange={this.onTextChanged}
                     error={submitClick && message.trim().length === 0}
                   />
@@ -423,7 +437,7 @@ class ContactUs extends Component {
 
               <Row>
                 <Col xs={12} sm={12} md={4} lg={4} style={{ width: '100%', marginTop: 50 }}>
-                  <FormControl fullWidth>
+                  <FormControl variant="standard" fullWidth>
                     <Button
                       type="submit"
                       variant="contained"
@@ -439,7 +453,6 @@ class ContactUs extends Component {
             </form>
           </Col>
         </Row>
-
         <Row noGutters>
           <Col xs={12} sm={12} md={12} lg={12}>
             <Footer />
@@ -450,4 +463,17 @@ class ContactUs extends Component {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(ContactUs);
+const ConnectedContactUs = connect(mapStateToProps, mapDispatchToProps)(ContactUs);
+
+function ContactUsWrapper(props) {
+  const params = useParams();
+  const location = useLocation();
+  const match = {
+    params: params,
+    path: location.pathname,
+    pathname: location.pathname,
+  };
+  return <ConnectedContactUs {...props} match={match} location={location} />;
+}
+
+export default ContactUsWrapper;

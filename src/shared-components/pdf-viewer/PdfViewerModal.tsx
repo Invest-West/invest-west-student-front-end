@@ -8,8 +8,8 @@ import {
   IconButton,
   Box,
   Typography,
-} from '@material-ui/core';
-import { Close } from '@material-ui/icons';
+} from '@mui/material';
+import { Close } from '@mui/icons-material';
 import PdfViewer from './PdfViewer';
 
 interface PdfViewerModalProps {

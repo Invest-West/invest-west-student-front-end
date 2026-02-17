@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { AppState } from '../../redux-store/reducers';
-import { Box, Divider, Typography } from '@material-ui/core';
+import { Box, Divider, Typography } from '@mui/material';
 import Routes from '../../router/routes';
 import * as appColors from '../../values/colors';
 import CustomLink from '../../shared-js-css-styles/CustomLink';

@@ -11,11 +11,11 @@ import {
   Select,
   TextField,
   Typography,
-} from '@material-ui/core';
+} from '@mui/material';
 import { css } from 'aphrodite';
 import { Col, Container, Row } from 'react-bootstrap';
 import { HashLoader } from 'react-spinners';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useParams, useNavigate, useLocation } from 'react-router-dom';
 
 import { connect } from 'react-redux';
 import * as manageGroupFromParamsActions from '../../redux-store/actions/manageGroupFromParamsActions';
@@ -463,13 +463,13 @@ class Signup extends Component {
               .then(() => {
                 if (!publicRegistration) {
                   if (invitedUserWithSpecifiedInvitedID.type === DB_CONST.TYPE_INVESTOR) {
-                    this.props.history.push(
+                    this.props.navigate(
                       groupUserName
                         ? `${ROUTES.DASHBOARD_INVESTOR.replace(':groupUserName', groupUserName)}?tab=Home`
                         : `${ROUTES.DASHBOARD_INVESTOR_INVEST_WEST_SUPER}?tab=Home`
                     );
                   } else {
-                    this.props.history.push(
+                    this.props.navigate(
                       groupUserName
                         ? `${ROUTES.DASHBOARD_ISSUER.replace(':groupUserName', groupUserName)}?tab=Home`
                         : `${ROUTES.DASHBOARD_ISSUER_INVEST_WEST_SUPER}?tab=Home`
@@ -477,13 +477,13 @@ class Signup extends Component {
                   }
                 } else {
                   if (publicRegistrationType === DB_CONST.TYPE_INVESTOR) {
-                    this.props.history.push(
+                    this.props.navigate(
                       groupUserName
                         ? `${ROUTES.DASHBOARD_INVESTOR.replace(':groupUserName', groupUserName)}?tab=Home`
                         : `${ROUTES.DASHBOARD_INVESTOR_INVEST_WEST_SUPER}?tab=Home`
                     );
                   } else {
-                    this.props.history.push(
+                    this.props.navigate(
                       groupUserName
                         ? `${ROUTES.DASHBOARD_ISSUER.replace(':groupUserName', groupUserName)}?tab=Home`
                         : `${ROUTES.DASHBOARD_ISSUER_INVEST_WEST_SUPER}?tab=Home`
@@ -846,6 +846,7 @@ class SignupForNewUser extends Component {
 
               {/** Title */}
               <FormControl
+                variant="standard"
                 required
                 fullWidth
                 error={
@@ -864,6 +865,7 @@ class SignupForNewUser extends Component {
                   </Typography>
                 </InputLabel>
                 <Select
+                  variant="standard"
                   name="title"
                   value={!publicRegistration ? invitedUser.title : publicRegistrationUser.title}
                   onChange={this.handleInputChanged}
@@ -923,7 +925,7 @@ class SignupForNewUser extends Component {
               </FlexView>
 
               {/** Email */}
-              <FormControl fullWidth>
+              <FormControl variant="standard" fullWidth>
                 <TextField
                   required
                   label="Email"
@@ -947,7 +949,7 @@ class SignupForNewUser extends Component {
 
               {!publicRegistration ? null : (
                 // Confirmed email
-                <FormControl fullWidth>
+                <FormControl variant="standard" fullWidth>
                   <TextField
                     required
                     label="Re-enter email"
@@ -1276,4 +1278,18 @@ class SignupForRegisteredUser extends Component {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(Signup);
+const ConnectedSignup = connect(mapStateToProps, mapDispatchToProps)(Signup);
+
+function SignupWrapper(props) {
+  const params = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const match = {
+    params: params,
+    path: location.pathname,
+  };
+  return <ConnectedSignup {...props} match={match} navigate={navigate} location={location} />;
+}
+
+export default ConnectedSignup;
+export { SignupWrapper };

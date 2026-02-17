@@ -9,10 +9,15 @@ import manageGroupUrlReducer, {
 import { ManageGroupUrlEvents } from '../../actions/manageGroupUrlActions';
 import { createMockGroup } from '../../../test-utils/mock-data';
 
-// Mock Material-UI theme creation
-jest.mock('@material-ui/core/styles', () => ({
-  createMuiTheme: jest.fn((config) => ({ ...config, __isMockTheme: true })),
-  responsiveFontSizes: jest.fn((theme) => theme),
+// Mock MUI to avoid loading the full library in tests
+jest.mock('@mui/material', () => ({
+  colors: { blue: { 500: '#2196f3' }, pink: { 500: '#e91e63' }, blueGrey: { 700: '#455a64' } },
+  adaptV4Theme: jest.fn((config: any) => config),
+}));
+
+jest.mock('@mui/material/styles', () => ({
+  createTheme: jest.fn((config: any) => ({ ...config, __isMockTheme: true })),
+  responsiveFontSizes: jest.fn((theme: any) => theme),
 }));
 
 jest.mock('../../../values/defaultThemes', () => ({

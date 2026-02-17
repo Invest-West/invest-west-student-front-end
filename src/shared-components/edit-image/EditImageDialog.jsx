@@ -8,11 +8,11 @@ import {
   Typography,
   CircularProgress,
   Slider,
-} from '@material-ui/core';
+} from '@mui/material';
 import { Container, Row, Col, Image } from 'react-bootstrap';
-import AddIcon from '@material-ui/icons/Add';
-import CloseIcon from '@material-ui/icons/Close';
-import ImageIcon from '@material-ui/icons/Image';
+import AddIcon from '@mui/icons-material/Add';
+import CloseIcon from '@mui/icons-material/Close';
+import ImageIcon from '@mui/icons-material/Image';
 import FlexView from 'react-flexview';
 import Files from 'react-files';
 import { css, StyleSheet } from 'aphrodite';
@@ -133,7 +133,7 @@ class EditImageDialog extends Component {
                   </FlexView>
 
                   <FlexView grow={1} hAlignContent="right">
-                    <IconButton onClick={onClose}>
+                    <IconButton onClick={onClose} size="large">
                       <CloseIcon fontSize="small" />
                     </IconButton>
                   </FlexView>

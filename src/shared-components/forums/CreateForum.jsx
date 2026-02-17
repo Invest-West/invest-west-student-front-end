@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Button, TextField, Typography } from '@material-ui/core';
+import { Button, TextField, Typography } from '@mui/material';
 import FlexView from 'react-flexview';
 import { Col, Row } from 'react-bootstrap';
 import { css } from 'aphrodite';
@@ -71,7 +71,7 @@ class CreateForum extends Component {
             margin="normal"
             multiline
             rows={4}
-            rowsMax={4}
+            maxRows={4}
             value={createForumDesc}
             onChange={handleForumsInputChanged}
           />

@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Avatar, Typography } from '@material-ui/core';
+import { Avatar, Typography } from '@mui/material';
 
 import * as appColors from '../../values/colors';
 

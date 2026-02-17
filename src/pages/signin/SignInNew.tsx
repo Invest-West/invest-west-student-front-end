@@ -16,8 +16,8 @@ import {
   Paper,
   TextField,
   Typography,
-} from '@material-ui/core';
-import { RouteComponentProps } from 'react-router-dom';
+} from '@mui/material';
+import { useParams } from 'react-router-dom';
 import { RouteParams } from '../../router/router';
 import {
   getGroupRouteTheme,
@@ -26,8 +26,8 @@ import {
 import { Col, Row } from 'react-bootstrap';
 import { css } from 'aphrodite';
 import sharedStyles from '../../shared-js-css-styles/SharedStyles';
-import VisibilityOff from '@material-ui/icons/VisibilityOff';
-import Visibility from '@material-ui/icons/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
+import Visibility from '@mui/icons-material/Visibility';
 import Routes from '../../router/routes';
 import ExploreOffers from '../../shared-components/explore-offers/ExploreOffers';
 import {
@@ -51,10 +51,14 @@ import {
 import HashLoader from 'react-spinners/HashLoader';
 import * as appColors from '../../values/colors';
 import { MediaQueryState } from '../../redux-store/reducers/mediaQueryReducer';
-import { Close } from '@material-ui/icons';
+import { Close } from '@mui/icons-material';
 import CustomLink from '../../shared-js-css-styles/CustomLink';
 import Footer from '../../shared-components/footer/Footer';
 import '../../shared-js-css-styles/sharedStyles.scss';
+
+interface SignInRouterProps {
+  params: Record<string, string | undefined>;
+}
 
 interface SignInProps {
   ManageGroupUrlState: ManageGroupUrlState;
@@ -87,7 +91,7 @@ const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
   };
 };
 
-class SignInNew extends Component<SignInProps & Readonly<RouteComponentProps<RouteParams>>, {}> {
+class SignInNewClass extends Component<SignInProps & SignInRouterProps, {}> {
   render() {
     const {
       ManageGroupUrlState,
@@ -157,7 +161,7 @@ class SignInNew extends Component<SignInProps & Readonly<RouteComponentProps<Rou
                 <form onSubmit={onSignInClick}>
                   <Box display="flex" flexDirection="column">
                     {/** Email field */}
-                    <FormControl>
+                    <FormControl variant="standard">
                       <TextField
                         label="Email address"
                         name="signInEmail"
@@ -170,7 +174,7 @@ class SignInNew extends Component<SignInProps & Readonly<RouteComponentProps<Rou
                     </FormControl>
 
                     {/** Password field */}
-                    <FormControl>
+                    <FormControl variant="standard">
                       <TextField
                         label="Password"
                         name="signInPassword"
@@ -186,6 +190,7 @@ class SignInNew extends Component<SignInProps & Readonly<RouteComponentProps<Rou
                                 edge="end"
                                 aria-label="Toggle password visibility"
                                 onClick={togglePasswordVisibility}
+                                size="large"
                               >
                                 {SignInLocalState.showPassword ? <VisibilityOff /> : <Visibility />}
                               </IconButton>
@@ -228,7 +233,7 @@ class SignInNew extends Component<SignInProps & Readonly<RouteComponentProps<Rou
                       </Box>
                     )}
 
-                    <FormControl>
+                    <FormControl variant="standard">
                       <Button
                         type="submit"
                         variant="contained"
@@ -248,7 +253,7 @@ class SignInNew extends Component<SignInProps & Readonly<RouteComponentProps<Rou
                           url={Routes.constructSignUpRoute(
                             ManageGroupUrlState.groupNameFromUrl ?? '',
                             undefined,
-                            this.props.match.params.courseUserName ?? 'student-showcase'
+                            this.props.params.courseUserName ?? 'student-showcase'
                           )}
                           color={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main}
                           activeColor="none"
@@ -280,14 +285,12 @@ class SignInNew extends Component<SignInProps & Readonly<RouteComponentProps<Rou
             </Box>
           </Col>
         </Row>
-
         {/** Footer */}
         <Row noGutters>
           <Col xs={12} sm={12} md={12} lg={12}>
             <Footer />
           </Col>
         </Row>
-
         {/** Reset password dialog */}
         <ResetPasswordDialogComponent />
       </Box>
@@ -295,7 +298,14 @@ class SignInNew extends Component<SignInProps & Readonly<RouteComponentProps<Rou
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(SignInNew);
+const ConnectedSignInNew = connect(mapStateToProps, mapDispatchToProps)(SignInNewClass);
+
+function SignInNew() {
+  const params = useParams();
+  return <ConnectedSignInNew params={params} />;
+}
+
+export default SignInNew;
 
 class ResetPasswordDialog extends Component<SignInProps, {}> {
   render() {
@@ -323,13 +333,12 @@ class ResetPasswordDialog extends Component<SignInProps, {}> {
               </Typography>
             </Box>
             <Box display="flex" justifyContent="flex-end" flexGrow={1}>
-              <IconButton onClick={toggleResetPasswordDialog}>
+              <IconButton onClick={toggleResetPasswordDialog} size="large">
                 <Close />
               </IconButton>
             </Box>
           </Box>
         </DialogTitle>
-
         <DialogContent style={{ padding: 0 }}>
           <Box
             display="flex"
@@ -391,7 +400,6 @@ class ResetPasswordDialog extends Component<SignInProps, {}> {
             <Box height="25px" />
           </Box>
         </DialogContent>
-
         <DialogActions>
           <Box display="flex" justifyContent="flex-end" padding="8px">
             <Button

@@ -1,13 +1,13 @@
 import React, { Component } from 'react';
 import FlexView from 'react-flexview';
 import { StyleSheet, css } from 'aphrodite';
-import { IconButton, List, ListItem, Typography } from '@material-ui/core';
-import CloseIcon from '@material-ui/icons/Close';
-import DescriptionIcon from '@material-ui/icons/Description';
-import PictureAsPdfIcon from '@material-ui/icons/PictureAsPdf';
-import ImageIcon from '@material-ui/icons/Image';
-import VideoLibraryIcon from '@material-ui/icons/VideoLibrary';
-import TableChartIcon from '@material-ui/icons/TableChart';
+import { IconButton, List, ListItem, Typography } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import DescriptionIcon from '@mui/icons-material/Description';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import ImageIcon from '@mui/icons-material/Image';
+import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
+import TableChartIcon from '@mui/icons-material/TableChart';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 
 import * as colors from '../../values/colors';
@@ -141,6 +141,7 @@ export default class DocumentsDownload extends Component {
                     <IconButton
                       style={{ width: 44, height: 44 }}
                       onClick={() => this.onDeleteDocument(index)}
+                      size="large"
                     >
                       <CloseIcon fontSize="small" />
                     </IconButton>

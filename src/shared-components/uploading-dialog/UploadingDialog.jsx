@@ -6,7 +6,7 @@ import {
   DialogContent,
   DialogTitle,
   Typography,
-} from '@material-ui/core';
+} from '@mui/material';
 import FlexView from 'react-flexview';
 import { ProgressBar } from 'react-bootstrap';
 import { connect } from 'react-redux';

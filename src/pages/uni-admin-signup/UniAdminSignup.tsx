@@ -13,11 +13,11 @@ import {
   Select,
   TextField,
   Typography,
-} from '@material-ui/core';
+} from '@mui/material';
 import { Col, Row } from 'react-bootstrap';
 import { css } from 'aphrodite';
 import sharedStyles from '../../shared-js-css-styles/SharedStyles';
-import { RouteComponentProps } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import HashLoader from 'react-spinners/HashLoader';
 import { BarLoader } from 'react-spinners';
 
@@ -45,10 +45,11 @@ import Footer from '../../shared-components/footer/Footer';
 const VALID_TITLES = ['Mr', 'Miss', 'Mrs', 'Ms', 'Dr', 'Prof', 'Other'];
 
 /**
- * Route parameters
+ * Router props injected by wrapper
  */
-interface RouteParams {
-  token: string;
+interface UniAdminSignupRouterProps {
+  params: Record<string, string | undefined>;
+  navigate: (to: string, options?: { replace?: boolean }) => void;
 }
 
 /**
@@ -106,15 +107,15 @@ interface LocalState {
  * - Last Name
  * - Password (email is pre-filled from invite)
  */
-class UniAdminSignup extends Component<
-  UniAdminSignupProps & RouteComponentProps<RouteParams>,
+class UniAdminSignupClass extends Component<
+  UniAdminSignupProps & UniAdminSignupRouterProps,
   LocalState
 > {
   private token: string;
 
-  constructor(props: UniAdminSignupProps & RouteComponentProps<RouteParams>) {
+  constructor(props: UniAdminSignupProps & UniAdminSignupRouterProps) {
     super(props);
-    this.token = props.match.params.token;
+    this.token = props.params.token || '';
     this.state = {
       isPasswordFocused: false,
     };
@@ -142,13 +143,13 @@ class UniAdminSignup extends Component<
     this.props.resetState();
   }
 
-  componentDidUpdate(prevProps: UniAdminSignupProps & RouteComponentProps<RouteParams>) {
+  componentDidUpdate(prevProps: UniAdminSignupProps & UniAdminSignupRouterProps) {
     const { UniAdminSignupLocalState: currentState } = this.props;
     const { UniAdminSignupLocalState: prevState } = prevProps;
 
     // Redirect after successful account creation
     if (!prevState.accountCreated && currentState.accountCreated && currentState.redirectTo) {
-      this.props.history.push(currentState.redirectTo);
+      this.props.navigate(currentState.redirectTo);
     }
   }
 
@@ -310,7 +311,7 @@ class UniAdminSignup extends Component<
                 )}
 
                 {/* Email (read-only) */}
-                <FormControl fullWidth>
+                <FormControl variant="standard" fullWidth>
                   <TextField
                     label="Email"
                     value={UniAdminSignupLocalState.email}
@@ -325,13 +326,14 @@ class UniAdminSignup extends Component<
                 <Box height="20px" />
 
                 {/* Title */}
-                <FormControl required fullWidth disabled={isFormDisabled}>
+                <FormControl variant="standard" required fullWidth disabled={isFormDisabled}>
                   <InputLabel>
                     <Typography variant="body1" color="primary">
                       Title
                     </Typography>
                   </InputLabel>
                   <Select
+                    variant="standard"
                     name="title"
                     value={UniAdminSignupLocalState.title}
                     // @ts-ignore
@@ -353,7 +355,7 @@ class UniAdminSignup extends Component<
                 <Box height="20px" />
 
                 {/* First Name */}
-                <FormControl required fullWidth>
+                <FormControl variant="standard" required fullWidth>
                   <TextField
                     required
                     label="First name"
@@ -368,7 +370,7 @@ class UniAdminSignup extends Component<
                 </FormControl>
 
                 {/* Last Name */}
-                <FormControl required fullWidth>
+                <FormControl variant="standard" required fullWidth>
                   <TextField
                     required
                     label="Last name"
@@ -385,7 +387,7 @@ class UniAdminSignup extends Component<
                 <Box height="20px" />
 
                 {/* Password */}
-                <FormControl required fullWidth>
+                <FormControl variant="standard" required fullWidth>
                   <TextField
                     required
                     label="Password"
@@ -403,7 +405,7 @@ class UniAdminSignup extends Component<
                 </FormControl>
 
                 {/* Confirmed Password */}
-                <FormControl required fullWidth>
+                <FormControl variant="standard" required fullWidth>
                   <TextField
                     required
                     label="Confirm password"
@@ -471,7 +473,6 @@ class UniAdminSignup extends Component<
             </Box>
           </Col>
         </Row>
-
         {/* Footer */}
         <Row noGutters>
           <Col xs={12} sm={12} md={12} lg={12}>
@@ -483,4 +484,12 @@ class UniAdminSignup extends Component<
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(UniAdminSignup);
+const ConnectedUniAdminSignup = connect(mapStateToProps, mapDispatchToProps)(UniAdminSignupClass);
+
+function UniAdminSignup() {
+  const params = useParams();
+  const navigate = useNavigate();
+  return <ConnectedUniAdminSignup params={params} navigate={navigate} />;
+}
+
+export default UniAdminSignup;

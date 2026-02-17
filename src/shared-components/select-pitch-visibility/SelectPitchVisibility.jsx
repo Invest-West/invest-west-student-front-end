@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 
-import { FormControl, FormHelperText, MenuItem, OutlinedInput, Select } from '@material-ui/core';
+import { FormControl, FormHelperText, MenuItem, OutlinedInput, Select } from '@mui/material';
 import { css } from 'aphrodite';
 import sharedStyles from '../../shared-js-css-styles/SharedStyles';
 import * as DB_CONST from '../../firebase/databaseConsts';
@@ -44,11 +44,12 @@ class SelectPitchVisibility extends Component {
     }
 
     return (
-      <FormControl fullWidth>
+      <FormControl variant="standard" fullWidth>
         <FormHelperText className={css(sharedStyles.black_text)} style={{ marginBottom: 6 }}>
           Select project visibility
         </FormHelperText>
         <Select
+          variant="standard"
           value={
             projectVisibilitySetting === -1
               ? !project

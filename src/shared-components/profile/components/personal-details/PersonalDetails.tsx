@@ -15,7 +15,7 @@ import {
   Select,
   TextField,
   Typography,
-} from '@material-ui/core';
+} from '@mui/material';
 import User, { getProfilePicture, UserTitles } from '../../../../models/user';
 import LetterAvatar from '../../../avatars/LetterAvatar';
 import { Col, Image, Row } from 'react-bootstrap';
@@ -132,12 +132,13 @@ class PersonalDetails extends Component<PersonalDetailsProps, any> {
             <Col xs={12} sm={12} md={6} lg={4}>
               <Box display="flex" flexDirection="column">
                 {/** Title */}
-                <FormControl fullWidth>
+                <FormControl variant="standard" fullWidth>
                   <FormLabel>
                     {' '}
                     <b>Title</b>{' '}
                   </FormLabel>
                   <Select
+                    variant="standard"
                     name="title"
                     value={copiedUser.title}
                     defaultValue="-1"
@@ -160,7 +161,7 @@ class PersonalDetails extends Component<PersonalDetailsProps, any> {
                 <Box height="22px" />
 
                 {/** First name */}
-                <FormControl fullWidth>
+                <FormControl variant="standard" fullWidth>
                   <FormLabel>
                     <b>First name</b>
                   </FormLabel>
@@ -178,7 +179,7 @@ class PersonalDetails extends Component<PersonalDetailsProps, any> {
                 <Box height="22px" />
 
                 {/** Last name */}
-                <FormControl fullWidth>
+                <FormControl variant="standard" fullWidth>
                   <FormLabel>
                     <b>Last name</b>
                   </FormLabel>
@@ -195,7 +196,7 @@ class PersonalDetails extends Component<PersonalDetailsProps, any> {
                 <Box height="22px" />
 
                 {/** Email */}
-                <FormControl fullWidth>
+                <FormControl variant="standard" fullWidth>
                   <FormLabel>
                     <b>Email</b>
                   </FormLabel>
@@ -213,7 +214,7 @@ class PersonalDetails extends Component<PersonalDetailsProps, any> {
                 <Box height="22px" />
 
                 {/** LinkedIn */}
-                <FormControl fullWidth>
+                <FormControl variant="standard" fullWidth>
                   <FormLabel>
                     <b>LinkedIn</b>
                   </FormLabel>

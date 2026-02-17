@@ -14,7 +14,7 @@ import {
   Select,
   TextField,
   Typography,
-} from '@material-ui/core';
+} from '@mui/material';
 import { Col, Row } from 'react-bootstrap';
 import { css } from 'aphrodite';
 import sharedStyles from '../../shared-js-css-styles/SharedStyles';
@@ -23,7 +23,7 @@ import {
   AuthenticationState,
   isAuthenticating,
 } from '../../redux-store/reducers/authenticationReducer';
-import { RouteComponentProps } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { RouteParams } from '../../router/router';
 import { createAccount, handleInputFieldChanged, loadInvitedUser } from './SignUpActions';
 import { findCourseDisplayNameByUrl } from '../../utils/courseUtils';
@@ -48,6 +48,11 @@ import { ManageSystemAttributesState } from '../../redux-store/reducers/manageSy
 import HashLoader from 'react-spinners/HashLoader';
 import { hasRegistered } from '../../models/invited_user';
 import Footer from '../../shared-components/footer/Footer';
+
+interface SignUpRouterProps {
+  params: Record<string, string | undefined>;
+  navigate: (to: string, options?: { replace?: boolean }) => void;
+}
 
 interface SignUpProps {
   ManageGroupUrlState: ManageGroupUrlState;
@@ -83,15 +88,12 @@ interface SignUpLocalComponentState {
   isPasswordFocused: boolean;
 }
 
-class SignUpNew extends Component<
-  SignUpProps & Readonly<RouteComponentProps<RouteParams>>,
-  SignUpLocalComponentState
-> {
+class SignUpNewClass extends Component<SignUpProps & SignUpRouterProps, SignUpLocalComponentState> {
   // invited user id (optional parameter from the url)
   // if invitedUserId = undefined --> public registration
   private invitedUserId: string | undefined;
 
-  constructor(props: SignUpProps & Readonly<RouteComponentProps<RouteParams>>) {
+  constructor(props: SignUpProps & SignUpRouterProps) {
     super(props);
     this.state = {
       isPasswordFocused: false,
@@ -101,7 +103,7 @@ class SignUpNew extends Component<
   componentDidMount() {
     const { loadInvitedUser } = this.props;
 
-    this.invitedUserId = this.props.match.params.id;
+    this.invitedUserId = this.props.params.id;
     if (this.invitedUserId) {
       loadInvitedUser(this.invitedUserId);
     }
@@ -110,7 +112,7 @@ class SignUpNew extends Component<
     this.trySetCourseFromUrl();
   }
 
-  componentDidUpdate(prevProps: SignUpProps & Readonly<RouteComponentProps<RouteParams>>) {
+  componentDidUpdate(prevProps: SignUpProps & SignUpRouterProps) {
     // If group just loaded, try to set course from URL
     if (!prevProps.ManageGroupUrlState.group && this.props.ManageGroupUrlState.group) {
       this.trySetCourseFromUrl();
@@ -125,7 +127,7 @@ class SignUpNew extends Component<
       return;
     }
 
-    const courseFromUrl = this.props.match.params.courseUserName;
+    const courseFromUrl = this.props.params.courseUserName;
     if (courseFromUrl && ManageGroupUrlState.group?.settings?.availableCourses) {
       const courseDisplayName = findCourseDisplayNameByUrl(
         courseFromUrl,
@@ -209,8 +211,9 @@ class SignUpNew extends Component<
               onClick={() => {
                 // invalid invitedUserID
                 if (notFoundInvitedUser(SignUpLocalState)) {
-                  this.props.history.replace(
-                    Routes.constructSignUpRoute(ManageGroupUrlState.groupNameFromUrl ?? '')
+                  this.props.navigate(
+                    Routes.constructSignUpRoute(ManageGroupUrlState.groupNameFromUrl ?? ''),
+                    { replace: true }
                   );
                   window.location.reload();
                   return;
@@ -218,7 +221,7 @@ class SignUpNew extends Component<
 
                 // user has already signed up
                 if (SignUpLocalState.invitedUser && hasRegistered(SignUpLocalState.invitedUser)) {
-                  this.props.history.push(Routes.constructSignInRoute(this.props.match.params));
+                  this.props.navigate(Routes.constructSignInRoute(this.props.params));
                   return;
                 }
 
@@ -293,13 +296,19 @@ class SignUpNew extends Component<
                 ) : null}
 
                 {/** User type */}
-                <FormControl required fullWidth disabled={this.invitedUserId !== undefined}>
+                <FormControl
+                  variant="standard"
+                  required
+                  fullWidth
+                  disabled={this.invitedUserId !== undefined}
+                >
                   <InputLabel>
                     <Typography variant="body1" color="primary">
                       What would you like to do?
                     </Typography>
                   </InputLabel>
                   <Select
+                    variant="standard"
                     name="userType"
                     value={SignUpLocalState.userType}
                     // @ts-ignore
@@ -324,13 +333,14 @@ class SignUpNew extends Component<
                 <Box height="30px" />
 
                 {/** Title */}
-                <FormControl required fullWidth>
+                <FormControl variant="standard" required fullWidth>
                   <InputLabel>
                     <Typography variant="body1" color="primary">
                       Title
                     </Typography>
                   </InputLabel>
                   <Select
+                    variant="standard"
                     name="title"
                     value={SignUpLocalState.title}
                     // @ts-ignore
@@ -356,7 +366,7 @@ class SignUpNew extends Component<
                 {/** Names */}
                 <Box marginBottom="18px">
                   {/** First name */}
-                  <FormControl required fullWidth>
+                  <FormControl variant="standard" required fullWidth>
                     <TextField
                       required
                       label="First name"
@@ -370,7 +380,7 @@ class SignUpNew extends Component<
                   </FormControl>
 
                   {/** Last name */}
-                  <FormControl required fullWidth>
+                  <FormControl variant="standard" required fullWidth>
                     <TextField
                       required
                       label="Last name"
@@ -387,7 +397,7 @@ class SignUpNew extends Component<
                 {/** Emails */}
                 <Box marginBottom="18px">
                   {/** Email */}
-                  <FormControl required fullWidth>
+                  <FormControl variant="standard" required fullWidth>
                     <TextField
                       required
                       label="Email"
@@ -402,7 +412,7 @@ class SignUpNew extends Component<
                   </FormControl>
 
                   {/** Confirmed email */}
-                  <FormControl required fullWidth>
+                  <FormControl variant="standard" required fullWidth>
                     <TextField
                       required
                       label="Re-enter email"
@@ -419,7 +429,7 @@ class SignUpNew extends Component<
                 {/** Passwords */}
                 <Box>
                   {/** Password */}
-                  <FormControl required fullWidth>
+                  <FormControl variant="standard" required fullWidth>
                     <TextField
                       required
                       label="Password"
@@ -436,7 +446,7 @@ class SignUpNew extends Component<
                   </FormControl>
 
                   {/** Confirmed password */}
-                  <FormControl required fullWidth>
+                  <FormControl variant="standard" required fullWidth>
                     <TextField
                       required
                       label="Confirm password"
@@ -472,13 +482,14 @@ class SignUpNew extends Component<
 
                   {/** How did you hear about us */}
                   <Box marginTop="28px" />
-                  <FormControl fullWidth>
+                  <FormControl variant="standard" fullWidth>
                     <InputLabel>
                       <Typography variant="body1" color="primary">
                         How did you hear about us?
                       </Typography>
                     </InputLabel>
                     <Select
+                      variant="standard"
                       name="discover"
                       value={SignUpLocalState.discover}
                       // @ts-ignore
@@ -502,7 +513,7 @@ class SignUpNew extends Component<
 
                 {/** Marketing preferences checkbox */}
                 <Box marginTop="28px">
-                  <FormControl>
+                  <FormControl variant="standard">
                     <Box display="flex" flexDirection="row" alignItems="center">
                       <Checkbox
                         name="acceptMarketingPreferences"
@@ -595,7 +606,7 @@ class SignUpNew extends Component<
                   <Typography variant="body2" align="center">
                     Already have an Student Showcase account?&nbsp;
                     <CustomLink
-                      url={Routes.constructSignInRoute(this.props.match.params)}
+                      url={Routes.constructSignInRoute(this.props.params)}
                       color={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main}
                       activeColor="none"
                       activeUnderline
@@ -608,7 +619,6 @@ class SignUpNew extends Component<
             </Box>
           </Col>
         </Row>
-
         {/** Footer */}
         <Row noGutters>
           <Col xs={12} sm={12} md={12} lg={12}>
@@ -620,4 +630,12 @@ class SignUpNew extends Component<
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(SignUpNew);
+const ConnectedSignUpNew = connect(mapStateToProps, mapDispatchToProps)(SignUpNewClass);
+
+function SignUpNew() {
+  const params = useParams();
+  const navigate = useNavigate();
+  return <ConnectedSignUpNew params={params} navigate={navigate} />;
+}
+
+export default SignUpNew;

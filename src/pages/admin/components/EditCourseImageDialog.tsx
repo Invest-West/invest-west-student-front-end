@@ -15,8 +15,8 @@ import {
   RadioGroup,
   FormControlLabel,
   Radio,
-} from '@material-ui/core';
-import { Close } from '@material-ui/icons';
+} from '@mui/material';
+import { Close } from '@mui/icons-material';
 import { css } from 'aphrodite';
 import sharedStyles from '../../../shared-js-css-styles/SharedStyles';
 // @ts-ignore
@@ -187,7 +187,7 @@ export default class EditCourseImageDialog extends Component<
               </Typography>
             </Box>
             <Box display="flex" flexGrow={1} justifyContent="flex-end">
-              <IconButton onClick={onClose} disabled={isProcessing}>
+              <IconButton onClick={onClose} disabled={isProcessing} size="large">
                 <Close />
               </IconButton>
             </Box>
@@ -197,7 +197,7 @@ export default class EditCourseImageDialog extends Component<
         <DialogContent style={{ margin: 0, padding: '20px' }}>
           <Box display="flex" flexDirection="column">
             {/* Mode selector */}
-            <FormControl component="fieldset">
+            <FormControl variant="standard" component="fieldset">
               <RadioGroup value={mode} onChange={this.handleModeChange} row>
                 <FormControlLabel
                   value="upload"

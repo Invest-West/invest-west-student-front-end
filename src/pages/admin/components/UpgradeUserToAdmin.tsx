@@ -33,12 +33,12 @@ import {
   TableBody,
   TableRow,
   TableCell,
-} from '@material-ui/core';
+} from '@mui/material';
 import { css } from 'aphrodite';
 import sharedStyles from '../../../shared-js-css-styles/SharedStyles';
-import AddIcon from '@material-ui/icons/Add';
-import CloseIcon from '@material-ui/icons/Close';
-import SearchIcon from '@material-ui/icons/Search';
+import AddIcon from '@mui/icons-material/Add';
+import CloseIcon from '@mui/icons-material/Close';
+import SearchIcon from '@mui/icons-material/Search';
 import FlexView from 'react-flexview';
 import { BeatLoader } from 'react-spinners';
 import * as colors from '../../../values/colors';
@@ -914,9 +914,7 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
         <Typography variant="h6" color="primary">
           Upgrade User to Course Admin
         </Typography>
-
         <Box height="15px" />
-
         <Typography variant="body2" color="textSecondary" paragraph>
           {isUniversityAdmin
             ? 'Search for existing users and upgrade them to become admins of a specific course within your university.'
@@ -926,7 +924,6 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
                 ? 'Search for existing users across all universities and upgrade them to become admins of a specific course.'
                 : 'As a super course admin, search for existing users across all universities and upgrade them to become admins of any course.'}
         </Typography>
-
         <Button
           className={css(sharedStyles.no_text_transform)}
           variant="outlined"
@@ -936,7 +933,6 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
         >
           Upgrade User to Admin
         </Button>
-
         <Dialog open={dialogOpen} onClose={this.toggleDialog} maxWidth="md" fullWidth>
           <DialogTitle>
             <FlexView vAlignContent="center">
@@ -950,7 +946,7 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
                 </Typography>
               </FlexView>
               <FlexView grow={1} hAlignContent="right">
-                <IconButton onClick={this.toggleDialog}>
+                <IconButton onClick={this.toggleDialog} size="large">
                   <CloseIcon />
                 </IconButton>
               </FlexView>
@@ -998,6 +994,7 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
                   <FormControl fullWidth variant="outlined">
                     <InputLabel>University</InputLabel>
                     <Select
+                      variant="standard"
                       name="selectedUniversity"
                       value={selectedUniversity}
                       onChange={this.handleInputChanged}
@@ -1027,6 +1024,7 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
                   <FormControl fullWidth variant="outlined">
                     <InputLabel>Course</InputLabel>
                     <Select
+                      variant="standard"
                       name="selectedCourse"
                       value={selectedCourse}
                       onChange={this.handleInputChanged}

@@ -7,12 +7,12 @@ import { MediaQueryState } from '../../../../redux-store/reducers/mediaQueryRedu
 import { toggleContactResourceDialog } from '../../ResourcesActions';
 import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
-import { Box, Button, colors, Divider, Paper, Typography } from '@material-ui/core';
+import { Box, Button, colors, Divider, Paper, Typography } from '@mui/material';
 import { Col, Row } from 'react-bootstrap';
 import CustomLink from '../../../../shared-js-css-styles/CustomLink';
 import { css } from 'aphrodite';
 import sharedStyles from '../../../../shared-js-css-styles/SharedStyles';
-import { AttachFile } from '@material-ui/icons';
+import { AttachFile } from '@mui/icons-material';
 import ContactResourceDialog from '../../components/ContactResourceDialog';
 import {
   isDevelopmentEnvironment,

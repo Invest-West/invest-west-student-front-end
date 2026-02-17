@@ -11,9 +11,9 @@ import {
   TextField,
   Toolbar,
   Typography,
-} from '@material-ui/core';
-import CloseIcon from '@material-ui/icons/Close';
-import { KeyboardDatePicker } from '@material-ui/pickers';
+} from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { Col, Container, Row } from 'react-bootstrap';
 
 import SelectPledgeVisibility from '../select-pledge-visibility/SelectPledgeVisibility';
@@ -86,7 +86,12 @@ class CreatePledgeDialog extends Component {
         <DialogTitle>
           <AppBar elevation={0}>
             <Toolbar>
-              <IconButton color="inherit" onClick={toggleCreatePledgeDialog} aria-label="Close">
+              <IconButton
+                color="inherit"
+                onClick={toggleCreatePledgeDialog}
+                aria-label="Close"
+                size="large"
+              >
                 <CloseIcon />
               </IconButton>
               <FlexView marginLeft={10}>
@@ -159,16 +164,18 @@ class CreatePledgeDialog extends Component {
                 />
 
                 <FlexView marginTop={15} width="100%">
-                  <KeyboardDatePicker
-                    autoOk
-                    variant="dialog"
-                    inputVariant="outlined"
+                  <DatePicker
                     label="Choose expired date"
                     format="dd/MM/yyyy"
                     minDate={utils.getDateWithDaysFurtherThanToday(1)}
                     value={expiredDate}
-                    InputAdornmentProps={{ position: 'start' }}
                     onChange={handleDateChanged}
+                    slotProps={{
+                      textField: {
+                        variant: 'outlined',
+                      },
+                      inputAdornment: { position: 'start' },
+                    }}
                   />
                 </FlexView>
 

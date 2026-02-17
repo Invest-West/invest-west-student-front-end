@@ -18,11 +18,11 @@ import {
   FormControl,
   InputLabel,
   OutlinedInput,
-} from '@material-ui/core';
-import CloseIcon from '@material-ui/icons/Close';
-import SearchIcon from '@material-ui/icons/Search';
-import RefreshIcon from '@material-ui/icons/Refresh';
-import PersonAddIcon from '@material-ui/icons/PersonAdd';
+} from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import SearchIcon from '@mui/icons-material/Search';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { HashLoader } from 'react-spinners';
 import { css } from 'aphrodite';
@@ -201,7 +201,7 @@ class GroupAdminsTable extends Component {
                               </Tooltip>
                             }
                           >
-                            <IconButton onClick={toggleSearchMode}>
+                            <IconButton onClick={toggleSearchMode} size="large">
                               {inSearchMode ? <CloseIcon /> : <SearchIcon />}
                             </IconButton>
                           </OverlayTrigger>
@@ -247,7 +247,11 @@ class GroupAdminsTable extends Component {
                         flip
                         overlay={<Tooltip id={`tooltip-bottom`}>Refresh</Tooltip>}
                       >
-                        <IconButton onClick={loadGroupAdmins} style={{ marginLeft: 10 }}>
+                        <IconButton
+                          onClick={loadGroupAdmins}
+                          style={{ marginLeft: 10 }}
+                          size="large"
+                        >
                           <RefreshIcon />
                         </IconButton>
                       </OverlayTrigger>
@@ -261,13 +265,14 @@ class GroupAdminsTable extends Component {
                   cellColor={colors.blue_gray_50}
                   component={
                     <FlexView marginTop={10} marginBottom={10}>
-                      <FormControl style={{ minWidth: 200 }}>
+                      <FormControl variant="standard" style={{ minWidth: 200 }}>
                         <InputLabel>
                           <Typography variant="body1" color="primary">
                             Course
                           </Typography>
                         </InputLabel>
                         <Select
+                          variant="standard"
                           margin="dense"
                           input={<OutlinedInput labelWidth={0} name="filterCourse" />}
                           name="filterCourse"
@@ -385,14 +390,13 @@ class GroupAdminsTable extends Component {
                   SelectProps={{
                     native: true,
                   }}
-                  onChangePage={changePage}
-                  onChangeRowsPerPage={changeRowsPerPage}
+                  onPageChange={changePage}
+                  onRowsPerPageChange={changeRowsPerPage}
                 />
               </TableRow>
             </TableFooter>
           </Table>
         </Paper>
-
         {/* Admin Access Request Dialog for admins */}
         {tableGroup && (
           <RequestAdminAccessDialog

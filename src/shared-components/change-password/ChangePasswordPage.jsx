@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Container, Row, Col } from 'react-bootstrap';
-import { Button, TextField, Typography, IconButton } from '@material-ui/core';
-import CloseIcon from '@material-ui/icons/Close';
+import { Button, TextField, Typography, IconButton } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 import FlexView from 'react-flexview';
 import { css, StyleSheet } from 'aphrodite';
 
@@ -190,7 +190,7 @@ class PasswordUpdate extends Component {
         </FlexView>
 
         <FlexView grow vAlignContent="center" hAlignContent="right" style={{ padding: 4 }}>
-          <IconButton onClick={this.onCloseMessage}>
+          <IconButton onClick={this.onCloseMessage} size="large">
             <CloseIcon fontSize="small" style={{ color: colors.white }} />
           </IconButton>
         </FlexView>

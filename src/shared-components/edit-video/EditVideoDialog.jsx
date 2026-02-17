@@ -7,10 +7,10 @@ import {
   IconButton,
   Typography,
   TextField,
-} from '@material-ui/core';
+} from '@mui/material';
 import { Container, Row, Col } from 'react-bootstrap';
-import AddIcon from '@material-ui/icons/Add';
-import CloseIcon from '@material-ui/icons/Close';
+import AddIcon from '@mui/icons-material/Add';
+import CloseIcon from '@mui/icons-material/Close';
 import FlexView from 'react-flexview';
 import Files from 'react-files';
 import { css, StyleSheet } from 'aphrodite';
@@ -129,7 +129,7 @@ class EditVideoDialog extends Component {
                   </FlexView>
 
                   <FlexView grow={1} hAlignContent="right">
-                    <IconButton onClick={onClose}>
+                    <IconButton onClick={onClose} size="large">
                       <CloseIcon fontSize="small" />
                     </IconButton>
                   </FlexView>

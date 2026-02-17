@@ -11,10 +11,10 @@ import {
   Typography,
   SnackbarContent,
   Snackbar,
-} from '@material-ui/core';
+} from '@mui/material';
 import { Image } from 'react-bootstrap';
-import CloseIcon from '@material-ui/icons/Close';
-import AddIcon from '@material-ui/icons/Add';
+import CloseIcon from '@mui/icons-material/Close';
+import AddIcon from '@mui/icons-material/Add';
 import FlexView from 'react-flexview';
 import { css, StyleSheet } from 'aphrodite';
 import Files from 'react-files';
@@ -139,7 +139,7 @@ class AddAngelNetworkDialog extends Component {
         onClose={toggleAddAngelNetworkDialog}
         {...other}
       >
-        <DialogTitle disableTypography>
+        <DialogTitle>
           <FlexView vAlignContent="center">
             <FlexView grow={4}>
               <Typography variant="h6" color="primary" align="left">
@@ -147,7 +147,7 @@ class AddAngelNetworkDialog extends Component {
               </Typography>
             </FlexView>
             <FlexView grow={1} hAlignContent="right">
-              <IconButton onClick={toggleAddAngelNetworkDialog}>
+              <IconButton onClick={toggleAddAngelNetworkDialog} size="large">
                 <CloseIcon />
               </IconButton>
             </FlexView>
@@ -181,7 +181,7 @@ class AddAngelNetworkDialog extends Component {
             onChange={handleInputChanged}
           />
 
-          <FormControl fullWidth style={{ marginTop: 25, marginBottom: 25 }}>
+          <FormControl variant="standard" fullWidth style={{ marginTop: 25, marginBottom: 25 }}>
             <TextField
               label="Registered email"
               placeholder="Write email here ..."
@@ -197,7 +197,7 @@ class AddAngelNetworkDialog extends Component {
             />
           </FormControl>
 
-          <FormControl fullWidth>
+          <FormControl variant="standard" fullWidth>
             <TextField
               label="Website"
               placeholder="Universities official website"
@@ -217,7 +217,7 @@ class AddAngelNetworkDialog extends Component {
             )}
           </FormControl>
 
-          <FormControl fullWidth style={{ marginTop: 25 }}>
+          <FormControl variant="standard" fullWidth style={{ marginTop: 25 }}>
             <TextField
               label="Primary color (optional)"
               placeholder="E.g. #FFFFFF"
@@ -236,7 +236,7 @@ class AddAngelNetworkDialog extends Component {
             )}
           </FormControl>
 
-          <FormControl fullWidth style={{ marginBottom: 25 }}>
+          <FormControl variant="standard" fullWidth style={{ marginBottom: 25 }}>
             <TextField
               label="Secondary color (optional)"
               placeholder="E.g. #FFFFFF"
@@ -350,21 +350,22 @@ class AddAngelNetworkDialog extends Component {
             </Button>
           </FlexView>
         </DialogActions>
-
         <Snackbar
           open={imgUploadErrorSnackbarOpen}
           anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
           autoHideDuration={3000}
           onClose={closeErrorSnackbar}
-          onExited={resetImageFileErrorMessageWhenSnackbarExited}
           TransitionComponent={SlideTransitionDown}
           transitionDuration={{ enter: 130, exit: 130 }}
+          TransitionProps={{
+            onExited: resetImageFileErrorMessageWhenSnackbarExited,
+          }}
         >
           <SnackbarContent
             style={{ backgroundColor: colors.red_700 }}
             message={imgUploadError}
             action={[
-              <IconButton key="close" color="inherit" onClick={closeErrorSnackbar}>
+              <IconButton key="close" color="inherit" onClick={closeErrorSnackbar} size="large">
                 <CloseIcon />
               </IconButton>,
             ]}

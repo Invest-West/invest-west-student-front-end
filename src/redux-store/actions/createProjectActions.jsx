@@ -145,26 +145,32 @@ export const navigateToTheSamePageWithActiveStepSaved = (activeStep, projectID) 
     // projectID not null
     // --> still in edit mode
     if (projectID) {
-      componentContext.props.history.push({
-        pathname: Routes.constructCreateProjectRoute(
-          groupUserName ?? null,
-          courseUserName ?? null,
-          { edit: projectID }
-        ).split('?')[0], // Remove query params since we're setting them separately
-        search: `?edit=${projectID}`,
-        state: {
-          activeStep: activeStep,
+      componentContext.props.navigate(
+        {
+          pathname: Routes.constructCreateProjectRoute(
+            groupUserName ?? null,
+            courseUserName ?? null,
+            { edit: projectID }
+          ).split('?')[0], // Remove query params since we're setting them separately
+          search: `?edit=${projectID}`,
         },
-      });
+        {
+          state: {
+            activeStep: activeStep,
+          },
+        }
+      );
     }
     // projectID null --> create mode
     else {
-      componentContext.props.history.push({
-        pathname: Routes.constructCreateProjectRoute(groupUserName ?? null, courseUserName ?? null),
-        state: {
-          activeStep: activeStep,
-        },
-      });
+      componentContext.props.navigate(
+        Routes.constructCreateProjectRoute(groupUserName ?? null, courseUserName ?? null),
+        {
+          state: {
+            activeStep: activeStep,
+          },
+        }
+      );
     }
   };
 };

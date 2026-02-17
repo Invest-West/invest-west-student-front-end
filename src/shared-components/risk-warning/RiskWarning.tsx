@@ -6,7 +6,7 @@ import {
   getGroupRouteTheme,
   ManageGroupUrlState,
 } from '../../redux-store/reducers/manageGroupUrlReducer';
-import { Box, colors, Typography } from '@material-ui/core';
+import { Box, colors, Typography } from '@mui/material';
 import Routes from '../../router/routes';
 import CustomLink from '../../shared-js-css-styles/CustomLink';
 

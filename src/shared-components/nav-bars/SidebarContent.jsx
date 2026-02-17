@@ -1,18 +1,18 @@
 import React, { Component } from 'react';
 import FlexView from 'react-flexview/lib/index';
 import { css } from 'aphrodite';
-import { Divider, List, ListItem, ListItemIcon, ListItemText, Link } from '@material-ui/core';
+import { Divider, List, ListItem, ListItemIcon, ListItemText, Link } from '@mui/material';
 import { Image } from 'react-bootstrap';
-import HomeIcon from '@material-ui/icons/Home';
-import WorkIcon from '@material-ui/icons/Work';
-import SettingsIcon from '@material-ui/icons/Settings';
-import ContactSupportIcon from '@material-ui/icons/ContactSupport';
-import ArrowLeft from '@material-ui/icons/SubdirectoryArrowLeft';
-import VerifiedUserIcon from '@material-ui/icons/VerifiedUser';
-import BubbleChartIcon from '@material-ui/icons/BubbleChart';
-import ProjectIcon from '@material-ui/icons/CardGiftcard';
-import InfoIcon from '@material-ui/icons/Info';
-import HistoryIcon from '@material-ui/icons/History';
+import HomeIcon from '@mui/icons-material/Home';
+import WorkIcon from '@mui/icons-material/Work';
+import SettingsIcon from '@mui/icons-material/Settings';
+import ContactSupportIcon from '@mui/icons-material/ContactSupport';
+import ArrowLeft from '@mui/icons-material/SubdirectoryArrowLeft';
+import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
+import BubbleChartIcon from '@mui/icons-material/BubbleChart';
+import ProjectIcon from '@mui/icons-material/CardGiftcard';
+import InfoIcon from '@mui/icons-material/Info';
+import HistoryIcon from '@mui/icons-material/History';
 import { NavLink } from 'react-router-dom';
 
 import { connect } from 'react-redux';
@@ -25,7 +25,7 @@ import Routes, * as ROUTES from '../../router/routes';
 import * as utils from '../../utils/utils';
 import sharedStyles from '../../shared-js-css-styles/SharedStyles';
 import { signOut } from '../../redux-store/actions/authenticationActions';
-import { School } from '@material-ui/icons';
+import { School } from '@mui/icons-material';
 import { safeRemoveItem, safeSetItem } from '../../utils/browser';
 
 export const HOME_TAB = 'Home';
@@ -137,7 +137,7 @@ class SidebarContent extends Component {
           hAlignContent="center"
           style={{ padding: 8 }}
         >
-          <Link href={groupProperties?.website ?? ''} target="_blank">
+          <Link href={groupProperties?.website ?? ''} target="_blank" underline="hover">
             <Image
               style={{ width: 'auto', height: 65, margin: 0, padding: 10, objectFit: 'scale-down' }}
               src={
@@ -148,9 +148,7 @@ class SidebarContent extends Component {
             />
           </Link>
         </FlexView>
-
         <Divider />
-
         {/** Main navigation */}
         <FlexView column marginTop={10}>
           {/** Home tab */}
@@ -269,7 +267,6 @@ class SidebarContent extends Component {
                         */}
           </List>
         </FlexView>
-
         {/** Footer navigation */}
         <FlexView column height="100%" vAlignContent="bottom">
           <List>

@@ -21,12 +21,12 @@ import {
   Select,
   TextField,
   Typography,
-} from '@material-ui/core';
-import AddIcon from '@material-ui/icons/Add';
-import InfoIcon from '@material-ui/icons/Info';
-import SearchIcon from '@material-ui/icons/Search';
-import CloseIcon from '@material-ui/icons/Close';
-import PublicIcon from '@material-ui/icons/Public';
+} from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import InfoIcon from '@mui/icons-material/Info';
+import SearchIcon from '@mui/icons-material/Search';
+import CloseIcon from '@mui/icons-material/Close';
+import PublicIcon from '@mui/icons-material/Public';
 import { Col, Container, Image, OverlayTrigger, Row, Tooltip } from 'react-bootstrap';
 import { NavLink } from 'react-router-dom';
 import ReactPlayer from 'react-player';
@@ -354,7 +354,6 @@ class Profile extends Component {
                         <Divider/>
                     </Col>
                 </Row>*/}
-
         {/** Personal details */}
         <Row noGutters style={{ backgroundColor: colors.white }}>
           <Col xs={12} md={12} lg={12} style={{ padding: 24 }}>
@@ -418,11 +417,12 @@ class Profile extends Component {
                   <Row>
                     {/** Title */}
                     <Col xs={12} md={12} lg={{ span: 6, order: 1 }} style={{ marginBottom: 20 }}>
-                      <FormControl fullWidth>
+                      <FormControl variant="standard" fullWidth>
                         <FormLabel>
                           <b>Title</b>
                         </FormLabel>
                         <Select
+                          variant="standard"
                           name="title"
                           value={userEdited.title}
                           onChange={this.handleEditUser(editUserActions.EDIT_PERSONAL_INFORMATION)}
@@ -446,7 +446,7 @@ class Profile extends Component {
                       lg={{ span: 6, order: 2 }}
                       style={{ marginBottom: 20 }}
                     >
-                      <FormControl fullWidth>
+                      <FormControl variant="standard" fullWidth>
                         <FormLabel>
                           <b>First name</b>
                         </FormLabel>
@@ -470,7 +470,7 @@ class Profile extends Component {
                       lg={{ span: 6, order: 3 }}
                       style={{ marginBottom: 20 }}
                     >
-                      <FormControl fullWidth>
+                      <FormControl variant="standard" fullWidth>
                         <FormLabel>
                           <b>Last name</b>
                         </FormLabel>
@@ -499,7 +499,7 @@ class Profile extends Component {
                       lg={{ span: 12, order: 5 }}
                       style={{ marginBottom: 20 }}
                     >
-                      <FormControl fullWidth>
+                      <FormControl variant="standard" fullWidth>
                         <FormLabel>
                           <b>Email</b>
                         </FormLabel>
@@ -529,7 +529,7 @@ class Profile extends Component {
                       lg={{ span: 12, order: 7 }}
                       style={{ marginBottom: 20 }}
                     >
-                      <FormControl fullWidth>
+                      <FormControl variant="standard" fullWidth>
                         <FormLabel>
                           <b>LinkedIn</b>
                         </FormLabel>
@@ -569,7 +569,7 @@ class Profile extends Component {
                           lg={{ span: 6, order: 9 }}
                           style={{ marginBottom: 20 }}
                         >
-                          <FormControl fullWidth>
+                          <FormControl variant="standard" fullWidth>
                             <FormLabel>
                               <b>Company</b>
                             </FormLabel>
@@ -594,7 +594,7 @@ class Profile extends Component {
                           lg={{ span: 6, order: 10 }}
                           style={{ marginBottom: 20 }}
                         >
-                          <FormControl fullWidth>
+                          <FormControl variant="standard" fullWidth>
                             <FormLabel>
                               <b>Company Name</b>
                             </FormLabel>
@@ -623,7 +623,7 @@ class Profile extends Component {
                           lg={{ span: 12, order: 11 }}
                           style={{ marginBottom: 20 }}
                         >
-                          <FormControl fullWidth>
+                          <FormControl variant="standard" fullWidth>
                             <FormLabel>
                               <b>Description</b>
                             </FormLabel>
@@ -725,7 +725,6 @@ class Profile extends Component {
             <Divider />
           </Col>
         </Row>
-
         {/** Business profile */}
         {/*
                 <Row noGutters style={{ backgroundColor: colors.kick_starter_background_color_1 }} >
@@ -741,7 +740,6 @@ class Profile extends Component {
                     </Col>
                 </Row>
                 */}
-
         {/** Fundraising summary - only available for super user who is viewing the profile of an issuer or an investor */}
         {currentUser.type !== DB_CONST.TYPE_ADMIN ? null : (
           <Row noGutters style={{ backgroundColor: colors.kick_starter_background_color_1 }}>
@@ -766,7 +764,6 @@ class Profile extends Component {
             )}
           </Row>
         )}
-
         {/** User's activities - only available for admins */}
         {currentUser.type !== DB_CONST.TYPE_ADMIN ? null : (
           <Row noGutters style={{ backgroundColor: colors.kick_starter_background_color_1 }}>
@@ -783,7 +780,6 @@ class Profile extends Component {
             </Col>
           </Row>
         )}
-
         <Row noGutters>
           <Col xs={12} sm={12} md={12} lg={12}>
             <Footer position="relative" />
@@ -928,7 +924,7 @@ class Profile extends Component {
             <Col xs={12} sm={12} md={6} lg={8}>
               {/** Student project name */}
               <FlexView column>
-                <FormControl>
+                <FormControl variant="standard">
                   <FormLabel>
                     <b>Student project name</b>
                   </FormLabel>
@@ -959,11 +955,12 @@ class Profile extends Component {
 
               {!clubAttributes ? null : (
                 <FlexView>
-                  <FormControl fullWidth>
+                  <FormControl variant="standard" fullWidth>
                     <FormLabel>
                       <b>Sector</b>
                     </FormLabel>
                     <Select
+                      variant="standard"
                       name="sector"
                       value={
                         userEdited.BusinessProfile.hasOwnProperty('sector')
@@ -990,7 +987,7 @@ class Profile extends Component {
 
               {/** Website */}
               <FlexView column>
-                <FormControl>
+                <FormControl variant="standard">
                   <FormLabel>
                     <b>Company website</b>
                   </FormLabel>
@@ -1124,14 +1121,13 @@ class Profile extends Component {
                 </Row>
               )}
             </FlexView>
-
             {originalUser.type === DB_CONST.TYPE_ISSUER ||
             createBusinessProfile.expandBusinessProfileFilling ? (
               // start filling in Business profile
               <FlexView column marginTop={20}>
                 {/** Student project name */}
                 <FlexView column>
-                  <FormControl required>
+                  <FormControl variant="standard" required>
                     <FormLabel>
                       <b>Student project name</b>
                     </FormLabel>
@@ -1148,16 +1144,15 @@ class Profile extends Component {
                     />
                   </FormControl>
                 </FlexView>
-
                 <Divider style={{ marginTop: 20, marginBottom: 20 }} />
-
                 {/** Course sector */}
                 <FlexView column>
-                  <FormControl required>
+                  <FormControl variant="standard" required>
                     <FormLabel>
                       <b>Course sector</b>
                     </FormLabel>
                     <Select
+                      variant="standard"
                       name="sector"
                       value={createBusinessProfile.BusinessProfile.sector}
                       input={<OutlinedInput />}
@@ -1179,12 +1174,10 @@ class Profile extends Component {
                     </Select>
                   </FormControl>
                 </FlexView>
-
                 <Divider style={{ marginTop: 20, marginBottom: 20 }} />
-
                 {/** Company Website */}
                 <FlexView column>
-                  <FormControl required>
+                  <FormControl variant="standard" required>
                     <FormLabel>
                       <b>Project website</b>
                     </FormLabel>
@@ -1210,9 +1203,7 @@ class Profile extends Component {
                     )}
                   </FormControl>
                 </FlexView>
-
                 <Divider style={{ marginTop: 20, marginBottom: 20 }} />
-
                 {/** Upload logo and introduction video */}
                 <FlexView marginBottom={20} width="100%" hAlignContent="center">
                   <Row style={{ width: '100%' }}>
@@ -1300,7 +1291,6 @@ class Profile extends Component {
                     </Col>
                   </Row>
                 </FlexView>
-
                 <FlexView grow={1} hAlignContent="right" marginTop={30} marginBottom={20}>
                   <FlexView marginRight={20}>
                     <Button

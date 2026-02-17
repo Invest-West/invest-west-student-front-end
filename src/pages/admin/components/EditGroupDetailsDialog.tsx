@@ -17,8 +17,8 @@ import {
   Radio,
   Tabs,
   Tab,
-} from '@material-ui/core';
-import { Close } from '@material-ui/icons';
+} from '@mui/material';
+import { Close } from '@mui/icons-material';
 import { css } from 'aphrodite';
 import sharedStyles from '../../../shared-js-css-styles/SharedStyles';
 // @ts-ignore
@@ -297,14 +297,13 @@ export default class EditGroupDetailsDialog extends Component<
               </Typography>
             </Box>
             <Box display="flex" flexGrow={1} justifyContent="flex-end">
-              <IconButton onClick={onClose} disabled={isProcessing}>
+              <IconButton onClick={onClose} disabled={isProcessing} size="large">
                 <Close />
               </IconButton>
             </Box>
           </Box>
         </DialogTitle>
         <Divider />
-
         <Tabs
           value={activeTab}
           onChange={this.handleTabChange}
@@ -317,7 +316,6 @@ export default class EditGroupDetailsDialog extends Component<
           <Tab label="About" disabled={isProcessing} />
         </Tabs>
         <Divider />
-
         <DialogContent style={{ margin: 0, padding: '20px', minHeight: '200px' }}>
           {/* Name Tab */}
           {activeTab === 0 && (
@@ -359,7 +357,7 @@ export default class EditGroupDetailsDialog extends Component<
                 </Box>
               )}
 
-              <FormControl component="fieldset">
+              <FormControl variant="standard" component="fieldset">
                 <RadioGroup value={logoMode} onChange={this.handleLogoModeChange} row>
                   <FormControlLabel
                     value="upload"

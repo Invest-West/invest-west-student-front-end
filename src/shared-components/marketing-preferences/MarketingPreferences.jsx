@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import FlexView from 'react-flexview';
-import { Typography } from '@material-ui/core';
+import { Typography } from '@mui/material';
 import { HashLoader } from 'react-spinners';
 
 import * as colors from '../../values/colors';

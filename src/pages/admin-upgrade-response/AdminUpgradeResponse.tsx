@@ -3,15 +3,15 @@ import { connect } from 'react-redux';
 import { AppState } from '../../redux-store/reducers';
 import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
-import { Box, Button, Paper, Typography } from '@material-ui/core';
+import { Box, Button, Paper, Typography } from '@mui/material';
 import { Col, Row } from 'react-bootstrap';
 import { css } from 'aphrodite';
 import sharedStyles from '../../shared-js-css-styles/SharedStyles';
-import { RouteComponentProps } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import HashLoader from 'react-spinners/HashLoader';
 import { BarLoader } from 'react-spinners';
-import CheckCircleOutlineIcon from '@material-ui/icons/CheckCircleOutline';
-import CancelOutlinedIcon from '@material-ui/icons/CancelOutlined';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined';
 
 import {
   validateUpgradeRequest,
@@ -34,10 +34,11 @@ import Footer from '../../shared-components/footer/Footer';
 import { safeSetItem } from '../../utils/browser';
 
 /**
- * Route parameters
+ * Router props injected by wrapper
  */
-interface RouteParams {
-  requestId: string;
+interface AdminUpgradeResponseRouterProps {
+  params: Record<string, string | undefined>;
+  navigate: (to: string, options?: { replace?: boolean }) => void;
 }
 
 /**
@@ -89,14 +90,14 @@ const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
  * This page allows existing users to accept or decline upgrade requests
  * to become course admins or lecturers.
  */
-class AdminUpgradeResponse extends Component<
-  AdminUpgradeResponseProps & RouteComponentProps<RouteParams>,
+class AdminUpgradeResponseClass extends Component<
+  AdminUpgradeResponseProps & AdminUpgradeResponseRouterProps,
   LocalState
 > {
-  constructor(props: AdminUpgradeResponseProps & RouteComponentProps<RouteParams>) {
+  constructor(props: AdminUpgradeResponseProps & AdminUpgradeResponseRouterProps) {
     super(props);
     this.state = {
-      requestId: props.match.params.requestId || '',
+      requestId: props.params.requestId || '',
       responseSubmitted: false,
     };
   }
@@ -105,7 +106,7 @@ class AdminUpgradeResponse extends Component<
     this.handleAuthStateChange();
   }
 
-  componentDidUpdate(prevProps: AdminUpgradeResponseProps & RouteComponentProps<RouteParams>) {
+  componentDidUpdate(prevProps: AdminUpgradeResponseProps & AdminUpgradeResponseRouterProps) {
     const { AuthenticationState: prevAuthState } = prevProps;
     const { AuthenticationState: currentAuthState } = this.props;
 
@@ -135,7 +136,7 @@ class AdminUpgradeResponse extends Component<
       // Store the current URL so user is redirected back after sign-in
       safeSetItem('redirectToAfterAuth', window.location.pathname);
       // Redirect to sign in
-      this.props.history.push('/sign-in');
+      this.props.navigate('/sign-in');
       return;
     }
 
@@ -286,7 +287,7 @@ class AdminUpgradeResponse extends Component<
           className={css(sharedStyles.no_text_transform)}
           variant="contained"
           color="primary"
-          onClick={() => this.props.history.push('/')}
+          onClick={() => this.props.navigate('/')}
         >
           Go to Dashboard
         </Button>
@@ -355,7 +356,7 @@ class AdminUpgradeResponse extends Component<
                   className={css(sharedStyles.no_text_transform)}
                   variant="contained"
                   color="primary"
-                  onClick={() => this.props.history.push('/')}
+                  onClick={() => this.props.navigate('/')}
                 >
                   {accepted ? 'Go to Dashboard' : 'Continue'}
                 </Button>
@@ -496,4 +497,15 @@ class AdminUpgradeResponse extends Component<
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(AdminUpgradeResponse);
+const ConnectedAdminUpgradeResponse = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(AdminUpgradeResponseClass);
+
+function AdminUpgradeResponse() {
+  const params = useParams();
+  const navigate = useNavigate();
+  return <ConnectedAdminUpgradeResponse params={params} navigate={navigate} />;
+}
+
+export default AdminUpgradeResponse;

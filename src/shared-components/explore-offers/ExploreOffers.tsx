@@ -16,9 +16,10 @@ import {
   MenuItem,
   OutlinedInput,
   Paper,
+  Pagination,
   Select,
   Typography,
-} from '@material-ui/core';
+} from '@mui/material';
 import {
   calculatePaginationIndices,
   calculatePaginationPages,
@@ -45,19 +46,18 @@ import {
 import { ManageSystemAttributesState } from '../../redux-store/reducers/manageSystemAttributesReducer';
 import { BeatLoader } from 'react-spinners';
 import OfferItem from './OfferItem';
-import { Pagination } from '@material-ui/lab';
 import { isIssuer } from '../../models/user';
 import CustomLink from '../../shared-js-css-styles/CustomLink';
 import Routes from '../../router/routes';
-import CreateIcon from '@material-ui/icons/CreateOutlined';
-import RefreshIcon from '@material-ui/icons/Refresh';
+import CreateIcon from '@mui/icons-material/CreateOutlined';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { css } from 'aphrodite';
 import sharedStyles from '../../shared-js-css-styles/SharedStyles';
 import {
   FetchProjectsOrderByOptions,
   FetchProjectsPhaseOptions,
 } from '../../api/repositories/OfferRepository';
-import { Close, Search } from '@material-ui/icons';
+import { Close, Search } from '@mui/icons-material';
 
 interface ExploreOffersProps {
   MediaQueryState: MediaQueryState;
@@ -243,7 +243,6 @@ class ExploreOffers extends Component<ExploreOffersProps, ExploreOffersComponent
             </Box>
           </Col>
         </Row>
-
         {/** Search bar */}
         <Row style={{ marginTop: 40 }}>
           <Col xs={12} sm={12} md={8} lg={4}>
@@ -271,6 +270,7 @@ class ExploreOffers extends Component<ExploreOffersProps, ExploreOffersComponent
                         type="submit"
                         onClick={() => fetchOffers(FetchProjectsOrderByOptions.Phase)}
                         /*disabled={!successfullyFetchedOffers(ExploreOffersLocalState)}*/
+                        size="large"
                       >
                         <Search fontSize="small" />
                       </IconButton>
@@ -279,7 +279,7 @@ class ExploreOffers extends Component<ExploreOffersProps, ExploreOffersComponent
                   endAdornment={
                     !isSearchFilterActive(ExploreOffersLocalState) ? null : (
                       <InputAdornment position="end">
-                        <IconButton onClick={() => clearSearchFilter()}>
+                        <IconButton onClick={() => clearSearchFilter()} size="large">
                           <Close fontSize="small" />
                         </IconButton>
                       </InputAdornment>
@@ -290,7 +290,6 @@ class ExploreOffers extends Component<ExploreOffersProps, ExploreOffersComponent
             </Box>
           </Col>
         </Row>
-
         {/** Loader */}
         {!isFetchingOffers(ExploreOffersLocalState) ? null : (
           <Row noGutters>
@@ -301,7 +300,6 @@ class ExploreOffers extends Component<ExploreOffersProps, ExploreOffersComponent
             </Col>
           </Row>
         )}
-
         {/** Offers */}
         {!successfullyFetchedOffers(ExploreOffersLocalState) ? null : (
           <Row noGutters>
@@ -327,7 +325,10 @@ class ExploreOffers extends Component<ExploreOffersProps, ExploreOffersComponent
                       &nbsp;<b>{ExploreOffersLocalState.offerInstances.length} projects</b>
                     </Typography>
                     <Box marginLeft="8px">
-                      <IconButton onClick={() => fetchOffers(FetchProjectsOrderByOptions.Phase)}>
+                      <IconButton
+                        onClick={() => fetchOffers(FetchProjectsOrderByOptions.Phase)}
+                        size="large"
+                      >
                         <RefreshIcon />
                       </IconButton>
                     </Box>
@@ -381,7 +382,6 @@ class ExploreOffers extends Component<ExploreOffersProps, ExploreOffersComponent
             </Col>
           </Row>
         )}
-
         {/** Pagination */}
         {!successfullyFetchedOffers(ExploreOffersLocalState) ? null : paginationPages ===
           1 ? null : (

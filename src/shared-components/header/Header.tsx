@@ -13,7 +13,7 @@ import {
 import { AppState } from '../../redux-store/reducers';
 import { Col, Container, Row } from 'react-bootstrap';
 import * as appColors from '../../values/colors';
-import { Box, Button, Divider, Typography } from '@material-ui/core';
+import { Box, Button, Divider, Typography } from '@mui/material';
 import CustomLink from '../../shared-js-css-styles/CustomLink';
 import { MediaQueryState } from '../../redux-store/reducers/mediaQueryReducer';
 import { getGroupLogo } from '../../models/group_properties';

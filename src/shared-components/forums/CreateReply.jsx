@@ -2,8 +2,8 @@ import React, { Component } from 'react';
 
 import { css, StyleSheet } from 'aphrodite';
 import FlexView from 'react-flexview';
-import { Button, Paper, TextField, Typography } from '@material-ui/core';
-import ReactQuill from 'react-quill';
+import { Button, Paper, TextField, Typography } from '@mui/material';
+import ReactQuill from 'react-quill-new';
 import { Col, Row } from 'react-bootstrap';
 import sharedStyles from '../../shared-js-css-styles/SharedStyles';
 import '../../shared-css/ReactQuillSizes.scss';

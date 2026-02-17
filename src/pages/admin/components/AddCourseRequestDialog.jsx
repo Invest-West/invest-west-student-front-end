@@ -8,9 +8,9 @@ import {
   IconButton,
   TextField,
   Typography,
-} from '@material-ui/core';
-import CloseIcon from '@material-ui/icons/Close';
-import AddIcon from '@material-ui/icons/Add';
+} from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import AddIcon from '@mui/icons-material/Add';
 import FlexView from 'react-flexview';
 import { css } from 'aphrodite';
 import { connect } from 'react-redux';
@@ -66,7 +66,7 @@ class AddCourseRequestDialog extends Component {
         onClose={toggleDialog}
         {...other}
       >
-        <DialogTitle disableTypography>
+        <DialogTitle>
           <FlexView vAlignContent="center">
             <FlexView grow={4}>
               <Typography variant="h6" color="primary" align="left">
@@ -74,7 +74,7 @@ class AddCourseRequestDialog extends Component {
               </Typography>
             </FlexView>
             <FlexView grow={1} hAlignContent="right">
-              <IconButton onClick={toggleDialog}>
+              <IconButton onClick={toggleDialog} size="large">
                 <CloseIcon />
               </IconButton>
             </FlexView>

@@ -3,10 +3,9 @@ import { connect } from 'react-redux';
 import { AppState } from '../../redux-store/reducers';
 import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
-import { Slide, SlideProps, Snackbar } from '@material-ui/core';
+import { Alert, Slide, SlideProps, Snackbar } from '@mui/material';
 import { FeedbackSnackbarState } from './FeedbackSnackbarReducer';
 import { closeFeedbackSnackbar } from './FeedbackSnackbarActions';
-import { Alert } from '@material-ui/lab';
 
 interface FeedbackSnackbarProps {
   FeedbackSnackbarLocalState: FeedbackSnackbarState;

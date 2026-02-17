@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { Box, Button, Typography, CircularProgress, Paper } from '@material-ui/core';
-import { GetApp, OpenInNew } from '@material-ui/icons';
-import DescriptionIcon from '@material-ui/icons/Description';
-import PictureAsPdfIcon from '@material-ui/icons/PictureAsPdf';
-import ImageIcon from '@material-ui/icons/Image';
-import VideoLibraryIcon from '@material-ui/icons/VideoLibrary';
-import TableChartIcon from '@material-ui/icons/TableChart';
+import { Box, Button, Typography, CircularProgress, Paper } from '@mui/material';
+import { GetApp, OpenInNew } from '@mui/icons-material';
+import DescriptionIcon from '@mui/icons-material/Description';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import ImageIcon from '@mui/icons-material/Image';
+import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
+import TableChartIcon from '@mui/icons-material/TableChart';
 import { PitchDocument } from '../../models/project';
 
 interface InlinePdfViewerProps {

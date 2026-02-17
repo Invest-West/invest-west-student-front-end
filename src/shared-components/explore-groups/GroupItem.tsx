@@ -1,15 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { AppState } from '../../redux-store/reducers';
-import {
-  Box,
-  Button,
-  Card,
-  CardActionArea,
-  CardActions,
-  colors,
-  Typography,
-} from '@material-ui/core';
+import { Box, Button, Card, CardActionArea, CardActions, colors, Typography } from '@mui/material';
 import GroupProperties, { getGroupLogo } from '../../models/group_properties';
 import { Image } from 'react-bootstrap';
 import { AuthenticationState } from '../../redux-store/reducers/authenticationReducer';
@@ -23,7 +15,7 @@ import {
   isSendingAccessRequest,
 } from './ExploreGroupsReducer';
 import GroupOfMembership, { getHomeGroup } from '../../models/group_of_membership';
-import { CheckCircle, School } from '@material-ui/icons';
+import { CheckCircle, School } from '@mui/icons-material';
 import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
 import { removeAccessRequest, sendAccessRequest } from './ExploreGroupsActions';

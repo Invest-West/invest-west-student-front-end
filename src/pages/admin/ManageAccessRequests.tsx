@@ -17,10 +17,10 @@ import {
   Tabs,
   TextField,
   Typography,
-} from '@material-ui/core';
-import CheckCircleIcon from '@material-ui/icons/CheckCircle';
-import CancelIcon from '@material-ui/icons/Cancel';
-import CloseIcon from '@material-ui/icons/Close';
+} from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
+import CloseIcon from '@mui/icons-material/Close';
 import FlexView from 'react-flexview';
 import { css } from 'aphrodite';
 import sharedStyles from '../../shared-js-css-styles/SharedStyles';
@@ -304,7 +304,6 @@ export default function ManageAccessRequests({ currentUser }: ManageAccessReques
           <Typography color="error">{error}</Typography>
         </Paper>
       )}
-
       <Paper>
         <Tabs
           value={activeTab}
@@ -347,7 +346,6 @@ export default function ManageAccessRequests({ currentUser }: ManageAccessReques
           )}
         </TabPanel>
       </Paper>
-
       {/* Rejection Dialog */}
       <Dialog
         open={rejectDialogOpen}
@@ -355,7 +353,7 @@ export default function ManageAccessRequests({ currentUser }: ManageAccessReques
         fullWidth
         maxWidth="sm"
       >
-        <DialogTitle disableTypography>
+        <DialogTitle>
           <FlexView vAlignContent="center">
             <FlexView grow={4}>
               <Typography variant="h6" color="secondary">
@@ -363,7 +361,11 @@ export default function ManageAccessRequests({ currentUser }: ManageAccessReques
               </Typography>
             </FlexView>
             <FlexView grow={1} hAlignContent="right">
-              <IconButton onClick={() => setRejectDialogOpen(false)} disabled={!!actionLoading}>
+              <IconButton
+                onClick={() => setRejectDialogOpen(false)}
+                disabled={!!actionLoading}
+                size="large"
+              >
                 <CloseIcon />
               </IconButton>
             </FlexView>

@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
 import { Col, Row } from 'react-bootstrap';
 import FlexView from 'react-flexview';
-import { Button, TextField, Typography } from '@material-ui/core';
-import ReactQuill from 'react-quill';
+import { Button, TextField, Typography } from '@mui/material';
+import ReactQuill from 'react-quill-new';
 import { css } from 'aphrodite';
 import sharedStyles from '../../shared-js-css-styles/SharedStyles';
 

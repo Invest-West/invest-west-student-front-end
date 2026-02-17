@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import FlexView from 'react-flexview';
-import { Typography, Divider } from '@material-ui/core';
+import { Typography, Divider } from '@mui/material';
 import Image from 'react-bootstrap/Image';
 import Container from 'react-bootstrap/Container';
 import Col from 'react-bootstrap/Col';

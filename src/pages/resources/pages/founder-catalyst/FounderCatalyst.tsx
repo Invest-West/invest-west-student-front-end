@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { AppState } from '../../../../redux-store/reducers';
 import { MediaQueryState } from '../../../../redux-store/reducers/mediaQueryReducer';
-import { Box, Button, colors, Divider, Paper, Typography } from '@material-ui/core';
+import { Box, Button, colors, Divider, Paper, Typography } from '@mui/material';
 import { Col, Image, Row } from 'react-bootstrap';
 import CustomLink from '../../../../shared-js-css-styles/CustomLink';
 import { css } from 'aphrodite';
@@ -17,7 +17,7 @@ import {
   isDevelopmentEnvironment,
   isProductionEnvironment,
 } from '../../../../utils/environmentUtil';
-import { AttachFile } from '@material-ui/icons';
+import { AttachFile } from '@mui/icons-material';
 
 interface FounderCatalystProps {
   MediaQueryState: MediaQueryState;

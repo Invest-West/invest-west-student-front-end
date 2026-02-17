@@ -4,7 +4,7 @@ import { AppState } from '../../../redux-store/reducers';
 import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
 import { resources } from '../Resources';
-import { Redirect } from 'react-router-dom';
+import { Navigate, useParams } from 'react-router-dom';
 import Routes from '../../../router/routes';
 
 const mapStateToProps = (state: AppState) => {
@@ -19,17 +19,24 @@ const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
   return {};
 };
 
-class ResourceDetail extends Component<any, any> {
+class ResourceDetailClass extends Component<any, any> {
   render() {
-    const resourceName = this.props.match.params.resourceName;
+    const resourceName = this.props.params.resourceName;
     const resourceIndex = resources.findIndex((resource) => resource.name === resourceName);
     if (resourceIndex !== -1) {
       const resource = resources[resourceIndex];
       return resource.page;
     }
 
-    return <Redirect to={Routes.error404} />;
+    return <Navigate to={Routes.error404} replace />;
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(ResourceDetail);
+const ConnectedResourceDetail = connect(mapStateToProps, mapDispatchToProps)(ResourceDetailClass);
+
+function ResourceDetail() {
+  const params = useParams();
+  return <ConnectedResourceDetail params={params} />;
+}
+
+export default ResourceDetail;

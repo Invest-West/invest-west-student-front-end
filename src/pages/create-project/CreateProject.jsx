@@ -25,13 +25,13 @@ import {
   Stepper,
   TextField,
   Typography,
-} from '@material-ui/core';
-import { KeyboardDatePicker } from '@material-ui/pickers';
-import SaveIcon from '@material-ui/icons/Save';
-import CloseIcon from '@material-ui/icons/Close';
-import DeleteIcon from '@material-ui/icons/Delete';
+} from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import SaveIcon from '@mui/icons-material/Save';
+import CloseIcon from '@mui/icons-material/Close';
+import DeleteIcon from '@mui/icons-material/Delete';
 import Files from 'react-files';
-import { NavLink, Redirect } from 'react-router-dom';
+import { NavLink, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import {
   Col,
   Container,
@@ -48,8 +48,8 @@ import { BeatLoader, HashLoader } from 'react-spinners';
 
 import queryString from 'query-string';
 // React Quill - text editor
-import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+import ReactQuill from 'react-quill-new';
+import 'react-quill-new/dist/quill.snow.css';
 
 import UploadDocuments from '../../shared-components/upload-documents/DocumentsUpload';
 import PageNotFoundWhole from '../../shared-components/page-not-found/PageNotFoundWhole';
@@ -330,29 +330,35 @@ class CreatePitchPageMain extends Component {
     // projectID not null
     // --> still in edit mode
     if (projectID) {
-      this.props.history.push({
-        pathname: Routes.constructCreateProjectRoute(
-          ManageGroupUrlState.groupNameFromUrl ?? null,
-          ManageGroupUrlState.courseNameFromUrl ?? null,
-          { edit: projectID }
-        ).split('?')[0], // Remove query params since we're setting them separately
-        search: `?edit=${projectID}`,
-        state: {
-          activeStep: activeStep,
+      this.props.navigate(
+        {
+          pathname: Routes.constructCreateProjectRoute(
+            ManageGroupUrlState.groupNameFromUrl ?? null,
+            ManageGroupUrlState.courseNameFromUrl ?? null,
+            { edit: projectID }
+          ).split('?')[0], // Remove query params since we're setting them separately
+          search: `?edit=${projectID}`,
         },
-      });
+        {
+          state: {
+            activeStep: activeStep,
+          },
+        }
+      );
     }
     // projectID null --> create mode
     else {
-      this.props.history.push({
-        pathname: Routes.constructCreateProjectRoute(
+      this.props.navigate(
+        Routes.constructCreateProjectRoute(
           ManageGroupUrlState.groupNameFromUrl ?? null,
           ManageGroupUrlState.courseNameFromUrl ?? null
         ),
-        state: {
-          activeStep: activeStep,
-        },
-      });
+        {
+          state: {
+            activeStep: activeStep,
+          },
+        }
+      );
     }
     console.log(
       `Navigating to step ${activeStep} with projectID ${projectID}. Current state:`,
@@ -1070,33 +1076,39 @@ class CreatePitchPageMain extends Component {
 
       // edit mode
       if (params.edit) {
-        this.props.history.push({
-          pathname: Routes.constructCreateProjectRoute(
-            AuthenticationState.groupsOfMembership[index].group.groupUserName,
-            null, // No course info available in this context, fallback to group route
-            { edit: params.edit }
-          ).split('?')[0], // Remove query params since we're setting them separately
-          search: `?edit=${params.edit}`,
-          state: {
-            activeStep: this.state.createProject.activeStep,
-            groupIssuerCreateOfferFor: value,
-            requestToLoadData: true,
+        this.props.navigate(
+          {
+            pathname: Routes.constructCreateProjectRoute(
+              AuthenticationState.groupsOfMembership[index].group.groupUserName,
+              null, // No course info available in this context, fallback to group route
+              { edit: params.edit }
+            ).split('?')[0], // Remove query params since we're setting them separately
+            search: `?edit=${params.edit}`,
           },
-        });
+          {
+            state: {
+              activeStep: this.state.createProject.activeStep,
+              groupIssuerCreateOfferFor: value,
+              requestToLoadData: true,
+            },
+          }
+        );
       }
       // create mode
       else {
-        this.props.history.push({
-          pathname: Routes.constructCreateProjectRoute(
+        this.props.navigate(
+          Routes.constructCreateProjectRoute(
             AuthenticationState.groupsOfMembership[index].group.groupUserName,
             null // No course info available in this context, fallback to group route
           ),
-          state: {
-            activeStep: this.state.createProject.activeStep,
-            groupIssuerCreateOfferFor: value,
-            requestToLoadData: true,
-          },
-        });
+          {
+            state: {
+              activeStep: this.state.createProject.activeStep,
+              groupIssuerCreateOfferFor: value,
+              requestToLoadData: true,
+            },
+          }
+        );
       }
     } else {
       // maximum characters for description is 300
@@ -2482,7 +2494,7 @@ class CreatePitchPageMain extends Component {
         AuthenticationState.currentUser.type === DB_CONST.TYPE_ADMIN &&
         AuthenticationState.currentUser.superAdmin)
     ) {
-      return <Redirect to={Routes.error404} />;
+      return <Navigate to={Routes.error404} replace />;
     }
 
     // in edit mode
@@ -2783,7 +2795,6 @@ class CreateProject extends Component {
             </FlexView>
           </Col>
         </Row>
-
         {/** Main content (changed based on activeStep) */}
         <Row noGutters style={{ padding: 18 }}>
           {createProjectState.activeStep === STEP_PITCH_GENERAL_INFORMATION ? (
@@ -2826,9 +2837,10 @@ class CreateProject extends Component {
                   ) ? null : AuthenticationState.groupsOfMembership === null ||
                   AuthenticationState.groupsOfMembership.length === 0 ? null : (
                   <FlexView marginTop={30}>
-                    <FormControl fullWidth required>
+                    <FormControl variant="standard" fullWidth required>
                       <FormLabel>Select course</FormLabel>
                       <Select
+                        variant="standard"
                         name="groupIssuerCreateOfferFor"
                         value={createProjectState.groupIssuerCreateOfferFor}
                         margin="dense"
@@ -2853,6 +2865,7 @@ class CreateProject extends Component {
                  */}
                 <FlexView marginTop={30}>
                   <FormControl
+                    variant="standard"
                     fullWidth
                     required
                     error={
@@ -2865,6 +2878,7 @@ class CreateProject extends Component {
                   >
                     <FormLabel>Choose sector</FormLabel>
                     <Select
+                      variant="standard"
                       name="pitchSector"
                       value={
                         createProjectState.pitchSector &&
@@ -2961,48 +2975,50 @@ class CreateProject extends Component {
                     <Row noGutters style={{ width: '100%' }}>
                       <Col xs={12} sm={12} md={8} lg={6}>
                         {!params.edit || !projectEdited ? (
-                          <KeyboardDatePicker
-                            autoOk
-                            fullWidth
-                            variant="dialog"
-                            inputVariant="outlined"
+                          <DatePicker
                             label="Choose expiry date for this project"
                             format="dd/MM/yyyy"
                             minDate={utils.getDateWithDaysFurtherThanToday(1)}
                             value={createProjectState.pitchExpiryDate}
-                            InputAdornmentProps={{ position: 'start' }}
-                            error={
-                              createProjectState.pitchPublishCheck ===
-                                PITCH_PUBLISH_FALSE_INVALID_DATE &&
-                              createProjectState.pitchExpiryDate !== null &&
-                              (isNaN(createProjectState.pitchExpiryDate) ||
-                                createProjectState.pitchExpiryDate <
-                                  utils.getDateWithDaysFurtherThanToday(0))
-                            }
                             onChange={(date) => this.onDateChanged(date)}
+                            slotProps={{
+                              textField: {
+                                fullWidth: true,
+                                variant: 'outlined',
+                                error:
+                                  createProjectState.pitchPublishCheck ===
+                                    PITCH_PUBLISH_FALSE_INVALID_DATE &&
+                                  createProjectState.pitchExpiryDate !== null &&
+                                  (isNaN(createProjectState.pitchExpiryDate) ||
+                                    createProjectState.pitchExpiryDate <
+                                      utils.getDateWithDaysFurtherThanToday(0)),
+                              },
+                              inputAdornment: { position: 'start' },
+                            }}
                           />
                         ) : utils.isDraftProject(projectEdited) ? (
-                          <KeyboardDatePicker
-                            autoOk
-                            fullWidth
-                            variant="dialog"
-                            inputVariant="outlined"
+                          <DatePicker
                             label="Choose expiry date for this project"
                             format="dd/MM/yyyy"
                             minDate={utils.getDateWithDaysFurtherThanToday(1)}
                             value={createProjectState.pitchExpiryDate}
-                            InputAdornmentProps={{ position: 'start' }}
-                            error={
-                              (createProjectState.pitchPublishCheck ===
-                                PITCH_PUBLISH_FALSE_MISSING_FIELDS_IN_GENERAL_INFORMATION &&
-                                createProjectState.pitchExpiryDate === null) ||
-                              (createProjectState.pitchPublishCheck ===
-                                PITCH_PUBLISH_FALSE_INVALID_DATE &&
-                                (isNaN(createProjectState.pitchExpiryDate) ||
-                                  createProjectState.pitchExpiryDate <
-                                    utils.getDateWithDaysFurtherThanToday(0)))
-                            }
                             onChange={(date) => this.onDateChanged(date)}
+                            slotProps={{
+                              textField: {
+                                fullWidth: true,
+                                variant: 'outlined',
+                                error:
+                                  (createProjectState.pitchPublishCheck ===
+                                    PITCH_PUBLISH_FALSE_MISSING_FIELDS_IN_GENERAL_INFORMATION &&
+                                    createProjectState.pitchExpiryDate === null) ||
+                                  (createProjectState.pitchPublishCheck ===
+                                    PITCH_PUBLISH_FALSE_INVALID_DATE &&
+                                    (isNaN(createProjectState.pitchExpiryDate) ||
+                                      createProjectState.pitchExpiryDate <
+                                        utils.getDateWithDaysFurtherThanToday(0))),
+                              },
+                              inputAdornment: { position: 'start' },
+                            }}
                           />
                         ) : (
                           <FlexView column>
@@ -3022,11 +3038,7 @@ class CreateProject extends Component {
                                 Project phase has ended. Waiting for the issuer to create pledge.
                               </Typography>
                             ) : (
-                              <KeyboardDatePicker
-                                autoOk
-                                fullWidth
-                                variant="dialog"
-                                inputVariant="outlined"
+                              <DatePicker
                                 label={
                                   projectEdited.status ===
                                   DB_CONST.PROJECT_STATUS_PRIMARY_OFFER_PHASE
@@ -3036,18 +3048,23 @@ class CreateProject extends Component {
                                 format="dd/MM/yyyy"
                                 minDate={utils.getDateWithDaysFurtherThanToday(1)}
                                 value={createProjectState.pitchExpiryDate}
-                                InputAdornmentProps={{ position: 'start' }}
-                                error={
-                                  (createProjectState.pitchPublishCheck ===
-                                    PITCH_PUBLISH_FALSE_MISSING_FIELDS_IN_GENERAL_INFORMATION &&
-                                    createProjectState.pitchExpiryDate === null) ||
-                                  (createProjectState.pitchPublishCheck ===
-                                    PITCH_PUBLISH_FALSE_INVALID_DATE &&
-                                    (isNaN(createProjectState.pitchExpiryDate) ||
-                                      createProjectState.pitchExpiryDate <
-                                        utils.getDateWithDaysFurtherThanToday(0)))
-                                }
                                 onChange={(date) => this.onDateChanged(date)}
+                                slotProps={{
+                                  textField: {
+                                    fullWidth: true,
+                                    variant: 'outlined',
+                                    error:
+                                      (createProjectState.pitchPublishCheck ===
+                                        PITCH_PUBLISH_FALSE_MISSING_FIELDS_IN_GENERAL_INFORMATION &&
+                                        createProjectState.pitchExpiryDate === null) ||
+                                      (createProjectState.pitchPublishCheck ===
+                                        PITCH_PUBLISH_FALSE_INVALID_DATE &&
+                                        (isNaN(createProjectState.pitchExpiryDate) ||
+                                          createProjectState.pitchExpiryDate <
+                                            utils.getDateWithDaysFurtherThanToday(0))),
+                                  },
+                                  inputAdornment: { position: 'start' },
+                                }}
                               />
                             )}
                           </FlexView>
@@ -3082,7 +3099,7 @@ class CreateProject extends Component {
                  * Company description (or project description)
                  */}
                 <FlexView marginTop={10}>
-                  <FormControl required fullWidth>
+                  <FormControl variant="standard" required fullWidth>
                     <TextField
                       label="Please provide a brief introduction of what your project is about (max 300 characters)"
                       name="pitchProjectDescription"
@@ -3131,7 +3148,6 @@ class CreateProject extends Component {
                  * Special news - QIB only
                  */}
               </FlexView>
-
               <Divider style={{ marginTop: 60 }} />
             </Col>
           ) : createProjectState.activeStep === STEP_PITCH_COVER ? (
@@ -3364,7 +3380,10 @@ class CreateProject extends Component {
                             flip
                             overlay={<Tooltip id={`tooltip-bottom`}>Delete this cover</Tooltip>}
                           >
-                            <IconButton onClick={this.onDeleteDocument(PITCH_COVER_FILES_CHANGED)}>
+                            <IconButton
+                              onClick={this.onDeleteDocument(PITCH_COVER_FILES_CHANGED)}
+                              size="large"
+                            >
                               <DeleteIcon fontSize="default" color="error" />
                             </IconButton>
                           </OverlayTrigger>
@@ -3407,7 +3426,6 @@ class CreateProject extends Component {
                   <Typography color="primary" variant="h6" align="left">
                     Step 3: Submit your one-pager
                   </Typography>
-
                   {/** Display the current one-pager if there is one */}
                   {!params.edit || !projectEdited ? null : utils.isDraftProject(projectEdited) &&
                     (!projectEdited.Pitch.presentationDocument ||
@@ -3429,7 +3447,6 @@ class CreateProject extends Component {
                       <Divider style={{ marginTop: 20 }} />
                     </FlexView>
                   )}
-
                   {/** File upload area */}
                   <FlexView column marginTop={30} marginBottom={30}>
                     <Typography variant="body1" paragraph align="left">
@@ -3469,7 +3486,6 @@ class CreateProject extends Component {
                       )}
                     />
                   </FlexView>
-
                   {/** Explanation text */}
                   <FlexView column marginBottom={60}>
                     <Typography variant="body1" align="left" component="span">
@@ -3492,7 +3508,6 @@ class CreateProject extends Component {
                   <Typography color="primary" variant="h6" align="left">
                     Step 3: Upload project outline
                   </Typography>
-
                   {/** Display the current project summary if there is one */}
                   {!params.edit || !projectEdited ? null : utils.isDraftProject(projectEdited) &&
                     (!projectEdited.Pitch.presentationDocument ||
@@ -3514,7 +3529,6 @@ class CreateProject extends Component {
                       <Divider style={{ marginTop: 20 }} />
                     </FlexView>
                   )}
-
                   {/** Explanation text */}
                   <Typography
                     variant="subtitle1"
@@ -3533,7 +3547,6 @@ class CreateProject extends Component {
                         ? 'You need to either upload your project summary (PDF, Word, or Power Point file) or use our provided text editor to create your own presentation.'
                         : 'Upload a PDF, Word, or Power Point file to change your project summary. We will use the new document for your project summary instead of the old one.'}
                   </Typography>
-
                   {/** File upload area */}
                   <FlexView column marginTop={30} marginBottom={60}>
                     <Typography variant="body1" paragraph align="left">
@@ -3573,7 +3586,6 @@ class CreateProject extends Component {
                       )}
                     />
                   </FlexView>
-
                   {/** Rich text editor */}
                   <FlexView column marginTop={20}>
                     <Typography variant="body1" paragraph align="left">
@@ -3615,7 +3627,6 @@ class CreateProject extends Component {
                   <Typography color="primary" variant="h6" align="left">
                     Step 4: Upload project summary (optional)
                   </Typography>
-
                   {/** Display current project summary if there is */}
                   {!params.edit || !projectEdited ? null : utils.isDraftProject(projectEdited) &&
                     (!projectEdited.Pitch.supportingDocuments ||
@@ -3647,7 +3658,6 @@ class CreateProject extends Component {
                       <Divider style={{ marginTop: 20 }} />
                     </FlexView>
                   )}
-
                   {/** File upload area */}
                   <FlexView column marginTop={25}>
                     <Files
@@ -3686,7 +3696,6 @@ class CreateProject extends Component {
                       )}
                     />
                   </FlexView>
-
                   {/** Divider */}
                   <Divider style={{ marginTop: 20, marginBottom: 20 }} />
                 </FlexView>
@@ -3696,7 +3705,6 @@ class CreateProject extends Component {
                   <Typography color="primary" variant="h6" align="left">
                     Step 4: Upload supporting documents
                   </Typography>
-
                   {/** Display current supporting documents if there are */}
                   {!params.edit || !projectEdited ? null : utils.isDraftProject(projectEdited) &&
                     (!projectEdited.Pitch.supportingDocuments ||
@@ -3728,7 +3736,6 @@ class CreateProject extends Component {
                       <Divider style={{ marginTop: 20 }} />
                     </FlexView>
                   )}
-
                   {/** Explanation text */}
                   <Typography
                     variant="body1"
@@ -3744,7 +3751,6 @@ class CreateProject extends Component {
                                                                         You can still upload ${DB_CONST.MAX_FILES_FOR_PITCH_SUPPORTING_DOCUMENTS - projectEdited.Pitch.supportingDocuments.filter((document) => !document.hasOwnProperty('removed')).length} 
                                                                         more documents.`}
                   </Typography>
-
                   {/** File upload area */}
                   <FlexView column marginTop={25}>
                     <Files
@@ -3783,7 +3789,6 @@ class CreateProject extends Component {
                       )}
                     />
                   </FlexView>
-
                   {/** Divider */}
                   <Divider style={{ marginTop: 20, marginBottom: 20 }} />
                 </FlexView>
@@ -3837,7 +3842,7 @@ class CreateProject extends Component {
                 {/**
                  * Agree to T&Cs
                  */}
-                <FormControl component="fieldset">
+                <FormControl variant="standard" component="fieldset">
                   <Typography variant="body1" align="left">
                     Please tick the box below to confirm that you agree to comply with the terms and
                     conditions of creating a project in our platform.
@@ -3881,7 +3886,6 @@ class CreateProject extends Component {
             </Col>
           )}
         </Row>
-
         {/** Navigation buttons */}
         <Row noGutters>
           <Col
@@ -3982,6 +3986,7 @@ class CreateProject extends Component {
                     <IconButton
                       style={{ width: 42, height: 42 }}
                       onClick={this.onPopoverErrorMessageClose}
+                      size="large"
                     >
                       <CloseIcon fontSize="small" />
                     </IconButton>
@@ -3991,7 +3996,6 @@ class CreateProject extends Component {
             </FlexView>
           </Col>
         </Row>
-
         {!params.edit ||
         !projectEdited ||
         (params.edit && projectEdited && projectEdited.status === DB_CONST.PROJECT_STATUS_DRAFT) ? (
@@ -4108,7 +4112,7 @@ class UploadingDialog extends Component {
 
     return (
       <Dialog maxWidth="sm" fullWidth open={open} {...other}>
-        <DialogTitle disableTypography={true}>
+        <DialogTitle>
           <Typography color="primary" variant="h6" align="left">
             {uploadFileMode === UPLOAD_DONE_MODE ? 'Congratulations!' : 'You are almost done...'}
           </Typography>
@@ -4294,7 +4298,18 @@ class UploadingDialog extends Component {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(CreatePitchPageMain);
+const ConnectedCreatePitchPageMain = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(CreatePitchPageMain);
+
+function CreatePitchPage(props) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  return <ConnectedCreatePitchPageMain {...props} navigate={navigate} location={location} />;
+}
+
+export default CreatePitchPage;
 
 const styles = StyleSheet.create({
   file_drop_zone: {

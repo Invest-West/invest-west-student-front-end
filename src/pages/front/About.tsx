@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { AppState } from '../../redux-store/reducers';
 import { ManageGroupUrlState } from '../../redux-store/reducers/manageGroupUrlReducer';
 import { AuthenticationState } from '../../redux-store/reducers/authenticationReducer';
-import { RouteComponentProps, NavLink } from 'react-router-dom';
+import { NavLink, useParams } from 'react-router-dom';
 import { RouteParams } from '../../router/router';
 import { MediaQueryState } from '../../redux-store/reducers/mediaQueryReducer';
 import Routes from '../../router/routes';
@@ -14,6 +14,10 @@ import handshake from '../../img/handshake_1.svg';
 import money from '../../img/money.svg';
 import time from '../../img/time.svg';
 import computer from '../../img/computer.svg';
+
+interface AboutRouterProps {
+  params: Record<string, string | undefined>;
+}
 
 interface AboutProps {
   ManageGroupUrlState: ManageGroupUrlState;
@@ -34,8 +38,8 @@ interface AboutState {
   isMobileMenuOpen: boolean;
 }
 
-class About extends Component<AboutProps & Readonly<RouteComponentProps<RouteParams>>, AboutState> {
-  constructor(props: AboutProps & Readonly<RouteComponentProps<RouteParams>>) {
+class AboutClass extends Component<AboutProps & AboutRouterProps, AboutState> {
+  constructor(props: AboutProps & AboutRouterProps) {
     super(props);
     this.state = {
       activeTab: 'academia',
@@ -68,16 +72,16 @@ class About extends Component<AboutProps & Readonly<RouteComponentProps<RoutePar
     const { ManageGroupUrlState, AuthenticationState } = this.props;
 
     const { isMobileMenuOpen } = this.state;
-    const { match } = this.props;
+    const routeParams = this.props.params;
 
     // Construct proper routes based on whether we have a group or not
-    const aboutRoute = Routes.constructAboutRoute(match.params);
-    const hiwRoute = Routes.constructHiwRoute(match.params);
-    const contactRoute = Routes.constructContactRoute(match.params);
-    const exploreRoute = Routes.constructExploreRoute(match.params);
-    const signInRoute = Routes.constructSignInRoute(match.params);
+    const aboutRoute = Routes.constructAboutRoute(routeParams);
+    const hiwRoute = Routes.constructHiwRoute(routeParams);
+    const contactRoute = Routes.constructContactRoute(routeParams);
+    const exploreRoute = Routes.constructExploreRoute(routeParams);
+    const signInRoute = Routes.constructSignInRoute(routeParams);
     const homeRoute = Routes.constructHomeRoute(
-      match.params,
+      routeParams,
       ManageGroupUrlState,
       AuthenticationState
     );
@@ -195,4 +199,11 @@ class About extends Component<AboutProps & Readonly<RouteComponentProps<RoutePar
   }
 }
 
-export default connect(mapStateToProps)(About);
+const ConnectedAbout = connect(mapStateToProps)(AboutClass);
+
+function About() {
+  const params = useParams();
+  return <ConnectedAbout params={params} />;
+}
+
+export default About;

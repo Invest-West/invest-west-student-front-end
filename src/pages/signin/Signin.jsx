@@ -11,14 +11,14 @@ import {
   InputAdornment,
   IconButton,
   FormControl,
-} from '@material-ui/core';
-import Visibility from '@material-ui/icons/Visibility';
-import VisibilityOff from '@material-ui/icons/VisibilityOff';
+} from '@mui/material';
+import Visibility from '@mui/icons-material/Visibility';
+import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import HashLoader from 'react-spinners/HashLoader';
 import Container from 'react-bootstrap/Container';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useParams, useNavigate, useLocation } from 'react-router-dom';
 
 import firebase from '../../firebase/firebaseApp';
 
@@ -152,7 +152,7 @@ class Signin extends Component {
       if (!authenticating && authStatus === AUTH_SUCCESS) {
         switch (user.type) {
           case DB_CONST.TYPE_ADMIN:
-            this.props.history.push({
+            this.props.navigate({
               pathname: groupUserName
                 ? ROUTES.ADMIN.replace(':groupUserName', groupUserName)
                 : ROUTES.ADMIN_INVEST_WEST_SUPER,
@@ -160,7 +160,7 @@ class Signin extends Component {
             });
             return;
           case DB_CONST.TYPE_INVESTOR:
-            this.props.history.push({
+            this.props.navigate({
               pathname: groupUserName
                 ? ROUTES.DASHBOARD_INVESTOR.replace(':groupUserName', groupUserName)
                 : ROUTES.DASHBOARD_INVESTOR_INVEST_WEST_SUPER,
@@ -168,7 +168,7 @@ class Signin extends Component {
             });
             return;
           case DB_CONST.TYPE_ISSUER:
-            this.props.history.push({
+            this.props.navigate({
               pathname: groupUserName
                 ? ROUTES.DASHBOARD_ISSUER.replace(':groupUserName', groupUserName)
                 : ROUTES.DASHBOARD_ISSUER_INVEST_WEST_SUPER,
@@ -455,7 +455,7 @@ class Signin extends Component {
 
                     {this.renderAuthStatus()}
 
-                    <FormControl>
+                    <FormControl variant="standard">
                       <TextField
                         label="Email address"
                         name="email"
@@ -466,7 +466,7 @@ class Signin extends Component {
                       />
                     </FormControl>
 
-                    <FormControl>
+                    <FormControl variant="standard">
                       <TextField
                         label="Password"
                         name="password"
@@ -482,6 +482,7 @@ class Signin extends Component {
                                 edge="end"
                                 aria-label="Toggle password visibility"
                                 onClick={this.handleClickShowPassword}
+                                size="large"
                               >
                                 {!this.state.showPassword ? <VisibilityOff /> : <Visibility />}
                               </IconButton>
@@ -522,7 +523,7 @@ class Signin extends Component {
                       </Typography>
                     </FlexView>
 
-                    <FormControl>
+                    <FormControl variant="standard">
                       <Button
                         type="submit"
                         variant="contained"
@@ -553,7 +554,6 @@ class Signin extends Component {
             </FlexView>
           </Col>
         </Row>
-
         <ResetPasswordDialog
           groupProperties={groupProperties}
           open={this.state.resetPassword.resetPasswordDialogOpen}
@@ -569,7 +569,21 @@ class Signin extends Component {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(Signin);
+const ConnectedSignin = connect(mapStateToProps, mapDispatchToProps)(Signin);
+
+function SigninWrapper(props) {
+  const params = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const match = {
+    params: params,
+    path: location.pathname,
+  };
+  return <ConnectedSignin {...props} match={match} navigate={navigate} location={location} />;
+}
+
+export { SigninWrapper as SigninComponent };
+export default ConnectedSignin;
 
 class ResetPasswordDialog extends Component {
   handleClose = () => {

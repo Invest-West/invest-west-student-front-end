@@ -10,8 +10,8 @@ import {
   IconButton,
   Divider,
   Chip,
-} from '@material-ui/core';
-import { ExpandMore, ExpandLess, School, Business } from '@material-ui/icons';
+} from '@mui/material';
+import { ExpandMore, ExpandLess, School, Business } from '@mui/icons-material';
 import GroupProperties, { getGroupLogo } from '../../models/group_properties';
 import { Image } from 'react-bootstrap';
 import { AuthenticationState } from '../../redux-store/reducers/authenticationReducer';
@@ -181,7 +181,7 @@ class UniversityGroupItem extends Component<
             </Box>
 
             {/* Expand Button */}
-            <IconButton onClick={this.toggleExpanded} color="primary">
+            <IconButton onClick={this.toggleExpanded} color="primary" size="large">
               {expanded ? <ExpandLess /> : <ExpandMore />}
               <Typography variant="body2" style={{ marginLeft: 4 }}>
                 {expanded ? 'Hide' : 'Show'} Courses
@@ -189,7 +189,6 @@ class UniversityGroupItem extends Component<
             </IconButton>
           </Box>
         </CardContent>
-
         {/* Courses Section */}
         <Collapse in={expanded} timeout="auto" unmountOnExit>
           <Divider />

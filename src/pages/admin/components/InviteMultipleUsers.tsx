@@ -26,13 +26,13 @@ import {
   TableHead,
   TableRow,
   Paper,
-} from '@material-ui/core';
+} from '@mui/material';
 import { css } from 'aphrodite';
 import sharedStyles from '../../../shared-js-css-styles/SharedStyles';
-import AddIcon from '@material-ui/icons/Add';
-import CloseIcon from '@material-ui/icons/Close';
-import DeleteIcon from '@material-ui/icons/Delete';
-import SendIcon from '@material-ui/icons/Send';
+import AddIcon from '@mui/icons-material/Add';
+import CloseIcon from '@mui/icons-material/Close';
+import DeleteIcon from '@mui/icons-material/Delete';
+import SendIcon from '@mui/icons-material/Send';
 import FlexView from 'react-flexview';
 import { BeatLoader } from 'react-spinners';
 import * as DB_CONST from '../../../firebase/databaseConsts';
@@ -292,14 +292,11 @@ class InviteMultipleUsers extends Component<InviteMultipleUsersProps, InviteMult
         <Typography variant="h6" color="primary">
           Invite Multiple Users
         </Typography>
-
         <Box height="15px" />
-
         <Typography variant="body2" color="textSecondary" paragraph>
           Send email invitations to multiple users at once. Users will receive an email with their
           login credentials to join {isSuperAdmin ? 'a university' : 'your course'}.
         </Typography>
-
         <Button
           className={css(sharedStyles.no_text_transform)}
           variant="outlined"
@@ -309,7 +306,6 @@ class InviteMultipleUsers extends Component<InviteMultipleUsersProps, InviteMult
         >
           Invite Multiple Users
         </Button>
-
         <Dialog open={dialogOpen} onClose={this.toggleDialog} maxWidth="md" fullWidth>
           <DialogTitle>
             <FlexView vAlignContent="center">
@@ -319,7 +315,7 @@ class InviteMultipleUsers extends Component<InviteMultipleUsersProps, InviteMult
                 </Typography>
               </FlexView>
               <FlexView grow={1} hAlignContent="right">
-                <IconButton onClick={this.toggleDialog}>
+                <IconButton onClick={this.toggleDialog} size="large">
                   <CloseIcon />
                 </IconButton>
               </FlexView>
@@ -337,6 +333,7 @@ class InviteMultipleUsers extends Component<InviteMultipleUsersProps, InviteMult
                   <FormControl fullWidth variant="outlined">
                     <InputLabel>University</InputLabel>
                     <Select
+                      variant="standard"
                       value={selectedGroupId}
                       onChange={this.handleGroupChange}
                       label="University"
@@ -376,7 +373,7 @@ class InviteMultipleUsers extends Component<InviteMultipleUsersProps, InviteMult
                     disabled={sending || (needsGroupSelection && !selectedGroupId)}
                   />
 
-                  <FormControl component="fieldset">
+                  <FormControl variant="standard" component="fieldset">
                     <FormLabel component="legend">User Type</FormLabel>
                     <RadioGroup
                       row

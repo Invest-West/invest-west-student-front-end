@@ -13,10 +13,10 @@ import {
   TextField,
   Typography,
   CircularProgress,
-} from '@material-ui/core';
-import CloseIcon from '@material-ui/icons/Close';
-import SendIcon from '@material-ui/icons/Send';
-import PersonAddIcon from '@material-ui/icons/PersonAdd';
+} from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import SendIcon from '@mui/icons-material/Send';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import FlexView from 'react-flexview';
 import { css } from 'aphrodite';
 import sharedStyles from '../../../shared-js-css-styles/SharedStyles';
@@ -178,7 +178,7 @@ export default function RequestAdminAccessDialog(props: RequestAdminAccessDialog
 
   return (
     <Dialog open={open} fullWidth maxWidth="sm" onClose={handleClose}>
-      <DialogTitle disableTypography>
+      <DialogTitle>
         <FlexView vAlignContent="center">
           <FlexView grow={4} vAlignContent="center">
             <PersonAddIcon color="primary" style={{ marginRight: 8 }} />
@@ -187,7 +187,7 @@ export default function RequestAdminAccessDialog(props: RequestAdminAccessDialog
             </Typography>
           </FlexView>
           <FlexView grow={1} hAlignContent="right">
-            <IconButton onClick={handleClose} disabled={isSubmitting}>
+            <IconButton onClick={handleClose} disabled={isSubmitting} size="large">
               <CloseIcon />
             </IconButton>
           </FlexView>
@@ -231,7 +231,12 @@ export default function RequestAdminAccessDialog(props: RequestAdminAccessDialog
           disabled={isSubmitting || !!result}
         >
           <InputLabel>Role</InputLabel>
-          <Select value={role} onChange={(e) => setRole(e.target.value as RoleType)} label="Role">
+          <Select
+            variant="standard"
+            value={role}
+            onChange={(e) => setRole(e.target.value as RoleType)}
+            label="Role"
+          >
             <MenuItem value="admin">
               <div>
                 <Typography variant="body1">Administrator</Typography>

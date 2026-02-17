@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { AppState } from '../../../../redux-store/reducers';
 import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
-import { Box, Button, IconButton, TextField, Typography } from '@material-ui/core';
+import { Box, Button, IconButton, TextField, Typography } from '@mui/material';
 import {
   ManageSystemAttributesState,
   successfullyLoadedSystemAttributes,
@@ -11,7 +11,7 @@ import {
 import { isSavingSectorsChanges, ManageSectorsState } from './ManageSectorsReducer';
 import { css } from 'aphrodite';
 import sharedStyles from '../../../../shared-js-css-styles/SharedStyles';
-import AddIcon from '@material-ui/icons/Add';
+import AddIcon from '@mui/icons-material/Add';
 import {
   addNewSector,
   cancelSectorsChanges,
@@ -20,8 +20,8 @@ import {
   saveSectorsChanges,
   toggleAddNewSector,
 } from './ManageSectorsActions';
-import CloseIcon from '@material-ui/icons/Close';
-import DeleteIcon from '@material-ui/icons/Delete';
+import CloseIcon from '@mui/icons-material/Close';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 interface ManageSectorsProps {
   ManageSystemAttributesState: ManageSystemAttributesState;
@@ -74,9 +74,7 @@ class ManageSectors extends Component<ManageSectorsProps, any> {
         <Typography variant="h6" color="primary">
           Edit sectors
         </Typography>
-
         <Box height="15px" />
-
         <Button
           className={css(sharedStyles.no_text_transform)}
           variant="outlined"
@@ -87,7 +85,6 @@ class ManageSectors extends Component<ManageSectorsProps, any> {
           <Box width="6px" />
           {!ManageSectorsLocalState.addingNewSector ? 'Add new sector' : 'Cancel adding new sector'}
         </Button>
-
         {!ManageSectorsLocalState.addingNewSector ? null : (
           <Box display="flex" flexDirection="row" alignItems="center" marginTop="10px">
             <TextField variant="outlined" margin="dense" onChange={onTextChanged} />
@@ -102,9 +99,7 @@ class ManageSectors extends Component<ManageSectorsProps, any> {
             </Button>
           </Box>
         )}
-
         <Box height="30px" />
-
         {ManageSectorsLocalState.sectors.map((sector) => (
           <Box
             key={sector}
@@ -117,12 +112,11 @@ class ManageSectors extends Component<ManageSectorsProps, any> {
               {sector}
             </Typography>
             <Box width="10px" />
-            <IconButton onClick={() => deleteSector(sector)}>
+            <IconButton onClick={() => deleteSector(sector)} size="large">
               <DeleteIcon fontSize="small" />
             </IconButton>
           </Box>
         ))}
-
         <Box display="flex" flexDirection="row" marginTop="20px">
           <Button
             className={css(sharedStyles.no_text_transform)}

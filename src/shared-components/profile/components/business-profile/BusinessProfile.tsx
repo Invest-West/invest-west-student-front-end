@@ -17,17 +17,17 @@ import {
   Select,
   TextField,
   Typography,
-} from '@material-ui/core';
+} from '@mui/material';
 import { AuthenticationState } from '../../../../redux-store/reducers/authenticationReducer';
 import { ProfileState } from '../../ProfileReducer';
 import User, { hasBusinessProfile } from '../../../../models/user';
 import Admin, { isAdmin } from '../../../../models/admin';
 import { css } from 'aphrodite';
 import sharedStyles from '../../../../shared-js-css-styles/SharedStyles';
-import AddIcon from '@material-ui/icons/Add';
+import AddIcon from '@mui/icons-material/Add';
 import { ManageSystemAttributesState } from '../../../../redux-store/reducers/manageSystemAttributesReducer';
 import { handleInputFieldChanged, InputCategories } from '../../ProfileActions';
-import { KeyboardArrowRight } from '@material-ui/icons';
+import { KeyboardArrowRight } from '@mui/icons-material';
 import { getFormattedAddress } from '../../../../models/address';
 
 interface BusinessProfileProps {
@@ -112,7 +112,7 @@ class BusinessProfile extends Component<BusinessProfileProps, any> {
     return (
       <Box display="flex" flexDirection="column">
         {/** Student project name */}
-        <FormControl fullWidth required>
+        <FormControl variant="standard" fullWidth required>
           <FormLabel>
             <b>Student project name</b>
           </FormLabel>
@@ -130,14 +130,14 @@ class BusinessProfile extends Component<BusinessProfileProps, any> {
             // error={copiedUser.firstName.trim().length === 0}
           />
         </FormControl>
-
         {/** Sector */}
-        <FormControl required>
+        <FormControl variant="standard" required>
           <FormLabel>
             {' '}
             <b>Course sector</b>{' '}
           </FormLabel>
           <Select
+            variant="standard"
             name="sector"
             // value={
             //     hasBusinessProfile(copiedUser)
@@ -161,9 +161,8 @@ class BusinessProfile extends Component<BusinessProfileProps, any> {
                 ))}
           </Select>
         </FormControl>
-
         {/** Company website */}
-        <FormControl required>
+        <FormControl variant="standard" required>
           <FormLabel>
             <b>Company website</b>
           </FormLabel>
@@ -182,7 +181,6 @@ class BusinessProfile extends Component<BusinessProfileProps, any> {
             onChange={this.onInputFieldChanged(InputCategories.BusinessProfile)}
           />
         </FormControl>
-
         <Box display="flex" flexDirection="row" justifyContent="flex-end">
           <Button
             variant="outlined"

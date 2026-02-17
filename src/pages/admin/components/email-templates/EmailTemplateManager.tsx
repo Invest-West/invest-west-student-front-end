@@ -21,8 +21,8 @@ import {
   TextField,
   Typography,
   CircularProgress,
-} from '@material-ui/core';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+} from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import Editor from '@monaco-editor/react';
 import Handlebars from 'handlebars';
 import { AppState } from '../../../../redux-store/reducers';
@@ -451,7 +451,6 @@ class EmailTemplateManager extends Component<Props, State> {
             );
           })}
         </Grid>
-
         {/* Edit Dialog */}
         <Dialog
           open={editDialogOpen}
@@ -464,6 +463,7 @@ class EmailTemplateManager extends Component<Props, State> {
             <Grid container spacing={2}>
               <Grid item xs={12}>
                 <TextField
+                  variant="standard"
                   label="Subject Line"
                   fullWidth
                   value={selectedTemplate?.subject || ''}
@@ -538,7 +538,6 @@ class EmailTemplateManager extends Component<Props, State> {
             </Button>
           </DialogActions>
         </Dialog>
-
         {/* Test Email Dialog */}
         <Dialog
           open={testDialogOpen}
@@ -549,6 +548,7 @@ class EmailTemplateManager extends Component<Props, State> {
           <DialogTitle>Send Test Email</DialogTitle>
           <DialogContent>
             <TextField
+              variant="standard"
               label="Test Email Address"
               fullWidth
               value={testEmail}

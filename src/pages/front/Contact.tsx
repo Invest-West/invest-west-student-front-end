@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { AppState } from '../../redux-store/reducers';
 import { ManageGroupUrlState } from '../../redux-store/reducers/manageGroupUrlReducer';
 import { AuthenticationState } from '../../redux-store/reducers/authenticationReducer';
-import { RouteComponentProps, NavLink } from 'react-router-dom';
+import { NavLink, useParams } from 'react-router-dom';
 import { RouteParams } from '../../router/router';
 import { MediaQueryState } from '../../redux-store/reducers/mediaQueryReducer';
 import Routes from '../../router/routes';
@@ -11,6 +11,10 @@ import '../../shared-js-css-styles/front.css';
 
 import studentLogo from '../../img/student_logo.png';
 import linkedIn from '../../img/linkedin_logo.png';
+
+interface ContactRouterProps {
+  params: Record<string, string | undefined>;
+}
 
 interface ContactProps {
   ManageGroupUrlState: ManageGroupUrlState;
@@ -31,11 +35,8 @@ interface ContactState {
   isMobileMenuOpen: boolean;
 }
 
-class Contact extends Component<
-  ContactProps & Readonly<RouteComponentProps<RouteParams>>,
-  ContactState
-> {
-  constructor(props: ContactProps & Readonly<RouteComponentProps<RouteParams>>) {
+class ContactClass extends Component<ContactProps & ContactRouterProps, ContactState> {
+  constructor(props: ContactProps & ContactRouterProps) {
     super(props);
     this.state = {
       activeTab: 'academia',
@@ -68,16 +69,16 @@ class Contact extends Component<
     const { ManageGroupUrlState, AuthenticationState } = this.props;
 
     const { isMobileMenuOpen } = this.state;
-    const { match } = this.props;
+    const routeParams = this.props.params;
 
     // Construct proper routes based on whether we have a group or not
-    const aboutRoute = Routes.constructAboutRoute(match.params);
-    const hiwRoute = Routes.constructHiwRoute(match.params);
-    const contactRoute = Routes.constructContactRoute(match.params);
-    const exploreRoute = Routes.constructExploreRoute(match.params);
-    const signInRoute = Routes.constructSignInRoute(match.params);
+    const aboutRoute = Routes.constructAboutRoute(routeParams);
+    const hiwRoute = Routes.constructHiwRoute(routeParams);
+    const contactRoute = Routes.constructContactRoute(routeParams);
+    const exploreRoute = Routes.constructExploreRoute(routeParams);
+    const signInRoute = Routes.constructSignInRoute(routeParams);
     const homeRoute = Routes.constructHomeRoute(
-      match.params,
+      routeParams,
       ManageGroupUrlState,
       AuthenticationState
     );
@@ -201,4 +202,11 @@ class Contact extends Component<
   }
 }
 
-export default connect(mapStateToProps)(Contact);
+const ConnectedContact = connect(mapStateToProps)(ContactClass);
+
+function Contact() {
+  const params = useParams();
+  return <ConnectedContact params={params} />;
+}
+
+export default Contact;

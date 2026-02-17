@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { AppState } from '../../redux-store/reducers';
 import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
-import { Box, Card, colors, Typography } from '@material-ui/core';
+import { Box, Card, colors, Typography } from '@mui/material';
 import CustomLink from '../../shared-js-css-styles/CustomLink';
 import { Image } from 'react-bootstrap';
 import { Resource } from './Resources';

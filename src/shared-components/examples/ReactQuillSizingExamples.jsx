@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
-import ReactQuill from 'react-quill';
+import ReactQuill from 'react-quill-new';
 import FlexView from 'react-flexview';
-import { Typography, Paper, Button } from '@material-ui/core';
+import { Typography, Paper, Button } from '@mui/material';
 import { css, StyleSheet } from 'aphrodite';
-import 'react-quill/dist/quill.snow.css';
+import 'react-quill-new/dist/quill.snow.css';
 import '../shared-css/ReactQuillSizes.scss';
 
 /**

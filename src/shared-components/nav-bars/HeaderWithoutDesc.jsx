@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
 import FlexView from 'react-flexview/lib/index';
 import { StyleSheet, css } from 'aphrodite';
-import { Typography } from '@material-ui/core';
+import { Typography } from '@mui/material';
 import { NavLink } from 'react-router-dom';
 import { Container, Col, Row } from 'react-bootstrap';
-import HomeIcon from '@material-ui/icons/HomeOutlined';
+import HomeIcon from '@mui/icons-material/HomeOutlined';
 
 import { connect } from 'react-redux';
 import * as manageGroupFromParamsActions from '../../redux-store/actions/manageGroupFromParamsActions';

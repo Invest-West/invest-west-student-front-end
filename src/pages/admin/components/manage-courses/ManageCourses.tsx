@@ -12,7 +12,7 @@ import {
   Chip,
   CircularProgress,
   Link,
-} from '@material-ui/core';
+} from '@mui/material';
 import GroupProperties from '../../../../models/group_properties';
 import { isSavingCoursesChanges, ManageCoursesState } from './ManageCoursesReducer';
 import { css } from 'aphrodite';
@@ -24,13 +24,13 @@ import {
   saveCoursesChanges,
   loadCourseStatistics,
 } from './ManageCoursesActions';
-import DeleteIcon from '@material-ui/icons/Delete';
-import PeopleIcon from '@material-ui/icons/People';
-import SupervisorAccountIcon from '@material-ui/icons/SupervisorAccount';
-import RefreshIcon from '@material-ui/icons/Refresh';
-import SettingsIcon from '@material-ui/icons/Settings';
-import ImageIcon from '@material-ui/icons/Image';
-import EditIcon from '@material-ui/icons/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import PeopleIcon from '@mui/icons-material/People';
+import SupervisorAccountIcon from '@mui/icons-material/SupervisorAccount';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import SettingsIcon from '@mui/icons-material/Settings';
+import ImageIcon from '@mui/icons-material/Image';
+import EditIcon from '@mui/icons-material/Edit';
 import CourseMembers from './CourseMembers';
 import Routes from '../../../../router/routes';
 import EditCourseImageDialog from '../EditCourseImageDialog';

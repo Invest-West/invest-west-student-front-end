@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { AppState } from '../../redux-store/reducers';
 import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
-import { Box } from '@material-ui/core';
+import { Box } from '@mui/material';
 import PersonalDetails from './components/personal-details/PersonalDetails';
 import EditImageDialog from './components/edit-image-dialog/EditImageDialog';
 import FeedbackSnackbarNew from '../feedback-snackbar/FeedbackSnackbarNew';

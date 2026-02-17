@@ -11,11 +11,11 @@ import {
   IconButton,
   Button,
   ClickAwayListener,
-} from '@material-ui/core';
-import NotificationsIcon from '@material-ui/icons/Notifications';
-import DeleteIcon from '@material-ui/icons/Delete';
-import CloseIcon from '@material-ui/icons/Close';
-import ClearAllIcon from '@material-ui/icons/ClearAll';
+} from '@mui/material';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import DeleteIcon from '@mui/icons-material/Delete';
+import CloseIcon from '@mui/icons-material/Close';
+import ClearAllIcon from '@mui/icons-material/ClearAll';
 import { Col, Container, Row } from 'react-bootstrap';
 import FlexView from 'react-flexview';
 import { css, StyleSheet } from 'aphrodite';
@@ -178,6 +178,7 @@ class NotificationsBox extends Component {
                             <IconButton
                               style={{ width: 44, height: 44 }}
                               onClick={toggleNotifications}
+                              size="large"
                             >
                               <CloseIcon fontSize="small" />
                             </IconButton>
@@ -343,6 +344,7 @@ class NotificationsBox extends Component {
                                           e.stopPropagation();
                                           deleteANotification(notification);
                                         }}
+                                        size="large"
                                       >
                                         <DeleteIcon fontSize="small" />
                                       </IconButton>

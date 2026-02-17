@@ -3,7 +3,7 @@ import { connect } from 'react-redux';
 import { AppState } from '../../../redux-store/reducers';
 import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
-import { Box, Button, Dialog, DialogActions, DialogContent, Typography } from '@material-ui/core';
+import { Box, Button, Dialog, DialogActions, DialogContent, Typography } from '@mui/material';
 import { sendContactEmail, toggleContactResourceDialog } from '../ResourcesActions';
 import { isDetailedPageSendingContactEmail, ResourcesState } from '../ResourcesReducer';
 import { css } from 'aphrodite';

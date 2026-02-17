@@ -12,10 +12,10 @@ import {
   TablePagination,
   TableRow,
   Typography,
-} from '@material-ui/core';
-import CloseIcon from '@material-ui/icons/Close';
-import SearchIcon from '@material-ui/icons/Search';
-import RefreshIcon from '@material-ui/icons/Refresh';
+} from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import SearchIcon from '@mui/icons-material/Search';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import FlexView from 'react-flexview';
 import { css } from 'aphrodite';
@@ -216,7 +216,7 @@ class PledgesTable extends Component {
                               </Tooltip>
                             }
                           >
-                            <IconButton onClick={toggleSearchMode}>
+                            <IconButton onClick={toggleSearchMode} size="large">
                               {inSearchMode ? <CloseIcon /> : <SearchIcon />}
                             </IconButton>
                           </OverlayTrigger>
@@ -237,7 +237,7 @@ class PledgesTable extends Component {
                       placement="bottom"
                       overlay={<Tooltip id={`tooltip-bottom`}>Refresh</Tooltip>}
                     >
-                      <IconButton onClick={loadPledges} style={{ marginLeft: 10 }}>
+                      <IconButton onClick={loadPledges} style={{ marginLeft: 10 }} size="large">
                         <RefreshIcon />
                       </IconButton>
                     </OverlayTrigger>
@@ -314,8 +314,8 @@ class PledgesTable extends Component {
                 SelectProps={{
                   native: true,
                 }}
-                onChangePage={changePage}
-                onChangeRowsPerPage={changeRowsPerPage}
+                onPageChange={changePage}
+                onRowsPerPageChange={changeRowsPerPage}
               />
             </TableRow>
           </TableFooter>

@@ -1,9 +1,10 @@
 import React, { Component } from 'react';
+import { useParams, useLocation } from 'react-router-dom';
 import { css, StyleSheet } from 'aphrodite';
 import HashLoader from 'react-spinners/HashLoader';
 import { Col, Container, Image, Row } from 'react-bootstrap';
 import FlexView from 'react-flexview';
-import { Divider, Paper, Typography } from '@material-ui/core';
+import { Divider, Paper, Typography } from '@mui/material';
 import ReactPlayer from 'react-player';
 
 import { AUTH_SUCCESS } from '../signin/Signin';
@@ -527,7 +528,23 @@ class ProfilePageViewOnly extends Component {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(ProfilePageViewOnly);
+const ConnectedProfilePageViewOnly = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(ProfilePageViewOnly);
+
+function ProfilePageViewOnlyWrapper(props) {
+  const params = useParams();
+  const location = useLocation();
+  const match = {
+    params: params,
+    path: location.pathname,
+    pathname: location.pathname,
+  };
+  return <ConnectedProfilePageViewOnly {...props} match={match} location={location} />;
+}
+
+export default ProfilePageViewOnlyWrapper;
 
 const styles = StyleSheet.create({
   divider_style: {

@@ -9,9 +9,9 @@ import {
   TextField,
   Typography,
   CircularProgress,
-} from '@material-ui/core';
-import CloseIcon from '@material-ui/icons/Close';
-import SendIcon from '@material-ui/icons/Send';
+} from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import SendIcon from '@mui/icons-material/Send';
 import FlexView from 'react-flexview';
 import { css } from 'aphrodite';
 import sharedStyles from '../../../shared-js-css-styles/SharedStyles';
@@ -96,7 +96,7 @@ export default function AddAdminAccessRequestDialog(props: AddAdminAccessRequest
 
   return (
     <Dialog open={open} fullWidth maxWidth="sm" onClose={handleClose}>
-      <DialogTitle disableTypography>
+      <DialogTitle>
         <FlexView vAlignContent="center">
           <FlexView grow={4}>
             <Typography variant="h6" color="primary" align="left">
@@ -104,7 +104,7 @@ export default function AddAdminAccessRequestDialog(props: AddAdminAccessRequest
             </Typography>
           </FlexView>
           <FlexView grow={1} hAlignContent="right">
-            <IconButton onClick={handleClose} disabled={isSubmitting}>
+            <IconButton onClick={handleClose} disabled={isSubmitting} size="large">
               <CloseIcon />
             </IconButton>
           </FlexView>

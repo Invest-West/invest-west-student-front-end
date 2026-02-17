@@ -12,8 +12,8 @@ import {
   isSendingAccessRequest,
   successfullyLoadedData,
 } from './GroupDetailsReducer';
-import { Box, Button, colors, Divider, Paper, Typography, Link } from '@material-ui/core';
-import { RouteComponentProps } from 'react-router-dom';
+import { Box, Button, colors, Divider, Paper, Typography, Link } from '@mui/material';
+import { useParams, useLocation } from 'react-router-dom';
 import { RouteParams } from '../../router/router';
 import { Col, Image, Row } from 'react-bootstrap';
 import { BeatLoader } from 'react-spinners';
@@ -31,7 +31,7 @@ import { AuthenticationState } from '../../redux-store/reducers/authenticationRe
 import Admin, { isAdmin } from '../../models/admin';
 import { dateInReadableFormat } from '../../utils/utils';
 import GroupOfMembership, { getHomeGroup } from '../../models/group_of_membership';
-import { CheckCircle, Edit as EditIcon } from '@material-ui/icons';
+import { CheckCircle, Edit as EditIcon } from '@mui/icons-material';
 import CustomLink from '../../shared-js-css-styles/CustomLink';
 import * as appColors from '../../values/colors';
 import { MediaQueryState } from '../../redux-store/reducers/mediaQueryReducer';
@@ -41,6 +41,11 @@ import Footer from '../../shared-components/footer/Footer';
 import { openFeedbackSnackbar } from '../../shared-components/feedback-snackbar/FeedbackSnackbarActions';
 import { FeedbackSnackbarTypes } from '../../shared-components/feedback-snackbar/FeedbackSnackbarReducer';
 import EditGroupDetailsDialog from '../admin/components/EditGroupDetailsDialog';
+
+interface GroupDetailsRouterProps {
+  params: Record<string, string | undefined>;
+  location: { pathname: string; search: string; hash: string };
+}
 
 interface GroupDetailsProps {
   MediaQueryState: MediaQueryState;
@@ -88,11 +93,11 @@ const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
   };
 };
 
-class GroupDetails extends Component<
-  GroupDetailsProps & Readonly<RouteComponentProps<RouteParams>>,
+class GroupDetailsClass extends Component<
+  GroupDetailsProps & GroupDetailsRouterProps,
   GroupDetailsLocalComponentState
 > {
-  constructor(props: GroupDetailsProps & Readonly<RouteComponentProps<RouteParams>>) {
+  constructor(props: GroupDetailsProps & GroupDetailsRouterProps) {
     super(props);
     this.state = {
       editDialogOpen: false,
@@ -100,7 +105,7 @@ class GroupDetails extends Component<
   }
 
   componentDidMount() {
-    const viewedGroupUserName = this.props.match.params.viewedGroupUserName;
+    const viewedGroupUserName = this.props.params.viewedGroupUserName;
     if (viewedGroupUserName) {
       this.props.loadData(viewedGroupUserName);
     }
@@ -119,8 +124,8 @@ class GroupDetails extends Component<
     openFeedbackSnackbar(FeedbackSnackbarTypes.Success, 'Details updated successfully!');
 
     // Reload data to reflect changes
-    const viewedGroupUserName = this.props.match.params.viewedGroupUserName;
-    const viewedCourseUserName = this.props.match.params.viewedCourseUserName;
+    const viewedGroupUserName = this.props.params.viewedGroupUserName;
+    const viewedCourseUserName = this.props.params.viewedCourseUserName;
 
     if (viewedGroupUserName) {
       this.props.loadData(viewedGroupUserName);
@@ -250,7 +255,11 @@ class GroupDetails extends Component<
                         justifyContent="center"
                         alignItems="center"
                       >
-                        <Link href={GroupDetailsLocalState.group?.website ?? ''} target="_blank">
+                        <Link
+                          href={GroupDetailsLocalState.group?.website ?? ''}
+                          target="_blank"
+                          underline="hover"
+                        >
                           <Image
                             alt={`${GroupDetailsLocalState.group?.displayName} logo`}
                             src={getGroupLogo(GroupDetailsLocalState.group ?? null) ?? undefined}
@@ -351,7 +360,6 @@ class GroupDetails extends Component<
             </Box>
           </Col>
         </Row>
-
         {/** About section */}
         <Row noGutters>
           <Col xs={12} sm={12} md={12} lg={{ span: 6, offset: 3 }}>
@@ -385,7 +393,6 @@ class GroupDetails extends Component<
             </Box>
           </Col>
         </Row>
-
         {/** Statistics section */}
         <Row noGutters>
           <Col xs={12} sm={12} md={12} lg={{ span: 6, offset: 3 }}>
@@ -479,14 +486,12 @@ class GroupDetails extends Component<
             </Box>
           </Col>
         </Row>
-
         {/** Footer */}
         <Row noGutters>
           <Col xs={12} sm={12} md={12} lg={12}>
             <Footer />
           </Col>
         </Row>
-
         {/** Consolidated Edit Dialog */}
         {GroupDetailsLocalState.group && (
           <EditGroupDetailsDialog
@@ -514,4 +519,12 @@ class GroupDetails extends Component<
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(GroupDetails);
+const ConnectedGroupDetails = connect(mapStateToProps, mapDispatchToProps)(GroupDetailsClass);
+
+function GroupDetails() {
+  const params = useParams();
+  const location = useLocation();
+  return <ConnectedGroupDetails params={params} location={location} />;
+}
+
+export default GroupDetails;

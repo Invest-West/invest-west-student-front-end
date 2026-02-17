@@ -20,13 +20,13 @@ import {
   Tabs,
   TextField,
   Typography,
-} from '@material-ui/core';
-import DeleteIcon from '@material-ui/icons/Delete';
-import CreateIcon from '@material-ui/icons/CreateOutlined';
-import CheckCircleIcon from '@material-ui/icons/CheckCircle';
+} from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import CreateIcon from '@mui/icons-material/CreateOutlined';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { Col, Container, Image, Row } from 'react-bootstrap';
 import HashLoader from 'react-spinners/HashLoader';
-import { NavLink, withRouter } from 'react-router-dom';
+import { NavLink, useParams, useLocation } from 'react-router-dom';
 import ReactPlayer from 'react-player';
 import * as colors from '../../values/colors';
 import * as utils from '../../utils/utils';
@@ -49,7 +49,7 @@ import * as realtimeDBUtils from '../../firebase/realtimeDBUtils';
 import sharedStyles from '../../shared-js-css-styles/SharedStyles';
 import Routes, * as ROUTES from '../../router/routes';
 import { AUTH_SUCCESS } from '../signin/Signin';
-import { KeyboardDatePicker } from '@material-ui/pickers';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import Api, { ApiRoutes } from '../../api/Api';
 import {
   isDraftProject,
@@ -2344,7 +2344,6 @@ class ProjectDetails extends Component {
                   >
                     {!utils.shouldAProjectBeEdited(user, project) ? (
                       <Button
-                        color="default"
                         variant="outlined"
                         size="medium"
                         className={css(sharedStyles.no_text_transform)}
@@ -2395,7 +2394,6 @@ class ProjectDetails extends Component {
                             className={css(sharedStyles.nav_link_hover_without_changing_text_color)}
                           >
                             <Button
-                              color="default"
                               variant="outlined"
                               size="medium"
                               className={css(sharedStyles.no_text_transform)}
@@ -2748,7 +2746,6 @@ class ProjectDetails extends Component {
             </Row>
           </Col>
         </Row>
-
         {/** Sections bar */}
         <Row noGutters className={css(styles.sticky_body_sections_bar)}>
           <Col xs={12} sm={12} md={12} lg={12}>
@@ -2769,7 +2766,8 @@ class ProjectDetails extends Component {
                 indicatorColor="primary"
                 textColor="primary"
                 variant="scrollable"
-                scrollButtons="on"
+                scrollButtons
+                allowScrollButtonsMobile
               >
                 {
                   // user is a super admin
@@ -2844,7 +2842,6 @@ class ProjectDetails extends Component {
             <Divider />
           </Col>
         </Row>
-
         {/** Main body */}
         <Row noGutters className={css(styles.main_body_section)}>
           {/** Offer states (only visible to Admin) */}
@@ -2912,7 +2909,7 @@ class ProjectDetails extends Component {
                                     required
                                     multiline
                                     rows={5}
-                                    rowsMax={5}
+                                    maxRows={5}
                                     onChange={this.onTextChanged}
                                   />
 
@@ -3058,17 +3055,19 @@ class ProjectDetails extends Component {
                                     updating the expiry date or close it.
                                   </Typography>
 
-                                  <KeyboardDatePicker
-                                    autoOk
-                                    fullWidth
-                                    variant="dialog"
-                                    inputVariant="outlined"
+                                  <DatePicker
                                     label="Update expiry date for this project"
                                     format="dd/MM/yyyy"
                                     minDate={utils.getDateWithDaysFurtherThanToday(1)}
                                     value={changedPitchExpiryDate}
-                                    InputAdornmentProps={{ position: 'start' }}
                                     onChange={this.onDateChanged}
+                                    slotProps={{
+                                      textField: {
+                                        fullWidth: true,
+                                        variant: 'outlined',
+                                      },
+                                      inputAdornment: { position: 'start' },
+                                    }}
                                   />
 
                                   <Button
@@ -3673,7 +3672,6 @@ class ProjectDetails extends Component {
                             <FlexView marginTop={25} width="100%" hAlignContent="right">
                               <Button
                                 size="small"
-                                color="default"
                                 variant="text"
                                 onClick={this.onCancelUpdateCurrentComment}
                               >
@@ -4661,7 +4659,7 @@ class CommentDialog extends Component {
           />
         </DialogContent>
         <DialogActions style={{ paddingTop: 20, paddingBottom: 20, paddingRight: 24 }}>
-          <Button size="small" color="default" variant="text" onClick={this.onClose}>
+          <Button size="small" variant="text" onClick={this.onClose}>
             Cancel
           </Button>
           <Button
@@ -4713,7 +4711,6 @@ class CommentReplyInputArea extends Component {
         <FlexView marginTop={18} width="100%" hAlignContent="right">
           <Button
             size="small"
-            color="default"
             variant="text"
             className={css(sharedStyles.no_text_transform)}
             onClick={() => this.onToggleReplyToComment(null, null)}
@@ -4737,7 +4734,23 @@ class CommentReplyInputArea extends Component {
   }
 }
 
-export default withRouter(connect(mapStateToProps, mapDispatchToProps)(ProjectDetailsMain));
+const ConnectedProjectDetailsMain = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(ProjectDetailsMain);
+
+function ProjectDetailsWrapper(props) {
+  const params = useParams();
+  const location = useLocation();
+  // Create a match-like object for legacy compatibility
+  const match = {
+    params: params,
+    path: location.pathname,
+  };
+  return <ConnectedProjectDetailsMain {...props} match={match} location={location} />;
+}
+
+export default ProjectDetailsWrapper;
 
 const styles = StyleSheet.create({
   gray_text: {

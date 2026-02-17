@@ -15,12 +15,12 @@ import {
   List,
   ListItem,
   Typography,
-} from '@material-ui/core';
-import DescriptionIcon from '@material-ui/icons/Description';
-import PictureAsPdfIcon from '@material-ui/icons/PictureAsPdf';
-import ImageIcon from '@material-ui/icons/Image';
-import VideoLibraryIcon from '@material-ui/icons/VideoLibrary';
-import TableChartIcon from '@material-ui/icons/TableChart';
+} from '@mui/material';
+import DescriptionIcon from '@mui/icons-material/Description';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import ImageIcon from '@mui/icons-material/Image';
+import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
+import TableChartIcon from '@mui/icons-material/TableChart';
 import { DocumentsDownloadState } from './DocumentsDownloadReducer';
 import {
   onAcceptRiskWarningClick,

@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 import FlexView from 'react-flexview';
 import { StyleSheet, css } from 'aphrodite';
-import { IconButton, List, ListItem, Typography, TextField } from '@material-ui/core';
-import CloseIcon from '@material-ui/icons/Close';
-import DescriptionIcon from '@material-ui/icons/Description';
+import { IconButton, List, ListItem, Typography, TextField } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import DescriptionIcon from '@mui/icons-material/Description';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 
 import * as colors from '../../values/colors';
@@ -64,6 +64,7 @@ export default class LegalDocuments extends Component {
                   <IconButton
                     style={{ width: 44, height: 44 }}
                     onClick={() => this.onDeleteDocument(index)}
+                    size="large"
                   >
                     <CloseIcon fontSize="small" />
                   </IconButton>

@@ -17,8 +17,8 @@ import {
   IconButton,
   Divider,
   Paper,
-} from '@material-ui/core';
-import { Add as AddIcon, Delete as DeleteIcon, Email as EmailIcon } from '@material-ui/icons';
+} from '@mui/material';
+import { Add as AddIcon, Delete as DeleteIcon, Email as EmailIcon } from '@mui/icons-material';
 import Api from '../../../../api/Api';
 
 interface CourseMembersProps {
@@ -164,7 +164,6 @@ const CourseMembers: React.FC<CourseMembersProps> = ({
           Add or remove members for this course
         </Typography>
       </DialogTitle>
-
       <DialogContent>
         {error && (
           <Paper
@@ -187,6 +186,7 @@ const CourseMembers: React.FC<CourseMembersProps> = ({
 
           <Box display="flex" mb={2} style={{ gap: '8px' }}>
             <TextField
+              variant="standard"
               label="Email Address"
               value={emailInput}
               onChange={(e) => setEmailInput(e.target.value)}
@@ -308,7 +308,6 @@ const CourseMembers: React.FC<CourseMembersProps> = ({
           )}
         </Box>
       </DialogContent>
-
       <DialogActions>
         <Button onClick={handleClose} color="primary">
           Close

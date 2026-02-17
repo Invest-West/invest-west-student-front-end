@@ -25,14 +25,14 @@ import {
   TableRow,
   TextField,
   Typography,
-} from '@material-ui/core';
-import CloseIcon from '@material-ui/icons/Close';
-import SearchIcon from '@material-ui/icons/Search';
-import RefreshIcon from '@material-ui/icons/Refresh';
-import AddIcon from '@material-ui/icons/Add';
-import DeleteIcon from '@material-ui/icons/Delete';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
-import ExpandLessIcon from '@material-ui/icons/ExpandLess';
+} from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
+import SearchIcon from '@mui/icons-material/Search';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { Col, OverlayTrigger, Row, Tooltip } from 'react-bootstrap';
 import FlexView from 'react-flexview';
 import { HashLoader, BeatLoader } from 'react-spinners';
@@ -768,10 +768,8 @@ class AngelNetworks extends Component {
           </Col>
         </Row>
         {this.renderAngelNetworksTable()}
-
         {/* Course request dialog for group admins */}
         <AddCourseRequestDialog onSuccess={this.loadCourseRequests} />
-
         {/* Add Group Admin Dialog */}
         <AddGroupAdminDialog
           groupProperties={groupProperties}
@@ -786,7 +784,6 @@ class AngelNetworks extends Component {
           handleInputChanged={handleInputChanged}
           handleAddNewGroupAdmin={handleAddNewGroupAdmin}
         />
-
         {/* Delete Confirmation Dialog */}
         <Dialog
           open={this.state.deleteConfirmDialogOpen}
@@ -814,9 +811,7 @@ class AngelNetworks extends Component {
             )}
           </DialogContent>
           <DialogActions>
-            <Button onClick={this.handleCloseDeleteConfirm} color="default">
-              Cancel
-            </Button>
+            <Button onClick={this.handleCloseDeleteConfirm}>Cancel</Button>
             <Button
               onClick={this.handleConfirmDelete}
               variant="contained"
@@ -896,7 +891,7 @@ class AngelNetworks extends Component {
                             </Tooltip>
                           }
                         >
-                          <IconButton onClick={toggleSearchMode}>
+                          <IconButton onClick={toggleSearchMode} size="large">
                             {inSearchMode ? <CloseIcon /> : <SearchIcon />}
                           </IconButton>
                         </OverlayTrigger>
@@ -916,7 +911,11 @@ class AngelNetworks extends Component {
                       placement="bottom"
                       overlay={<Tooltip id={`tooltip-bottom`}>Refresh</Tooltip>}
                     >
-                      <IconButton onClick={loadAngelNetworks} style={{ marginLeft: 10 }}>
+                      <IconButton
+                        onClick={loadAngelNetworks}
+                        style={{ marginLeft: 10 }}
+                        size="large"
+                      >
                         <RefreshIcon />
                       </IconButton>
                     </OverlayTrigger>
@@ -1003,8 +1002,8 @@ class AngelNetworks extends Component {
                 backIconButtonProps={{ 'aria-label': 'Previous Page' }}
                 nextIconButtonProps={{ 'aria-label': 'Next Page' }}
                 SelectProps={{ native: true }}
-                onChangePage={changePage}
-                onChangeRowsPerPage={changeRowsPerPage}
+                onPageChange={changePage}
+                onRowsPerPageChange={changeRowsPerPage}
               />
             </TableRow>
           </TableFooter>
@@ -1647,7 +1646,7 @@ class AddGroupAdminDialog extends Component {
         maxWidth="md"
         onClose={toggleAddNewGroupAdminDialog}
       >
-        <DialogTitle disableTypography>
+        <DialogTitle>
           <FlexView vAlignContent="center">
             <FlexView grow={4}>
               <Typography variant="h6" color="primary" align="left">
@@ -1655,7 +1654,7 @@ class AddGroupAdminDialog extends Component {
               </Typography>
             </FlexView>
             <FlexView grow={1} hAlignContent="right">
-              <IconButton onClick={toggleAddNewGroupAdminDialog}>
+              <IconButton onClick={toggleAddNewGroupAdminDialog} size="large">
                 <CloseIcon />
               </IconButton>
             </FlexView>
@@ -1677,6 +1676,7 @@ class AddGroupAdminDialog extends Component {
           <FormControl fullWidth variant="outlined" style={{ marginBottom: 16 }}>
             <InputLabel>University</InputLabel>
             <Select
+              variant="standard"
               name="selectedUniversity"
               value={selectedUniversity}
               onChange={handleInputChanged}
@@ -1694,6 +1694,7 @@ class AddGroupAdminDialog extends Component {
           <FormControl fullWidth variant="outlined" style={{ marginBottom: 16 }}>
             <InputLabel>Course (Optional)</InputLabel>
             <Select
+              variant="standard"
               name="selectedCourse"
               value={selectedCourse}
               onChange={handleInputChanged}

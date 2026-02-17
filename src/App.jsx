@@ -1,7 +1,13 @@
 import React, { Component } from 'react';
-import { createMuiTheme, MuiThemeProvider, responsiveFontSizes } from '@material-ui/core/styles';
-import { MuiPickersUtilsProvider } from '@material-ui/pickers';
-import DateFnsUtils from '@date-io/date-fns';
+import {
+  createTheme,
+  ThemeProvider,
+  StyledEngineProvider,
+  responsiveFontSizes,
+  adaptV4Theme,
+} from '@mui/material/styles';
+import { LocalizationProvider } from '@mui/x-date-pickers';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import AppRouter from './router/router.tsx';
 
 import { connect } from 'react-redux';
@@ -379,24 +385,26 @@ class App extends Component {
     }
 
     return responsiveFontSizes(
-      createMuiTheme({
-        palette: {
-          primary: {
-            main: groupProperties.settings.primaryColor,
-          },
+      createTheme(
+        adaptV4Theme({
+          palette: {
+            primary: {
+              main: groupProperties.settings.primaryColor,
+            },
 
-          secondary: {
-            main: groupProperties.settings.secondaryColor,
-          },
+            secondary: {
+              main: groupProperties.settings.secondaryColor,
+            },
 
-          text: {
-            secondary: colors.blue_gray_700,
+            text: {
+              secondary: colors.blue_gray_700,
+            },
           },
-        },
-        typography: {
-          fontFamily: 'Muli, sans-serif',
-        },
-      })
+          typography: {
+            fontFamily: 'Muli, sans-serif',
+          },
+        })
+      )
     );
   };
 
@@ -404,15 +412,16 @@ class App extends Component {
     return (
       <div>
         <IdleTimer timeout={activeTimeOut} onIdle={this.props.onIdle} />
+        <StyledEngineProvider injectFirst>
+          <ThemeProvider theme={this.getTheme()}>
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <AppRouter />
 
-        <MuiThemeProvider theme={this.getTheme()}>
-          <MuiPickersUtilsProvider utils={DateFnsUtils}>
-            <AppRouter />
-
-            {/** Feedback snackbar */}
-            <FeedbackSnackbar />
-          </MuiPickersUtilsProvider>
-        </MuiThemeProvider>
+              {/** Feedback snackbar */}
+              <FeedbackSnackbar />
+            </LocalizationProvider>
+          </ThemeProvider>
+        </StyledEngineProvider>
       </div>
     );
   }

@@ -17,7 +17,7 @@ import {
   TablePagination,
   TableRow,
   Typography,
-} from '@material-ui/core';
+} from '@mui/material';
 import HashLoader from 'react-spinners/HashLoader';
 import FlexView from 'react-flexview';
 import * as colors from '../../values/colors';
@@ -25,10 +25,10 @@ import * as utils from '../../utils/utils';
 import * as DB_CONST from '../../firebase/databaseConsts';
 import { css } from 'aphrodite';
 import sharedStyles, { StyledTableCell } from '../../shared-js-css-styles/SharedStyles';
-import DeleteIcon from '@material-ui/icons/Delete';
-import EditIcon from '@material-ui/icons/CreateOutlined';
-import ArrowBackIcon from '@material-ui/icons/ArrowBack';
-import AddIcon from '@material-ui/icons/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/CreateOutlined';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import AddIcon from '@mui/icons-material/Add';
 import { Col, Container, Row } from 'react-bootstrap';
 import * as realtimeDBUtils from '../../firebase/realtimeDBUtils';
 import { SORT_BY_CURRENT_USER, SORT_BY_LAST, SORT_BY_OLDEST } from './Forums';
@@ -264,14 +264,13 @@ class IndividualForum extends Component {
     return (
       <FlexView column>
         <FlexView vAlignContent="center">
-          <IconButton color="primary" aria-label="Back" onClick={goBackToForumsList}>
+          <IconButton color="primary" aria-label="Back" onClick={goBackToForumsList} size="large">
             <ArrowBackIcon />
           </IconButton>
           <FlexView marginLeft={8}>
             <Typography color="primary" variant="h6">{`Forum: ${forumSelected.name}`}</Typography>
           </FlexView>
         </FlexView>
-
         <FlexView marginTop={12} marginBottom={24}>
           <Typography variant="body2" align="left">
             {!forumSelected.hasOwnProperty('lastEdited')
@@ -279,17 +278,14 @@ class IndividualForum extends Component {
               : `Last edited: ${utils.dateTimeInReadableFormat(forumSelected.lastEdited)}`}
           </Typography>
         </FlexView>
-
         <Typography variant="body1" align="left">
           <b>
             <u>Description:</u>
           </b>
         </Typography>
-
         <Typography variant="body1" align="left" style={{ whiteSpace: 'pre-line', marginTop: 6 }}>
           {forumSelected.description}
         </Typography>
-
         <Divider
           style={{
             height: 2,
@@ -298,7 +294,6 @@ class IndividualForum extends Component {
             backgroundColor: colors.blue_gray_100,
           }}
         />
-
         <FlexView marginBottom={35}>
           <Button
             variant="outlined"
@@ -310,7 +305,6 @@ class IndividualForum extends Component {
             Create thread
           </Button>
         </FlexView>
-
         {/** Filters */}
         <Container fluid style={{ padding: 0, marginBottom: 40 }}>
           <Row>
@@ -321,8 +315,9 @@ class IndividualForum extends Component {
                     Mode
                   </Typography>
                   <Paper>
-                    <FormControl fullWidth>
+                    <FormControl variant="standard" fullWidth>
                       <Select
+                        variant="standard"
                         value={threadsLoadMode}
                         onChange={handleForumsInputChanged}
                         margin="dense"
@@ -344,8 +339,9 @@ class IndividualForum extends Component {
                   Sort by
                 </Typography>
                 <Paper>
-                  <FormControl fullWidth>
+                  <FormControl variant="standard" fullWidth>
                     <Select
+                      variant="standard"
                       value={threadsSortedMode}
                       onChange={handleForumsInputChanged}
                       margin="dense"
@@ -361,7 +357,6 @@ class IndividualForum extends Component {
             </Col>
           </Row>
         </Container>
-
         {/** Threads table */}
         <Paper style={{ overflowX: 'auto' }}>
           <Table>
@@ -449,8 +444,8 @@ class IndividualForum extends Component {
                   SelectProps={{
                     native: true,
                   }}
-                  onChangePage={this.tableChangePage('threads')}
-                  onChangeRowsPerPage={this.tableChangeRowsPerPage('threads')}
+                  onPageChange={this.tableChangePage('threads')}
+                  onRowsPerPageChange={this.tableChangeRowsPerPage('threads')}
                 />
               </TableRow>
             </TableFooter>

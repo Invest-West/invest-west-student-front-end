@@ -1,8 +1,8 @@
 import React from 'react';
-import { Box, Button, Typography, Paper } from '@material-ui/core';
+import { Box, Button, Typography, Paper } from '@mui/material';
 import { BarLoader } from 'react-spinners';
 import HashLoader from 'react-spinners/HashLoader';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 /**
  * Props for RouteLoadingIndicator
@@ -58,7 +58,7 @@ export const RouteErrorDisplay: React.FC<RouteErrorDisplayProps> = ({
   universityName,
   onRetry,
 }) => {
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const getErrorTitle = () => {
     switch (errorCode) {
@@ -189,7 +189,7 @@ export const RouteErrorDisplay: React.FC<RouteErrorDisplayProps> = ({
           <Button
             variant={onRetry && errorCode === 'NETWORK_ERROR' ? 'outlined' : 'contained'}
             color="primary"
-            onClick={() => history.push('/groups/invest-west/student-showcase')}
+            onClick={() => navigate('/groups/invest-west/student-showcase')}
           >
             Go to Home
           </Button>

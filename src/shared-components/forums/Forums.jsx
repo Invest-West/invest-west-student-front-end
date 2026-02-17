@@ -18,11 +18,11 @@ import {
   TablePagination,
   TableRow,
   Typography,
-} from '@material-ui/core';
-import AddIcon from '@material-ui/icons/Add';
-import DeleteIcon from '@material-ui/icons/Delete';
-import EditIcon from '@material-ui/icons/CreateOutlined';
-import 'react-quill/dist/quill.snow.css';
+} from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/CreateOutlined';
+import 'react-quill-new/dist/quill.snow.css';
 import HashLoader from 'react-spinners/HashLoader';
 
 import { connect } from 'react-redux';
@@ -256,7 +256,6 @@ class Forums extends Component {
                 Create forum
               </Button>
             </FlexView>
-
             {/** Filters */}
             <Container fluid style={{ padding: 0, marginBottom: 40 }}>
               <Row>
@@ -267,8 +266,9 @@ class Forums extends Component {
                         Mode
                       </Typography>
                       <Paper>
-                        <FormControl fullWidth>
+                        <FormControl variant="standard" fullWidth>
                           <Select
+                            variant="standard"
                             value={forumsLoadMode}
                             onChange={handleForumsInputChanged}
                             margin="dense"
@@ -292,8 +292,9 @@ class Forums extends Component {
                       Sort by
                     </Typography>
                     <Paper>
-                      <FormControl fullWidth>
+                      <FormControl variant="standard" fullWidth>
                         <Select
+                          variant="standard"
                           value={forumsSortedMode}
                           onChange={handleForumsInputChanged}
                           margin="dense"
@@ -309,7 +310,6 @@ class Forums extends Component {
                 </Col>
               </Row>
             </Container>
-
             {/** Forums table */}
             <Paper style={{ overflowX: 'auto' }}>
               <Table>
@@ -405,8 +405,8 @@ class Forums extends Component {
                       SelectProps={{
                         native: true,
                       }}
-                      onChangePage={this.tableChangePage('forums')}
-                      onChangeRowsPerPage={this.tableChangeRowsPerPage('forums')}
+                      onPageChange={this.tableChangePage('forums')}
+                      onRowsPerPageChange={this.tableChangeRowsPerPage('forums')}
                     />
                   </TableRow>
                 </TableFooter>

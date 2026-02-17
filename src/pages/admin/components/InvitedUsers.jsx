@@ -18,13 +18,13 @@ import {
   TableRow,
   TextField,
   Typography,
-} from '@material-ui/core';
-import Add from '@material-ui/icons/Add';
-import SearchIcon from '@material-ui/icons/Search';
-import CloseIcon from '@material-ui/icons/Close';
-import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
-import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
-import FileCopyIcon from '@material-ui/icons/FileCopy';
+} from '@mui/material';
+import Add from '@mui/icons-material/Add';
+import SearchIcon from '@mui/icons-material/Search';
+import CloseIcon from '@mui/icons-material/Close';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import FileCopyIcon from '@mui/icons-material/FileCopy';
 import { Col, Row } from 'react-bootstrap';
 import FlexView from 'react-flexview';
 import { HashLoader } from 'react-spinners';
@@ -584,7 +584,6 @@ class InvitedUsers extends Component {
     return (
       <FlexView column width="100%">
         <Divider style={{ marginBottom: 30 }} />
-
         {/** Invite/Upgrade users section */}
         <Row style={{ marginBottom: 30 }}>
           {/** For regular admins: Show Copy URL button */}
@@ -612,18 +611,18 @@ class InvitedUsers extends Component {
             </Col>
           ) : null}
         </Row>
-
         {/** Filters */}
         <Row>
           {/** Registration status */}
           <Col xs={12} sm={12} md={4} lg={3}>
-            <FormControl fullWidth>
+            <FormControl variant="standard" fullWidth>
               <InputLabel>
                 <Typography variant="body1" color="primary" align="left">
                   Registration status
                 </Typography>
               </InputLabel>
               <Select
+                variant="standard"
                 margin="dense"
                 input={<OutlinedInput labelWidth={0} name="filterRegistrationStatus" />}
                 style={{ marginTop: 25, width: '100%' }}
@@ -640,13 +639,14 @@ class InvitedUsers extends Component {
 
           {/** User type */}
           <Col xs={12} sm={12} md={4} lg={3}>
-            <FormControl fullWidth>
+            <FormControl variant="standard" fullWidth>
               <InputLabel>
                 <Typography variant="body1" color="primary" align="left">
                   User type
                 </Typography>
               </InputLabel>
               <Select
+                variant="standard"
                 margin="dense"
                 input={<OutlinedInput labelWidth={0} name="filterUserType" />}
                 style={{ marginTop: 25, width: '100%' }}
@@ -665,13 +665,14 @@ class InvitedUsers extends Component {
           {!admin.superAdmin ? (
             <Col xs={12} sm={12} md={4} lg={3}>
               <FlexView vAlignContent="center">
-                <FormControl fullWidth>
+                <FormControl variant="standard" fullWidth>
                   <InputLabel>
                     <Typography variant="body1" color="primary" align="left">
                       Members
                     </Typography>
                   </InputLabel>
                   <Select
+                    variant="standard"
                     margin="dense"
                     input={<OutlinedInput labelWidth={0} name="filterMembers" />}
                     style={{ marginTop: 25, width: '100%' }}
@@ -706,13 +707,14 @@ class InvitedUsers extends Component {
           {/** University filter - only shown to super admins */}
           {admin.superAdmin ? (
             <Col xs={12} sm={12} md={4} lg={3}>
-              <FormControl fullWidth>
+              <FormControl variant="standard" fullWidth>
                 <InputLabel>
                   <Typography variant="body1" color="primary" align="left">
                     University
                   </Typography>
                 </InputLabel>
                 <Select
+                  variant="standard"
                   margin="dense"
                   input={
                     <OutlinedInput labelWidth={0} name="filterGroup" disabled={!groupsLoaded} />
@@ -739,7 +741,6 @@ class InvitedUsers extends Component {
             </Col>
           ) : null}
         </Row>
-
         {/** Search email */}
         <Row style={{ marginTop: 30, marginBottom: 30 }}>
           <Col xs={12} sm={12} md={12} lg={8}>
@@ -756,14 +757,17 @@ class InvitedUsers extends Component {
                 />
               </FlexView>
               <FlexView hAlignContent="center" vAlignContent="center" basis="10%" marginLeft={10}>
-                <IconButton style={{ width: 50, height: 50 }} onClick={toggleSearchMode}>
+                <IconButton
+                  style={{ width: 50, height: 50 }}
+                  onClick={toggleSearchMode}
+                  size="large"
+                >
                   {!invitedUsersInSearchMode ? <SearchIcon /> : <CloseIcon />}
                 </IconButton>
               </FlexView>
             </FlexView>
           </Col>
         </Row>
-
         {/** Add members (only investors) from QIB to Silicon Gorge and vice versa */}
         {!admin.superAdmin ? null : systemGroups.findIndex(
             (group) => group.anid === filterGroup
@@ -813,7 +817,6 @@ class InvitedUsers extends Component {
             </Button>
           </FlexView>
         ) : null}
-
         {/** Export button - only available for admins */}
         {admin.type !== DB_CONST.TYPE_ADMIN ? null : (
           <FlexView vAlignContent="center" marginTop={30} marginBottom={20}>
@@ -845,7 +848,6 @@ class InvitedUsers extends Component {
             />
           </FlexView>
         )}
-
         {this.renderInvitedUsersTable()}
       </FlexView>
     );
@@ -972,8 +974,8 @@ class InvitedUsers extends Component {
                 SelectProps={{
                   native: true,
                 }}
-                onChangePage={handleChangeTablePage}
-                onChangeRowsPerPage={handleChangeTableRowsPerPage}
+                onPageChange={handleChangeTablePage}
+                onRowsPerPageChange={handleChangeTableRowsPerPage}
               />
             </TableRow>
           </TableFooter>

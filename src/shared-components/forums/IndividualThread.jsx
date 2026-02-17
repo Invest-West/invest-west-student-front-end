@@ -1,9 +1,9 @@
 import React, { Component } from 'react';
 
-import { Button, IconButton, Paper, Typography } from '@material-ui/core';
-import ArrowBackIcon from '@material-ui/icons/ArrowBack';
-import DeleteIcon from '@material-ui/icons/Delete';
-import EditIcon from '@material-ui/icons/CreateOutlined';
+import { Button, IconButton, Paper, Typography } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/CreateOutlined';
 import { css, StyleSheet } from 'aphrodite';
 import FlexView from 'react-flexview';
 import * as DB_CONST from '../../firebase/databaseConsts';
@@ -244,7 +244,7 @@ class IndividualThread extends Component {
     return (
       <FlexView column>
         <FlexView vAlignContent="center" marginBottom={24}>
-          <IconButton color="primary" aria-label="Back" onClick={goBackToThreadsList}>
+          <IconButton color="primary" aria-label="Back" onClick={goBackToThreadsList} size="large">
             <ArrowBackIcon />
           </IconButton>
           <FlexView marginLeft={8}>
@@ -254,7 +254,6 @@ class IndividualThread extends Component {
             >{`Thread: ${forumThreadSelected.name}`}</Typography>
           </FlexView>
         </FlexView>
-
         <Paper className={css(styles.thread_reply_style)}>
           <FlexView column>
             <FlexView vAlignContent="center" marginBottom={10}>

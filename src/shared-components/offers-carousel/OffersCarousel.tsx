@@ -5,14 +5,21 @@ import { AuthenticationState } from '../../redux-store/reducers/authenticationRe
 import { ManageGroupUrlState } from '../../redux-store/reducers/manageGroupUrlReducer';
 import { ProjectInstance } from '../../models/project';
 import OfferItem from '../explore-offers/OfferItem';
-import { Box, IconButton } from '@material-ui/core';
-import { ArrowBackIos, ArrowForwardIos } from '@material-ui/icons';
+import { Box, IconButton } from '@mui/material';
+import { ArrowBackIos, ArrowForwardIos } from '@mui/icons-material';
 import { Col, Row } from 'react-bootstrap';
-import { withRouter, RouteComponentProps } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Routes from '../../router/routes';
 import './OffersCarousel.scss';
 
-interface OffersCarouselProps extends RouteComponentProps {
+/**
+ * Router props injected by wrapper
+ */
+interface OffersCarouselRouterProps {
+  navigate: (to: string) => void;
+}
+
+interface OffersCarouselProps {
   offers: ProjectInstance[];
   AuthenticationState: AuthenticationState;
   ManageGroupUrlState: ManageGroupUrlState;
@@ -30,10 +37,13 @@ const mapStateToProps = (state: AppState) => {
   };
 };
 
-class OffersCarousel extends Component<OffersCarouselProps, OffersCarouselState> {
+class OffersCarouselClass extends Component<
+  OffersCarouselProps & OffersCarouselRouterProps,
+  OffersCarouselState
+> {
   private carouselRef = React.createRef<HTMLDivElement>();
 
-  constructor(props: OffersCarouselProps) {
+  constructor(props: OffersCarouselProps & OffersCarouselRouterProps) {
     super(props);
     this.state = {
       currentIndex: 0,
@@ -64,14 +74,13 @@ class OffersCarousel extends Component<OffersCarouselProps, OffersCarouselState>
   };
 
   handleOfferClick = (offer: ProjectInstance) => {
-    const { ManageGroupUrlState, history } = this.props;
+    const { ManageGroupUrlState, navigate } = this.props;
     const projectUrl = Routes.constructProjectDetailRoute(
       ManageGroupUrlState.groupNameFromUrl ?? null,
       ManageGroupUrlState.courseNameFromUrl ?? null,
       offer.projectDetail.id
     );
-    console.log('Navigating to:', projectUrl);
-    history.push(projectUrl);
+    navigate(projectUrl);
   };
 
   handlePrevClick = () => {
@@ -172,4 +181,11 @@ class OffersCarousel extends Component<OffersCarouselProps, OffersCarouselState>
   }
 }
 
-export default withRouter(connect(mapStateToProps)(OffersCarousel));
+const ConnectedOffersCarousel = connect(mapStateToProps)(OffersCarouselClass);
+
+function OffersCarousel(props: { offers: ProjectInstance[] }) {
+  const navigate = useNavigate();
+  return <ConnectedOffersCarousel {...props} navigate={navigate} />;
+}
+
+export default OffersCarousel;

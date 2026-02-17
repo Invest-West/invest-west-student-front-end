@@ -3,12 +3,11 @@ import {
   FinishedValidatingGroupUrlAction,
   ManageGroupUrlAction,
   ManageGroupUrlEvents,
-  ResetGroupUrlStateAction,
   SetGroupUrlAction,
 } from '../actions/manageGroupUrlActions';
 import Error from '../../models/error';
-import { colors } from '@material-ui/core';
-import { createMuiTheme, responsiveFontSizes, Theme } from '@material-ui/core/styles';
+import { colors, adaptV4Theme } from '@mui/material';
+import { createTheme, responsiveFontSizes, Theme } from '@mui/material/styles';
 import { defaultTheme } from '../../values/defaultThemes';
 
 export interface ManageGroupUrlState {
@@ -107,24 +106,26 @@ const manageGroupUrlReducer = (
         groupRouteTheme:
           finishedValidatingGroupUrlAction.validGroupUrl && finishedValidatingGroupUrlAction.group
             ? responsiveFontSizes(
-                createMuiTheme({
-                  palette: {
-                    primary: {
-                      main: finishedValidatingGroupUrlAction.group.settings.primaryColor,
-                    },
+                createTheme(
+                  adaptV4Theme({
+                    palette: {
+                      primary: {
+                        main: finishedValidatingGroupUrlAction.group.settings.primaryColor,
+                      },
 
-                    secondary: {
-                      main: finishedValidatingGroupUrlAction.group.settings.secondaryColor,
-                    },
+                      secondary: {
+                        main: finishedValidatingGroupUrlAction.group.settings.secondaryColor,
+                      },
 
-                    text: {
-                      secondary: colors.blueGrey['700'],
+                      text: {
+                        secondary: colors.blueGrey['700'],
+                      },
                     },
-                  },
-                  typography: {
-                    fontFamily: 'Muli, sans-serif',
-                  },
-                })
+                    typography: {
+                      fontFamily: 'Muli, sans-serif',
+                    },
+                  })
+                )
               )
             : defaultTheme,
       };

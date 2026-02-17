@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Box, Button, Typography, CircularProgress, Paper } from '@material-ui/core';
-import { GetApp, OpenInNew } from '@material-ui/icons';
+import { Box, Button, Typography, CircularProgress, Paper } from '@mui/material';
+import { GetApp, OpenInNew } from '@mui/icons-material';
 
 interface PdfViewerProps {
   fileUrl: string;

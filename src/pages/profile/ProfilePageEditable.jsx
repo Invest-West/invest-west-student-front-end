@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { useParams, useLocation } from 'react-router-dom';
 import { Col, Container, Row } from 'react-bootstrap';
 import HashLoader from 'react-spinners/HashLoader';
 import FlexView from 'react-flexview';
@@ -298,4 +299,20 @@ class ProfilePageEditable extends Component {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(ProfilePageEditable);
+const ConnectedProfilePageEditable = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(ProfilePageEditable);
+
+function ProfilePageEditableWrapper(props) {
+  const params = useParams();
+  const location = useLocation();
+  const match = {
+    params: params,
+    path: location.pathname,
+    pathname: location.pathname,
+  };
+  return <ConnectedProfilePageEditable {...props} match={match} location={location} />;
+}
+
+export default ProfilePageEditableWrapper;

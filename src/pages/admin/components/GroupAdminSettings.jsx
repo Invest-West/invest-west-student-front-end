@@ -9,16 +9,16 @@ import {
   Divider,
   Button,
   TextField,
-} from '@material-ui/core';
-import { KeyboardDatePicker } from '@material-ui/pickers';
-import PublicIcon from '@material-ui/icons/Public';
+} from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import PublicIcon from '@mui/icons-material/Public';
 import { Col, Container, Row } from 'react-bootstrap';
 import FlexView from 'react-flexview';
 import { css } from 'aphrodite';
 import { NavLink } from 'react-router-dom';
-import 'react-quill/dist/quill.snow.css';
+import 'react-quill-new/dist/quill.snow.css';
 // React Quill - text editor
-import ReactQuill from 'react-quill';
+import ReactQuill from 'react-quill-new';
 
 import { connect } from 'react-redux';
 import * as groupAdminSettingsActions from '../../../redux-store/actions/groupAdminSettingsActions';
@@ -223,7 +223,7 @@ class GroupAdminSettings extends Component {
                 variant="outlined"
                 label="Course description"
                 multiline
-                rowsMax={5}
+                maxRows={5}
                 rows={5}
                 onChange={handleInputChanged}
               />
@@ -252,7 +252,7 @@ class GroupAdminSettings extends Component {
 
             {/** Edit website */}
             <FlexView marginTop={35} column>
-              <FormControl fullWidth>
+              <FormControl variant="standard" fullWidth>
                 <TextField
                   label="Website"
                   placeholder="Official website"
@@ -303,7 +303,7 @@ class GroupAdminSettings extends Component {
 
             {/** Sign up link */}
             <FlexView marginTop={35} column>
-              <FormControl fullWidth>
+              <FormControl variant="standard" fullWidth>
                 <TextField
                   label="Public registration link"
                   fullWidth
@@ -452,11 +452,7 @@ class GroupAdminSettings extends Component {
                */}
               {groupUserName !== 'qib' ? null : (
                 <FlexView column marginTop={30}>
-                  <KeyboardDatePicker
-                    autoOk
-                    fullWidth
-                    variant="dialog"
-                    inputVariant="outlined"
+                  <DatePicker
                     label="Choose expired date for this project"
                     format="dd/MM/yyyy"
                     minDate={utils.getDateWithDaysFurtherThanToday(1)}
@@ -465,14 +461,18 @@ class GroupAdminSettings extends Component {
                         ? utils.getDateWithDaysFurtherThanToday(1)
                         : groupAttributesEdited.defaultPitchExpiryDate
                     }
-                    InputAdornmentProps={{ position: 'start' }}
-                    error={
-                      groupAttributesEdited.hasOwnProperty('groupAttributesEdited')
-                        ? groupAttributesEdited.defaultPitchExpiryDate === null ||
-                          isNaN(groupAttributesEdited.defaultPitchExpiryDate)
-                        : false
-                    }
                     onChange={handlePitchExpiryDateChanged}
+                    slotProps={{
+                      textField: {
+                        fullWidth: true,
+                        variant: 'outlined',
+                        error: groupAttributesEdited.hasOwnProperty('groupAttributesEdited')
+                          ? groupAttributesEdited.defaultPitchExpiryDate === null ||
+                            isNaN(groupAttributesEdited.defaultPitchExpiryDate)
+                          : false,
+                      },
+                      inputAdornment: { position: 'start' },
+                    }}
                   />
 
                   <FlexView width="100%" marginTop={15}>
@@ -514,7 +514,7 @@ class GroupAdminSettings extends Component {
                * Set project's visibility
                */}
               <FlexView marginTop={20}>
-                <FormControl>
+                <FormControl variant="standard">
                   <Typography variant="body1" align="left" paragraph>
                     Choose default visibility value for all newly created student projects
                   </Typography>

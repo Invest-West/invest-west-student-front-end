@@ -3,9 +3,8 @@ import { connect } from 'react-redux';
 import { AppState } from '../../redux-store/reducers';
 import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
-import { Box, Button, TextField, Typography } from '@material-ui/core';
-import { Redirect, RouteComponentProps } from 'react-router-dom';
-import { RouteParams } from '../../router/router';
+import { Box, Button, TextField, Typography } from '@mui/material';
+import { Navigate, useLocation } from 'react-router-dom';
 import { Col, Row } from 'react-bootstrap';
 import { css } from 'aphrodite';
 import sharedStyles from '../../shared-js-css-styles/SharedStyles';
@@ -26,6 +25,10 @@ import {
 } from '../../redux-store/reducers/manageGroupUrlReducer';
 import Routes from '../../router/routes';
 import { MediaQueryState } from '../../redux-store/reducers/mediaQueryReducer';
+
+interface ResetPasswordRouterProps {
+  location: { pathname: string; search: string; hash: string };
+}
 
 interface ResetPasswordProps {
   ManageGroupUrlState: ManageGroupUrlState;
@@ -52,10 +55,7 @@ const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
   };
 };
 
-class ResetPassword extends Component<
-  ResetPasswordProps & Readonly<RouteComponentProps<RouteParams>>,
-  any
-> {
+class ResetPasswordClass extends Component<ResetPasswordProps & ResetPasswordRouterProps, any> {
   componentDidMount() {
     const params = queryString.parse(this.props.location.search);
     if (params.oobCode) {
@@ -90,7 +90,7 @@ class ResetPassword extends Component<
 
     // failed to verify code
     if (hasErrorVerifyingCode(ResetPasswordLocalState)) {
-      return <Redirect to={Routes.error404} />;
+      return <Navigate to={Routes.error404} replace />;
     }
 
     // password has been successfully updated
@@ -176,4 +176,11 @@ class ResetPassword extends Component<
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(ResetPassword);
+const ConnectedResetPassword = connect(mapStateToProps, mapDispatchToProps)(ResetPasswordClass);
+
+function ResetPassword() {
+  const location = useLocation();
+  return <ConnectedResetPassword location={location} />;
+}
+
+export default ResetPassword;

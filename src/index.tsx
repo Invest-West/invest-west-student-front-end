@@ -1,6 +1,6 @@
 import './suppressConsole'; // Must be first - suppresses console in production
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import './index';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
@@ -11,11 +11,11 @@ import thunk from 'redux-thunk';
 
 const store: Store<AppState> = createStore(rootReducer, applyMiddleware(thunk));
 
-ReactDOM.render(
+const root = createRoot(document.getElementById('root')!);
+root.render(
   <Provider store={store}>
     <App />
-  </Provider>,
-  document.getElementById('root')
+  </Provider>
 );
 
 // If you want your app to work offline and load faster, you can change

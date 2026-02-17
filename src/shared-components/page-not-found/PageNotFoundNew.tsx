@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { Col, Container, Row } from 'react-bootstrap';
-import { Box, Typography } from '@material-ui/core';
+import { Box, Typography } from '@mui/material';
 import * as appColors from '../../values/colors';
 
 export default class PageNotFound extends Component<any, any> {

@@ -15,12 +15,12 @@ import {
   Paper,
   TextField,
   Typography,
-} from '@material-ui/core';
-import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+} from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import HashLoader from 'react-spinners/HashLoader';
 import FlexView from 'react-flexview';
 import { css, StyleSheet } from 'aphrodite';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useParams, useNavigate, useLocation } from 'react-router-dom';
 
 import HeaderWithoutDesc from '../../shared-components/nav-bars/HeaderWithoutDesc';
 import PageNotFoundWhole from '../../shared-components/page-not-found/PageNotFoundWhole';
@@ -351,14 +351,14 @@ class PledgePage extends Component {
           },
         });
 
-        this.props.history.push({
-          pathname: groupUserName
+        this.props.navigate(
+          groupUserName
             ? ROUTES.PROJECT_DETAILS.replace(':groupUserName', groupUserName).replace(
                 ':projectID',
                 project.id
               )
-            : ROUTES.PROJECT_DETAILS_INVEST_WEST_SUPER.replace(':projectID', project.id),
-        });
+            : ROUTES.PROJECT_DETAILS_INVEST_WEST_SUPER.replace(':projectID', project.id)
+        );
       });
   };
 
@@ -750,7 +750,6 @@ class PledgePage extends Component {
             <HeaderWithoutDesc />
           </Col>
         </Row>
-
         {/** Project's name (header) */}
         <Row noGutters>
           <Col
@@ -819,7 +818,6 @@ class PledgePage extends Component {
             <Divider />
           </Col>
         </Row>
-
         {displayThankYou ? (
           /** Thank you body - displayed after pledge has been made or edited */
           <ThankYouComponent
@@ -899,7 +897,6 @@ class PledgePage extends Component {
                           style={{ marginTop: 14 }}
                           variant="text"
                           size="small"
-                          color="default"
                           className={css(sharedStyles.no_text_transform)}
                           onClick={this.handleCancelPledge}
                         >
@@ -911,7 +908,6 @@ class PledgePage extends Component {
                 </FlexView>
               </Paper>
             </Col>
-
             <Col xs={12} sm={12} md={12} lg={{ span: 6, offset: 3 }} style={{ marginTop: 50 }}>
               <FlexView column>
                 <Typography variant="body1" align="left" paragraph>
@@ -982,7 +978,6 @@ class PledgePage extends Component {
             </Col>
           </Row>
         )}
-
         {displayThankYou ? null : (
           <Row noGutters>
             <Col
@@ -1004,7 +999,6 @@ class PledgePage extends Component {
             </Col>
           </Row>
         )}
-
         <ConfirmationDialog
           open={pledgeConfirmationDialogOpen}
           pledgeAmount={pledgeAmount}
@@ -1186,7 +1180,21 @@ class ThankYouComponent extends Component {
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(PledgePage);
+const ConnectedPledgePage = connect(mapStateToProps, mapDispatchToProps)(PledgePage);
+
+function PledgePageWrapper(props) {
+  const params = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  // Create a match-like object for legacy compatibility
+  const match = {
+    params: params,
+    path: location.pathname,
+  };
+  return <ConnectedPledgePage {...props} match={match} navigate={navigate} location={location} />;
+}
+
+export default PledgePageWrapper;
 
 const styles = StyleSheet.create({
   pledge_box: {

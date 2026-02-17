@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Typography } from '@material-ui/core';
+import { Typography } from '@mui/material';
 import { Col, Container, Row } from 'react-bootstrap';
 import FlexView from 'react-flexview';
 import HashLoader from 'react-spinners/HashLoader';

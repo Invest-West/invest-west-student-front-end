@@ -22,7 +22,7 @@ import {
   TablePagination,
   TableRow,
   Typography,
-} from '@material-ui/core';
+} from '@mui/material';
 import {
   Close,
   CreateOutlined,
@@ -30,7 +30,7 @@ import {
   Refresh,
   Search,
   Warning,
-} from '@material-ui/icons';
+} from '@mui/icons-material';
 import { MediaQueryState } from '../../redux-store/reducers/mediaQueryReducer';
 import { ManageSystemAttributesState } from '../../redux-store/reducers/manageSystemAttributesReducer';
 import {
@@ -69,9 +69,9 @@ import {
 } from './OffersTableActions';
 import { Col, Row } from 'react-bootstrap';
 import { BeatLoader } from 'react-spinners';
-import PublicIcon from '@material-ui/icons/Public';
-import RestrictedIcon from '@material-ui/icons/VpnLock';
-import PrivateIcon from '@material-ui/icons/LockOutlined';
+import PublicIcon from '@mui/icons-material/Public';
+import RestrictedIcon from '@mui/icons-material/VpnLock';
+import PrivateIcon from '@mui/icons-material/LockOutlined';
 import {
   isDraftProject,
   isProjectPitchExpiredWaitingForAdminToCheck,
@@ -296,6 +296,7 @@ class OffersTable extends Component<OffersTableProps, any> {
                             <IconButton
                               onClick={() => filterOffersByName()}
                               disabled={!successfullyFetchedOffers(OffersTableLocalState)}
+                              size="large"
                             >
                               <Search fontSize="small" />
                             </IconButton>
@@ -304,7 +305,10 @@ class OffersTable extends Component<OffersTableProps, any> {
                         endAdornment={
                           !isFilteringOffersByName(OffersTableLocalState) ? null : (
                             <InputAdornment position="end">
-                              <IconButton onClick={() => cancelFilteringOffersByName()}>
+                              <IconButton
+                                onClick={() => cancelFilteringOffersByName()}
+                                size="large"
+                              >
                                 <Close fontSize="small" />
                               </IconButton>
                             </InputAdornment>
@@ -320,6 +324,7 @@ class OffersTable extends Component<OffersTableProps, any> {
                       <IconButton
                         onClick={() => fetchOffers()}
                         disabled={!successfullyFetchedOffers(OffersTableLocalState)}
+                        size="large"
                       >
                         <Refresh />
                       </IconButton>
@@ -736,8 +741,8 @@ class OffersTable extends Component<OffersTableProps, any> {
                 SelectProps={{
                   native: true,
                 }}
-                onChangePage={changePage}
-                onChangeRowsPerPage={changeRowsPerPage}
+                onPageChange={changePage}
+                onRowsPerPageChange={changeRowsPerPage}
               />
             </TableRow>
           </TableFooter>

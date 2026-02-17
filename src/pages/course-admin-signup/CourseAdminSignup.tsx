@@ -13,11 +13,11 @@ import {
   Select,
   TextField,
   Typography,
-} from '@material-ui/core';
+} from '@mui/material';
 import { Col, Row } from 'react-bootstrap';
 import { css } from 'aphrodite';
 import sharedStyles from '../../shared-js-css-styles/SharedStyles';
-import { RouteComponentProps } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import HashLoader from 'react-spinners/HashLoader';
 import { BarLoader } from 'react-spinners';
 import firebase from '../../firebase/firebaseApp';
@@ -41,10 +41,11 @@ import Footer from '../../shared-components/footer/Footer';
 const VALID_TITLES = ['Mr', 'Miss', 'Mrs', 'Ms', 'Dr', 'Prof', 'Other'];
 
 /**
- * Route parameters
+ * Router props injected by wrapper
  */
-interface RouteParams {
-  token: string;
+interface CourseAdminSignupRouterProps {
+  params: Record<string, string | undefined>;
+  navigate: (to: string, options?: { replace?: boolean }) => void;
 }
 
 /**
@@ -102,14 +103,14 @@ const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
  * - Last Name
  * - Password (email is pre-filled from invite)
  */
-class CourseAdminSignup extends Component<
-  CourseAdminSignupProps & RouteComponentProps<RouteParams>,
+class CourseAdminSignupClass extends Component<
+  CourseAdminSignupProps & CourseAdminSignupRouterProps,
   LocalState
 > {
-  constructor(props: CourseAdminSignupProps & RouteComponentProps<RouteParams>) {
+  constructor(props: CourseAdminSignupProps & CourseAdminSignupRouterProps) {
     super(props);
     this.state = {
-      token: props.match.params.token || '',
+      token: props.params.token || '',
       title: '-1',
       firstName: '',
       lastName: '',
@@ -133,7 +134,7 @@ class CourseAdminSignup extends Component<
     this.props.clearCourseAdminInviteState();
   }
 
-  componentDidUpdate(prevProps: CourseAdminSignupProps & RouteComponentProps<RouteParams>) {
+  componentDidUpdate(prevProps: CourseAdminSignupProps & CourseAdminSignupRouterProps) {
     const { CourseAdminInviteLocalState: currentState } = this.props;
     const { CourseAdminInviteLocalState: prevState } = prevProps;
 
@@ -146,17 +147,17 @@ class CourseAdminSignup extends Component<
           .signInWithCustomToken(currentState.signupResult.customToken)
           .then(() => {
             if (currentState.signupResult?.redirectTo) {
-              this.props.history.push(currentState.signupResult.redirectTo);
+              this.props.navigate(currentState.signupResult.redirectTo);
             }
           })
           .catch((error) => {
             // If auto-sign-in fails, still redirect
             if (currentState.signupResult?.redirectTo) {
-              this.props.history.push(currentState.signupResult.redirectTo);
+              this.props.navigate(currentState.signupResult.redirectTo);
             }
           });
       } else if (currentState.signupResult.redirectTo) {
-        this.props.history.push(currentState.signupResult.redirectTo);
+        this.props.navigate(currentState.signupResult.redirectTo);
       }
     }
   }
@@ -353,7 +354,7 @@ class CourseAdminSignup extends Component<
                 )}
 
                 {/* Email (read-only) */}
-                <FormControl fullWidth>
+                <FormControl variant="standard" fullWidth>
                   <TextField
                     label="Email"
                     value={inviteData?.email || ''}
@@ -368,13 +369,14 @@ class CourseAdminSignup extends Component<
                 <Box height="20px" />
 
                 {/* Title */}
-                <FormControl required fullWidth disabled={isFormDisabled}>
+                <FormControl variant="standard" required fullWidth disabled={isFormDisabled}>
                   <InputLabel>
                     <Typography variant="body1" color="primary">
                       Title
                     </Typography>
                   </InputLabel>
                   <Select
+                    variant="standard"
                     name="title"
                     value={title}
                     // @ts-ignore
@@ -396,7 +398,7 @@ class CourseAdminSignup extends Component<
                 <Box height="20px" />
 
                 {/* First Name */}
-                <FormControl required fullWidth>
+                <FormControl variant="standard" required fullWidth>
                   <TextField
                     required
                     label="First name"
@@ -411,7 +413,7 @@ class CourseAdminSignup extends Component<
                 </FormControl>
 
                 {/* Last Name */}
-                <FormControl required fullWidth>
+                <FormControl variant="standard" required fullWidth>
                   <TextField
                     required
                     label="Last name"
@@ -428,7 +430,7 @@ class CourseAdminSignup extends Component<
                 <Box height="20px" />
 
                 {/* Password */}
-                <FormControl required fullWidth>
+                <FormControl variant="standard" required fullWidth>
                   <TextField
                     required
                     label="Password"
@@ -446,7 +448,7 @@ class CourseAdminSignup extends Component<
                 </FormControl>
 
                 {/* Confirmed Password */}
-                <FormControl required fullWidth>
+                <FormControl variant="standard" required fullWidth>
                   <TextField
                     required
                     label="Confirm password"
@@ -507,7 +509,6 @@ class CourseAdminSignup extends Component<
             </Box>
           </Col>
         </Row>
-
         {/* Footer */}
         <Row noGutters>
           <Col xs={12} sm={12} md={12} lg={12}>
@@ -519,4 +520,15 @@ class CourseAdminSignup extends Component<
   }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(CourseAdminSignup);
+const ConnectedCourseAdminSignup = connect(
+  mapStateToProps,
+  mapDispatchToProps
+)(CourseAdminSignupClass);
+
+function CourseAdminSignup() {
+  const params = useParams();
+  const navigate = useNavigate();
+  return <ConnectedCourseAdminSignup params={params} navigate={navigate} />;
+}
+
+export default CourseAdminSignup;

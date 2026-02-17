@@ -16,9 +16,9 @@ import {
   Select,
   TextField,
   Typography,
-} from '@material-ui/core';
-import SendIcon from '@material-ui/icons/Send';
-import CloseIcon from '@material-ui/icons/Close';
+} from '@mui/material';
+import SendIcon from '@mui/icons-material/Send';
+import CloseIcon from '@mui/icons-material/Close';
 import FlexView from 'react-flexview';
 import { css } from 'aphrodite';
 
@@ -85,7 +85,7 @@ class InvitationDialog extends Component {
         onClose={toggleInvitationDialog}
         {...other}
       >
-        <DialogTitle disableTypography>
+        <DialogTitle>
           <FlexView vAlignContent="center">
             <FlexView grow={4}>
               <Typography variant="h6" color="primary" align="left">
@@ -93,16 +93,21 @@ class InvitationDialog extends Component {
               </Typography>
             </FlexView>
             <FlexView grow={1} hAlignContent="right">
-              <IconButton onClick={toggleInvitationDialog}>
+              <IconButton onClick={toggleInvitationDialog} size="large">
                 <CloseIcon />
               </IconButton>
             </FlexView>
           </FlexView>
         </DialogTitle>
         <DialogContent style={{ marginTop: 10 }}>
-          <FormControl required error={sendButtonClick && title === DB_CONST.USER_TITLES[0]}>
+          <FormControl
+            variant="standard"
+            required
+            error={sendButtonClick && title === DB_CONST.USER_TITLES[0]}
+          >
             <FormLabel>Title</FormLabel>
             <Select
+              variant="standard"
               name="title"
               value={title}
               margin="dense"
@@ -157,7 +162,11 @@ class InvitationDialog extends Component {
           />
 
           <FlexView marginTop={20}>
-            <FormControl required error={sendButtonClick && userType.length === 0}>
+            <FormControl
+              variant="standard"
+              required
+              error={sendButtonClick && userType.length === 0}
+            >
               <FormLabel>User type</FormLabel>
               <RadioGroup row name="userType" value={userType} onChange={handleInputChanged}>
                 <FormControlLabel

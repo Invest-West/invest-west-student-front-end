@@ -10,7 +10,7 @@ import {
   DialogContent,
   TextField,
   Typography,
-} from '@material-ui/core';
+} from '@mui/material';
 import { css } from 'aphrodite';
 import sharedStyles from '../../../../shared-js-css-styles/SharedStyles';
 import {

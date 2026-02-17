@@ -20,9 +20,10 @@ import {
   InputBase,
   MenuItem,
   OutlinedInput,
+  Pagination,
   Select,
   Typography,
-} from '@material-ui/core';
+} from '@mui/material';
 import { Col, Row } from 'react-bootstrap';
 import {
   getGroupRouteTheme,
@@ -30,7 +31,7 @@ import {
 } from '../../redux-store/reducers/manageGroupUrlReducer';
 import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
-import { Close, Refresh, Search } from '@material-ui/icons';
+import { Close, Refresh, Search } from '@mui/icons-material';
 import {
   cancelFilteringGroupsByName,
   fetchGroups,
@@ -50,7 +51,6 @@ import GroupProperties, {
 } from '../../models/group_properties';
 import { isAdmin } from '../../models/admin';
 import { MediaQueryState } from '../../redux-store/reducers/mediaQueryReducer';
-import { Pagination } from '@material-ui/lab';
 
 interface ExploreGroupsOwnProps {
   coursesOnlyMode?: boolean;
@@ -188,6 +188,7 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
                         <IconButton
                           onClick={() => filterGroupsByName()}
                           disabled={!successfullyFetchedGroups(ExploreGroupsLocalState)}
+                          size="large"
                         >
                           <Search fontSize="small" />
                         </IconButton>
@@ -196,7 +197,7 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
                     endAdornment={
                       !isFilteringGroupsByName(ExploreGroupsLocalState) ? null : (
                         <InputAdornment position="end">
-                          <IconButton onClick={() => cancelFilteringGroupsByName()}>
+                          <IconButton onClick={() => cancelFilteringGroupsByName()} size="large">
                             <Close fontSize="small" />
                           </IconButton>
                         </InputAdornment>
@@ -208,7 +209,6 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
             </Card>
           </Col>
         </Row>
-
         {/** Filters (only available for issuer and investor, and not in coursesOnlyMode) */}
         {isAdmin(AuthenticationState.currentUser) || coursesOnlyMode ? null : (
           <Row noGutters>
@@ -234,14 +234,13 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
 
                 <Box width="15px" />
 
-                <IconButton onClick={() => fetchGroups()}>
+                <IconButton onClick={() => fetchGroups()} size="large">
                   <Refresh />
                 </IconButton>
               </Box>
             </Col>
           </Row>
         )}
-
         {/** Loader */}
         {!isFetchingGroups(ExploreGroupsLocalState) ? null : (
           <Row noGutters>
@@ -252,7 +251,6 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
             </Col>
           </Row>
         )}
-
         {/** Groups area */}
         {!successfullyFetchedGroups(ExploreGroupsLocalState) ? null : !hasGroupsForCurrentFilters(
             ExploreGroupsLocalState
@@ -271,7 +269,6 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
             </Row>
           </Box>
         )}
-
         {/** Pagination */}
         {!successfullyFetchedGroups(ExploreGroupsLocalState) ? null : paginationPages ===
           1 ? null : (

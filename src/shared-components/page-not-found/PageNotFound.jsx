@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Typography } from '@material-ui/core';
+import { Typography } from '@mui/material';
 import FlexView from 'react-flexview';
 import { StyleSheet, css } from 'aphrodite';
 import * as colors from '../../values/colors';

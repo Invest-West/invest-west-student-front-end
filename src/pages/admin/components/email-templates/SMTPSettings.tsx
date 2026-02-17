@@ -19,7 +19,7 @@ import {
   Switch,
   TextField,
   Typography,
-} from '@material-ui/core';
+} from '@mui/material';
 import { AppState } from '../../../../redux-store/reducers';
 import * as emailTemplateActions from '../../../../redux-store/actions/emailTemplateActions';
 import { SMTPSettings as SMTPSettingsType } from '../../../../redux-store/actions/emailTemplateActions';
@@ -121,6 +121,7 @@ class SMTPSettings extends Component<Props, State> {
               <FormControl fullWidth variant="outlined">
                 <InputLabel>Provider</InputLabel>
                 <Select
+                  variant="standard"
                   value={settings.provider}
                   onChange={(e) => this.handleProviderChange(e.target.value as 'google' | 'custom')}
                   label="Provider"

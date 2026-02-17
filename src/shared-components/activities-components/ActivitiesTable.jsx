@@ -10,8 +10,8 @@ import {
   TablePagination,
   TableFooter,
   Button,
-} from '@material-ui/core';
-import LinkIcon from '@material-ui/icons/Link';
+} from '@mui/material';
+import LinkIcon from '@mui/icons-material/Link';
 import FlexView from 'react-flexview';
 import { HashLoader } from 'react-spinners';
 import { css } from 'aphrodite';
@@ -210,14 +210,13 @@ class ActivitiesTable extends Component {
                   SelectProps={{
                     native: true,
                   }}
-                  onChangePage={changePage}
-                  onChangeRowsPerPage={changeRowsPerPage}
+                  onPageChange={changePage}
+                  onRowsPerPageChange={changeRowsPerPage}
                 />
               </TableRow>
             </TableFooter>
           </Table>
         </Paper>
-
         <JSONCompareChangesDialog />
       </div>
     );

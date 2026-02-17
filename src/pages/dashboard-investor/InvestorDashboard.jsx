@@ -1,12 +1,13 @@
 import React, { Component } from 'react';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import FlexView from 'react-flexview';
 import HashLoader from 'react-spinners/HashLoader';
 import { Col, Container, Row } from 'react-bootstrap';
 import Sidebar from 'react-sidebar';
 import { css, StyleSheet } from 'aphrodite';
-import { Badge, IconButton, Typography } from '@material-ui/core';
-import Menu from '@material-ui/icons/Menu';
-import NotificationsIcon from '@material-ui/icons/Notifications';
+import { Badge, IconButton, Typography } from '@mui/material';
+import Menu from '@mui/icons-material/Menu';
+import NotificationsIcon from '@mui/icons-material/Notifications';
 
 import PageNotFoundWhole from '../../shared-components/page-not-found/PageNotFoundWhole';
 import SidebarContent, {
@@ -333,6 +334,7 @@ class InvestorDashboard extends Component {
                         <IconButton
                           className={css(sharedStyles.hamburger_button)}
                           onClick={() => toggleSidebar(true)}
+                          size="large"
                         >
                           <Menu />
                         </IconButton>
@@ -345,7 +347,7 @@ class InvestorDashboard extends Component {
                   <Col xs={2} sm={2} md={1} lg={1} style={{ paddingRight: 13 }}>
                     <FlexView vAlignContent="center" hAlignContent="right" width="100%">
                       <div ref={this.notificationBell}>
-                        <IconButton onClick={toggleNotifications}>
+                        <IconButton onClick={toggleNotifications} size="large">
                           <Badge
                             badgeContent={notifications.length}
                             color="secondary"
@@ -427,7 +429,29 @@ class InvestorDashboard extends Component {
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(InvestorDashboard);
+const ConnectedInvestorDashboard = connect(mapStateToProps, mapDispatchToProps)(InvestorDashboard);
+
+function InvestorDashboardWrapper(props) {
+  const params = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const match = {
+    params: params,
+    path: location.pathname,
+    pathname: location.pathname,
+    url: location.pathname,
+  };
+  return (
+    <ConnectedInvestorDashboard
+      {...props}
+      match={match}
+      history={{ push: navigate }}
+      location={location}
+    />
+  );
+}
+
+export default InvestorDashboardWrapper;
 
 const styles = StyleSheet.create({
   page_title: {

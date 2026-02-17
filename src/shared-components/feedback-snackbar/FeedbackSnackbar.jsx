@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
-import { IconButton, Snackbar, SnackbarContent } from '@material-ui/core';
-import CheckCircleIcon from '@material-ui/icons/CheckCircle';
-import CloseIcon from '@material-ui/icons/Close';
+import { IconButton, Snackbar, SnackbarContent } from '@mui/material';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CloseIcon from '@mui/icons-material/Close';
 
 import { connect } from 'react-redux';
 import * as feedbackSnackbarActions from '../../redux-store/actions/feedbackSnackbarActions';
@@ -51,7 +51,6 @@ class FeedbackSnackbar extends Component {
         }}
         autoHideDuration={2500}
         onClose={closeFeedbackSnackbar}
-        onExited={resetStatesWhenSnackbarClosed}
         TransitionComponent={
           position === 'bottom'
             ? SlideTransitionUp
@@ -62,6 +61,9 @@ class FeedbackSnackbar extends Component {
         transitionDuration={{
           enter: 130,
           exit: 130,
+        }}
+        TransitionProps={{
+          onExited: resetStatesWhenSnackbarClosed,
         }}
       >
         <SnackbarContent
@@ -82,7 +84,7 @@ class FeedbackSnackbar extends Component {
             </span>
           }
           action={[
-            <IconButton key="close" color="inherit" onClick={closeFeedbackSnackbar}>
+            <IconButton key="close" color="inherit" onClick={closeFeedbackSnackbar} size="large">
               <CloseIcon />
             </IconButton>,
           ]}

@@ -11,8 +11,8 @@ import {
   TextField,
   Typography,
   CircularProgress,
-} from '@material-ui/core';
-import { Close } from '@material-ui/icons';
+} from '@mui/material';
+import { Close } from '@mui/icons-material';
 import { css } from 'aphrodite';
 import sharedStyles from '../../../../shared-js-css-styles/SharedStyles';
 import GroupRepository from '../../../../api/repositories/GroupRepository';
@@ -115,7 +115,7 @@ export default class EditCourseNameDialog extends Component<
               </Typography>
             </Box>
             <Box display="flex" flexGrow={1} justifyContent="flex-end">
-              <IconButton onClick={onClose} disabled={updating}>
+              <IconButton onClick={onClose} disabled={updating} size="large">
                 <Close />
               </IconButton>
             </Box>
