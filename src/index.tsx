@@ -1,3 +1,4 @@
+import "./suppressConsole"; // Must be first - suppresses console in production
 import React from "react";
 import ReactDOM from "react-dom";
 import "./index";

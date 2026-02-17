@@ -3,6 +3,32 @@ import firebase from "../firebase/firebaseApp";
 import HttpResponseError from "./ResponseError";
 
 /**
+ * Wait for Firebase auth to be ready and return the current user
+ * This ensures we don't make API calls before Firebase has restored the auth state
+ */
+const waitForFirebaseAuth = (): Promise<firebase.default.User | null> => {
+    return new Promise((resolve) => {
+        const currentUser = firebase.auth().currentUser;
+        if (currentUser) {
+            resolve(currentUser);
+            return;
+        }
+
+        // If no current user, wait for auth state to change (max 5 seconds)
+        const timeout = setTimeout(() => {
+            unsubscribe();
+            resolve(null);
+        }, 5000);
+
+        const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
+            clearTimeout(timeout);
+            unsubscribe();
+            resolve(user);
+        });
+    });
+};
+
+/**
  * Api routes
  */
 
@@ -33,14 +59,18 @@ export class ApiRoutes {
     static retrieveInvitedUser = ApiRoutes.usersBaseRoute + "/:invitedUserID/retrieve-invited";
     static updateUser = ApiRoutes.usersBaseRoute + "/update";
     static listGroupsOfMembership = ApiRoutes.usersBaseRoute + "/:uid/groups-of-membership";
+    static inviteStudentRoute = ApiRoutes.usersBaseRoute + "/invite";
     static exportUsersCsvRoute = ApiRoutes.usersBaseRoute + "/export";
 
     static groupsBaseRoute = "/groups";
     static listGroups = ApiRoutes.groupsBaseRoute + "/list";
     static retrieveGroup = ApiRoutes.groupsBaseRoute + "/:groupUserName";
     static updateGroupLogo = ApiRoutes.groupsBaseRoute + "/:groupUserName/update-logo";
+    static updateUniversityName = ApiRoutes.groupsBaseRoute + "/:groupUserName/update-name";
     static updateCourseImage = ApiRoutes.groupsBaseRoute + "/:groupUserName/courses/:courseUserName/update-image";
     static updateCourseName = ApiRoutes.groupsBaseRoute + "/:groupUserName/courses/:courseUserName/update-name";
+    static deleteUniversity = ApiRoutes.groupsBaseRoute + "/:groupUserName/delete";
+    static deleteCourse = ApiRoutes.groupsBaseRoute + "/:groupUserName/courses/:courseUserName/delete";
     static addMembersToGroup = ApiRoutes.groupsBaseRoute + "/:group/add-members";
     static listGroupMembers = ApiRoutes.groupsBaseRoute + "/:group/list-members";
 
@@ -48,6 +78,8 @@ export class ApiRoutes {
     static listProjectsRoute = ApiRoutes.projectsBaseRoute + "/list";
     static sendProjectBackToIssuerRoute = ApiRoutes.projectsBaseRoute + "/send-back-to-issuer";
     static exportProjectsToCsvRoute = ApiRoutes.projectsBaseRoute + "/export";
+    static notifyAdminsOfResubmissionRoute = ApiRoutes.projectsBaseRoute + "/notify-resubmission";
+    static clearProjectRejectFeedbacksRoute = ApiRoutes.projectsBaseRoute + "/clear-reject-feedbacks";
 
     static groupAdminsBaseRoute = "/group-admins";
     static addGroupAdminRoute = ApiRoutes.groupAdminsBaseRoute + "/add";
@@ -73,6 +105,15 @@ export class ApiRoutes {
     static uploadSingleFileRoute = ApiRoutes.fileBaseRoute + "/upload-single";
 
     static testRoute = "/test";
+
+    // Course admin invite routes
+    static courseAdminInviteBaseRoute = "/course-admin-invite";
+    static requestAdminAccessRoute = ApiRoutes.courseAdminInviteBaseRoute + "/request-access";
+    static validateCourseAdminInviteRoute = ApiRoutes.courseAdminInviteBaseRoute + "/validate/:token";
+    static completeCourseAdminSignupRoute = ApiRoutes.courseAdminInviteBaseRoute + "/complete";
+    static validateUpgradeRequestRoute = ApiRoutes.courseAdminInviteBaseRoute + "/upgrade-request/validate/:requestId";
+    static respondToUpgradeRequestRoute = ApiRoutes.courseAdminInviteBaseRoute + "/upgrade-request/respond";
+    static getMyUpgradeRequestsRoute = ApiRoutes.courseAdminInviteBaseRoute + "/my-upgrade-requests";
 }
 
 export interface RequestOptionalParams {
@@ -190,7 +231,8 @@ export default class Api {
                 : null
         );
 
-        let currentUser: firebase.default.User | null = firebase.auth().currentUser;
+        // Wait for Firebase auth to be ready before making the request
+        let currentUser: firebase.default.User | null = await waitForFirebaseAuth();
 
         try {
             let idToken: string | null = null;

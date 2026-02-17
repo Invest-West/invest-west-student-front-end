@@ -35,6 +35,7 @@ import * as ROUTES from "../../../router/routes";
 import Routes from "../../../router/routes";
 import ManageCourses from "./manage-courses/ManageCourses";
 import EditGroupImageDialog from "./EditGroupImageDialog";
+import EditUniversityNameDialog from "./EditUniversityNameDialog";
 
 const mapStateToProps = state => {
     return {
@@ -91,7 +92,8 @@ class GroupAdminSettings extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            editLogoDialogOpen: false
+            editLogoDialogOpen: false,
+            editNameDialogOpen: false
         };
     }
 
@@ -113,6 +115,19 @@ class GroupAdminSettings extends Component {
 
     handleLogoUpdateSuccess = () => {
         // Reload the group properties to show the new logo
+        window.location.reload();
+    };
+
+    handleOpenEditNameDialog = () => {
+        this.setState({ editNameDialogOpen: true });
+    };
+
+    handleCloseEditNameDialog = () => {
+        this.setState({ editNameDialogOpen: false });
+    };
+
+    handleNameUpdateSuccess = () => {
+        // Reload the group properties to show the new name
         window.location.reload();
     };
 
@@ -150,7 +165,7 @@ class GroupAdminSettings extends Component {
             saveEditedQuill,
         } = this.props;
 
-        const { editLogoDialogOpen } = this.state;
+        const { editLogoDialogOpen, editNameDialogOpen } = this.state;
 
         if (!groupAttributesEdited) {
             return null;
@@ -472,35 +487,66 @@ class GroupAdminSettings extends Component {
                             }}/>
                     </Col>
 
-                    {/** Edit Logo (Super Admin or Super Group Admin) */}
+                    {/** Edit University Name and Logo (Super Admin or Super Group Admin) */}
                     {currentUser && (currentUser.superAdmin || currentUser.superGroupAdmin) && (
                         <Col xs={12} sm={12} md={12} lg={12}>
                             <FlexView column marginBottom={40}>
                                 <Typography variant="h6" color="primary">
-                                    Manage University Logo
+                                    Manage University Settings
                                 </Typography>
 
-                                <FlexView marginTop={16}>
-                                    <Button
-                                        className={css(sharedStyles.no_text_transform)}
-                                        variant="contained"
-                                        color="primary"
-                                        onClick={this.handleOpenEditLogoDialog}
-                                    >
-                                        Edit University Logo
-                                    </Button>
+                                {/** Edit University Name */}
+                                <FlexView column marginTop={20}>
+                                    <Typography variant="body1" style={{ marginBottom: 8 }}>
+                                        University Name: <strong>{groupDetails?.displayName}</strong>
+                                    </Typography>
+                                    <FlexView>
+                                        <Button
+                                            className={css(sharedStyles.no_text_transform)}
+                                            variant="outlined"
+                                            color="primary"
+                                            onClick={this.handleOpenEditNameDialog}
+                                        >
+                                            Edit University Name
+                                        </Button>
+                                    </FlexView>
                                 </FlexView>
 
-                                {groupDetails && groupDetails.plainLogo && groupDetails.plainLogo.length > 0 && (
-                                    <FlexView marginTop={16}>
-                                        <img
-                                            src={groupDetails.plainLogo.find(logo => !logo.removed)?.url}
-                                            alt="Current logo"
-                                            style={{ maxWidth: 200, maxHeight: 100, objectFit: 'contain' }}
-                                        />
+                                {/** Edit University Logo */}
+                                <FlexView column marginTop={30}>
+                                    <Typography variant="body1" style={{ marginBottom: 8 }}>
+                                        University Logo
+                                    </Typography>
+                                    <FlexView>
+                                        <Button
+                                            className={css(sharedStyles.no_text_transform)}
+                                            variant="outlined"
+                                            color="primary"
+                                            onClick={this.handleOpenEditLogoDialog}
+                                        >
+                                            Edit University Logo
+                                        </Button>
                                     </FlexView>
-                                )}
+
+                                    {groupDetails && groupDetails.plainLogo && groupDetails.plainLogo.length > 0 && (
+                                        <FlexView marginTop={16}>
+                                            <img
+                                                src={groupDetails.plainLogo.find(logo => !logo.removed)?.url}
+                                                alt="Current logo"
+                                                style={{ maxWidth: 200, maxHeight: 100, objectFit: 'contain' }}
+                                            />
+                                        </FlexView>
+                                    )}
+                                </FlexView>
                             </FlexView>
+
+                            <EditUniversityNameDialog
+                                open={editNameDialogOpen}
+                                groupUserName={groupUserName}
+                                currentName={groupDetails?.displayName || ''}
+                                onClose={this.handleCloseEditNameDialog}
+                                onSuccess={this.handleNameUpdateSuccess}
+                            />
 
                             <EditGroupImageDialog
                                 open={editLogoDialogOpen}

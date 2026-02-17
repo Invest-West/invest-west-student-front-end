@@ -18,6 +18,7 @@ import ChangePasswordPage from "../../shared-components/change-password/ChangePa
 import SidebarContent, {
     CHANGE_PASSWORD_TAB,
     EXPLORE_GROUPS_TAB,
+    EXPLORE_COURSES_TAB,
     HOME_TAB,
     MY_OFFERS_TAB,
     PROFILE_TAB,
@@ -232,11 +233,20 @@ class IssuerDashboard extends Component {
         }
 
         /**
-         * EXPLORE GROUPS TAB
+         * EXPLORE GROUPS TAB (for super admins - shows all universities)
          */
         if (params.tab === EXPLORE_GROUPS_TAB) {
             return (
                 <ExploreGroups/>
+            );
+        }
+
+        /**
+         * EXPLORE COURSES TAB (for non-super admins - shows only their university's courses)
+         */
+        if (params.tab === EXPLORE_COURSES_TAB) {
+            return (
+                <ExploreGroups coursesOnlyMode={true} />
             );
         }
 
@@ -424,6 +434,9 @@ class IssuerDashboard extends Component {
                 break;
             case EXPLORE_GROUPS_TAB:
                 title = EXPLORE_GROUPS_TAB;
+                break;
+            case EXPLORE_COURSES_TAB:
+                title = EXPLORE_COURSES_TAB;
                 break;
             default:
                 return;

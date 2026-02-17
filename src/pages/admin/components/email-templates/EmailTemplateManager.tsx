@@ -91,6 +91,11 @@ const EMAIL_TEMPLATE_INFO: Record<string, { name: string; variables: string[]; d
         name: 'Contact Pitch Owner',
         description: 'Sent when someone contacts a pitch owner',
         variables: ['userName', 'companyName', 'companyPosition', 'projectName', 'message', 'senderEmail']
+    },
+    'university-created': {
+        name: 'University Created',
+        description: 'Sent when a super admin creates a new university',
+        variables: ['universityName', 'universityLogo', 'universityWebsite', 'adminEmail', 'adderName', 'adderEmail', 'platformUrl', 'isAdder']
     }
 };
 
@@ -202,6 +207,18 @@ class EmailTemplateManager extends Component<Props, State> {
         realData['project'] = 'Sample Project';
         realData['feedback'] = 'This is sample feedback for the project.';
         realData['password'] = '********';
+
+        // University creation template variables
+        realData['universityName'] = group?.displayName || 'Sample University';
+        realData['universityLogo'] = group ? (getGroupLogo(group) || '[No Logo]') : '[No Logo]';
+        realData['universityWebsite'] = group?.website || 'https://example-university.edu';
+        realData['adminEmail'] = currentUser?.email || 'admin@example.edu';
+        realData['adderName'] = currentUser ?
+            ((currentUser as User).firstName ? `${(currentUser as User).firstName} ${(currentUser as User).lastName || ''}`.trim() : currentUser.email)
+            : 'Super Admin';
+        realData['adderEmail'] = currentUser?.email || 'superadmin@investwest.online';
+        realData['platformUrl'] = `${baseUrl}${groupPath}`;
+        realData['isAdder'] = 'false';
 
         // Build the sample data using real values when available, otherwise use placeholders
         const sampleData: Record<string, string> = {};

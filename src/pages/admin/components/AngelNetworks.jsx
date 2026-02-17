@@ -30,6 +30,7 @@ import CloseIcon from '@material-ui/icons/Close';
 import SearchIcon from '@material-ui/icons/Search';
 import RefreshIcon from '@material-ui/icons/Refresh';
 import AddIcon from '@material-ui/icons/Add';
+import DeleteIcon from '@material-ui/icons/Delete';
 import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
 import ExpandLessIcon from '@material-ui/icons/ExpandLess';
 import {Col, OverlayTrigger, Row, Tooltip} from 'react-bootstrap';
@@ -88,7 +89,12 @@ const mapStateToProps = state => {
         selectedUniversity: state.manageGroupAdminsTable.selectedUniversity,
         selectedCourse: state.manageGroupAdminsTable.selectedCourse,
         availableCourses: state.manageGroupAdminsTable.availableCourses,
-        addNewGroupAdminStatus: state.manageGroupAdminsTable.addNewGroupAdminStatus
+        addNewGroupAdminStatus: state.manageGroupAdminsTable.addNewGroupAdminStatus,
+
+        // Delete state
+        deletingUniversityId: state.manageAngelNetworks.deletingUniversityId,
+        deletingCourseId: state.manageAngelNetworks.deletingCourseId,
+        deleteError: state.manageAngelNetworks.deleteError
     }
 };
 
@@ -107,7 +113,11 @@ const mapDispatchToProps = dispatch => {
         // Add new group admin actions
         toggleAddNewGroupAdminDialog: () => dispatch(groupAdminsTableActions.toggleAddNewGroupAdminDialog()),
         handleInputChanged: (event) => dispatch(groupAdminsTableActions.handleInputChanged(event)),
-        handleAddNewGroupAdmin: () => dispatch(groupAdminsTableActions.handleAddNewGroupAdmin())
+        handleAddNewGroupAdmin: () => dispatch(groupAdminsTableActions.handleAddNewGroupAdmin()),
+
+        // Delete actions
+        deleteUniversity: (groupUserName, universityId) => dispatch(angelNetworksActions.deleteUniversity(groupUserName, universityId)),
+        deleteCourse: (groupUserName, courseUserName, courseId) => dispatch(angelNetworksActions.deleteCourse(groupUserName, courseUserName, courseId))
     }
 };
 
@@ -127,11 +137,55 @@ class AngelNetworks extends Component {
             loadingCourseRequests: false,
             approvingRequest: null, // Track which request is being approved
             rejectingRequest: null, // Track which request is being rejected
-            hasLoadedCourseMembers: false // Track if we've already loaded all course members
+            hasLoadedCourseMembers: false, // Track if we've already loaded all course members
+
+            // Delete confirmation dialog state
+            deleteConfirmDialogOpen: false,
+            deleteTarget: null, // { type: 'university' | 'course', name: '', groupUserName: '', courseUserName: '', id: '' }
         };
         this._isMounted = false; // ⚡ Track mount state to prevent memory leaks
         this._loadCourseMembersTimeout = null; // ⚡ Track timeout to cancel on unmount
     }
+
+    // Delete confirmation handlers
+    handleOpenDeleteConfirm = (type, name, groupUserName, id, courseUserName = null) => {
+        this.setState({
+            deleteConfirmDialogOpen: true,
+            deleteTarget: { type, name, groupUserName, courseUserName, id }
+        });
+    };
+
+    handleCloseDeleteConfirm = () => {
+        this.setState({
+            deleteConfirmDialogOpen: false,
+            deleteTarget: null
+        });
+    };
+
+    handleConfirmDelete = async () => {
+        const { deleteTarget } = this.state;
+        const { deleteUniversity, deleteCourse, loadAngelNetworks } = this.props;
+
+        if (!deleteTarget) return;
+
+        if (deleteTarget.type === 'university') {
+            const result = await deleteUniversity(deleteTarget.groupUserName, deleteTarget.id);
+            if (result.success) {
+                this.handleCloseDeleteConfirm();
+            } else {
+                alert('Failed to delete university: ' + result.error);
+            }
+        } else if (deleteTarget.type === 'course') {
+            const result = await deleteCourse(deleteTarget.groupUserName, deleteTarget.courseUserName, deleteTarget.id);
+            if (result.success) {
+                this.handleCloseDeleteConfirm();
+                // Reload to update course list
+                loadAngelNetworks();
+            } else {
+                alert('Failed to delete course: ' + result.error);
+            }
+        }
+    };
 
     toggleUniversityExpansion = (universityId) => {
         if (!this._isMounted) return;
@@ -678,6 +732,46 @@ class AngelNetworks extends Component {
                     handleInputChanged={handleInputChanged}
                     handleAddNewGroupAdmin={handleAddNewGroupAdmin}
                 />
+
+                {/* Delete Confirmation Dialog */}
+                <Dialog
+                    open={this.state.deleteConfirmDialogOpen}
+                    onClose={this.handleCloseDeleteConfirm}
+                    maxWidth="sm"
+                    fullWidth
+                >
+                    <DialogTitle>
+                        <Typography variant="h6" color="error">
+                            Confirm Delete
+                        </Typography>
+                    </DialogTitle>
+                    <DialogContent>
+                        {this.state.deleteTarget && (
+                            <Typography variant="body1">
+                                Are you sure you want to delete the {this.state.deleteTarget.type === 'university' ? 'university' : 'course'}{' '}
+                                <strong>"{this.state.deleteTarget.name}"</strong>?
+                                {this.state.deleteTarget.type === 'university' && (
+                                    <Typography variant="body2" color="error" style={{ marginTop: 12 }}>
+                                        Warning: This will also delete all courses associated with this university.
+                                    </Typography>
+                                )}
+                            </Typography>
+                        )}
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={this.handleCloseDeleteConfirm} color="default">
+                            Cancel
+                        </Button>
+                        <Button
+                            onClick={this.handleConfirmDelete}
+                            variant="contained"
+                            style={{ backgroundColor: '#d32f2f', color: 'white' }}
+                            disabled={this.props.deletingUniversityId || this.props.deletingCourseId}
+                        >
+                            {(this.props.deletingUniversityId || this.props.deletingCourseId) ? 'Deleting...' : 'Delete'}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
             </FlexView>
         );
     }
@@ -718,7 +812,7 @@ class AngelNetworks extends Component {
                 <Table>
                     <TableHead>
                         <TableRow>
-                            <StyledTableCell colSpan={3} cellColor={colors.blue_gray_50}
+                            <StyledTableCell colSpan={4} cellColor={colors.blue_gray_50}
                                 component={
                                     <InputBase name="searchText" value={searchText}  onChange={handleAngelNetworksTableInputChanged} fullWidth placeholder="Search university by name" type="text"
                                         startAdornment={
@@ -817,6 +911,19 @@ class AngelNetworks extends Component {
                                 textColor={colors.white}
                                 component={
                                     <Typography variant="body2" className={css(sharedStyles.white_text)} align="left">Status</Typography>
+                                }
+                            />
+                            <StyledTableCell colSpan={1}
+                                cellColor={
+                                    !groupProperties
+                                        ?
+                                        colors.primaryColor
+                                        :
+                                        groupProperties.settings.primaryColor
+                                }
+                                textColor={colors.white}
+                                component={
+                                    <Typography variant="body2" className={css(sharedStyles.white_text)} align="center">Actions</Typography>
                                 }
                             />
                         </TableRow>
@@ -1004,12 +1111,33 @@ class AngelNetworks extends Component {
                                     }
                                 </Typography>
                             </TableCell>
+                            <TableCell colSpan={1} align="center">
+                                {(this.props.admin?.superAdmin || this.props.admin?.superGroupAdmin) && (
+                                    <OverlayTrigger trigger={['hover', 'focus']} flip placement="top"
+                                        overlay={
+                                            <Tooltip id={`tooltip-delete-${angelNetwork.anid}`}>Delete University</Tooltip>
+                                        }>
+                                        <IconButton
+                                            size="small"
+                                            onClick={() => this.handleOpenDeleteConfirm('university', angelNetwork.displayName, angelNetwork.groupUserName, angelNetwork.anid)}
+                                            style={{ color: '#d32f2f' }}
+                                            disabled={this.props.deletingUniversityId === angelNetwork.anid}
+                                        >
+                                            {this.props.deletingUniversityId === angelNetwork.anid ? (
+                                                <BeatLoader size={8} color="#d32f2f" />
+                                            ) : (
+                                                <DeleteIcon fontSize="small" />
+                                            )}
+                                        </IconButton>
+                                    </OverlayTrigger>
+                                )}
+                            </TableCell>
                         </TableRow>
 
                         {/* Expandable row showing courses */}
                         {isUniv && hasCoursesOrStrings && (
                             <TableRow>
-                                <TableCell colSpan={5} style={{paddingBottom: 0, paddingTop: 0, backgroundColor: colors.blue_gray_50}}>
+                                <TableCell colSpan={6} style={{paddingBottom: 0, paddingTop: 0, backgroundColor: colors.blue_gray_50}}>
                                     <Collapse in={isExpanded} timeout="auto" unmountOnExit>
                                         <div style={{padding: '16px 0 16px 48px'}}>
                                             <Typography variant="subtitle2" gutterBottom style={{fontWeight: 'bold', color: colors.primaryColor}}>
@@ -1022,6 +1150,7 @@ class AngelNetworks extends Component {
                                                         <TableCell style={{fontWeight: 'bold'}}>Course ID</TableCell>
                                                         <TableCell style={{fontWeight: 'bold'}}>Date Added</TableCell>
                                                         <TableCell style={{fontWeight: 'bold'}}>Status</TableCell>
+                                                        <TableCell style={{fontWeight: 'bold'}} align="center">Actions</TableCell>
                                                     </TableRow>
                                                 </TableHead>
                                                 <TableBody>
@@ -1093,11 +1222,32 @@ class AngelNetworks extends Component {
                                                                                 {course.status === DB_CONST.GROUP_STATUS_ACTIVE ? "Active" : "Suspended"}
                                                                             </Typography>
                                                                         </TableCell>
+                                                                        <TableCell align="center">
+                                                                            {(this.props.admin?.superAdmin || this.props.admin?.superGroupAdmin) && (
+                                                                                <OverlayTrigger trigger={['hover', 'focus']} flip placement="top"
+                                                                                    overlay={
+                                                                                        <Tooltip id={`tooltip-delete-course-${course.anid}`}>Delete Course</Tooltip>
+                                                                                    }>
+                                                                                    <IconButton
+                                                                                        size="small"
+                                                                                        onClick={() => this.handleOpenDeleteConfirm('course', course.displayName, angelNetwork.groupUserName, course.anid, course.groupUserName)}
+                                                                                        style={{ color: '#d32f2f' }}
+                                                                                        disabled={this.props.deletingCourseId === course.anid}
+                                                                                    >
+                                                                                        {this.props.deletingCourseId === course.anid ? (
+                                                                                            <BeatLoader size={6} color="#d32f2f" />
+                                                                                        ) : (
+                                                                                            <DeleteIcon fontSize="small" />
+                                                                                        )}
+                                                                                    </IconButton>
+                                                                                </OverlayTrigger>
+                                                                            )}
+                                                                        </TableCell>
                                                                     </TableRow>
 
                                                                     {/* Nested row showing lecturers/admins for this course */}
                                                                     <TableRow>
-                                                                        <TableCell colSpan={4} style={{paddingBottom: 0, paddingTop: 0, backgroundColor: colors.gray_50}}>
+                                                                        <TableCell colSpan={5} style={{paddingBottom: 0, paddingTop: 0, backgroundColor: colors.gray_50}}>
                                                                             <Collapse in={isCourseExpanded} timeout="auto" unmountOnExit>
                                                                                 <div style={{padding: '12px 0 12px 40px'}}>
                                                                                     <Typography variant="caption" gutterBottom style={{fontWeight: 'bold', color: colors.primaryColor}}>

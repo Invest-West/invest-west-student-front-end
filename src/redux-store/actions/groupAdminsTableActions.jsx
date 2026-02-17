@@ -57,11 +57,9 @@ export const loadGroupAdmins = () => {
         try {
             let groupAdmins = [];
 
-            // Super admins OR super group admins see ALL admins
-            const isSuperUser = currentUser.superAdmin || currentUser.superGroupAdmin;
-
-            if (isSuperUser) {
-                // Super users see ALL admins from all universities
+            // Only super admins see ALL admins from all universities
+            if (currentUser.superAdmin) {
+                // Super admins see ALL admins from all universities
                 const snapshot = await firebase
                     .database()
                     .ref(DB_CONST.ADMINISTRATORS_CHILD)
@@ -72,7 +70,7 @@ export const loadGroupAdmins = () => {
                     groupAdmins = Object.keys(adminsObject).map(key => adminsObject[key]);
                 }
             } else {
-                // Regular group admins only see admins from their university
+                // University admins (superGroupAdmin) and regular group admins only see admins from their own university
                 groupAdmins = await realtimeDBUtils.loadGroupAdminsBasedOnGroupID(currentUser.anid);
             }
 
@@ -297,9 +295,8 @@ export const startListeningForGroupAdminsChanged = () => {
 
                 const index = groupAdmins.findIndex(existingGroupAdmin => existingGroupAdmin.id === groupAdmin.id);
                 if (index === -1) {
-                    // Super users (superAdmin OR superGroupAdmin) see all admins, regular group admins only see their own university's admins
-                    const isSuperUser = currentUser.superAdmin || currentUser.superGroupAdmin;
-                    if (isSuperUser || groupAdmin.anid === currentUser.anid) {
+                    // Only super admins see all admins, university admins (superGroupAdmin) and regular group admins only see their own university's admins
+                    if (currentUser.superAdmin || groupAdmin.anid === currentUser.anid) {
                         dispatch({
                             type: GROUP_ADMINS_TABLE_CHANGED,
                             groupAdmins: [...groupAdmins, groupAdmin]
@@ -315,9 +312,8 @@ export const startListeningForGroupAdminsChanged = () => {
 
                 const index = groupAdmins.findIndex(existingGroupAdmin => existingGroupAdmin.id === groupAdmin.id);
                 if (index !== -1) {
-                    // Only update if visible to this admin
-                    const isSuperUser = currentUser.superAdmin || currentUser.superGroupAdmin;
-                    if (isSuperUser || groupAdmin.anid === currentUser.anid) {
+                    // Only update if visible to this admin - super admins see all, others see only their university
+                    if (currentUser.superAdmin || groupAdmin.anid === currentUser.anid) {
                         groupAdmins[index] = groupAdmin;
                         dispatch({
                             type: GROUP_ADMINS_TABLE_CHANGED,

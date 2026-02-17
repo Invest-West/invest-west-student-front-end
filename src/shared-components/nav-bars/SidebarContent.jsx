@@ -40,6 +40,7 @@ export const CONTACT_US_TAB = "Contact us";
 export const GUIDELINE_TAB = "Help";
 export const RESOURCES_TAB = "Resources";
 export const EXPLORE_GROUPS_TAB = "Explore Universities";
+export const EXPLORE_COURSES_TAB = "Explore Courses";
 export const EXPLORE_OFFERS_TAB = "Explore student projects";
 export const MY_ACTIVITIES_TAB = "My activities";
 export const GROUP_ACTIVITIES_TAB = "Audit Log";
@@ -235,21 +236,44 @@ class SidebarContent extends Component {
                                 </NavLink>
                         }
 
-                        {/** Explore courses tab */}
-                        <NavLink
-                            to={{
-                                pathname: dashboardProps.match.pathname,
-                                search: `?tab=${EXPLORE_GROUPS_TAB}`
-                            }}
-                            className={css(sharedStyles.nav_link_white_text_hover_without_changing_text_color)}
-                        >
-                            <ListItem button onClick={() => toggleSidebar(false)} >
-                                <ListItemIcon>
-                                    <BubbleChartIcon/>
-                                </ListItemIcon>
-                                <ListItemText className={css(sharedStyles.black_text)}>{EXPLORE_GROUPS_TAB}</ListItemText>
-                            </ListItem>
-                        </NavLink> 
+                        {/** Explore courses tab - Show different tabs based on user type */}
+                        {
+                            // Super admins see "Explore Universities" with full hierarchy
+                            user && user.type === DB_CONST.TYPE_ADMIN && (user.superAdmin || user.superGroupAdmin)
+                                ? (
+                                    <NavLink
+                                        to={{
+                                            pathname: dashboardProps.match.pathname,
+                                            search: `?tab=${EXPLORE_GROUPS_TAB}`
+                                        }}
+                                        className={css(sharedStyles.nav_link_white_text_hover_without_changing_text_color)}
+                                    >
+                                        <ListItem button onClick={() => toggleSidebar(false)} >
+                                            <ListItemIcon>
+                                                <BubbleChartIcon/>
+                                            </ListItemIcon>
+                                            <ListItemText className={css(sharedStyles.black_text)}>{EXPLORE_GROUPS_TAB}</ListItemText>
+                                        </ListItem>
+                                    </NavLink>
+                                )
+                                : (
+                                    // Non-super admins see "Explore Courses" with only their university's courses
+                                    <NavLink
+                                        to={{
+                                            pathname: dashboardProps.match.pathname,
+                                            search: `?tab=${EXPLORE_COURSES_TAB}`
+                                        }}
+                                        className={css(sharedStyles.nav_link_white_text_hover_without_changing_text_color)}
+                                    >
+                                        <ListItem button onClick={() => toggleSidebar(false)} >
+                                            <ListItemIcon>
+                                                <BubbleChartIcon/>
+                                            </ListItemIcon>
+                                            <ListItemText className={css(sharedStyles.black_text)}>{EXPLORE_COURSES_TAB}</ListItemText>
+                                        </ListItem>
+                                    </NavLink>
+                                )
+                        } 
 
                         {/** Resources 
                         <NavLink

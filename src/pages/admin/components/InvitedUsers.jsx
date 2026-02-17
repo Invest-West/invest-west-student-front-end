@@ -243,7 +243,10 @@ class InvitedUsers extends Component {
                         }
                     }
                 } catch (error) {
-                    console.warn(`Failed to fetch last login date for user ${user.email}:`, error);
+                    // Silently ignore 404 errors - user may not exist yet or was deleted
+                    if (!error.toString().includes('404')) {
+                        console.warn(`Failed to fetch last login date for user ${user.email}:`, error);
+                    }
                 }
             }
 
@@ -545,29 +548,28 @@ class InvitedUsers extends Component {
             <FlexView column width="100%">
                 <Divider style={{marginBottom: 30}}/>
 
-                {/** Invite/Upgrade users section - different UI for super admins vs regular admins */}
+                {/** Invite/Upgrade users section */}
                 <Row style={{marginBottom: 30}}>
-                    {/** For regular admins: Show Copy URL and Invite Multiple Users */}
+                    {/** For regular admins: Show Copy URL button */}
                     {
                         !(admin.superAdmin || admin.superGroupAdmin)
                             ?
-                            <>
-                                <Col xs={12} md={6} lg={6} style={{marginBottom: 20}}>
-                                    <Button color="primary" variant="outlined" className={css(sharedStyles.no_text_transform)} onClick={this.copySignupUrl}>
-                                        <FileCopyIcon style={{ marginRight: 10, width: 20, height: "auto"}}/>Copy signup URL</Button>
-                                </Col>
-                                <Col xs={12} sm={12} md={12} lg={12}>
-                                    <InviteMultipleUsers/>
-                                </Col>
-                            </>
+                            <Col xs={12} md={6} lg={6} style={{marginBottom: 20}}>
+                                <Button color="primary" variant="outlined" className={css(sharedStyles.no_text_transform)} onClick={this.copySignupUrl}>
+                                    <FileCopyIcon style={{ marginRight: 10, width: 20, height: "auto"}}/>Copy signup URL</Button>
+                            </Col>
                             :
                             null
                     }
-                    {/** For super admins and super group admins: Show Upgrade User to Admin */}
+                    {/** Invite Multiple Users - available to all admins */}
+                    <Col xs={12} sm={12} md={12} lg={12}>
+                        <InviteMultipleUsers/>
+                    </Col>
+                    {/** For super admins and super group admins: Also show Upgrade User to Admin */}
                     {
                         (admin.superAdmin || admin.superGroupAdmin)
                             ?
-                            <Col xs={12} sm={12} md={12} lg={12}>
+                            <Col xs={12} sm={12} md={12} lg={12} style={{marginTop: 20}}>
                                 <UpgradeUserToAdmin/>
                             </Col>
                             :
@@ -615,9 +617,9 @@ class InvitedUsers extends Component {
                         </FormControl>
                     </Col>
 
-                    {/** Group members */}
+                    {/** Group members - shown to regular admins and superGroupAdmins */}
                     {
-                        !(admin.superAdmin || admin.superGroupAdmin)
+                        !admin.superAdmin
                             ?
                             <Col xs={12} sm={12} md={4} lg={3}>
                                 <FlexView vAlignContent="center">
@@ -649,6 +651,13 @@ class InvitedUsers extends Component {
                                 </FlexView>
                             </Col>
                             :
+                            null
+                    }
+
+                    {/** University filter - only shown to super admins */}
+                    {
+                        admin.superAdmin
+                            ?
                             <Col xs={12} sm={12} md={4} lg={3}>
                                 <FormControl fullWidth>
                                     <InputLabel>
@@ -683,6 +692,8 @@ class InvitedUsers extends Component {
                                     </Select>
                                 </FormControl>
                             </Col>
+                            :
+                            null
                     }
                 </Row>
 
@@ -791,11 +802,11 @@ class InvitedUsers extends Component {
 
                             <InfoOverlay placement="right"
                                 message={
-                                    (admin.superAdmin || admin.superGroupAdmin)
+                                    admin.superAdmin
                                         ?
                                         "Export all the users in the system to a .csv file."
                                         :
-                                        "Export all the members in your course to a .csv file."
+                                        "Export all the members in your university to a .csv file."
                                 }
                             />
                         </FlexView>
@@ -844,7 +855,7 @@ class InvitedUsers extends Component {
                                 </FlexView>
                             </TableCell>
                             {
-                                !(admin.superAdmin || admin.superGroupAdmin)
+                                !admin.superAdmin
                                     ?
                                     null
                                     :
@@ -1056,9 +1067,9 @@ class InvitedUsers extends Component {
                                                 </FlexView>
                                     }
 
-                                    {/** Display enrolled course or platform member status */}
+                                    {/** Display enrolled course or platform member status - shown to non-super admins */}
                                     {
-                                        (admin.superAdmin || admin.superGroupAdmin)
+                                        admin.superAdmin
                                             ?
                                             null
                                             :
@@ -1083,9 +1094,9 @@ class InvitedUsers extends Component {
                                 </FlexView>
                             </TableCell>
 
-                            {/** Group the user belongs to - available only for super admins and super group admins */}
+                            {/** Group the user belongs to - available only for super admins */}
                             {
-                                !(admin.superAdmin || admin.superGroupAdmin)
+                                !admin.superAdmin
                                     ?
                                     null
                                     :

@@ -1,8 +1,6 @@
 import React, {Component} from "react";
 import {connect} from "react-redux";
 import {AppState} from "../../../redux-store/reducers";
-import {ThunkDispatch} from "redux-thunk";
-import {AnyAction} from "redux";
 import {
     Box,
     Button,
@@ -14,9 +12,12 @@ import {
     FormControl,
     FormLabel,
     IconButton,
+    InputLabel,
+    MenuItem,
     Radio,
     RadioGroup,
     FormControlLabel,
+    Select,
     TextField,
     Typography,
     Table,
@@ -34,12 +35,9 @@ import DeleteIcon from "@material-ui/icons/Delete";
 import SendIcon from "@material-ui/icons/Send";
 import FlexView from "react-flexview";
 import {BeatLoader} from "react-spinners";
-import * as colors from "../../../values/colors";
 import * as DB_CONST from "../../../firebase/databaseConsts";
-import * as emailUtils from "../../../utils/emailUtils";
-import * as realtimeDBUtils from "../../../firebase/realtimeDBUtils";
-import firebase from "../../../firebase/firebaseApp";
 import * as utils from "../../../utils/utils";
+import UserRepository from "../../../api/repositories/UserRepository";
 
 export const INVITE_STATUS_NONE = 0;
 export const INVITE_STATUS_SENDING = 1;
@@ -58,6 +56,9 @@ interface InviteMultipleUsersProps {
     currentAdmin?: any;
     currentGroup?: any;
     groupUserName?: string;
+    // For super admins who need to select a group
+    systemGroups?: any[];
+    groupsLoaded?: boolean;
 }
 
 interface InviteMultipleUsersState {
@@ -67,6 +68,8 @@ interface InviteMultipleUsersState {
     emailList: EmailInvite[];
     sending: boolean;
     emailError: string;
+    // For super admins - selected group to invite to
+    selectedGroupId: string;
 }
 
 class InviteMultipleUsers extends Component<InviteMultipleUsersProps, InviteMultipleUsersState> {
@@ -79,7 +82,8 @@ class InviteMultipleUsers extends Component<InviteMultipleUsersProps, InviteMult
             newUserType: DB_CONST.TYPE_ISSUER, // Default to Student
             emailList: [],
             sending: false,
-            emailError: ''
+            emailError: '',
+            selectedGroupId: ''
         };
     }
 
@@ -90,8 +94,56 @@ class InviteMultipleUsers extends Component<InviteMultipleUsersProps, InviteMult
             newUserType: DB_CONST.TYPE_ISSUER,
             emailList: [],
             sending: false,
-            emailError: ''
+            emailError: '',
+            selectedGroupId: ''
         });
+    };
+
+    handleGroupChange = (event: React.ChangeEvent<{ value: unknown }>) => {
+        this.setState({
+            selectedGroupId: event.target.value as string
+        });
+    };
+
+    // Get the active group - either from URL params or from super admin selection
+    getActiveGroup = () => {
+        const { currentGroup, systemGroups } = this.props;
+        const { selectedGroupId } = this.state;
+
+        // If we have a current group from URL params, use that
+        if (currentGroup) {
+            return currentGroup;
+        }
+
+        // For super admins, use the selected group
+        if (selectedGroupId && systemGroups) {
+            return systemGroups.find(group => group.anid === selectedGroupId);
+        }
+
+        return null;
+    };
+
+    getActiveGroupUserName = () => {
+        const { groupUserName, systemGroups } = this.props;
+        const { selectedGroupId } = this.state;
+
+        // If we have a group username from URL params, use that
+        if (groupUserName) {
+            return groupUserName;
+        }
+
+        // For super admins, get the username from the selected group
+        if (selectedGroupId && systemGroups) {
+            const group = systemGroups.find(g => g.anid === selectedGroupId);
+            return group?.groupUserName;
+        }
+
+        return null;
+    };
+
+    isSuperAdmin = () => {
+        const { currentAdmin } = this.props;
+        return currentAdmin?.superAdmin || currentAdmin?.superGroupAdmin;
     };
 
     validateEmail = (email: string): boolean => {
@@ -154,13 +206,18 @@ class InviteMultipleUsers extends Component<InviteMultipleUsersProps, InviteMult
 
     sendInvitations = async () => {
         const {emailList} = this.state;
-        const {currentAdmin, currentGroup, groupUserName} = this.props;
 
-        if (emailList.length === 0) {
+        // Get the active group (from URL params or super admin selection)
+        const activeGroup = this.getActiveGroup();
+        const activeGroupUserName = this.getActiveGroupUserName();
+
+        if (emailList.length === 0 || !activeGroup) {
             return;
         }
 
         this.setState({sending: true});
+
+        const userRepository = new UserRepository();
 
         // Process each email invitation
         const updatedList = [...emailList];
@@ -173,82 +230,16 @@ class InviteMultipleUsers extends Component<InviteMultipleUsersProps, InviteMult
             this.setState({emailList: updatedList});
 
             try {
-                // Check if user was already invited
-                const existingInvites = await realtimeDBUtils.loadInvitedUsers(currentGroup?.anid);
-                const alreadyInvited = existingInvites.find(
-                    (invitedUser: any) => invitedUser.email.toLowerCase() === invite.email.toLowerCase()
-                );
-
-                if (alreadyInvited) {
-                    updatedList[i] = {
-                        ...invite,
-                        status: INVITE_STATUS_ERROR,
-                        statusMessage: 'Already invited'
-                    };
-                    this.setState({emailList: updatedList});
-                    continue;
-                }
-
-                // Generate invitation ID
-                const invitationID = firebase.database().ref().child('invitedUsers').push().key;
-
-                // Build signup URL
-                const signupURL = `${window.location.origin}/groups/${groupUserName}/signup?invitedUserID=${invitationID}`;
-
-                // Create invited user object
-                const invitedUser = {
-                    id: invitationID,
+                // Call backend to create Firebase Auth account, Users record,
+                // InvitedUsers record, and send email with generated password
+                await userRepository.inviteStudent({
                     email: invite.email,
-                    firstName: '',
-                    lastName: '',
-                    title: '',
-                    type: invite.userType,
-                    status: DB_CONST.INVITED_USER_NOT_REGISTERED,
-                    invitedBy: currentGroup?.anid,
-                    invitedDate: Date.now(),
-                    Invitor: {
-                        anid: currentGroup?.anid,
-                        displayName: currentGroup?.displayName,
-                        groupUserName: currentGroup?.groupUserName
-                    }
-                };
-
-                // Save to Firebase
-                await firebase
-                    .database()
-                    .ref(DB_CONST.INVITED_USERS_CHILD)
-                    .child(invitationID!)
-                    .set(invitedUser);
-
-                // Send email
-                // Get the user type as a readable string
-                const userTypeString = invite.userType === DB_CONST.TYPE_ISSUER ? 'Student' : 'Project Viewer';
-
-                await emailUtils.sendEmail({
-                    serverURL: process.env.REACT_APP_BACK_END_BASE_URL,
-                    emailType: emailUtils.EMAIL_INVITATION,
-                    data: {
-                        groupName: currentGroup?.displayName,
-                        groupLogo: utils.getLogoFromGroup(utils.GET_PLAIN_LOGO, currentGroup) || '',
-                        groupWebsite: currentGroup?.website || '',
-                        groupContactUs: `${window.location.origin}/groups/${groupUserName}/contact-us`,
-                        sender: currentAdmin?.email,
-                        receiver: invite.email,
-                        receiverName: '', // Name not known at invitation time - template will show email instead
-                        userType: userTypeString,
-                        signupURL: signupURL
-                    }
+                    userType: invite.userType,
+                    groupID: activeGroup.anid,
+                    groupDisplayName: activeGroup.displayName,
+                    groupUserName: activeGroupUserName || activeGroup.groupUserName,
+                    groupLogo: utils.getLogoFromGroup(utils.GET_PLAIN_LOGO, activeGroup) || ''
                 });
-
-                // Track activity
-                await realtimeDBUtils
-                    .trackActivity({
-                        userID: currentAdmin.id,
-                        activityType: DB_CONST.ACTIVITY_TYPE_POST,
-                        interactedObjectLocation: DB_CONST.INVITED_USERS_CHILD,
-                        interactedObjectID: invitedUser.id,
-                        activitySummary: `invited ${invite.email} to join ${currentGroup?.displayName} as a ${invite.userType === DB_CONST.TYPE_ISSUER ? 'student' : 'project viewer'}`
-                    });
 
                 // Update status to success
                 updatedList[i] = {
@@ -279,11 +270,19 @@ class InviteMultipleUsers extends Component<InviteMultipleUsersProps, InviteMult
     };
 
     render() {
-        const {currentAdmin, currentGroup} = this.props;
-        const {dialogOpen, newEmail, newUserType, emailList, sending, emailError} = this.state;
+        const {currentGroup, systemGroups, groupsLoaded} = this.props;
+        const {dialogOpen, newEmail, newUserType, emailList, sending, emailError, selectedGroupId} = this.state;
 
         const hasSuccess = emailList.some(item => item.status === INVITE_STATUS_SUCCESS);
         const allComplete = emailList.length > 0 && emailList.every(item => item.status !== INVITE_STATUS_NONE && item.status !== INVITE_STATUS_SENDING);
+
+        // Get the active group for display
+        const activeGroup = this.getActiveGroup();
+        const isSuperAdmin = this.isSuperAdmin();
+        const needsGroupSelection = isSuperAdmin && !currentGroup;
+
+        // Filter to only show parent groups (universities) for super admin selection
+        const availableGroups = systemGroups?.filter(group => !group.parentGroupId) || [];
 
         return (
             <Box>
@@ -294,7 +293,7 @@ class InviteMultipleUsers extends Component<InviteMultipleUsersProps, InviteMult
                 <Box height="15px" />
 
                 <Typography variant="body2" color="textSecondary" paragraph>
-                    Send email invitations to multiple users at once. Users will receive an email with a signup link to join your course.
+                    Send email invitations to multiple users at once. Users will receive an email with their login credentials to join {isSuperAdmin ? 'a university' : 'your course'}.
                 </Typography>
 
                 <Button
@@ -317,7 +316,7 @@ class InviteMultipleUsers extends Component<InviteMultipleUsersProps, InviteMult
                         <FlexView vAlignContent="center">
                             <FlexView grow={4}>
                                 <Typography variant="h6" color="primary">
-                                    Invite Multiple Users to {currentGroup?.displayName}
+                                    Invite Multiple Users {activeGroup ? `to ${activeGroup.displayName}` : ''}
                                 </Typography>
                             </FlexView>
                             <FlexView grow={1} hAlignContent="right">
@@ -330,6 +329,33 @@ class InviteMultipleUsers extends Component<InviteMultipleUsersProps, InviteMult
 
                     <DialogContent>
                         <Box display="flex" flexDirection="column" style={{gap: '16px'}}>
+                            {/* Group Selection for Super Admins */}
+                            {needsGroupSelection && (
+                                <Box>
+                                    <Typography variant="subtitle1" gutterBottom>
+                                        Select University
+                                    </Typography>
+                                    <FormControl fullWidth variant="outlined">
+                                        <InputLabel>University</InputLabel>
+                                        <Select
+                                            value={selectedGroupId}
+                                            onChange={this.handleGroupChange}
+                                            label="University"
+                                            disabled={sending || !groupsLoaded}
+                                        >
+                                            <MenuItem value="">
+                                                <em>{groupsLoaded ? 'Select a university...' : 'Loading universities...'}</em>
+                                            </MenuItem>
+                                            {availableGroups.map(group => (
+                                                <MenuItem key={group.anid} value={group.anid}>
+                                                    {group.displayName}
+                                                </MenuItem>
+                                            ))}
+                                        </Select>
+                                    </FormControl>
+                                </Box>
+                            )}
+
                             {/* Add Email Section */}
                             <Box>
                                 <Typography variant="subtitle1" gutterBottom>
@@ -346,7 +372,7 @@ class InviteMultipleUsers extends Component<InviteMultipleUsersProps, InviteMult
                                         fullWidth
                                         error={!!emailError}
                                         helperText={emailError}
-                                        disabled={sending}
+                                        disabled={sending || (needsGroupSelection && !selectedGroupId)}
                                     />
 
                                     <FormControl component="fieldset">
@@ -360,13 +386,13 @@ class InviteMultipleUsers extends Component<InviteMultipleUsersProps, InviteMult
                                                 value={DB_CONST.TYPE_ISSUER.toString()}
                                                 control={<Radio color="primary" />}
                                                 label="Student"
-                                                disabled={sending}
+                                                disabled={sending || (needsGroupSelection && !selectedGroupId)}
                                             />
                                             <FormControlLabel
                                                 value={DB_CONST.TYPE_INVESTOR.toString()}
                                                 control={<Radio color="primary" />}
                                                 label="Project Viewer"
-                                                disabled={sending}
+                                                disabled={sending || (needsGroupSelection && !selectedGroupId)}
                                             />
                                         </RadioGroup>
                                     </FormControl>
@@ -375,7 +401,7 @@ class InviteMultipleUsers extends Component<InviteMultipleUsersProps, InviteMult
                                         variant="contained"
                                         color="primary"
                                         onClick={this.addEmailToList}
-                                        disabled={sending}
+                                        disabled={sending || (needsGroupSelection && !selectedGroupId)}
                                         className={css(sharedStyles.no_text_transform)}
                                     >
                                         Add to List
@@ -475,7 +501,7 @@ class InviteMultipleUsers extends Component<InviteMultipleUsersProps, InviteMult
                                 variant="contained"
                                 color="primary"
                                 onClick={this.sendInvitations}
-                                disabled={emailList.length === 0 || sending || allComplete}
+                                disabled={emailList.length === 0 || sending || allComplete || !activeGroup}
                                 startIcon={sending ? <BeatLoader size={8} color="white" /> : <SendIcon />}
                                 className={css(sharedStyles.no_text_transform)}
                             >
@@ -493,7 +519,10 @@ const mapStateToProps = (state: AppState) => {
     return {
         currentAdmin: state.auth?.user,
         currentGroup: state.manageGroupFromParams?.groupProperties,
-        groupUserName: state.manageGroupFromParams?.groupUserName
+        groupUserName: state.manageGroupFromParams?.groupUserName,
+        // For super admins who need to select a group
+        systemGroups: state.manageSystemGroups?.systemGroups,
+        groupsLoaded: state.manageSystemGroups?.groupsLoaded
     };
 };
 

@@ -3518,8 +3518,15 @@ class ProjectDetails extends Component {
                                 <Col xs={12} sm={12} md={12} lg={{span: 6, offset: 3}}>
 
                                     {
-                                        // Display reject feedbacks for the issuer (project owner) - not for admins
-                                        user && user.type !== DB_CONST.TYPE_ADMIN && isProjectOwner(user, project) && rejectFeedbacks && rejectFeedbacks.length > 0
+                                        // Display reject feedbacks for both admin and issuer (project owner)
+                                        // Only show when project is NOT live (still in draft/review state)
+                                        user &&
+                                        (user.type === DB_CONST.TYPE_ADMIN || isProjectOwner(user, project)) &&
+                                        rejectFeedbacks &&
+                                        rejectFeedbacks.length > 0 &&
+                                        !isProjectLive(project) &&
+                                        !isProjectSuccessful(project) &&
+                                        !isProjectFailed(project)
                                             ?
                                             <RejectFeedbacksList rejectFeedbacks={rejectFeedbacks} />
                                             :

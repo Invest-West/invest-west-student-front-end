@@ -95,6 +95,54 @@ export default class GroupRepository {
     }
 
     /**
+     * Get a specific course by parent group ID and course slug
+     * This is the proper way to find a course when multiple universities
+     * may have courses with the same slug (e.g., "student-showcase")
+     *
+     * @param parentGroupId - The ID of the parent university
+     * @param courseSlug - The groupUserName/slug of the course
+     * @returns Promise<GroupProperties | null>
+     */
+    public async getCourseByParentAndSlug(parentGroupId: string, courseSlug: string): Promise<GroupProperties | null> {
+        try {
+            // Query courses by parentGroupId first (more selective)
+            const coursesSnapshot = await firebase
+                .database()
+                .ref(COURSES_CHILD)
+                .orderByChild('parentGroupId')
+                .equalTo(parentGroupId)
+                .once('value');
+
+            if (!coursesSnapshot.exists()) {
+                console.log(`[GroupRepository] No courses found for parent: ${parentGroupId}`);
+                return null;
+            }
+
+            let matchingCourse: GroupProperties | null = null;
+            coursesSnapshot.forEach((snapshot) => {
+                const course = snapshot.val() as GroupProperties;
+                // Check if this course matches the slug
+                if (course.groupUserName === courseSlug && snapshot.key) {
+                    matchingCourse = { ...course, anid: snapshot.key };
+                    return true; // Stop iteration
+                }
+                return false; // Continue iteration
+            });
+
+            if (matchingCourse) {
+                console.log(`[GroupRepository] Found course by parent+slug: ${courseSlug} for parent ${parentGroupId}`, matchingCourse);
+            } else {
+                console.log(`[GroupRepository] Course not found: ${courseSlug} for parent ${parentGroupId}`);
+            }
+
+            return matchingCourse;
+        } catch (error) {
+            console.error('[GroupRepository] Error fetching course by parent and slug:', error);
+            throw error;
+        }
+    }
+
+    /**
      * Fetch groups
      *
      * @param params
@@ -143,6 +191,24 @@ export default class GroupRepository {
     }
 
     /**
+     * Update university name (super admin or super group admin only)
+     *
+     * @param groupUserName - University groupUserName
+     * @param newName - New university name
+     */
+    public async updateUniversityName(groupUserName: string, newName: string) {
+        return await new Api()
+            .request(
+                "put",
+                ApiRoutes.updateUniversityName.replace(":groupUserName", groupUserName),
+                {
+                    requestBody: { newName },
+                    queryParameters: null
+                }
+            );
+    }
+
+    /**
      * Update course image (system admin only)
      *
      * @param groupUserName - University groupUserName
@@ -181,6 +247,36 @@ export default class GroupRepository {
                     requestBody: { newName },
                     queryParameters: null
                 }
+            );
+    }
+
+    /**
+     * Delete a university (super admin only)
+     * This will delete the university and all associated courses
+     *
+     * @param groupUserName - University groupUserName
+     */
+    public async deleteUniversity(groupUserName: string) {
+        return await new Api()
+            .request(
+                "delete",
+                ApiRoutes.deleteUniversity.replace(":groupUserName", groupUserName)
+            );
+    }
+
+    /**
+     * Delete a course (super admin only)
+     *
+     * @param groupUserName - University groupUserName
+     * @param courseUserName - Course groupUserName
+     */
+    public async deleteCourse(groupUserName: string, courseUserName: string) {
+        return await new Api()
+            .request(
+                "delete",
+                ApiRoutes.deleteCourse
+                    .replace(":groupUserName", groupUserName)
+                    .replace(":courseUserName", courseUserName)
             );
     }
 }

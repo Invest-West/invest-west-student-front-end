@@ -91,6 +91,26 @@ export const startListeningForSystemGroupsChanged = () => {
                         });
                     }
                 });
+
+            // Handle university deletion - remove from state when deleted from Firebase
+            groupsListener
+                .on('child_removed', snapshot => {
+                    const removedGroup = snapshot.val();
+
+                    let groups = [...getState().manageSystemGroups.systemGroups];
+                    // Filter out the removed university AND any courses that belong to it
+                    const filteredGroups = groups.filter(existingGroup =>
+                        existingGroup.anid !== removedGroup.anid &&
+                        existingGroup.parentGroupId !== removedGroup.anid
+                    );
+
+                    if (filteredGroups.length !== groups.length) {
+                        dispatch({
+                            type: SYSTEM_GROUPS_CHANGED,
+                            groups: filteredGroups
+                        });
+                    }
+                });
         }
 
         // Listen to courses (Courses node)
@@ -128,6 +148,24 @@ export const startListeningForSystemGroupsChanged = () => {
                         });
                     }
                 });
+
+            // Handle course deletion - remove from state when deleted from Firebase
+            coursesListener
+                .on('child_removed', snapshot => {
+                    const removedCourse = snapshot.val();
+
+                    let groups = [...getState().manageSystemGroups.systemGroups];
+                    const filteredGroups = groups.filter(existingGroup =>
+                        existingGroup.anid !== removedCourse.anid
+                    );
+
+                    if (filteredGroups.length !== groups.length) {
+                        dispatch({
+                            type: SYSTEM_GROUPS_CHANGED,
+                            groups: filteredGroups
+                        });
+                    }
+                });
         }
     }
 }
@@ -137,11 +175,13 @@ export const stopListeningForSystemGroupsChanged = () => {
         if (groupsListener) {
             groupsListener.off('child_added');
             groupsListener.off('child_changed');
+            groupsListener.off('child_removed');
             groupsListener = null;
         }
         if (coursesListener) {
             coursesListener.off('child_added');
             coursesListener.off('child_changed');
+            coursesListener.off('child_removed');
             coursesListener = null;
         }
     }

@@ -2,7 +2,7 @@ import {Action, ActionCreator, Dispatch} from "redux";
 import React, {FormEvent} from "react";
 import {signIn} from "../../redux-store/actions/authenticationActions";
 import {AppState} from "../../redux-store/reducers";
-import firebaseApp from "../../firebase/firebaseApp.jsx";
+import Api, {ApiRoutes} from "../../api/Api";
 
 export enum SignInEvents {
     ResetAllStates = "SignInEvents.ResetAllStates",
@@ -113,8 +113,8 @@ export const onSendResetPasswordClick: ActionCreator<any> = (email: string) => {
         }
 
         try {
-            const auth = firebaseApp.auth();
-            await auth.sendPasswordResetEmail(email);
+            // Use backend API to send reset password email with custom template
+            await Api.doPost(ApiRoutes.requestResetPasswordRoute, { email });
             dispatch(toggleResetPasswordDialog());
             return dispatch(completeAction);
         } catch (error) {
