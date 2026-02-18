@@ -41,7 +41,7 @@ import {
   removeAccessRequest,
   sendAccessRequest,
 } from './ExploreGroupsActions';
-import { BeatLoader } from 'react-spinners';
+import CardSkeleton from '../skeletons/CardSkeleton';
 import GroupItem from './GroupItem';
 import UniversityGroupItem from './UniversityGroupItem';
 import GroupProperties, {
@@ -245,8 +245,8 @@ class ExploreGroups extends Component<ExploreGroupsProps, any> {
         {!isFetchingGroups(ExploreGroupsLocalState) ? null : (
           <Row noGutters>
             <Col xs={12} sm={12} md={12} lg={12}>
-              <Box display="flex" marginY="80px" justifyContent="center">
-                <BeatLoader color={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main} />
+              <Box marginY="50px">
+                <CardSkeleton cards={4} />
               </Box>
             </Col>
           </Row>

@@ -31,10 +31,7 @@ import {
   successfullyFetchedOffers,
 } from './ExploreOffersReducer';
 import { MediaQueryState } from '../../redux-store/reducers/mediaQueryReducer';
-import {
-  getGroupRouteTheme,
-  ManageGroupUrlState,
-} from '../../redux-store/reducers/manageGroupUrlReducer';
+import { ManageGroupUrlState } from '../../redux-store/reducers/manageGroupUrlReducer';
 import { AuthenticationState } from '../../redux-store/reducers/authenticationReducer';
 import {
   clearSearchFilter,
@@ -44,7 +41,7 @@ import {
   paginationChanged,
 } from './ExploreOffersActions';
 import { ManageSystemAttributesState } from '../../redux-store/reducers/manageSystemAttributesReducer';
-import { BeatLoader } from 'react-spinners';
+import CardSkeleton from '../skeletons/CardSkeleton';
 import OfferItem from './OfferItem';
 import { isIssuer } from '../../models/user';
 import CustomLink from '../../shared-js-css-styles/CustomLink';
@@ -294,8 +291,8 @@ class ExploreOffers extends Component<ExploreOffersProps, ExploreOffersComponent
         {!isFetchingOffers(ExploreOffersLocalState) ? null : (
           <Row noGutters>
             <Col xs={12} sm={12} md={12} lg={12}>
-              <Box display="flex" marginY="50px" justifyContent="center">
-                <BeatLoader color={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main} />
+              <Box marginY="50px">
+                <CardSkeleton cards={4} />
               </Box>
             </Col>
           </Row>

@@ -7,7 +7,7 @@ import { Badge, IconButton, Typography } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import { Col, Container, Row } from 'react-bootstrap';
 import Menu from '@mui/icons-material/Menu';
-import { HashLoader } from 'react-spinners';
+import PageSkeleton from '../../shared-components/skeletons/PageSkeleton';
 
 import firebase from '../../firebase/firebaseApp';
 
@@ -292,11 +292,7 @@ class IssuerDashboard extends Component {
     } = this.props;
 
     if (!groupPropertiesLoaded) {
-      return (
-        <FlexView marginTop={30} hAlignContent="center">
-          <HashLoader color={colors.primaryColor} />
-        </FlexView>
-      );
+      return <PageSkeleton rows={8} />;
     }
 
     if (!shouldLoadOtherData) {
@@ -304,13 +300,7 @@ class IssuerDashboard extends Component {
     }
 
     if (authenticating || !userLoaded) {
-      return (
-        <FlexView marginTop={30} hAlignContent="center">
-          <HashLoader
-            color={!groupProperties ? colors.primaryColor : groupProperties.settings.primaryColor}
-          />
-        </FlexView>
-      );
+      return <PageSkeleton rows={8} />;
     }
 
     if (authStatus !== AUTH_SUCCESS || !user || (user && user.type !== DB_CONST.TYPE_ISSUER)) {

@@ -6,9 +6,8 @@ interface CarouselOfferItemProps {
   onClick: () => void;
 }
 
-const CarouselOfferItem: React.FC<CarouselOfferItemProps> = ({ offer, onClick }) => {
+const CarouselOfferItem: React.FC<CarouselOfferItemProps> = React.memo(({ offer, onClick }) => {
   const pitchCover = getPitchCover(offer.projectDetail);
-  console.log('CarouselOfferItem pitchCover:', pitchCover);
 
   return (
     <div
@@ -116,6 +115,6 @@ const CarouselOfferItem: React.FC<CarouselOfferItemProps> = ({ offer, onClick })
               </CardContent>
           </Card>*/
   );
-};
+});
 
 export default CarouselOfferItem;

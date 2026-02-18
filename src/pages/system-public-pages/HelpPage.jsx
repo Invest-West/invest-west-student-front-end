@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import {
   Accordion,
@@ -20,7 +20,7 @@ import { css, StyleSheet } from 'aphrodite';
 import HashLoader from 'react-spinners/HashLoader';
 import PageNotFoundWhole from '../../shared-components/page-not-found/PageNotFoundWhole';
 
-import { connect } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import * as manageGroupFromParamsActions from '../../redux-store/actions/manageGroupFromParamsActions';
 
 import './SystemPublicPagesSharedCSS.scss';
@@ -31,235 +31,160 @@ import sharedStyles from '../../shared-js-css-styles/SharedStyles';
 import * as colors from '../../values/colors';
 import { AUTH_SUCCESS } from '../signin/Signin';
 
-const mapStateToProps = (state) => {
-  return {
-    groupUserName: state.manageGroupFromParams.groupUserName,
-    groupProperties: state.manageGroupFromParams.groupProperties,
-    groupPropertiesLoaded: state.manageGroupFromParams.groupPropertiesLoaded,
-    shouldLoadOtherData: state.manageGroupFromParams.shouldLoadOtherData,
+function HelpPage() {
+  const dispatch = useDispatch();
+  const params = useParams();
+  const location = useLocation();
 
-    authStatus: state.auth.authStatus,
-    authenticating: state.auth.authenticating,
-    user: state.auth.user,
-    userLoaded: state.auth.userLoaded,
-  };
-};
+  const groupProperties = useSelector((state) => state.manageGroupFromParams.groupProperties);
+  const groupPropertiesLoaded = useSelector(
+    (state) => state.manageGroupFromParams.groupPropertiesLoaded
+  );
+  const shouldLoadOtherData = useSelector(
+    (state) => state.manageGroupFromParams.shouldLoadOtherData
+  );
+  const authStatus = useSelector((state) => state.auth.authStatus);
+  const authenticating = useSelector((state) => state.auth.authenticating);
+  const user = useSelector((state) => state.auth.user);
+  const userLoaded = useSelector((state) => state.auth.userLoaded);
 
-const mapDispatchToProps = (dispatch) => {
-  return {
-    setGroupUserNameFromParams: (groupUserName) =>
-      dispatch(manageGroupFromParamsActions.setGroupUserNameFromParams(groupUserName)),
-    setExpectedAndCurrentPathsForChecking: (expectedPath, currentPath) =>
-      dispatch(
-        manageGroupFromParamsActions.setExpectedAndCurrentPathsForChecking(
-          expectedPath,
-          currentPath
-        )
-      ),
-    loadAngelNetwork: () => dispatch(manageGroupFromParamsActions.loadAngelNetwork()),
-  };
-};
+  const [helpType, setHelpType] = useState(DB_CONST.TYPE_INVESTOR);
+  const [autoSwitching, setAutoSwitching] = useState(true);
+  const [expandedPanel, setExpandedPanel] = useState(false);
 
-class HelpPage extends Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      helpType: DB_CONST.TYPE_INVESTOR,
-      autoSwitching: true,
-      expandedPanel: false,
-    };
-  }
-
-  componentDidMount() {
-    const {
-      setGroupUserNameFromParams,
-      setExpectedAndCurrentPathsForChecking,
-
-      loadAngelNetwork,
-    } = this.props;
-
-    const match = this.props.match;
-
-    setGroupUserNameFromParams(
-      match.params.hasOwnProperty('groupUserName') ? match.params.groupUserName : null
-    );
-    setExpectedAndCurrentPathsForChecking(
-      match.params.hasOwnProperty('groupUserName') ? ROUTES.HELP : ROUTES.HELP_INVEST_WEST_SUPER,
-      match.path
-    );
-
-    loadAngelNetwork();
-
-    this.autoSwitchToAppropriateHelpTab();
-  }
-
-  componentDidUpdate(prevProps, prevState, snapshot) {
-    const { groupPropertiesLoaded, shouldLoadOtherData, loadAngelNetwork } = this.props;
-
-    loadAngelNetwork();
-
-    if (groupPropertiesLoaded && shouldLoadOtherData) {
-      this.autoSwitchToAppropriateHelpTab();
-    }
-  }
-
-  /**
-   * Switch to the appropriate Help tab based on user's type
-   */
-  autoSwitchToAppropriateHelpTab = () => {
-    const { user } = this.props;
-
-    const { helpType, autoSwitching } = this.state;
-
+  const autoSwitchToAppropriateHelpTab = useCallback(() => {
     if (!user) {
       return;
     }
 
     if (user.type !== DB_CONST.TYPE_ADMIN) {
-      // when the user just opened this Help page
-      // detect if the type of the user to automatically switch the Help tab
-      // this should only happen once
       if (user.type !== helpType) {
         if (autoSwitching) {
-          this.setState({
-            helpType: user.type,
-            autoSwitching: false,
-          });
+          setHelpType(user.type);
+          setAutoSwitching(false);
         }
       } else {
         if (autoSwitching) {
-          this.setState({
-            autoSwitching: false,
-          });
+          setAutoSwitching(false);
         }
       }
     }
+  }, [user, helpType, autoSwitching]);
+
+  // componentDidMount equivalent
+  useEffect(() => {
+    const groupUserName = params.groupUserName || null;
+    dispatch(manageGroupFromParamsActions.setGroupUserNameFromParams(groupUserName));
+    dispatch(
+      manageGroupFromParamsActions.setExpectedAndCurrentPathsForChecking(
+        params.groupUserName ? ROUTES.HELP : ROUTES.HELP_INVEST_WEST_SUPER,
+        location.pathname
+      )
+    );
+    dispatch(manageGroupFromParamsActions.loadAngelNetwork());
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // componentDidUpdate equivalent
+  useEffect(() => {
+    dispatch(manageGroupFromParamsActions.loadAngelNetwork());
+    if (groupPropertiesLoaded && shouldLoadOtherData) {
+      autoSwitchToAppropriateHelpTab();
+    }
+  }, [groupPropertiesLoaded, shouldLoadOtherData, dispatch, autoSwitchToAppropriateHelpTab]);
+
+  // Also auto-switch on mount once user is loaded
+  useEffect(() => {
+    autoSwitchToAppropriateHelpTab();
+  }, [user, autoSwitchToAppropriateHelpTab]);
+
+  const handleTabChanged = (event, newValue) => {
+    setHelpType(newValue);
+    setExpandedPanel(false);
   };
 
-  /**
-   * Handle tab changed
-   *
-   * @param event
-   * @param newValue
-   */
-  handleTabChanged = (event, newValue) => {
-    this.setState({
-      helpType: newValue,
-      expandedPanel: false,
-    });
+  const handleExpandPanel = (panel) => (event, isExpanded) => {
+    setExpandedPanel(isExpanded ? panel : false);
   };
 
-  /**
-   * Handle panel changed
-   *
-   * @param panel
-   * @returns {function(...[*]=)}
-   */
-  handleExpandPanel = (panel) => (event, isExpanded) => {
-    this.setState({
-      expandedPanel: isExpanded ? panel : false,
-    });
-  };
-
-  render() {
-    const { helpType } = this.state;
-
-    const {
-      groupProperties,
-      shouldLoadOtherData,
-      groupPropertiesLoaded,
-
-      authStatus,
-      authenticating,
-      user,
-      userLoaded,
-    } = this.props;
-
-    if (!groupPropertiesLoaded) {
-      return (
-        <FlexView marginTop={30} hAlignContent="center">
-          <HashLoader color={colors.primaryColor} />
-        </FlexView>
-      );
-    }
-
-    if (!shouldLoadOtherData) {
-      return <PageNotFoundWhole />;
-    }
-
-    if (authenticating || !userLoaded) {
-      return (
-        <FlexView marginTop={30} hAlignContent="center">
-          <HashLoader
-            color={!groupProperties ? colors.primaryColor : groupProperties.settings.primaryColor}
-          />
-        </FlexView>
-      );
-    }
-
-    if (authStatus !== AUTH_SUCCESS || !user) {
-      return <PageNotFoundWhole />;
-    }
-
+  if (!groupPropertiesLoaded) {
     return (
-      <Container fluid style={{ paddingLeft: 0, paddingRight: 0, paddingBottom: 50 }}>
-        <Row noGutters style={{ marginTop: 40, marginBottom: 60 }}>
-          <Col xs={12} sm={12} md={{ span: 6, offset: 3 }} lg={{ span: 4, offset: 4 }}>
-            <FlexView width="100%" hAlignContent="center" marginBottom={20}>
-              <ContactSupportIcon
-                style={{
-                  fontSize: '7em',
-                  color: !groupProperties
-                    ? colors.primaryColor
-                    : groupProperties.settings.primaryColor,
-                }}
-              />
-            </FlexView>
-            <Typography variant="h4" align="center" color="primary">
-              How can we help you?
-            </Typography>
-            {user.type === DB_CONST.TYPE_ADMIN ? null : (
-              <FlexView width="100%" hAlignContent="center" marginTop={40}>
-                <Paper elevation={2} style={{ width: '100%' }}>
-                  <Tabs
-                    indicatorColor="primary"
-                    textColor="primary"
-                    variant="fullWidth"
-                    value={helpType}
-                    onChange={this.handleTabChanged}
-                  >
-                    <Tab
-                      value={DB_CONST.TYPE_INVESTOR}
-                      label="Investor"
-                      className={css(sharedStyles.no_text_transform)}
-                    />
-                    <Tab
-                      value={DB_CONST.TYPE_ISSUER}
-                      label="Issuer"
-                      className={css(sharedStyles.no_text_transform)}
-                    />
-                  </Tabs>
-                </Paper>
-              </FlexView>
-            )}
-          </Col>
-        </Row>
-
-        {user.type === DB_CONST.TYPE_ADMIN
-          ? this.renderGroupAdminHelp()
-          : helpType === DB_CONST.TYPE_INVESTOR
-            ? this.renderInvestorHelp()
-            : this.renderIssuerHelp()}
-      </Container>
+      <FlexView marginTop={30} hAlignContent="center">
+        <HashLoader color={colors.primaryColor} />
+      </FlexView>
     );
   }
 
-  /**
-   * Render group admin help
-   */
-  renderGroupAdminHelp = () => {
-    const { expandedPanel } = this.state;
+  if (!shouldLoadOtherData) {
+    return <PageNotFoundWhole />;
+  }
+
+  if (authenticating || !userLoaded) {
+    return (
+      <FlexView marginTop={30} hAlignContent="center">
+        <HashLoader
+          color={!groupProperties ? colors.primaryColor : groupProperties.settings.primaryColor}
+        />
+      </FlexView>
+    );
+  }
+
+  if (authStatus !== AUTH_SUCCESS || !user) {
+    return <PageNotFoundWhole />;
+  }
+
+  return (
+    <Container fluid style={{ paddingLeft: 0, paddingRight: 0, paddingBottom: 50 }}>
+      <Row noGutters style={{ marginTop: 40, marginBottom: 60 }}>
+        <Col xs={12} sm={12} md={{ span: 6, offset: 3 }} lg={{ span: 4, offset: 4 }}>
+          <FlexView width="100%" hAlignContent="center" marginBottom={20}>
+            <ContactSupportIcon
+              style={{
+                fontSize: '7em',
+                color: !groupProperties
+                  ? colors.primaryColor
+                  : groupProperties.settings.primaryColor,
+              }}
+            />
+          </FlexView>
+          <Typography variant="h4" align="center" color="primary">
+            How can we help you?
+          </Typography>
+          {user.type === DB_CONST.TYPE_ADMIN ? null : (
+            <FlexView width="100%" hAlignContent="center" marginTop={40}>
+              <Paper elevation={2} style={{ width: '100%' }}>
+                <Tabs
+                  indicatorColor="primary"
+                  textColor="primary"
+                  variant="fullWidth"
+                  value={helpType}
+                  onChange={handleTabChanged}
+                >
+                  <Tab
+                    value={DB_CONST.TYPE_INVESTOR}
+                    label="Investor"
+                    className={css(sharedStyles.no_text_transform)}
+                  />
+                  <Tab
+                    value={DB_CONST.TYPE_ISSUER}
+                    label="Issuer"
+                    className={css(sharedStyles.no_text_transform)}
+                  />
+                </Tabs>
+              </Paper>
+            </FlexView>
+          )}
+        </Col>
+      </Row>
+
+      {user.type === DB_CONST.TYPE_ADMIN
+        ? renderGroupAdminHelp()
+        : helpType === DB_CONST.TYPE_INVESTOR
+          ? renderInvestorHelp()
+          : renderIssuerHelp()}
+    </Container>
+  );
+
+  function renderGroupAdminHelp() {
     /** Group admin guide  */
     return (
       <Container>
@@ -268,7 +193,7 @@ class HelpPage extends Component {
             {/** 1. Navigating Student Showcase */}
             <Accordion
               expanded={expandedPanel === 'group_admin_help_navigating_invest_west'}
-              onChange={this.handleExpandPanel('group_admin_help_navigating_invest_west')}
+              onChange={handleExpandPanel('group_admin_help_navigating_invest_west')}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <FlexView column>
@@ -339,7 +264,7 @@ class HelpPage extends Component {
             {/** 2. Manage group users */}
             <Accordion
               expanded={expandedPanel === 'group_admin_help_user_management'}
-              onChange={this.handleExpandPanel('group_admin_help_user_management')}
+              onChange={handleExpandPanel('group_admin_help_user_management')}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <FlexView column>
@@ -399,7 +324,7 @@ class HelpPage extends Component {
             {/** 3. Manage access requests */}
             <Accordion
               expanded={expandedPanel === 'group_admin_help_manage_access_requests'}
-              onChange={this.handleExpandPanel('group_admin_help_manage_access_requests')}
+              onChange={handleExpandPanel('group_admin_help_manage_access_requests')}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <FlexView column>
@@ -424,7 +349,7 @@ class HelpPage extends Component {
             {/** 4. Manage group members */}
             <Accordion
               expanded={expandedPanel === 'group_admin_help_manage_group_requests'}
-              onChange={this.handleExpandPanel('group_admin_help_manage_group_requests')}
+              onChange={handleExpandPanel('group_admin_help_manage_group_requests')}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <FlexView column>
@@ -454,7 +379,7 @@ class HelpPage extends Component {
             {/** 5. Manage offers */}
             <Accordion
               expanded={expandedPanel === 'group_admin_help_manage_offers'}
-              onChange={this.handleExpandPanel('group_admin_help_manage_offers')}
+              onChange={handleExpandPanel('group_admin_help_manage_offers')}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <FlexView column>
@@ -552,7 +477,7 @@ class HelpPage extends Component {
             {/** 6. Manage group admins */}
             <Accordion
               expanded={expandedPanel === 'group_admin_help_manage_group_admins'}
-              onChange={this.handleExpandPanel('group_admin_help_manage_group_admins')}
+              onChange={handleExpandPanel('group_admin_help_manage_group_admins')}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <FlexView column>
@@ -578,7 +503,7 @@ class HelpPage extends Component {
             {/** 7. Explore offers */}
             <Accordion
               expanded={expandedPanel === 'group_admin_help_explore_offers'}
-              onChange={this.handleExpandPanel('group_admin_help_explore_offers')}
+              onChange={handleExpandPanel('group_admin_help_explore_offers')}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <FlexView column>
@@ -602,7 +527,7 @@ class HelpPage extends Component {
             {/** 8. Explore groups */}
             <Accordion
               expanded={expandedPanel === 'group_admin_help_explore_groups'}
-              onChange={this.handleExpandPanel('group_admin_help_explore_groups')}
+              onChange={handleExpandPanel('group_admin_help_explore_groups')}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <FlexView column>
@@ -624,7 +549,7 @@ class HelpPage extends Component {
             {/** 9. Resources */}
             <Accordion
               expanded={expandedPanel === 'group_admin_help_resources'}
-              onChange={this.handleExpandPanel('group_admin_help_resources')}
+              onChange={handleExpandPanel('group_admin_help_resources')}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <FlexView column>
@@ -647,7 +572,7 @@ class HelpPage extends Component {
             {/** 10. Settings */}
             <Accordion
               expanded={expandedPanel === 'group_admin_help_settings'}
-              onChange={this.handleExpandPanel('group_admin_help_settings')}
+              onChange={handleExpandPanel('group_admin_help_settings')}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <FlexView column>
@@ -731,7 +656,7 @@ class HelpPage extends Component {
             {/** 11. Audit log */}
             <Accordion
               expanded={expandedPanel === 'group_admin_help_audit_log'}
-              onChange={this.handleExpandPanel('group_admin_help_audit_log')}
+              onChange={handleExpandPanel('group_admin_help_audit_log')}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <FlexView column>
@@ -753,7 +678,7 @@ class HelpPage extends Component {
             {/** 12. Password */}
             <Accordion
               expanded={expandedPanel === 'group_admin_help_password'}
-              onChange={this.handleExpandPanel('group_admin_help_password')}
+              onChange={handleExpandPanel('group_admin_help_password')}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <FlexView column>
@@ -789,7 +714,7 @@ class HelpPage extends Component {
             {/** 13. Logging out */}
             <Accordion
               expanded={expandedPanel === 'group_admin_help_logging_out'}
-              onChange={this.handleExpandPanel('group_admin_help_logging_out')}
+              onChange={handleExpandPanel('group_admin_help_logging_out')}
             >
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <FlexView column>
@@ -818,21 +743,16 @@ class HelpPage extends Component {
         </Row>
       </Container>
     );
-  };
+  }
 
-  /**
-   * Render investor help
-   */
-  renderInvestorHelp = () => {
-    const { expandedPanel } = this.state;
-
+  function renderInvestorHelp() {
     return (
       <Row noGutters style={{ marginBottom: 50 }}>
         <Col xs={12} sm={12} md={{ span: 8, offset: 2 }} lg={{ span: 6, offset: 3 }}>
           {/** 1. Navigating Invest West */}
           <Accordion
             expanded={expandedPanel === 'investor_help_navigating_invest_west'}
-            onChange={this.handleExpandPanel('investor_help_navigating_invest_west')}
+            onChange={handleExpandPanel('investor_help_navigating_invest_west')}
           >
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <FlexView column>
@@ -891,7 +811,7 @@ class HelpPage extends Component {
           {/** 2. Offers */}
           <Accordion
             expanded={expandedPanel === 'investor_help_offers'}
-            onChange={this.handleExpandPanel('investor_help_offers')}
+            onChange={handleExpandPanel('investor_help_offers')}
           >
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <FlexView column>
@@ -959,7 +879,7 @@ class HelpPage extends Component {
           {/** 3. Exploring groups */}
           <Accordion
             expanded={expandedPanel === 'investor_help_exploring_groups'}
-            onChange={this.handleExpandPanel('investor_help_exploring_groups')}
+            onChange={handleExpandPanel('investor_help_exploring_groups')}
           >
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <FlexView column>
@@ -982,7 +902,7 @@ class HelpPage extends Component {
           {/** 4. Resources */}
           <Accordion
             expanded={expandedPanel === 'investor_help_resources'}
-            onChange={this.handleExpandPanel('investor_help_resources')}
+            onChange={handleExpandPanel('investor_help_resources')}
           >
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <FlexView column>
@@ -1006,7 +926,7 @@ class HelpPage extends Component {
           {/** 5. Your profile */}
           <Accordion
             expanded={expandedPanel === 'investor_help_your_profile'}
-            onChange={this.handleExpandPanel('investor_help_your_profile')}
+            onChange={handleExpandPanel('investor_help_your_profile')}
           >
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <FlexView column>
@@ -1049,7 +969,7 @@ class HelpPage extends Component {
           {/** 6. Password */}
           <Accordion
             expanded={expandedPanel === 'investor_help_password'}
-            onChange={this.handleExpandPanel('investor_help_password')}
+            onChange={handleExpandPanel('investor_help_password')}
           >
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <FlexView column>
@@ -1091,7 +1011,7 @@ class HelpPage extends Component {
           {/** 7. Support */}
           <Accordion
             expanded={expandedPanel === 'investor_help_support'}
-            onChange={this.handleExpandPanel('investor_help_support')}
+            onChange={handleExpandPanel('investor_help_support')}
           >
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <FlexView column>
@@ -1118,7 +1038,7 @@ class HelpPage extends Component {
           {/** 8. Logging out */}
           <Accordion
             expanded={expandedPanel === 'investor_help_logging_out'}
-            onChange={this.handleExpandPanel('investor_help_logging_out')}
+            onChange={handleExpandPanel('investor_help_logging_out')}
           >
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <FlexView column>
@@ -1139,14 +1059,9 @@ class HelpPage extends Component {
         </Col>
       </Row>
     );
-  };
+  }
 
-  /**
-   * Render issuer help
-   */
-  renderIssuerHelp = () => {
-    const { expandedPanel } = this.state;
-
+  function renderIssuerHelp() {
     return (
       <Row
         noGutters
@@ -1158,7 +1073,7 @@ class HelpPage extends Component {
           {/** 1. Navigating Invest West */}
           <Accordion
             expanded={expandedPanel === 'issuer_help_navigating_invest_west'}
-            onChange={this.handleExpandPanel('issuer_help_navigating_invest_west')}
+            onChange={handleExpandPanel('issuer_help_navigating_invest_west')}
           >
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <FlexView column>
@@ -1218,7 +1133,7 @@ class HelpPage extends Component {
           {/** 2. My projects */}
           <Accordion
             expanded={expandedPanel === 'issuer_help_my_offers'}
-            onChange={this.handleExpandPanel('issuer_help_my_offers')}
+            onChange={handleExpandPanel('issuer_help_my_offers')}
           >
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <FlexView column>
@@ -1303,7 +1218,7 @@ class HelpPage extends Component {
           {/** 3. Exploring groups */}
           <Accordion
             expanded={expandedPanel === 'issuer_help_exploring_groups'}
-            onChange={this.handleExpandPanel('issuer_help_exploring_groups')}
+            onChange={handleExpandPanel('issuer_help_exploring_groups')}
           >
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <FlexView column>
@@ -1326,7 +1241,7 @@ class HelpPage extends Component {
           {/** 4. Resources */}
           <Accordion
             expanded={expandedPanel === 'issuer_help_resources'}
-            onChange={this.handleExpandPanel('issuer_help_resources')}
+            onChange={handleExpandPanel('issuer_help_resources')}
           >
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <FlexView column>
@@ -1350,7 +1265,7 @@ class HelpPage extends Component {
           {/** 5. Your profile */}
           <Accordion
             expanded={expandedPanel === 'issuer_help_your_profile'}
-            onChange={this.handleExpandPanel('issuer_help_your_profile')}
+            onChange={handleExpandPanel('issuer_help_your_profile')}
           >
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <FlexView column>
@@ -1415,7 +1330,7 @@ class HelpPage extends Component {
           {/** 6. Password */}
           <Accordion
             expanded={expandedPanel === 'issuer_help_password'}
-            onChange={this.handleExpandPanel('issuer_help_password')}
+            onChange={handleExpandPanel('issuer_help_password')}
           >
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <FlexView column>
@@ -1457,7 +1372,7 @@ class HelpPage extends Component {
           {/** 7. Support */}
           <Accordion
             expanded={expandedPanel === 'issuer_help_support'}
-            onChange={this.handleExpandPanel('issuer_help_support')}
+            onChange={handleExpandPanel('issuer_help_support')}
           >
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <FlexView column>
@@ -1484,7 +1399,7 @@ class HelpPage extends Component {
           {/** 8. Logging out */}
           <Accordion
             expanded={expandedPanel === 'issuer_help_logging_out'}
-            onChange={this.handleExpandPanel('issuer_help_logging_out')}
+            onChange={handleExpandPanel('issuer_help_logging_out')}
           >
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
               <FlexView column>
@@ -1505,23 +1420,10 @@ class HelpPage extends Component {
         </Col>
       </Row>
     );
-  };
+  }
 }
 
-const ConnectedHelpPage = connect(mapStateToProps, mapDispatchToProps)(HelpPage);
-
-function HelpPageWrapper(props) {
-  const params = useParams();
-  const location = useLocation();
-  const match = {
-    params: params,
-    path: location.pathname,
-    pathname: location.pathname,
-  };
-  return <ConnectedHelpPage {...props} match={match} location={location} />;
-}
-
-export default HelpPageWrapper;
+export default HelpPage;
 
 const styles = StyleSheet.create({
   image_style: {

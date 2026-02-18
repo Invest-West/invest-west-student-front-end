@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import FlexView from 'react-flexview';
-import HashLoader from 'react-spinners/HashLoader';
+import PageSkeleton from '../../shared-components/skeletons/PageSkeleton';
 import { Col, Container, Row } from 'react-bootstrap';
 import Sidebar from 'react-sidebar';
 import { css, StyleSheet } from 'aphrodite';
@@ -274,11 +274,7 @@ class InvestorDashboard extends Component {
     } = this.props;
 
     if (!groupPropertiesLoaded) {
-      return (
-        <FlexView marginTop={30} hAlignContent="center">
-          <HashLoader color={colors.primaryColor} />
-        </FlexView>
-      );
+      return <PageSkeleton rows={8} />;
     }
 
     if (!shouldLoadOtherData) {
@@ -286,13 +282,7 @@ class InvestorDashboard extends Component {
     }
 
     if (authenticating || !userLoaded) {
-      return (
-        <FlexView marginTop={30} hAlignContent="center">
-          <HashLoader
-            color={!groupProperties ? colors.primaryColor : groupProperties.settings.primaryColor}
-          />
-        </FlexView>
-      );
+      return <PageSkeleton rows={8} />;
     }
 
     if (authStatus !== AUTH_SUCCESS || !user || (user && user.type !== DB_CONST.TYPE_INVESTOR)) {

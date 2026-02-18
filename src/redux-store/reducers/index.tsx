@@ -23,7 +23,7 @@ import manageGroupFromParamsReducer from './manageGroupFromParamsReducer';
 import angelNetworksReducer from './angelNetworksReducer';
 import manageJoinRequestsReducer from './manageJoinRequestsReducer';
 import pledgesTableReducer from './pledgesTableReducer';
-import feedbackSnackbarReducer from './feedbackSnackbarReducer';
+import feedbackSnackbarReducer from '../slices/feedbackSnackbarSlice';
 import activitiesTableReducer from './activitiesTableReducer';
 import manageJSONCompareChangesDialogReducer from './manageJSONCompareChangesDialogReducer';
 import groupAdminsTableReducer from './groupAdminsTableReducer';

@@ -16,7 +16,7 @@ import {
 import Menu from '@mui/icons-material/Menu';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import HashLoader from 'react-spinners/HashLoader';
+import PageSkeleton from '../../shared-components/skeletons/PageSkeleton';
 import queryString from 'query-string';
 
 import firebase from '../../firebase/firebaseApp';
@@ -602,11 +602,7 @@ class AdminDashboard extends Component {
     const currentAdmin = isAdmin(currentUser);
 
     if (!groupPropertiesLoaded) {
-      return (
-        <FlexView marginTop={30} hAlignContent="center">
-          <HashLoader color={colors.primaryColor} />
-        </FlexView>
-      );
+      return <PageSkeleton rows={8} />;
     }
 
     if (!shouldLoadOtherData) {
@@ -614,13 +610,7 @@ class AdminDashboard extends Component {
     }
 
     if (authenticating || !currentUserLoaded) {
-      return (
-        <FlexView marginTop={30} hAlignContent="center">
-          <HashLoader
-            color={!groupProperties ? colors.primaryColor : groupProperties.settings.primaryColor}
-          />
-        </FlexView>
-      );
+      return <PageSkeleton rows={8} />;
     }
 
     if (

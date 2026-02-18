@@ -68,7 +68,7 @@ import {
   setUser,
 } from './OffersTableActions';
 import { Col, Row } from 'react-bootstrap';
-import { BeatLoader } from 'react-spinners';
+import TableSkeleton from '../skeletons/TableSkeleton';
 import PublicIcon from '@mui/icons-material/Public';
 import RestrictedIcon from '@mui/icons-material/VpnLock';
 import PrivateIcon from '@mui/icons-material/LockOutlined';
@@ -498,10 +498,8 @@ class OffersTable extends Component<OffersTableProps, any> {
               isFetchingOffers(OffersTableLocalState) ? (
                 <TableRow>
                   <TableCell colSpan={5}>
-                    <Box display="flex" justifyContent="center" alignItems="center" height="120px">
-                      <BeatLoader
-                        color={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main}
-                      />
+                    <Box padding={2}>
+                      <TableSkeleton rows={5} columns={5} />
                     </Box>
                   </TableCell>
                 </TableRow>
