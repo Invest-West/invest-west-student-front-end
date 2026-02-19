@@ -3,13 +3,13 @@ import GroupProperties from '../../models/group_properties';
 import { InvitedUserWithProfile } from '../../models/invited_user';
 import { ProjectInstance } from '../../models/project';
 import { AppState } from '../../redux-store/reducers';
-import GroupRepository from '../../api/repositories/GroupRepository';
-import OfferRepository, {
+import groupRepository from '../../api/repositories/GroupRepository';
+import offerRepository, {
   FetchProjectsOrderByOptions,
 } from '../../api/repositories/OfferRepository';
 import AccessRequest, { AccessRequestInstance } from '../../models/access_request';
 import Admin, { isAdmin } from '../../models/admin';
-import AccessRequestRepository from '../../api/repositories/AccessRequestRepository';
+import accessRequestRepository from '../../api/repositories/AccessRequestRepository';
 import * as realtimeDBUtils from '../../firebase/realtimeDBUtils';
 
 export enum GroupDetailsEvents {
@@ -67,13 +67,13 @@ export const loadData: ActionCreator<any> = (groupUserName: string) => {
     }
 
     try {
-      const groupResponse = await new GroupRepository().getGroup(groupUserName);
+      const groupResponse = await groupRepository.getGroup(groupUserName);
       const group: GroupProperties = groupResponse.data;
 
-      const membersResponse = await new GroupRepository().fetchGroupMembers(group.groupUserName);
+      const membersResponse = await groupRepository.fetchGroupMembers(group.groupUserName);
       const members: InvitedUserWithProfile[] = membersResponse.data;
 
-      const offersResponse = await new OfferRepository().fetchOffers({
+      const offersResponse = await offerRepository.fetchOffers({
         phase: 'all',
         group: group.anid,
         orderBy: FetchProjectsOrderByOptions.Group,
@@ -133,11 +133,10 @@ export const loadData: ActionCreator<any> = (groupUserName: string) => {
         // user is an issuer, investor, or group admin
         // and access requests have not been fetched
         if (!accessRequestsInstances) {
-          const accessRequestInstancesResponse =
-            await new AccessRequestRepository().fetchAccessRequests({
-              user: currentUser.id,
-              orderBy: 'user',
-            });
+          const accessRequestInstancesResponse = await accessRequestRepository.fetchAccessRequests({
+            user: currentUser.id,
+            orderBy: 'user',
+          });
           completeAction.accessRequestInstances = accessRequestInstancesResponse.data;
         }
       }
@@ -177,7 +176,7 @@ export const sendAccessRequest: ActionCreator<any> = () => {
     }
 
     try {
-      const response = await new AccessRequestRepository().createAccessRequest(
+      const response = await accessRequestRepository.createAccessRequest(
         currentUser.id,
         group.anid
       );
@@ -241,7 +240,7 @@ export const removeAccessRequest: ActionCreator<any> = () => {
       ];
       const accessRequest: AccessRequest =
         updatedAccessRequestInstances[accessRequestIndex].request;
-      await new AccessRequestRepository().removeAccessRequest(accessRequest.id);
+      await accessRequestRepository.removeAccessRequest(accessRequest.id);
       updatedAccessRequestInstances.splice(accessRequestIndex, 1);
 
       completeAction.updatedAccessRequestInstances = updatedAccessRequestInstances;

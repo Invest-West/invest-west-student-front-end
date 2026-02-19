@@ -15,7 +15,7 @@ import {
 import { Close } from '@mui/icons-material';
 import { css } from 'aphrodite';
 import sharedStyles from '../../../../shared-js-css-styles/SharedStyles';
-import GroupRepository from '../../../../api/repositories/GroupRepository';
+import groupRepository from '../../../../api/repositories/GroupRepository';
 
 interface EditCourseNameDialogProps {
   open: boolean;
@@ -80,7 +80,6 @@ export default class EditCourseNameDialog extends Component<
     this.setState({ error: null, updating: true });
 
     try {
-      const groupRepository = new GroupRepository();
       await groupRepository.updateCourseName(groupUserName, courseUserName, trimmedName);
 
       this.setState({ updating: false });

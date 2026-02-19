@@ -204,7 +204,6 @@ class ContactUs extends Component {
 
     emailUtils
       .sendEmail({
-        serverURL: clubAttributes.serverURL,
         emailType: emailUtils.EMAIL_ENQUIRY,
         data: {
           sender: companyEmail.toLowerCase(),

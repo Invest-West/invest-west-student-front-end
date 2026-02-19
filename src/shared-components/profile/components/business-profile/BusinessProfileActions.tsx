@@ -2,7 +2,7 @@ import { ProfileAction } from '../../ProfileActions';
 import { ActionCreator, Dispatch } from 'redux';
 import { AppState } from '../../../../redux-store/reducers';
 import Address from '../../../../models/address';
-import AddressRepository from '../../../../api/repositories/AddressRepository';
+import addressRepository from '../../../../api/repositories/AddressRepository';
 import { AddressStates } from '../../ProfileReducer';
 
 export enum BusinessProfileEvents {

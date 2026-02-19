@@ -23,7 +23,7 @@ import { css } from 'aphrodite';
 import sharedStyles from '../../../shared-js-css-styles/SharedStyles';
 // @ts-ignore
 import Files from 'react-files';
-import GroupRepository from '../../../api/repositories/GroupRepository';
+import groupRepository from '../../../api/repositories/GroupRepository';
 import { ApiRoutes } from '../../../api/Api';
 import firebase from '../../../firebase/firebaseApp';
 import * as DB_CONST from '../../../firebase/databaseConsts';
@@ -159,7 +159,6 @@ export default class EditGroupDetailsDialog extends Component<
     this.setState({ error: null, saving: true });
 
     try {
-      const groupRepository = new GroupRepository();
       const dbRef = isCourse ? DB_CONST.COURSES_CHILD : DB_CONST.GROUP_PROPERTIES_CHILD;
 
       // 1. Update name if changed

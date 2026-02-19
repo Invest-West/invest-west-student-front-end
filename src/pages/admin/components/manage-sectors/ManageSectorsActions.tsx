@@ -2,7 +2,7 @@ import { Action, ActionCreator, Dispatch } from 'redux';
 import { AppState } from '../../../../redux-store/reducers';
 import React from 'react';
 import { SystemAttributes } from '../../../../models/system_attributes';
-import SystemAttributesRepository from '../../../../api/repositories/SystemAttributesRepository';
+import systemAttributesRepository from '../../../../api/repositories/SystemAttributesRepository';
 import { openFeedbackSnackbar } from '../../../../shared-components/feedback-snackbar/FeedbackSnackbarActions';
 import { FeedbackSnackbarTypes } from '../../../../shared-components/feedback-snackbar/FeedbackSnackbarReducer';
 
@@ -105,7 +105,7 @@ export const saveSectorsChanges: ActionCreator<any> = () => {
       dispatch({
         type: ManageSectorsEvents.SavingSectorsChanges,
       });
-      await new SystemAttributesRepository().updateSystemAttributes(systemAttributes);
+      await systemAttributesRepository.updateSystemAttributes(systemAttributes);
       return dispatch(completeAction);
     } catch (error) {
       completeAction.error = error.toString();

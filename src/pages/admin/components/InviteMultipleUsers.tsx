@@ -37,7 +37,7 @@ import FlexView from 'react-flexview';
 import { BeatLoader } from 'react-spinners';
 import * as DB_CONST from '../../../firebase/databaseConsts';
 import * as utils from '../../../utils/utils';
-import UserRepository from '../../../api/repositories/UserRepository';
+import userRepository from '../../../api/repositories/UserRepository';
 
 export const INVITE_STATUS_NONE = 0;
 export const INVITE_STATUS_SENDING = 1;
@@ -215,8 +215,6 @@ class InviteMultipleUsers extends Component<InviteMultipleUsersProps, InviteMult
     }
 
     this.setState({ sending: true });
-
-    const userRepository = new UserRepository();
 
     // Process each email invitation
     const updatedList = [...emailList];

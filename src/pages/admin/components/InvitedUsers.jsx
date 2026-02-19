@@ -38,11 +38,11 @@ import * as DB_CONST from '../../../firebase/databaseConsts';
 import * as ROUTES from '../../../router/routes';
 import * as myUtils from '../../../utils/utils';
 import * as colors from '../../../values/colors';
-import OfferRepository, {
+import offerRepository, {
   FetchProjectsOrderByOptions,
 } from '../../../api/repositories/OfferRepository';
 import firebase from '../../../firebase/firebaseApp';
-import UserRepository from '../../../api/repositories/UserRepository';
+import userRepository from '../../../api/repositories/UserRepository';
 import UpgradeUserToAdmin from './UpgradeUserToAdmin';
 import InviteMultipleUsers from './InviteMultipleUsers';
 
@@ -135,8 +135,6 @@ function InvitedUsers() {
   const [sortDirection, setSortDirection] = useState('desc');
 
   // Refs for repositories
-  const offerRepositoryRef = useRef(new OfferRepository());
-  const userRepositoryRef = useRef(new UserRepository());
   // Track previous values for componentDidUpdate logic
   const prevInvitedUsersLoadedRef = useRef(false);
   const prevMatchedInvitedUsersRef = useRef(null);
@@ -196,7 +194,7 @@ function InvitedUsers() {
         try {
           const userIdToQuery = user.officialUserID || user.id;
 
-          const response = await offerRepositoryRef.current.fetchOffers({
+          const response = await offerRepository.fetchOffers({
             issuer: userIdToQuery,
             phase: 'all',
             orderBy: FetchProjectsOrderByOptions.Issuer,
@@ -230,7 +228,7 @@ function InvitedUsers() {
       for (const user of usersToProcess) {
         try {
           if (user.officialUserID) {
-            const response = await userRepositoryRef.current.retrieveUser(user.officialUserID);
+            const response = await userRepository.retrieveUser(user.officialUserID);
             const userProfile = response.data;
             if (userProfile && userProfile.lastLoginDate) {
               lastLoginDates[user.id] = userProfile.lastLoginDate;
@@ -296,11 +294,11 @@ function InvitedUsers() {
 
   async function testUpdateLoginDate(userId) {
     try {
-      const retrieveResponse = await userRepositoryRef.current.retrieveUser(userId);
+      const retrieveResponse = await userRepository.retrieveUser(userId);
       const currentTimestamp = Date.now();
       const updatedUser = { ...retrieveResponse.data, lastLoginDate: currentTimestamp };
-      await userRepositoryRef.current.updateUser({ updatedUser });
-      const verifyResponse = await userRepositoryRef.current.retrieveUser(userId);
+      await userRepository.updateUser({ updatedUser });
+      const verifyResponse = await userRepository.retrieveUser(userId);
       return verifyResponse.data;
     } catch (error) {
       console.error(`TEST UPDATE: Error during test:`, error);

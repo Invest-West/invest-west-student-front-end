@@ -236,8 +236,8 @@ export const deleteUniversity = (groupUserName, universityId) => {
     dispatch({ type: DELETING_UNIVERSITY, universityId });
 
     try {
-      const GroupRepository = require('../../api/repositories/GroupRepository').default;
-      await new GroupRepository().deleteUniversity(groupUserName);
+      const groupRepository = require('../../api/repositories/GroupRepository').default;
+      await groupRepository.deleteUniversity(groupUserName);
 
       // Remove from local state
       const angelNetworks = getState().manageAngelNetworks.angelNetworks.filter(
@@ -272,8 +272,8 @@ export const deleteCourse = (groupUserName, courseUserName, courseId) => {
     dispatch({ type: DELETING_COURSE, courseId });
 
     try {
-      const GroupRepository = require('../../api/repositories/GroupRepository').default;
-      await new GroupRepository().deleteCourse(groupUserName, courseUserName);
+      const groupRepository = require('../../api/repositories/GroupRepository').default;
+      await groupRepository.deleteCourse(groupUserName, courseUserName);
 
       dispatch({
         type: DELETED_COURSE,

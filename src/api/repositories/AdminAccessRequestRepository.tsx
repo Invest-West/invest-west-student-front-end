@@ -1,4 +1,5 @@
-import Api, { ApiRoutes } from '../Api';
+import apiClient from '../apiClient';
+import { ApiRoutes } from '../Api';
 
 export interface FetchAdminAccessRequestsOptions {
   requestedBy?: string;
@@ -7,15 +8,12 @@ export interface FetchAdminAccessRequestsOptions {
   requestedEmail?: string;
 }
 
-export default class AdminAccessRequestRepository {
+class AdminAccessRequestRepository {
   /**
    * Fetch admin access requests
    */
   public async fetchAdminAccessRequests(options?: FetchAdminAccessRequestsOptions) {
-    return await new Api().request('get', ApiRoutes.listAdminAccessRequestsRoute, {
-      requestBody: null,
-      queryParameters: options ?? null,
-    });
+    return await apiClient.get(ApiRoutes.listAdminAccessRequestsRoute, { params: options });
   }
 
   /**
@@ -26,13 +24,10 @@ export default class AdminAccessRequestRepository {
    * @param reason
    */
   public async createAdminAccessRequest(requestedEmail: string, groupId: string, reason?: string) {
-    return await new Api().request('post', ApiRoutes.createAdminAccessRequestRoute, {
-      queryParameters: null,
-      requestBody: {
-        requestedEmail,
-        groupId,
-        reason,
-      },
+    return await apiClient.post(ApiRoutes.createAdminAccessRequestRoute, {
+      requestedEmail,
+      groupId,
+      reason,
     });
   }
 
@@ -42,12 +37,7 @@ export default class AdminAccessRequestRepository {
    * @param requestId
    */
   public async approveAdminAccessRequest(requestId: string) {
-    return await new Api().request('post', ApiRoutes.approveAdminAccessRequestRoute, {
-      queryParameters: null,
-      requestBody: {
-        requestId,
-      },
-    });
+    return await apiClient.post(ApiRoutes.approveAdminAccessRequestRoute, { requestId });
   }
 
   /**
@@ -57,12 +47,9 @@ export default class AdminAccessRequestRepository {
    * @param reason
    */
   public async rejectAdminAccessRequest(requestId: string, reason: string) {
-    return await new Api().request('post', ApiRoutes.rejectAdminAccessRequestRoute, {
-      queryParameters: null,
-      requestBody: {
-        requestId,
-        reason,
-      },
-    });
+    return await apiClient.post(ApiRoutes.rejectAdminAccessRequestRoute, { requestId, reason });
   }
 }
+
+export { AdminAccessRequestRepository };
+export default new AdminAccessRequestRepository();

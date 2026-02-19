@@ -6,7 +6,7 @@ import {
   PROJECT_VISIBILITY_PUBLIC,
   PROJECT_VISIBILITY_RESTRICTED,
 } from '../../firebase/databaseConsts';
-import OfferRepository, {
+import offerRepository, {
   FetchProjectsOptions,
   FetchProjectsOrderByOptions,
   FetchProjectsPhaseOptions,
@@ -147,7 +147,7 @@ export const fetchOffers: ActionCreator<any> = () => {
 
       dispatch({ type: ExploreOffersEvents.FetchingOffers });
 
-      const response = await new OfferRepository().fetchOffers(fetchOffersOptions);
+      const response = await offerRepository.fetchOffers(fetchOffersOptions);
 
       // Cache the response with smart TTL based on filter complexity
       const ttl = searchFilter.trim().length > 0 ? 2 * 60 * 1000 : 5 * 60 * 1000; // 2min for search, 5min for browse

@@ -1,7 +1,7 @@
 import { Action, ActionCreator, Dispatch } from 'redux';
 import { AppState } from '../../redux-store/reducers';
 import InvitedUser from '../../models/invited_user';
-import UserRepository from '../../api/repositories/UserRepository';
+import userRepository from '../../api/repositories/UserRepository';
 import React from 'react';
 import { checkPasswordStrength, PASSWORD_VERY_WEAK } from '../../utils/passwordUtils';
 import { isValidEmailAddress } from '../../utils/emailUtils';
@@ -42,7 +42,7 @@ export const loadInvitedUser: ActionCreator<any> = (invitedUserID: string) => {
         type: SignUpEvents.LoadingInvitedUser,
       });
 
-      const response = await new UserRepository().retrieveInvitedUser(invitedUserID);
+      const response = await userRepository.retrieveInvitedUser(invitedUserID);
       const invitedUser: InvitedUser = response.data;
       completeAction.invitedUser = JSON.parse(JSON.stringify(invitedUser));
       return dispatch(completeAction);
@@ -130,7 +130,7 @@ export const createAccount: ActionCreator<any> = () => {
         type: SignUpEvents.CreatingAccount,
       });
 
-      await new UserRepository().signUp({
+      await userRepository.signUp({
         isPublicRegistration: invitedUser === undefined,
         invitedUserID: invitedUser !== undefined ? invitedUser.id : undefined,
         userProfile: {

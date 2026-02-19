@@ -21,7 +21,7 @@ import { css } from 'aphrodite';
 import sharedStyles from '../../../shared-js-css-styles/SharedStyles';
 // @ts-ignore
 import Files from 'react-files';
-import GroupRepository from '../../../api/repositories/GroupRepository';
+import groupRepository from '../../../api/repositories/GroupRepository';
 import { ApiRoutes } from '../../../api/Api';
 import firebase from '../../../firebase/firebaseApp';
 
@@ -169,7 +169,6 @@ export default class EditGroupImageDialog extends Component<
 
       // Update the group logo
       this.setState({ updating: true });
-      const groupRepository = new GroupRepository();
       await groupRepository.updateGroupLogo(groupUserName, finalImageUrl);
 
       this.setState({ updating: false });

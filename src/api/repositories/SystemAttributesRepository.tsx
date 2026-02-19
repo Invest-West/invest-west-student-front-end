@@ -1,21 +1,22 @@
-import Api, { ApiRoutes } from '../Api';
+import apiClient from '../apiClient';
+import { ApiRoutes } from '../Api';
 import { SystemAttributes } from '../../models/system_attributes';
 
-export default class SystemAttributesRepository {
+class SystemAttributesRepository {
   /**
    * Fetch system attributes
    */
   public async getSystemAttributes() {
-    return await new Api().request('get', ApiRoutes.retrieveSystemAttributesRoute);
+    return await apiClient.get(ApiRoutes.retrieveSystemAttributesRoute);
   }
 
   /**
    * Update system attributes
    */
   public async updateSystemAttributes(systemAttributes: SystemAttributes) {
-    return await new Api().request('put', ApiRoutes.updateSystemAttributesRoute, {
-      requestBody: systemAttributes,
-      queryParameters: null,
-    });
+    return await apiClient.put(ApiRoutes.updateSystemAttributesRoute, systemAttributes);
   }
 }
+
+export { SystemAttributesRepository };
+export default new SystemAttributesRepository();

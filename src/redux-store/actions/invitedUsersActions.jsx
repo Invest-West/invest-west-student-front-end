@@ -362,7 +362,6 @@ export const resendInvite = (invitedUser) => {
 
     emailUtils
       .sendEmail({
-        serverURL: clubAttributes.serverURL,
         emailType: emailUtils.EMAIL_INVITATION,
         data: {
           groupName: groupProperties.displayName,

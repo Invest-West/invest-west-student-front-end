@@ -455,9 +455,9 @@ class AngelNetworks extends Component {
     }
 
     try {
-      const CourseRequestRepository =
+      const courseRequestRepository =
         require('../../../api/repositories/CourseRequestRepository').default;
-      const response = await new CourseRequestRepository().fetchCourseRequests({
+      const response = await courseRequestRepository.fetchCourseRequests({
         status: 'pending', // Only fetch pending requests
       });
 
@@ -489,9 +489,9 @@ class AngelNetworks extends Component {
     }
 
     try {
-      const CourseRequestRepository =
+      const courseRequestRepository =
         require('../../../api/repositories/CourseRequestRepository').default;
-      await new CourseRequestRepository().approveCourseRequest(requestId);
+      await courseRequestRepository.approveCourseRequest(requestId);
 
       // Reload course requests and angel networks to show the new course
       await this.loadCourseRequests();
@@ -526,9 +526,9 @@ class AngelNetworks extends Component {
     }
 
     try {
-      const CourseRequestRepository =
+      const courseRequestRepository =
         require('../../../api/repositories/CourseRequestRepository').default;
-      await new CourseRequestRepository().rejectCourseRequest(requestId, reason.trim());
+      await courseRequestRepository.rejectCourseRequest(requestId, reason.trim());
 
       // Reload course requests to remove the rejected one
       await this.loadCourseRequests();

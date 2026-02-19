@@ -1,4 +1,5 @@
-import Api, { ApiRoutes } from '../Api';
+import apiClient from '../apiClient';
+import { ApiRoutes } from '../Api';
 
 export enum FetchProjectsOrderByOptions {
   Visibility = 'visibility',
@@ -35,34 +36,18 @@ export interface FetchProjectsOptions {
   orderBy?: FetchProjectsOrderByOptions; // mode to use orderByChild
 }
 
-export default class OfferRepository {
+class OfferRepository {
   /**
    * Fetch offers
    *
    * @param options
    */
   public async fetchOffers(options: FetchProjectsOptions) {
-    console.log('[OfferRepository] Fetching offers with raw options:', options);
     const fetchOptions = {
       ...options,
       orderBy: options.orderBy || FetchProjectsOrderByOptions.Phase,
     };
-    console.log('[OfferRepository] Final fetchOptions being sent to API:', fetchOptions);
-
-    try {
-      const response = await new Api().request('get', ApiRoutes.listProjectsRoute, {
-        requestBody: null,
-        queryParameters: fetchOptions,
-      });
-      console.log(
-        '[OfferRepository] API response received, data count:',
-        response?.data?.length || 0
-      );
-      return response;
-    } catch (error) {
-      console.error('[OfferRepository] Error fetching offers:', error);
-      throw error;
-    }
+    return await apiClient.get(ApiRoutes.listProjectsRoute, { params: fetchOptions });
   }
 
   /**
@@ -70,31 +55,24 @@ export default class OfferRepository {
    *
    * @param options
    */
-  public async exportCsv(options?: FetchProjectsOptions) {
-    return new Promise<void>(async (resolve, reject) => {
-      try {
-        const response = await new Api().request('get', ApiRoutes.exportProjectsToCsvRoute, {
-          requestBody: null,
-          queryParameters: options ?? null,
-        });
+  public async exportCsv(options?: FetchProjectsOptions): Promise<void> {
+    const response = await apiClient.get(ApiRoutes.exportProjectsToCsvRoute, { params: options });
 
-        // create a file from the csv returned by the server
-        const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        if (link.download !== undefined) {
-          // create a download url
-          const url = URL.createObjectURL(blob);
-          link.setAttribute('href', url);
-          link.setAttribute('download', 'offers_data.csv');
-          link.style.visibility = 'hidden';
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
-        }
-        return resolve();
-      } catch (error) {
-        return reject(error);
-      }
-    });
+    // create a file from the csv returned by the server
+    const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    if (link.download !== undefined) {
+      // create a download url
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', 'offers_data.csv');
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   }
 }
+
+export { OfferRepository };
+export default new OfferRepository();

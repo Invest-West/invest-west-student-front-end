@@ -6,7 +6,7 @@ import { Action, ActionCreator, Dispatch } from 'redux';
 import GroupProperties from '../../models/group_properties';
 import Error from '../../models/error';
 import { AppState } from '../reducers';
-import GroupRepository from '../../api/repositories/GroupRepository';
+import groupRepository from '../../api/repositories/GroupRepository';
 import Api from '../../api/Api';
 import {
   setGroupUrl,
@@ -81,7 +81,7 @@ export const validateGroupUrl: ActionCreator<any> = (
       if (groupUserName === 'invest-west') {
         let investWestGroup: GroupProperties;
         try {
-          const response = await new GroupRepository().getGroup('invest-west');
+          const response = await groupRepository.getGroup('invest-west');
           investWestGroup = response.data;
         } catch (error) {
           investWestGroup = {
@@ -105,10 +105,7 @@ export const validateGroupUrl: ActionCreator<any> = (
 
         if (courseUserName) {
           try {
-            await new GroupRepository().getCourseByParentAndSlug(
-              investWestGroup.anid,
-              courseUserName
-            );
+            await groupRepository.getCourseByParentAndSlug(investWestGroup.anid, courseUserName);
           } catch (error: any) {
             // Allow validation to proceed regardless of course validation errors
           }
@@ -120,15 +117,12 @@ export const validateGroupUrl: ActionCreator<any> = (
       }
 
       try {
-        const response = await new GroupRepository().getGroup(groupUserName);
+        const response = await groupRepository.getGroup(groupUserName);
         const retrievedGroup: GroupProperties | null = response.data;
 
         if (retrievedGroup && courseUserName) {
           try {
-            await new GroupRepository().getCourseByParentAndSlug(
-              retrievedGroup.anid,
-              courseUserName
-            );
+            await groupRepository.getCourseByParentAndSlug(retrievedGroup.anid, courseUserName);
           } catch (error: any) {
             // Allow validation to proceed regardless of course validation errors
           }

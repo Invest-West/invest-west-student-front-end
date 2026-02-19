@@ -1,4 +1,5 @@
-import Api, { ApiRoutes } from '../Api';
+import apiClient from '../apiClient';
+import { ApiRoutes } from '../Api';
 
 export interface FetchAccessRequestsOptions {
   user?: string;
@@ -6,15 +7,12 @@ export interface FetchAccessRequestsOptions {
   orderBy: 'user' | 'group';
 }
 
-export default class AccessRequestRepository {
+class AccessRequestRepository {
   /**
    * Fetch access requests
    */
   public async fetchAccessRequests(options?: FetchAccessRequestsOptions) {
-    return await new Api().request('get', ApiRoutes.listAccessRequestsRoute, {
-      requestBody: null,
-      queryParameters: options ?? null,
-    });
+    return await apiClient.get(ApiRoutes.listAccessRequestsRoute, { params: options });
   }
 
   /**
@@ -24,13 +22,7 @@ export default class AccessRequestRepository {
    * @param groupID
    */
   public async createAccessRequest(userID: string, groupID: string) {
-    return await new Api().request('post', ApiRoutes.createAccessRequestRoute, {
-      queryParameters: null,
-      requestBody: {
-        userID,
-        groupID,
-      },
-    });
+    return await apiClient.post(ApiRoutes.createAccessRequestRoute, { userID, groupID });
   }
 
   /**
@@ -39,11 +31,9 @@ export default class AccessRequestRepository {
    * @param requestID
    */
   public async removeAccessRequest(requestID: string) {
-    return await new Api().request('delete', ApiRoutes.removeAccessRequestRoute, {
-      queryParameters: null,
-      requestBody: {
-        requestID,
-      },
-    });
+    return await apiClient.delete(ApiRoutes.removeAccessRequestRoute, { data: { requestID } });
   }
 }
+
+export { AccessRequestRepository };
+export default new AccessRequestRepository();

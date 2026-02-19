@@ -21,7 +21,7 @@ import { css } from 'aphrodite';
 import sharedStyles from '../../../shared-js-css-styles/SharedStyles';
 // @ts-ignore
 import Files from 'react-files';
-import GroupRepository from '../../../api/repositories/GroupRepository';
+import groupRepository from '../../../api/repositories/GroupRepository';
 import { ApiRoutes } from '../../../api/Api';
 import firebase from '../../../firebase/firebaseApp';
 
@@ -149,7 +149,6 @@ export default class EditCourseImageDialog extends Component<
 
       // Update the course image
       this.setState({ updating: true });
-      const groupRepository = new GroupRepository();
       await groupRepository.updateCourseImage(groupUserName, courseUserName, finalImageUrl);
 
       this.setState({ updating: false });

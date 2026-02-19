@@ -24,7 +24,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import FlexView from 'react-flexview';
 import { css } from 'aphrodite';
 import sharedStyles from '../../shared-js-css-styles/SharedStyles';
-import AdminAccessRequestRepository from '../../api/repositories/AdminAccessRequestRepository';
+import adminAccessRequestRepository from '../../api/repositories/AdminAccessRequestRepository';
 import { AdminAccessRequestInstance } from '../../models/admin_access_request';
 import Admin, { isAdmin } from '../../models/admin';
 import User from '../../models/user';
@@ -62,7 +62,7 @@ export default function ManageAccessRequests({ currentUser }: ManageAccessReques
   const [selectedRequest, setSelectedRequest] = useState<AdminAccessRequestInstance | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
 
-  const repository = new AdminAccessRequestRepository();
+  const repository = adminAccessRequestRepository;
 
   // ⚡ FIX: Track mount state to prevent memory leaks
   const isMountedRef = React.useRef(true);

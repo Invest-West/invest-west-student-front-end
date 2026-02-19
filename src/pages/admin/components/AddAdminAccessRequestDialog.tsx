@@ -15,7 +15,7 @@ import SendIcon from '@mui/icons-material/Send';
 import FlexView from 'react-flexview';
 import { css } from 'aphrodite';
 import sharedStyles from '../../../shared-js-css-styles/SharedStyles';
-import AdminAccessRequestRepository from '../../../api/repositories/AdminAccessRequestRepository';
+import adminAccessRequestRepository from '../../../api/repositories/AdminAccessRequestRepository';
 
 interface AddAdminAccessRequestDialogProps {
   open: boolean;
@@ -35,7 +35,7 @@ export default function AddAdminAccessRequestDialog(props: AddAdminAccessRequest
   const [success, setSuccess] = useState(false);
   const [touched, setTouched] = useState(false);
 
-  const repository = new AdminAccessRequestRepository();
+  const repository = adminAccessRequestRepository;
 
   const handleClose = () => {
     if (!isSubmitting) {

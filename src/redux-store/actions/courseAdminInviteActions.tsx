@@ -1,6 +1,6 @@
 import { Action, ActionCreator, Dispatch } from 'redux';
 import { AppState } from '../reducers';
-import CourseAdminInviteRepository, {
+import courseAdminInviteRepository, {
   RequestAdminAccessData,
   CourseAdminSignupData,
   UpgradeResponseData,
@@ -146,8 +146,7 @@ export const requestAdminAccess: ActionCreator<any> = (data: RequestAdminAccessD
     });
 
     try {
-      const repository = new CourseAdminInviteRepository();
-      const response = await repository.requestAdminAccess(data);
+      const response = await courseAdminInviteRepository.requestAdminAccess(data);
 
       const successAction: RequestAdminAccessSuccessAction = {
         type: CourseAdminInviteEvents.RequestAdminAccessSuccess,
@@ -181,8 +180,7 @@ export const validateCourseAdminInvite: ActionCreator<any> = (token: string) => 
     });
 
     try {
-      const repository = new CourseAdminInviteRepository();
-      const response = await repository.validateCourseAdminInvite(token);
+      const response = await courseAdminInviteRepository.validateCourseAdminInvite(token);
 
       const successAction: ValidateInviteSuccessAction = {
         type: CourseAdminInviteEvents.ValidateInviteSuccess,
@@ -215,8 +213,7 @@ export const completeCourseAdminSignup: ActionCreator<any> = (data: CourseAdminS
     });
 
     try {
-      const repository = new CourseAdminInviteRepository();
-      const response = await repository.completeCourseAdminSignup(data);
+      const response = await courseAdminInviteRepository.completeCourseAdminSignup(data);
 
       const successAction: CompleteSignupSuccessAction = {
         type: CourseAdminInviteEvents.CompleteSignupSuccess,
@@ -249,8 +246,7 @@ export const validateUpgradeRequest: ActionCreator<any> = (requestId: string) =>
     });
 
     try {
-      const repository = new CourseAdminInviteRepository();
-      const response = await repository.validateUpgradeRequest(requestId);
+      const response = await courseAdminInviteRepository.validateUpgradeRequest(requestId);
 
       const successAction: ValidateUpgradeRequestSuccessAction = {
         type: CourseAdminInviteEvents.ValidateUpgradeRequestSuccess,
@@ -283,8 +279,7 @@ export const respondToUpgradeRequest: ActionCreator<any> = (data: UpgradeRespons
     });
 
     try {
-      const repository = new CourseAdminInviteRepository();
-      const response = await repository.respondToUpgradeRequest(data);
+      const response = await courseAdminInviteRepository.respondToUpgradeRequest(data);
 
       const successAction: RespondToUpgradeSuccessAction = {
         type: CourseAdminInviteEvents.RespondToUpgradeSuccess,
@@ -317,8 +312,7 @@ export const fetchMyUpgradeRequests: ActionCreator<any> = () => {
     });
 
     try {
-      const repository = new CourseAdminInviteRepository();
-      const response = await repository.getMyUpgradeRequests();
+      const response = await courseAdminInviteRepository.getMyUpgradeRequests();
 
       const successAction: FetchMyUpgradeRequestsSuccessAction = {
         type: CourseAdminInviteEvents.FetchMyUpgradeRequestsSuccess,

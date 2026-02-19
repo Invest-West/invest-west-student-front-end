@@ -3,13 +3,13 @@ import { ProjectInstance } from '../../models/project';
 import { AppState } from '../../redux-store/reducers';
 import User, { isInvestor, isIssuer } from '../../models/user';
 import Admin, { isAdmin } from '../../models/admin';
-import OfferRepository, {
+import offerRepository, {
   FetchProjectsOptions,
   FetchProjectsOrderByOptions,
 } from '../../api/repositories/OfferRepository';
 import GroupOfMembership from '../../models/group_of_membership';
 import GroupProperties from '../../models/group_properties';
-import GroupRepository from '../../api/repositories/GroupRepository';
+import groupRepository from '../../api/repositories/GroupRepository';
 import Api, { ApiRoutes } from '../../api/Api';
 
 export enum OffersTableEvents {
@@ -106,7 +106,7 @@ export const setUser: ActionCreator<any> = (user?: User | Admin) => {
           const isTableAdminUser: Admin | null = isAdmin(user);
 
           if (isTableAdminUser && isTableAdminUser.superAdmin) {
-            const allGroupsResponse = await new GroupRepository().fetchGroups();
+            const allGroupsResponse = await groupRepository.fetchGroups();
             action.groupsSelect = allGroupsResponse.data;
           } else {
             action.groupsSelect = groupsOfMembership.map(
@@ -214,7 +214,7 @@ export const fetchOffers: ActionCreator<any> = () => {
     });
 
     try {
-      const response = await new OfferRepository().fetchOffers(fetchOffersOptions);
+      const response = await offerRepository.fetchOffers(fetchOffersOptions);
       completeAction.offerInstances = response.data;
 
       dispatch(completeAction);
@@ -331,7 +331,7 @@ export const exportCsv: ActionCreator<any> = () => {
     };
 
     try {
-      await new OfferRepository().exportCsv(
+      await offerRepository.exportCsv(
         currentAdmin.superAdmin
           ? undefined
           : { group: currentAdmin.anid, orderBy: FetchProjectsOrderByOptions.Group }
@@ -369,7 +369,7 @@ export const fetchDraftProjectsWithFeedbackCount: ActionCreator<any> = () => {
         phase: 'all', // Get all phases including drafts
       };
 
-      const response = await new OfferRepository().fetchOffers(fetchOptions);
+      const response = await offerRepository.fetchOffers(fetchOptions);
 
       // Count draft projects with feedback
       const draftProjectsWithFeedback = response.data.filter((projectInstance: ProjectInstance) => {

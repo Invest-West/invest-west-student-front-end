@@ -1,6 +1,6 @@
 import { uploadFile, UploadFileData } from '../../firebase/cloud_storage';
 
-export default class FileRepository {
+class FileRepository {
   /**
    * Upload file to Cloud storage
    *
@@ -10,3 +10,6 @@ export default class FileRepository {
     return await uploadFile(data);
   }
 }
+
+export { FileRepository };
+export default new FileRepository();

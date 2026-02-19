@@ -20,7 +20,7 @@ import GroupOfMembership from '../../models/group_of_membership';
 import { AppState } from '../reducers';
 import Routes from '../../router/routes';
 import Firebase from 'firebase';
-import UserRepository from '../../api/repositories/UserRepository';
+import userRepository from '../../api/repositories/UserRepository';
 import { userCache, CacheKeys } from '../../utils/CacheManager';
 import { monitorCacheHit, monitorCacheMiss } from '../../utils/CacheMonitor';
 import { CacheInvalidationManager } from '../../utils/CacheInvalidation';
@@ -110,7 +110,7 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
           currentUser = cachedUser;
         } else {
           monitorCacheMiss('user');
-          const retrieveUserResponse = await new UserRepository().retrieveUser(uid);
+          const retrieveUserResponse = await userRepository.retrieveUser(uid);
           currentUser = retrieveUserResponse.data;
           userCache.set(userCacheKey, currentUser, 10 * 60 * 1000);
         }
@@ -152,9 +152,7 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
           authResult.groupsOfMembership = cachedGroups;
         } else {
           monitorCacheMiss('user');
-          const listGroupsOfMembershipResponse = await new UserRepository().listGroupsOfMembership(
-            uid
-          );
+          const listGroupsOfMembershipResponse = await userRepository.listGroupsOfMembership(uid);
           authResult.groupsOfMembership = listGroupsOfMembershipResponse.data;
           userCache.set(groupsCacheKey, listGroupsOfMembershipResponse.data, 15 * 60 * 1000);
         }
@@ -169,7 +167,7 @@ export const signIn: ActionCreator<any> = (email?: string, password?: string) =>
           } else {
             const updatedUser = { ...(currentUser as User), lastLoginDate: currentTimestamp };
 
-            await new UserRepository().updateUser({
+            await userRepository.updateUser({
               updatedUser: updatedUser,
             });
 

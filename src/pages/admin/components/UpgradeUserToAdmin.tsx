@@ -43,7 +43,7 @@ import FlexView from 'react-flexview';
 import { BeatLoader } from 'react-spinners';
 import * as colors from '../../../values/colors';
 import Api, { ApiRoutes } from '../../../api/Api';
-import UserRepository from '../../../api/repositories/UserRepository';
+import userRepository from '../../../api/repositories/UserRepository';
 import * as realtimeDBUtils from '../../../firebase/realtimeDBUtils';
 import { loadCourseStatistics } from './manage-courses/ManageCoursesActions';
 
@@ -77,7 +77,6 @@ interface UpgradeUserToAdminState {
 }
 
 class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserToAdminState> {
-  private userRepository: UserRepository;
   private api: Api;
 
   // Helper function to get all available courses for a university (both actual groups and virtual courses)
@@ -162,7 +161,6 @@ class UpgradeUserToAdmin extends Component<UpgradeUserToAdminProps, UpgradeUserT
       selectedUser: null,
       availableCourses: [],
     };
-    this.userRepository = new UserRepository();
     this.api = new Api();
   }
 

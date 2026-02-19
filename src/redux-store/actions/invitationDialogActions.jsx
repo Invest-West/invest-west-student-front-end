@@ -146,7 +146,6 @@ export const sendInvitation = () => {
               // send invitation email via server
               emailUtils
                 .sendEmail({
-                  serverURL: clubAttributes.serverURL,
                   emailType: emailUtils.EMAIL_INVITATION,
                   data: {
                     groupName: groupProperties.displayName,

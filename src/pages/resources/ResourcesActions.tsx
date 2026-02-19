@@ -1,6 +1,6 @@
 import { Action, ActionCreator, Dispatch } from 'redux';
 import { AppState } from '../../redux-store/reducers';
-import EmailRepository, {
+import emailRepository, {
   ClientEmailTypes,
   ContactResourceEmailData,
 } from '../../api/repositories/EmailRepository';
@@ -67,7 +67,7 @@ export const sendContactEmail: ActionCreator<any> = (receiver: string | string[]
         }`,
       };
 
-      await new EmailRepository().sendEmail({
+      await emailRepository.sendEmail({
         emailType: ClientEmailTypes.ContactResource,
         emailInfo: emailInfo,
       });

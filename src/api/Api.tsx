@@ -141,16 +141,6 @@ export default class Api {
   private buildUrl(endPoint: string, queryParameters: any): string {
     const queryString = Api.buildQueryParameters(queryParameters);
     const fullUrl = this.baseUrl + endPoint + queryString;
-
-    if (endPoint.includes('projects')) {
-      console.log('[API] Building URL for projects endpoint:', {
-        endPoint,
-        queryParameters,
-        queryString,
-        fullUrl,
-      });
-    }
-
     return encodeURI(fullUrl);
   }
 
@@ -249,12 +239,10 @@ export default class Api {
           // Get ID token - Firebase will auto-refresh if expired
           idToken = await currentUser.getIdToken();
         } catch (tokenError) {
-          console.error('Failed to get ID token:', tokenError);
           // If token retrieval fails, try to force refresh once
           try {
             idToken = await currentUser.getIdToken(true);
           } catch (refreshError) {
-            console.error('Failed to refresh ID token:', refreshError);
             throw new Error(
               'Authentication token could not be retrieved. Please try logging in again.'
             );
@@ -306,7 +294,6 @@ export default class Api {
       return this.parseResponse(response);
     } catch (exception) {
       const error = Api.parseError(exception);
-      console.log(`Failed to request. Status code: ${error.statusCode}. Cause: ${error.message}`);
       throw new Error(error.statusCode + ' ' + error.message);
     }
   }

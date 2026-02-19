@@ -8,10 +8,10 @@ import {
   isDeletingProfilePicture,
   isSavingProfilePicture,
 } from '../../ProfileReducer';
-import UserRepository from '../../../../api/repositories/UserRepository';
+import userRepository from '../../../../api/repositories/UserRepository';
 import User from '../../../../models/user';
 import { updateUserChanges } from '../../../../redux-store/actions/authenticationActions';
-import FileRepository from '../../../../api/repositories/FileRepository';
+import fileRepository from '../../../../api/repositories/FileRepository';
 import { getCurrentDate } from '../../../../utils/utils';
 import { PROFILE_PICTURES_CHILD, USERS_CHILD } from '../../../../firebase/databaseConsts';
 
@@ -168,14 +168,14 @@ export const saveImage: ActionCreator<any> = () => {
       dispatch(savingImageAction);
 
       const storageID: number = getCurrentDate();
-      const imageUrl = await new FileRepository().uploadSingleFile({
+      const imageUrl = await fileRepository.uploadSingleFile({
         file: editedImageAsBlob,
         fileName: storageID,
         storageLocation: `${USERS_CHILD}/${copiedUser.id}/${PROFILE_PICTURES_CHILD}`,
       });
 
       // update user
-      const response = await new UserRepository().updateUser({
+      const response = await userRepository.updateUser({
         updatedUser: JSON.parse(JSON.stringify(copiedUser)),
         newProfilePicture: {
           storageID,
@@ -224,7 +224,7 @@ export const deleteImage: ActionCreator<any> = () => {
       dispatch(deletingImageAction);
 
       // update user
-      const response = await new UserRepository().updateUser({
+      const response = await userRepository.updateUser({
         updatedUser: JSON.parse(JSON.stringify(copiedUser)),
         removeProfilePicture: true,
       });

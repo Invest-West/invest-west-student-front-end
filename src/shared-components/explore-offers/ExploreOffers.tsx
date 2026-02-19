@@ -4,7 +4,7 @@ import { AppState } from '../../redux-store/reducers';
 import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
 import { Col, Row } from 'react-bootstrap';
-import GroupRepository from '../../api/repositories/GroupRepository';
+import groupRepository from '../../api/repositories/GroupRepository';
 import GroupProperties from '../../models/group_properties';
 import {
   Box,
@@ -118,7 +118,7 @@ class ExploreOffers extends Component<ExploreOffersProps, ExploreOffersComponent
 
   fetchGroups = async () => {
     try {
-      const response = await new GroupRepository().fetchGroups();
+      const response = await groupRepository.fetchGroups();
       // ⚡ Only update state if component is still mounted
       if (this._isMounted) {
         this.setState({ groups: response.data });

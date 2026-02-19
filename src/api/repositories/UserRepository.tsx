@@ -1,5 +1,6 @@
+import apiClient from '../apiClient';
+import { ApiRoutes } from '../Api';
 import User, { ProfileImage, ProfileVideo } from '../../models/user';
-import Api, { ApiRoutes } from '../Api';
 
 export interface UpdateUserData {
   updatedUser: User;
@@ -20,17 +21,14 @@ export interface SignUpData {
   courseUserName?: string;
 }
 
-export default class UserRepository {
+class UserRepository {
   /**
    * Sign up
    *
    * @param data
    */
   public async signUp(data: SignUpData) {
-    return await new Api().request('post', ApiRoutes.createUser, {
-      queryParameters: null,
-      requestBody: data,
-    });
+    return await apiClient.post(ApiRoutes.createUser, data);
   }
 
   /**
@@ -39,7 +37,7 @@ export default class UserRepository {
    * @param uid
    */
   public async retrieveUser(uid: string) {
-    return await new Api().request('get', ApiRoutes.retrieveUser.replace(':uid', uid));
+    return await apiClient.get(ApiRoutes.retrieveUser.replace(':uid', uid));
   }
 
   /**
@@ -48,8 +46,7 @@ export default class UserRepository {
    * @param invitedUserID
    */
   public async retrieveInvitedUser(invitedUserID: string) {
-    return await new Api().request(
-      'get',
+    return await apiClient.get(
       ApiRoutes.retrieveInvitedUser.replace(':invitedUserID', invitedUserID)
     );
   }
@@ -67,10 +64,7 @@ export default class UserRepository {
     groupUserName: string;
     groupLogo: string;
   }) {
-    return await new Api().request('post', ApiRoutes.inviteStudentRoute, {
-      queryParameters: null,
-      requestBody: data,
-    });
+    return await apiClient.post(ApiRoutes.inviteStudentRoute, data);
   }
 
   /**
@@ -79,10 +73,7 @@ export default class UserRepository {
    * @param data
    */
   public async updateUser(data: UpdateUserData) {
-    return await new Api().request('put', ApiRoutes.updateUser, {
-      queryParameters: null,
-      requestBody: data,
-    });
+    return await apiClient.put(ApiRoutes.updateUser, data);
   }
 
   /**
@@ -91,6 +82,9 @@ export default class UserRepository {
    * @param uid
    */
   public async listGroupsOfMembership(uid: string) {
-    return await new Api().request('get', ApiRoutes.listGroupsOfMembership.replace(':uid', uid));
+    return await apiClient.get(ApiRoutes.listGroupsOfMembership.replace(':uid', uid));
   }
 }
+
+export { UserRepository };
+export default new UserRepository();

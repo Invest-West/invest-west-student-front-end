@@ -6,7 +6,7 @@ import { Action, ActionCreator, Dispatch } from 'redux';
 import { AppState } from '../reducers';
 import Error from '../../models/error';
 import { SystemAttributes } from '../../models/system_attributes';
-import SystemAttributesRepository from '../../api/repositories/SystemAttributesRepository';
+import systemAttributesRepository from '../../api/repositories/SystemAttributesRepository';
 import { setSectors } from '../../pages/admin/components/manage-sectors/ManageSectorsActions';
 import { setCourses } from '../../pages/admin/components/manage-courses/ManageCoursesActions';
 import {
@@ -36,7 +36,7 @@ export const loadSystemAttributes: ActionCreator<any> = () => {
       dispatch(setLoadingSystemAttributes());
 
       try {
-        const response = await new SystemAttributesRepository().getSystemAttributes();
+        const response = await systemAttributesRepository.getSystemAttributes();
         const systemAttributes: SystemAttributes = response.data;
         dispatch(setSectors(systemAttributes.Sectors));
         dispatch(setCourses(systemAttributes.Courses || []));

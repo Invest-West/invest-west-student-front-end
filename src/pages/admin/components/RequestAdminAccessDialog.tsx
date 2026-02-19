@@ -20,7 +20,7 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import FlexView from 'react-flexview';
 import { css } from 'aphrodite';
 import sharedStyles from '../../../shared-js-css-styles/SharedStyles';
-import CourseAdminInviteRepository from '../../../api/repositories/CourseAdminInviteRepository';
+import courseAdminInviteRepository from '../../../api/repositories/CourseAdminInviteRepository';
 
 interface RequestAdminAccessDialogProps {
   open: boolean;
@@ -54,8 +54,6 @@ export default function RequestAdminAccessDialog(props: RequestAdminAccessDialog
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ResultInfo | null>(null);
   const [touched, setTouched] = useState(false);
-
-  const repository = new CourseAdminInviteRepository();
 
   const handleClose = () => {
     if (!isSubmitting) {
@@ -92,7 +90,7 @@ export default function RequestAdminAccessDialog(props: RequestAdminAccessDialog
     setIsSubmitting(true);
 
     try {
-      const response = await repository.requestAdminAccess({
+      const response = await courseAdminInviteRepository.requestAdminAccess({
         email: email.trim(),
         universityId,
         role,

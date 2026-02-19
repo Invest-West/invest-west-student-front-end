@@ -1,4 +1,4 @@
-import CourseRequestRepository from '../../api/repositories/CourseRequestRepository';
+import courseRequestRepository from '../../api/repositories/CourseRequestRepository';
 import {
   REQUEST_STATUS_ERROR,
   REQUEST_STATUS_NONE,
@@ -50,7 +50,7 @@ export const submitCourseRequest = (onSuccessCallback) => {
       const universityId = currentUser.anid;
 
       // Submit the course request
-      await new CourseRequestRepository().createCourseRequest(courseName.trim(), universityId);
+      await courseRequestRepository.createCourseRequest(courseName.trim(), universityId);
 
       // Set status to success
       dispatch({

@@ -1,4 +1,5 @@
-import Api, { ApiRoutes } from '../Api';
+import apiClient from '../apiClient';
+import { ApiRoutes } from '../Api';
 
 export interface FetchCourseRequestsOptions {
   requestedBy?: string;
@@ -6,15 +7,12 @@ export interface FetchCourseRequestsOptions {
   status?: 'pending' | 'approved' | 'rejected';
 }
 
-export default class CourseRequestRepository {
+class CourseRequestRepository {
   /**
    * Fetch course requests
    */
   public async fetchCourseRequests(options?: FetchCourseRequestsOptions) {
-    return await new Api().request('get', ApiRoutes.listCourseRequestsRoute, {
-      requestBody: null,
-      queryParameters: options ?? null,
-    });
+    return await apiClient.get(ApiRoutes.listCourseRequestsRoute, { params: options });
   }
 
   /**
@@ -24,13 +22,7 @@ export default class CourseRequestRepository {
    * @param universityId
    */
   public async createCourseRequest(courseName: string, universityId: string) {
-    return await new Api().request('post', ApiRoutes.createCourseRequestRoute, {
-      queryParameters: null,
-      requestBody: {
-        courseName,
-        universityId,
-      },
-    });
+    return await apiClient.post(ApiRoutes.createCourseRequestRoute, { courseName, universityId });
   }
 
   /**
@@ -39,12 +31,7 @@ export default class CourseRequestRepository {
    * @param requestId
    */
   public async approveCourseRequest(requestId: string) {
-    return await new Api().request('post', ApiRoutes.approveCourseRequestRoute, {
-      queryParameters: null,
-      requestBody: {
-        requestId,
-      },
-    });
+    return await apiClient.post(ApiRoutes.approveCourseRequestRoute, { requestId });
   }
 
   /**
@@ -54,12 +41,9 @@ export default class CourseRequestRepository {
    * @param reason
    */
   public async rejectCourseRequest(requestId: string, reason: string) {
-    return await new Api().request('post', ApiRoutes.rejectCourseRequestRoute, {
-      queryParameters: null,
-      requestBody: {
-        requestId,
-        reason,
-      },
-    });
+    return await apiClient.post(ApiRoutes.rejectCourseRequestRoute, { requestId, reason });
   }
 }
+
+export { CourseRequestRepository };
+export default new CourseRequestRepository();

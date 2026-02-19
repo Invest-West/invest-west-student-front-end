@@ -1,9 +1,9 @@
 import { Action, ActionCreator, Dispatch } from 'redux';
 import GroupProperties from '../../models/group_properties';
 import { AppState } from '../../redux-store/reducers';
-import GroupRepository from '../../api/repositories/GroupRepository';
+import groupRepository from '../../api/repositories/GroupRepository';
 import AccessRequest, { AccessRequestInstance } from '../../models/access_request';
-import AccessRequestRepository from '../../api/repositories/AccessRequestRepository';
+import accessRequestRepository from '../../api/repositories/AccessRequestRepository';
 import Admin, { isAdmin } from '../../models/admin';
 import React from 'react';
 
@@ -77,7 +77,7 @@ export const fetchGroups: ActionCreator<any> = () => {
 
     try {
       // Fetch universities from the API (works for both authenticated and unauthenticated users)
-      const groupsResponse = await new GroupRepository().fetchGroups(
+      const groupsResponse = await groupRepository.fetchGroups(
         nameFilter.trim().length === 0 ? undefined : { name: nameFilter }
       );
       const universities = groupsResponse.data;
@@ -93,7 +93,7 @@ export const fetchGroups: ActionCreator<any> = () => {
           // and access requests have not been fetched
           if (!accessRequestsInstances) {
             const accessRequestInstancesResponse =
-              await new AccessRequestRepository().fetchAccessRequests({
+              await accessRequestRepository.fetchAccessRequests({
                 user: currentUser.id,
                 orderBy: 'user',
               });
@@ -235,10 +235,7 @@ export const sendAccessRequest: ActionCreator<any> = (groupID: string) => {
     };
 
     try {
-      const response = await new AccessRequestRepository().createAccessRequest(
-        currentUser.id,
-        groupID
-      );
+      const response = await accessRequestRepository.createAccessRequest(currentUser.id, groupID);
       const accessRequestInstance: AccessRequestInstance = response.data;
       const currentAccessRequestInstances: AccessRequestInstance[] | undefined =
         getState().ExploreGroupsLocalState.accessRequestsInstances;
@@ -295,7 +292,7 @@ export const removeAccessRequest: ActionCreator<any> = (groupID: string) => {
       ];
       const accessRequest: AccessRequest =
         updatedAccessRequestInstances[accessRequestIndex].request;
-      await new AccessRequestRepository().removeAccessRequest(accessRequest.id);
+      await accessRequestRepository.removeAccessRequest(accessRequest.id);
       updatedAccessRequestInstances.splice(accessRequestIndex, 1);
 
       completeAction.updatedAccessRequestInstances = updatedAccessRequestInstances;

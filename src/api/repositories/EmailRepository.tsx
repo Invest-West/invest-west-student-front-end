@@ -1,4 +1,5 @@
-import Api, { ApiRoutes } from '../Api';
+import apiClient from '../apiClient';
+import { ApiRoutes } from '../Api';
 
 export enum ClientEmailTypes {
   EnquiryEmail,
@@ -56,16 +57,16 @@ export interface ContactPitchOwnerEmailData extends EmailInfo {
   projectName: string;
 }
 
-export default class EmailRepository {
+class EmailRepository {
   /**
    * Send email
    *
    * @param data
    */
   public async sendEmail(data: EmailData) {
-    return await new Api().request('post', ApiRoutes.sendEmailRoute, {
-      queryParameters: null,
-      requestBody: data,
-    });
+    return await apiClient.post(ApiRoutes.sendEmailRoute, data);
   }
 }
+
+export { EmailRepository };
+export default new EmailRepository();
