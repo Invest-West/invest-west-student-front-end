@@ -1,3 +1,7 @@
+/**
+ * Backwards-compatible action creators that delegate to the RTK slice.
+ * The async thunk stays here; sync actions use the slice.
+ */
 import { Action, ActionCreator, Dispatch } from 'redux';
 import { AppState } from '../reducers';
 import Error from '../../models/error';
@@ -5,10 +9,15 @@ import { SystemAttributes } from '../../models/system_attributes';
 import SystemAttributesRepository from '../../api/repositories/SystemAttributesRepository';
 import { setSectors } from '../../pages/admin/components/manage-sectors/ManageSectorsActions';
 import { setCourses } from '../../pages/admin/components/manage-courses/ManageCoursesActions';
+import {
+  setLoadingSystemAttributes,
+  setSystemAttributesLoaded,
+} from '../slices/systemAttributesSlice';
 
+// Re-export event names mapped to slice action types for consumers that match on them
 export enum ManageSystemAttributesEvents {
-  LoadingSystemAttributes = 'ManageSystemAttributesEvents.LoadingSystemAttributes',
-  FinishedLoadingSystemAttributes = 'ManageSystemAttributesEvents.FinishedLoadingSystemAttributes',
+  LoadingSystemAttributes = 'ManageSystemAttributesState/setLoadingSystemAttributes',
+  FinishedLoadingSystemAttributes = 'ManageSystemAttributesState/setSystemAttributesLoaded',
 }
 
 export interface ManageSystemAttributesAction extends Action {}
@@ -24,27 +33,21 @@ export const loadSystemAttributes: ActionCreator<any> = () => {
       getState().ManageSystemAttributesState;
 
     if (!systemAttributesLoaded && !loadingSystemAttributes && !systemAttributes) {
-      dispatch({
-        type: ManageSystemAttributesEvents.LoadingSystemAttributes,
-      });
-
-      const finishedAction: FinishedLoadingSystemAttributesAction = {
-        type: ManageSystemAttributesEvents.FinishedLoadingSystemAttributes,
-        systemAttributes: null,
-      };
+      dispatch(setLoadingSystemAttributes());
 
       try {
         const response = await new SystemAttributesRepository().getSystemAttributes();
         const systemAttributes: SystemAttributes = response.data;
-        finishedAction.systemAttributes = systemAttributes;
         dispatch(setSectors(systemAttributes.Sectors));
         dispatch(setCourses(systemAttributes.Courses || []));
-        return dispatch(finishedAction);
+        return dispatch(setSystemAttributesLoaded({ systemAttributes }));
       } catch (error) {
-        finishedAction.error = {
-          detail: error.toString(),
-        };
-        return dispatch(finishedAction);
+        return dispatch(
+          setSystemAttributesLoaded({
+            systemAttributes: null,
+            error: { detail: error.toString() },
+          })
+        );
       }
     }
   };

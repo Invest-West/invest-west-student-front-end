@@ -1,15 +1,26 @@
+/**
+ * Backwards-compatible action creators that delegate to the RTK slice.
+ * The async thunk stays here; sync actions use the slice.
+ */
 import { Action, ActionCreator, Dispatch } from 'redux';
 import GroupProperties from '../../models/group_properties';
 import Error from '../../models/error';
 import { AppState } from '../reducers';
 import GroupRepository from '../../api/repositories/GroupRepository';
 import Api from '../../api/Api';
+import {
+  setGroupUrl,
+  setValidatingGroupUrl,
+  setFinishedValidatingGroupUrl,
+  resetGroupUrlState as _resetGroupUrlState,
+} from '../slices/groupUrlSlice';
 
+// Re-export event names mapped to slice action types for consumers that match on them
 export enum ManageGroupUrlEvents {
-  SetGroupUrl = 'ManageGroupUrlEvents.SetGroupUrl',
-  ValidatingGroupUrl = 'ManageGroupUrlEvents.ValidatingGroupUrl',
-  FinishedValidatingGroupUrl = 'ManageGroupUrlEvents.FinishedValidatingGroupUrl',
-  ResetGroupUrlState = 'ManageGroupUrlEvents.ResetGroupUrlState',
+  SetGroupUrl = 'ManageGroupUrlState/setGroupUrl',
+  ValidatingGroupUrl = 'ManageGroupUrlState/setValidatingGroupUrl',
+  FinishedValidatingGroupUrl = 'ManageGroupUrlState/setFinishedValidatingGroupUrl',
+  ResetGroupUrlState = 'ManageGroupUrlState/resetGroupUrlState',
 }
 
 export interface ManageGroupUrlAction extends Action {
@@ -46,66 +57,33 @@ export const validateGroupUrl: ActionCreator<any> = (
     const { routePath, groupNameFromUrl, courseNameFromUrl, group, loadingGroup, groupLoaded } =
       getState().ManageGroupUrlState;
 
-    const setGroupUrlAction: SetGroupUrlAction = {
-      type: ManageGroupUrlEvents.SetGroupUrl,
-      path,
-      groupUserName,
-      courseUserName: courseUserName || null,
-    };
-
     let shouldValidateGroupUrl = false;
 
-    // routePath or groupNameFromUrl or both of them have not been defined
     if (routePath === undefined || groupNameFromUrl === undefined) {
       shouldValidateGroupUrl = true;
-    }
-    // routePath and groupNameFromUrl have been defined
-    else {
+    } else {
       if (groupNameFromUrl !== groupUserName || courseNameFromUrl !== courseUserName) {
         shouldValidateGroupUrl = true;
       }
     }
 
-    // group has not been loaded
-    // or group has been loaded but a new group name is set in the url
-    // --> continue validating group url
     if (
       (!group && !loadingGroup && !groupLoaded) ||
       (!(!group && !loadingGroup && !groupLoaded) && shouldValidateGroupUrl)
     ) {
-      dispatch(setGroupUrlAction);
+      dispatch(setGroupUrl({ path, groupUserName, courseUserName: courseUserName || null }));
+      dispatch(setValidatingGroupUrl());
 
-      const validatingGroupUrlAction: ValidatingGroupUrlAction = {
-        type: ManageGroupUrlEvents.ValidatingGroupUrl,
-      };
-
-      dispatch(validatingGroupUrlAction);
-
-      const finishedLoadingGroupUrlAction: FinishedValidatingGroupUrlAction = {
-        type: ManageGroupUrlEvents.FinishedValidatingGroupUrl,
-        group: null,
-        validGroupUrl: false,
-      };
-
-      // group name is not specified in the url
       if (!groupUserName) {
-        finishedLoadingGroupUrlAction.validGroupUrl = true;
-        return dispatch(finishedLoadingGroupUrlAction);
+        return dispatch(setFinishedValidatingGroupUrl({ group: null, validGroupUrl: true }));
       }
 
-      // Handle default "invest-west" group for course-based URLs
       if (groupUserName === 'invest-west') {
-        // Fetch the actual invest-west group from the backend to get the latest data including logo
         let investWestGroup: GroupProperties;
         try {
           const response = await new GroupRepository().getGroup('invest-west');
           investWestGroup = response.data;
         } catch (error) {
-          console.error(
-            '[VALIDATE GROUP] Failed to fetch invest-west group, using fallback:',
-            error
-          );
-          // Fallback to hardcoded object if fetch fails
           investWestGroup = {
             anid: '-M2I40dBdzdI89yDCaAn',
             dateAdded: Date.now(),
@@ -125,114 +103,44 @@ export const validateGroupUrl: ActionCreator<any> = (
           };
         }
 
-        // If courseUserName is provided, validate it exists in Firebase as a course entity
         if (courseUserName) {
           try {
-            // Query by parent group ID and course slug to ensure we get the correct course
-            // (multiple universities may have courses with the same slug like "student-showcase")
-            const courseGroup = await new GroupRepository().getCourseByParentAndSlug(
+            await new GroupRepository().getCourseByParentAndSlug(
               investWestGroup.anid,
               courseUserName
             );
-
-            if (!courseGroup) {
-              console.log(
-                `[COURSE VALIDATION] ⚠️ Course not found in Firebase: ${courseUserName} for parent ${investWestGroup.anid}`
-              );
-              // Don't fail validation here - the course might exist but we can't read it
-              // due to Firebase security rules (not authenticated yet)
-              // Let the authentication and permission checks handle access control
-            } else {
-              console.log(
-                `[COURSE VALIDATION] ✅ Course validated: "${courseUserName}" for group "${groupUserName}"`
-              );
-            }
           } catch (error: any) {
-            console.error('[COURSE VALIDATION] Error validating course:', error);
-            // Check if this is a permission/auth error (PERMISSION_DENIED from Firebase)
-            const isPermissionError =
-              error.toString().includes('PERMISSION_DENIED') ||
-              error.toString().includes('permission') ||
-              error.code === 'PERMISSION_DENIED';
-
-            if (isPermissionError) {
-              // Allow validation to pass - authentication check will handle this
-            } else {
-              // For other errors, we might want to fail validation
-              console.log(
-                `[COURSE VALIDATION] ⚠️ Non-permission error, but allowing validation to proceed: ${error.toString()}`
-              );
-              // Still allow it to pass - be lenient with course validation
-              // The auth/permission checks will catch any real issues
-            }
+            // Allow validation to proceed regardless of course validation errors
           }
         }
 
-        finishedLoadingGroupUrlAction.group = investWestGroup;
-        finishedLoadingGroupUrlAction.validGroupUrl = true;
-        return dispatch(finishedLoadingGroupUrlAction);
+        return dispatch(
+          setFinishedValidatingGroupUrl({ group: investWestGroup, validGroupUrl: true })
+        );
       }
 
       try {
         const response = await new GroupRepository().getGroup(groupUserName);
         const retrievedGroup: GroupProperties | null = response.data;
 
-        // If group exists and courseUserName is provided, validate the course from Firebase
         if (retrievedGroup && courseUserName) {
           try {
-            // Query by parent group ID and course slug to ensure we get the correct course
-            // (multiple universities may have courses with the same slug like "student-showcase")
-            const courseGroup = await new GroupRepository().getCourseByParentAndSlug(
+            await new GroupRepository().getCourseByParentAndSlug(
               retrievedGroup.anid,
               courseUserName
             );
-
-            if (!courseGroup) {
-              console.log(
-                `[COURSE VALIDATION] ⚠️ Course not found in Firebase: ${courseUserName} for parent ${retrievedGroup.anid}`
-              );
-              // Don't fail validation here - the course might exist but we can't read it
-              // due to Firebase security rules (not authenticated yet)
-              // Let the authentication and permission checks handle access control
-            } else {
-              console.log(
-                `[COURSE VALIDATION] ✅ Course validated: "${courseUserName}" for group "${groupUserName}"`
-              );
-            }
           } catch (error: any) {
-            console.error('[COURSE VALIDATION] Error validating course:', error);
-            // Check if this is a permission/auth error (PERMISSION_DENIED from Firebase)
-            const isPermissionError =
-              error.toString().includes('PERMISSION_DENIED') ||
-              error.toString().includes('permission') ||
-              error.code === 'PERMISSION_DENIED';
-
-            if (isPermissionError) {
-              console.log(
-                `[COURSE VALIDATION] ⏭️ Permission error - user likely not authenticated. Allowing validation to proceed.`
-              );
-              // Allow validation to pass - authentication check will handle this
-            } else {
-              // For other errors, we might want to fail validation
-              console.log(
-                `[COURSE VALIDATION] ⚠️ Non-permission error, but allowing validation to proceed: ${error.toString()}`
-              );
-              // Still allow it to pass - be lenient with course validation
-              // The auth/permission checks will catch any real issues
-            }
+            // Allow validation to proceed regardless of course validation errors
           }
         }
 
-        finishedLoadingGroupUrlAction.group = retrievedGroup;
-        finishedLoadingGroupUrlAction.validGroupUrl = retrievedGroup !== null;
-        return dispatch(finishedLoadingGroupUrlAction);
-      } catch (error: any) {
-        console.log(
-          `[GROUP VALIDATION] Standard group retrieval failed for "${groupUserName}", trying public API fallback...`
+        return dispatch(
+          setFinishedValidatingGroupUrl({
+            group: retrievedGroup,
+            validGroupUrl: retrievedGroup !== null,
+          })
         );
-
-        // Fallback to public API for route validation
-        // This handles cases where the university exists but isn't accessible via the standard auth-protected endpoints
+      } catch (error: any) {
         try {
           let publicApiUrl: string;
           if (courseUserName) {
@@ -241,16 +149,10 @@ export const validateGroupUrl: ActionCreator<any> = (
             publicApiUrl = `/public/uni/${groupUserName}`;
           }
 
-          console.log(`[GROUP VALIDATION] Calling public API: ${publicApiUrl}`);
           const publicResponse = await Api.doGet(publicApiUrl);
           const publicData = publicResponse.data;
 
           if (publicData.valid || publicData.found) {
-            console.log(
-              `[GROUP VALIDATION] ✅ Public API validation succeeded for "${groupUserName}"`
-            );
-
-            // Construct a GroupProperties object from the public API response
             const publicGroup: GroupProperties = {
               anid: publicData.university?.id || '',
               dateAdded: Date.now(),
@@ -277,24 +179,28 @@ export const validateGroupUrl: ActionCreator<any> = (
               },
             };
 
-            finishedLoadingGroupUrlAction.group = publicGroup;
-            finishedLoadingGroupUrlAction.validGroupUrl = true;
-            return dispatch(finishedLoadingGroupUrlAction);
-          } else {
-            console.log(
-              `[GROUP VALIDATION] ❌ Public API validation failed for "${groupUserName}": ${publicData.error}`
+            return dispatch(
+              setFinishedValidatingGroupUrl({ group: publicGroup, validGroupUrl: true })
             );
-            finishedLoadingGroupUrlAction.error = {
-              detail: publicData.error || `University "${groupUserName}" not found`,
-            };
-            return dispatch(finishedLoadingGroupUrlAction);
+          } else {
+            return dispatch(
+              setFinishedValidatingGroupUrl({
+                group: null,
+                validGroupUrl: false,
+                error: {
+                  detail: publicData.error || `University "${groupUserName}" not found`,
+                },
+              })
+            );
           }
         } catch (publicError: any) {
-          console.error('[GROUP VALIDATION] Public API fallback also failed:', publicError);
-          finishedLoadingGroupUrlAction.error = {
-            detail: error.toString(),
-          };
-          return dispatch(finishedLoadingGroupUrlAction);
+          return dispatch(
+            setFinishedValidatingGroupUrl({
+              group: null,
+              validGroupUrl: false,
+              error: { detail: error.toString() },
+            })
+          );
         }
       }
     }
@@ -303,9 +209,6 @@ export const validateGroupUrl: ActionCreator<any> = (
 
 export const resetGroupUrlState: ActionCreator<any> = () => {
   return (dispatch: Dispatch) => {
-    const action: ResetGroupUrlStateAction = {
-      type: ManageGroupUrlEvents.ResetGroupUrlState,
-    };
-    return dispatch(action);
+    return dispatch(_resetGroupUrlState());
   };
 };

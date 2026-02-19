@@ -1,13 +1,32 @@
+/**
+ * Backwards-compatible action creators that delegate to the RTK slice.
+ * Thunks and Firebase listeners remain here; sync actions use the slice.
+ */
+import {
+  setLoadingJoinRequests,
+  setJoinRequestsLoaded,
+  toggleSearchMode as _toggleSearchMode,
+  changePage as _changePage,
+  changeRowsPerPage as _changeRowsPerPage,
+  setSearchInput,
+  setJoinRequestsChanged,
+} from '../slices/joinRequestsSlice';
+
 import firebase from '../../firebase/firebaseApp';
 import * as realtimeDBUtils from '../../firebase/realtimeDBUtils';
 import * as DB_CONST from '../../firebase/databaseConsts';
 import * as utils from '../../utils/utils';
 import * as ROUTES from '../../router/routes';
 
-export const MANAGE_JOIN_REQUESTS_LOADING_JOIN_REQUESTS =
-  'MANAGE_JOIN_REQUESTS_LOADING_JOIN_REQUESTS';
-export const MANAGE_JOIN_REQUESTS_FINISHED_LOADING_JOIN_REQUESTS =
-  'MANAGE_JOIN_REQUESTS_FINISHED_LOADING_JOIN_REQUESTS';
+// Re-export action type strings for any consumers that match on them
+export const MANAGE_JOIN_REQUESTS_LOADING_JOIN_REQUESTS = setLoadingJoinRequests.type;
+export const MANAGE_JOIN_REQUESTS_FINISHED_LOADING_JOIN_REQUESTS = setJoinRequestsLoaded.type;
+export const MANAGE_JOIN_REQUESTS_TABLE_TOGGLE_SEARCH_MODE = _toggleSearchMode.type;
+export const MANAGE_JOIN_REQUESTS_TABLE_PAGE_CHANGED = _changePage.type;
+export const MANAGE_JOIN_REQUESTS_TABLE_ROWS_PER_PAGE_CHANGED = _changeRowsPerPage.type;
+export const MANAGE_JOIN_REQUESTS_TABLE_INPUT_CHANGED = setSearchInput.type;
+export const MANAGE_JOIN_REQUESTS_CHANGED = setJoinRequestsChanged.type;
+
 export const loadJoinRequests = () => {
   return (dispatch, getState) => {
     const groupProperties = getState().manageGroupFromParams.groupProperties;
@@ -16,30 +35,19 @@ export const loadJoinRequests = () => {
       return;
     }
 
-    dispatch({
-      type: MANAGE_JOIN_REQUESTS_LOADING_JOIN_REQUESTS,
-    });
+    dispatch(setLoadingJoinRequests());
 
     realtimeDBUtils
       .loadRequestsToJoin({ anid: groupProperties.anid })
       .then((joinRequests) => {
-        dispatch({
-          type: MANAGE_JOIN_REQUESTS_FINISHED_LOADING_JOIN_REQUESTS,
-          joinRequests,
-        });
+        dispatch(setJoinRequestsLoaded({ joinRequests }));
       })
-      .catch((error) => {
-        dispatch({
-          type: MANAGE_JOIN_REQUESTS_FINISHED_LOADING_JOIN_REQUESTS,
-          joinRequests: [],
-          error,
-        });
+      .catch(() => {
+        dispatch(setJoinRequestsLoaded({ joinRequests: [] }));
       });
   };
 };
 
-export const MANAGE_JOIN_REQUESTS_TABLE_TOGGLE_SEARCH_MODE =
-  'MANAGE_JOIN_REQUESTS_TABLE_TOGGLE_SEARCH_MODE';
 export const toggleSearchMode = () => {
   return (dispatch, getState) => {
     const inSearchMode = getState().manageJoinRequests.inSearchMode;
@@ -47,42 +55,20 @@ export const toggleSearchMode = () => {
     const joinRequests = getState().manageJoinRequests.joinRequests;
 
     if (inSearchMode) {
-      dispatch({
-        type: MANAGE_JOIN_REQUESTS_TABLE_TOGGLE_SEARCH_MODE,
-        enter: false,
-        matchedJoinRequests: [],
-      });
+      dispatch(_toggleSearchMode({ enter: false, matchedJoinRequests: [] }));
     } else {
       const matchedJoinRequests = joinRequests.filter((joinRequest) =>
         joinRequest.userProfile.email.toLowerCase().includes(searchText.trim().toLowerCase())
       );
-      dispatch({
-        type: MANAGE_JOIN_REQUESTS_TABLE_TOGGLE_SEARCH_MODE,
-        enter: true,
-        matchedJoinRequests,
-      });
+      dispatch(_toggleSearchMode({ enter: true, matchedJoinRequests }));
     }
   };
 };
 
-export const MANAGE_JOIN_REQUESTS_TABLE_PAGE_CHANGED = 'MANAGE_JOIN_REQUESTS_TABLE_PAGE_CHANGED';
-export const changePage = (event, newPage) => {
-  return {
-    type: MANAGE_JOIN_REQUESTS_TABLE_PAGE_CHANGED,
-    newPage,
-  };
-};
+export const changePage = (event, newPage) => _changePage(newPage);
 
-export const MANAGE_JOIN_REQUESTS_TABLE_ROWS_PER_PAGE_CHANGED =
-  'MANAGE_JOIN_REQUESTS_TABLE_ROWS_PER_PAGE_CHANGED';
-export const changeRowsPerPage = (event) => {
-  return {
-    type: MANAGE_JOIN_REQUESTS_TABLE_ROWS_PER_PAGE_CHANGED,
-    value: parseInt(event.target.value, 10),
-  };
-};
+export const changeRowsPerPage = (event) => _changeRowsPerPage(parseInt(event.target.value, 10));
 
-export const MANAGE_JOIN_REQUESTS_TABLE_INPUT_CHANGED = 'MANAGE_JOIN_REQUESTS_TABLE_INPUT_CHANGED';
 export const handleJoinRequestsTableInputChanged = (event) => {
   return (dispatch, getState) => {
     const joinRequests = getState().manageJoinRequests.joinRequests;
@@ -92,17 +78,12 @@ export const handleJoinRequestsTableInputChanged = (event) => {
       joinRequest.userProfile.email.toLowerCase().includes(searchText.trim().toLowerCase())
     );
 
-    dispatch({
-      type: MANAGE_JOIN_REQUESTS_TABLE_INPUT_CHANGED,
-      searchText,
-      matchedJoinRequests,
-    });
+    dispatch(setSearchInput({ searchText, matchedJoinRequests }));
   };
 };
 
 export const acceptJoinRequest = (request) => {
   return (dispatch, getState) => {
-    // remove the join request
     firebase
       .database()
       .ref(DB_CONST.REQUESTS_TO_JOIN_CHILD)
@@ -111,7 +92,6 @@ export const acceptJoinRequest = (request) => {
       .then(() => {
         const pushKey = firebase.database().ref(DB_CONST.INVITED_USERS_CHILD).push().key;
         const currentDate = utils.getCurrentDate();
-        // add a node in InvitedUsers
         firebase
           .database()
           .ref(DB_CONST.INVITED_USERS_CHILD)
@@ -139,12 +119,8 @@ export const acceptJoinRequest = (request) => {
                 userID: request.userID,
                 action: `${ROUTES.DASHBOARD_INVESTOR_INVEST_WEST_SUPER}?tab=Explore groups`,
               })
-              .then(() => {
-                // do something
-              })
-              .catch((error) => {
-                // handle error
-              });
+              .then(() => {})
+              .catch(() => {});
           });
       });
   };
@@ -152,7 +128,6 @@ export const acceptJoinRequest = (request) => {
 
 export const rejectJoinRequest = (request) => {
   return (dispatch, getState) => {
-    // remove the join request
     firebase
       .database()
       .ref(DB_CONST.REQUESTS_TO_JOIN_CHILD)
@@ -166,20 +141,15 @@ export const rejectJoinRequest = (request) => {
             userID: request.userID,
             action: `${ROUTES.DASHBOARD_INVESTOR_INVEST_WEST_SUPER}?tab=Explore groups`,
           })
-          .then(() => {
-            // do something
-          })
-          .catch((error) => {
-            // handle error
-          });
+          .then(() => {})
+          .catch(() => {});
       });
   };
 };
 
-//----------------------------------------------------------------------------------------------------------------------
+// Listener ---------------------------------------------------------------
 let joinRequestsListener = null;
 
-export const MANAGE_JOIN_REQUESTS_CHANGED = 'MANAGE_JOIN_REQUESTS_CHANGED';
 export const startListeningForJoinRequestsChanged = () => {
   return (dispatch, getState) => {
     const user = getState().auth.user;
@@ -212,10 +182,7 @@ export const startListeningForJoinRequestsChanged = () => {
               .then((angelNetwork) => {
                 joinRequest.group = angelNetwork;
 
-                dispatch({
-                  type: MANAGE_JOIN_REQUESTS_CHANGED,
-                  joinRequests: [...joinRequests, joinRequest],
-                });
+                dispatch(setJoinRequestsChanged({ joinRequests: [...joinRequests, joinRequest] }));
               });
           });
         }
@@ -231,10 +198,7 @@ export const startListeningForJoinRequestsChanged = () => {
 
         if (index !== -1) {
           joinRequests.splice(index, 1);
-          dispatch({
-            type: MANAGE_JOIN_REQUESTS_CHANGED,
-            joinRequests,
-          });
+          dispatch(setJoinRequestsChanged({ joinRequests }));
         }
       });
     }

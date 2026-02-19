@@ -6,7 +6,12 @@ import authenticationReducer, {
   successfullyAuthenticated,
   hasAuthenticationError,
 } from '../authenticationReducer';
-import { AuthenticationEvents } from '../../actions/authenticationActions';
+import {
+  startAuthenticating,
+  completeAuthentication,
+  signOutAction,
+  updateUserChanges,
+} from '../../slices/authSlice';
 import {
   createMockUser,
   createMockAdmin,
@@ -39,9 +44,7 @@ describe('authenticationReducer', () => {
         currentUser: createMockUser(),
         groupsOfMembership: [createMockGroupOfMembership()],
       };
-      const state = authenticationReducer(prevState, {
-        type: AuthenticationEvents.StartAuthenticating,
-      });
+      const state = authenticationReducer(prevState, startAuthenticating());
       expect(state.status).toBe(AuthenticationStatus.Authenticating);
       expect(state.currentUser).toBeNull();
       expect(state.groupsOfMembership).toEqual([]);
@@ -54,12 +57,11 @@ describe('authenticationReducer', () => {
       const groups = [createMockGroupOfMembership()];
       const state = authenticationReducer(
         { ...initialState, status: AuthenticationStatus.Authenticating },
-        {
-          type: AuthenticationEvents.CompleteAuthentication,
+        completeAuthentication({
           status: AuthenticationStatus.Authenticated,
           currentUser: user,
           groupsOfMembership: groups,
-        }
+        })
       );
       expect(state.status).toBe(AuthenticationStatus.Authenticated);
       expect(state.currentUser).toBeDefined();
@@ -69,23 +71,27 @@ describe('authenticationReducer', () => {
 
     it('deep clones user to prevent mutation', () => {
       const user = createMockUser();
-      const state = authenticationReducer(initialState, {
-        type: AuthenticationEvents.CompleteAuthentication,
-        status: AuthenticationStatus.Authenticated,
-        currentUser: user,
-        groupsOfMembership: [],
-      });
+      const state = authenticationReducer(
+        initialState,
+        completeAuthentication({
+          status: AuthenticationStatus.Authenticated,
+          currentUser: user,
+          groupsOfMembership: [],
+        })
+      );
       expect(state.currentUser).not.toBe(user);
     });
 
     it('sets error when provided', () => {
-      const state = authenticationReducer(initialState, {
-        type: AuthenticationEvents.CompleteAuthentication,
-        status: AuthenticationStatus.Unauthenticated,
-        currentUser: null,
-        groupsOfMembership: [],
-        error: { detail: 'Invalid credential.' },
-      });
+      const state = authenticationReducer(
+        initialState,
+        completeAuthentication({
+          status: AuthenticationStatus.Unauthenticated,
+          currentUser: null,
+          groupsOfMembership: [],
+          error: { detail: 'Invalid credential.' },
+        })
+      );
       expect(state.error).toEqual({ detail: 'Invalid credential.' });
     });
 
@@ -96,12 +102,14 @@ describe('authenticationReducer', () => {
         currentUser: existingUser,
         groupsOfMembership: [],
       };
-      const state = authenticationReducer(prevState, {
-        type: AuthenticationEvents.CompleteAuthentication,
-        status: AuthenticationStatus.Unauthenticated,
-        currentUser: null,
-        groupsOfMembership: [],
-      });
+      const state = authenticationReducer(
+        prevState,
+        completeAuthentication({
+          status: AuthenticationStatus.Unauthenticated,
+          currentUser: null,
+          groupsOfMembership: [],
+        })
+      );
       // When currentUser is null in action, existing user is preserved
       expect(state.currentUser).toBeDefined();
     });
@@ -114,18 +122,14 @@ describe('authenticationReducer', () => {
         currentUser: createMockUser(),
         groupsOfMembership: [createMockGroupOfMembership()],
       };
-      const state = authenticationReducer(prevState, {
-        type: AuthenticationEvents.SignOut,
-      });
+      const state = authenticationReducer(prevState, signOutAction());
       expect(state.status).toBe(AuthenticationStatus.Unauthenticated);
       expect(state.currentUser).toBeNull();
       expect(state.groupsOfMembership).toEqual([]);
     });
 
     it('from NotInitialized → Unauthenticated, clears user', () => {
-      const state = authenticationReducer(initialState, {
-        type: AuthenticationEvents.SignOut,
-      });
+      const state = authenticationReducer(initialState, signOutAction());
       expect(state.status).toBe(AuthenticationStatus.Unauthenticated);
       expect(state.currentUser).toBeNull();
     });
@@ -136,9 +140,7 @@ describe('authenticationReducer', () => {
         currentUser: null,
         groupsOfMembership: [],
       };
-      const state = authenticationReducer(prevState, {
-        type: AuthenticationEvents.SignOut,
-      });
+      const state = authenticationReducer(prevState, signOutAction());
       expect(state.status).toBe(AuthenticationStatus.Authenticating);
     });
   });
@@ -152,12 +154,9 @@ describe('authenticationReducer', () => {
         currentUser: createMockUser(),
         groupsOfMembership: groups,
       };
-      const state = authenticationReducer(prevState, {
-        type: AuthenticationEvents.UpdateUserChanges,
-        updatedUser,
-      });
+      const state = authenticationReducer(prevState, updateUserChanges({ updatedUser }));
       expect(state.currentUser!.firstName).toBe('Updated');
-      expect(state.groupsOfMembership).toBe(groups);
+      expect(state.groupsOfMembership).toEqual(groups);
       expect(state.status).toBe(AuthenticationStatus.Authenticated);
     });
   });

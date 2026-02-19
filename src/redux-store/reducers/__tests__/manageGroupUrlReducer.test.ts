@@ -6,7 +6,12 @@ import manageGroupUrlReducer, {
   hasGroupValidationError,
   getGroupRouteTheme,
 } from '../manageGroupUrlReducer';
-import { ManageGroupUrlEvents } from '../../actions/manageGroupUrlActions';
+import {
+  setGroupUrl,
+  setValidatingGroupUrl,
+  setFinishedValidatingGroupUrl,
+  resetGroupUrlState,
+} from '../../slices/groupUrlSlice';
 import { createMockGroup } from '../../../test-utils/mock-data';
 
 // Mock MUI to avoid loading the full library in tests
@@ -39,12 +44,14 @@ describe('manageGroupUrlReducer', () => {
 
   describe('SetGroupUrl', () => {
     it('sets route path, group name, and course name', () => {
-      const state = manageGroupUrlReducer(getInitialState(), {
-        type: ManageGroupUrlEvents.SetGroupUrl,
-        path: '/groups/test-uni/cs-msc',
-        groupUserName: 'test-uni',
-        courseUserName: 'cs-msc',
-      });
+      const state = manageGroupUrlReducer(
+        getInitialState(),
+        setGroupUrl({
+          path: '/groups/test-uni/cs-msc',
+          groupUserName: 'test-uni',
+          courseUserName: 'cs-msc',
+        })
+      );
       expect(state.routePath).toBe('/groups/test-uni/cs-msc');
       expect(state.groupNameFromUrl).toBe('test-uni');
       expect(state.courseNameFromUrl).toBe('cs-msc');
@@ -53,9 +60,7 @@ describe('manageGroupUrlReducer', () => {
 
   describe('ValidatingGroupUrl', () => {
     it('sets loadingGroup to true', () => {
-      const state = manageGroupUrlReducer(getInitialState(), {
-        type: ManageGroupUrlEvents.ValidatingGroupUrl,
-      });
+      const state = manageGroupUrlReducer(getInitialState(), setValidatingGroupUrl());
       expect(state.loadingGroup).toBe(true);
       expect(state.groupLoaded).toBe(false);
       expect(state.group).toBeNull();
@@ -66,11 +71,10 @@ describe('manageGroupUrlReducer', () => {
   describe('FinishedValidatingGroupUrl', () => {
     it('sets group and validGroupUrl on success', () => {
       const group = createMockGroup();
-      const state = manageGroupUrlReducer(getInitialState(), {
-        type: ManageGroupUrlEvents.FinishedValidatingGroupUrl,
-        group,
-        validGroupUrl: true,
-      });
+      const state = manageGroupUrlReducer(
+        getInitialState(),
+        setFinishedValidatingGroupUrl({ group, validGroupUrl: true })
+      );
       expect(state.groupLoaded).toBe(true);
       expect(state.loadingGroup).toBe(false);
       expect(state.validGroupUrl).toBe(true);
@@ -79,12 +83,14 @@ describe('manageGroupUrlReducer', () => {
     });
 
     it('sets null group and false validGroupUrl on failure', () => {
-      const state = manageGroupUrlReducer(getInitialState(), {
-        type: ManageGroupUrlEvents.FinishedValidatingGroupUrl,
-        group: null,
-        validGroupUrl: false,
-        error: { detail: 'Not found' },
-      });
+      const state = manageGroupUrlReducer(
+        getInitialState(),
+        setFinishedValidatingGroupUrl({
+          group: null,
+          validGroupUrl: false,
+          error: { detail: 'Not found' },
+        })
+      );
       expect(state.group).toBeNull();
       expect(state.validGroupUrl).toBe(false);
       expect(state.error).toEqual({ detail: 'Not found' });
@@ -94,16 +100,12 @@ describe('manageGroupUrlReducer', () => {
   describe('ResetGroupUrlState', () => {
     it('returns to initial state', () => {
       // First set some state
-      let state = manageGroupUrlReducer(getInitialState(), {
-        type: ManageGroupUrlEvents.SetGroupUrl,
-        path: '/test',
-        groupUserName: 'test',
-        courseUserName: null,
-      });
+      let state = manageGroupUrlReducer(
+        getInitialState(),
+        setGroupUrl({ path: '/test', groupUserName: 'test', courseUserName: null })
+      );
       // Then reset
-      state = manageGroupUrlReducer(state, {
-        type: ManageGroupUrlEvents.ResetGroupUrlState,
-      });
+      state = manageGroupUrlReducer(state, resetGroupUrlState());
       expect(state.routePath).toBeUndefined();
       expect(state.group).toBeNull();
       expect(state.groupLoaded).toBe(false);

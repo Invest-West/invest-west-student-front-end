@@ -1,49 +1,45 @@
+/**
+ * Backwards-compatible action creators that delegate to the RTK slice.
+ * Thunks and Firebase listeners remain here; sync actions use the slice.
+ */
+import {
+  toggleNotifications as _toggleNotifications,
+  setNotificationBellRef as _setNotificationBellRef,
+  setLoadingNotifications,
+  setNotificationsLoaded,
+  setNotificationsChanged,
+} from '../slices/notificationsSlice';
+
 import * as realtimeDBUtils from '../../firebase/realtimeDBUtils';
 import * as DB_CONST from '../../firebase/databaseConsts';
 import firebase from '../../firebase/firebaseApp';
 
-export const TOGGLE_NOTIFICATIONS = 'TOGGLE_NOTIFICATIONS';
-export const CALLED_LAST = 'CALLED_LAST';
-export const CALLED_BEFORE_LAST = 'CALLED_BEFORE_LAST';
+// Re-export action type strings for any consumers that match on them
+export const TOGGLE_NOTIFICATIONS = _toggleNotifications.type;
+export const NOTIFICATIONBELL_REF = _setNotificationBellRef.type;
+export const LOADING_NOTIFICATIONS = setLoadingNotifications.type;
+export const FINISHED_LOADING_NOTIFICATIONS = setNotificationsLoaded.type;
+export const NOTIFICATIONS_LIST_CHANGED = setNotificationsChanged.type;
+
 export const toggleNotifications = (event) => {
   return (dispatch, getState) => {
     const notificationsAnchorEl = getState().manageNotifications.notificationsAnchorEl;
     const notificationBellRef = getState().manageNotifications.notificationBellRef;
 
-    const openPanel = () => {
-      dispatch({
-        type: TOGGLE_NOTIFICATIONS,
-        notificationsAnchorEl: notificationBellRef,
-      });
-    };
-
-    const closePanel = () => {
-      dispatch({
-        type: TOGGLE_NOTIFICATIONS,
-        notificationsAnchorEl: null,
-      });
-    };
-
     if (!notificationsAnchorEl) {
-      openPanel();
+      dispatch(_toggleNotifications({ notificationsAnchorEl: notificationBellRef }));
     } else {
-      closePanel();
+      dispatch(_toggleNotifications({ notificationsAnchorEl: null }));
     }
   };
 };
 
-export const NOTIFICATIONBELL_REF = 'NOTIFICATIONBELL_REF';
 export const notificationRefUpdated = (ref) => {
-  return (dispatch, getState) => {
-    dispatch({
-      type: NOTIFICATIONBELL_REF,
-      notificationBellRef: ref,
-    });
+  return (dispatch) => {
+    dispatch(_setNotificationBellRef({ notificationBellRef: ref }));
   };
 };
 
-export const LOADING_NOTIFICATIONS = 'LOADING_NOTIFICATIONS';
-export const FINISHED_LOADING_NOTIFICATIONS = 'FINISHED_LOADING_NOTIFICATIONS';
 export const loadNotifications = () => {
   return (dispatch, getState) => {
     const user = getState().auth.user;
@@ -54,40 +50,28 @@ export const loadNotifications = () => {
 
     const userId = user.hasOwnProperty('anid') ? user.anid : user.id;
 
-    dispatch({
-      type: LOADING_NOTIFICATIONS,
-    });
+    dispatch(setLoadingNotifications());
 
     realtimeDBUtils
       .loadNotifications(userId)
       .then((notifications) => {
-        dispatch({
-          type: FINISHED_LOADING_NOTIFICATIONS,
-          notifications,
-        });
+        dispatch(setNotificationsLoaded({ notifications }));
       })
-      .catch((error) => {
-        dispatch({
-          type: FINISHED_LOADING_NOTIFICATIONS,
-          notifications: [],
-        });
+      .catch(() => {
+        dispatch(setNotificationsLoaded({ notifications: [] }));
       });
   };
 };
 
 export const deleteANotification = (notification) => {
-  return (dispatch, getState) => {
+  return () => {
     firebase
       .database()
       .ref(DB_CONST.NOTIFICATIONS_CHILD)
       .child(notification.id)
       .remove()
-      .then(() => {
-        // Don't close the panel - let the real-time listener update the UI
-      })
-      .catch((error) => {
-        console.error('Error deleting notification:', error);
-      });
+      .then(() => {})
+      .catch(() => {});
   };
 };
 
@@ -103,20 +87,14 @@ export const deleteAllNotifications = () => {
 
     realtimeDBUtils
       .deleteAllNotifications(userId)
-      .then(() => {
-        // Don't close the panel - let the real-time listener update the UI
-      })
-      .catch((error) => {
-        console.error('Error deleting all notifications:', error);
-      });
+      .then(() => {})
+      .catch(() => {});
   };
 };
 
-// Listener ------------------------------------------------------------------------------------------------------------
-
+// Listener ---------------------------------------------------------------
 let notificationsListener = null;
 
-export const NOTIFICATIONS_LIST_CHANGED = 'NOTIFICATIONS_LIST_CHANGED';
 export const startListeningForNotificationsChanged = () => {
   return (dispatch, getState) => {
     if (!notificationsListener) {
@@ -143,10 +121,7 @@ export const startListeningForNotificationsChanged = () => {
         );
 
         if (notificationIndex === -1) {
-          dispatch({
-            type: NOTIFICATIONS_LIST_CHANGED,
-            notifications: [...notifications, notification],
-          });
+          dispatch(setNotificationsChanged({ notifications: [...notifications, notification] }));
         }
       });
 
@@ -160,10 +135,7 @@ export const startListeningForNotificationsChanged = () => {
 
         if (notificationIndex !== -1) {
           notifications.splice(notificationIndex, 1);
-          dispatch({
-            type: NOTIFICATIONS_LIST_CHANGED,
-            notifications,
-          });
+          dispatch(setNotificationsChanged({ notifications }));
         }
       });
     }
@@ -171,7 +143,7 @@ export const startListeningForNotificationsChanged = () => {
 };
 
 export const stopListeningForNotificationsChanged = () => {
-  return (dispatch, getState) => {
+  return () => {
     if (notificationsListener) {
       notificationsListener.off('child_added');
       notificationsListener.off('child_removed');

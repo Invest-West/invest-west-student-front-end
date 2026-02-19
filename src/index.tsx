@@ -4,12 +4,15 @@ import { createRoot } from 'react-dom/client';
 import './index';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
-import { applyMiddleware, createStore, Store } from 'redux';
-import rootReducer, { AppState } from './redux-store/reducers';
+import { configureStore } from '@reduxjs/toolkit';
+import rootReducer from './redux-store/reducers';
 import { Provider } from 'react-redux';
-import thunk from 'redux-thunk';
 
-const store: Store<AppState> = createStore(rootReducer, applyMiddleware(thunk));
+const store = configureStore({
+  reducer: rootReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({ serializableCheck: false, immutableCheck: false }),
+});
 
 const root = createRoot(document.getElementById('root')!);
 root.render(
