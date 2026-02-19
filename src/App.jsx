@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import {
   createTheme,
   ThemeProvider,
@@ -9,9 +9,6 @@ import {
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import AppRouter from './router/router.tsx';
-
-import { connect } from 'react-redux';
-import * as manageGroupFromParamsActions from './redux-store/actions/manageGroupFromParamsActions';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { AUTH_SUCCESS } from './pages/signin/Signin';
@@ -31,6 +28,7 @@ import * as groupAdminsTableActions from './redux-store/actions/groupAdminsTable
 import * as forumsActions from './redux-store/actions/forumsActions';
 import * as editUserActions from './redux-store/actions/editUserActions';
 import * as manageSystemGroupsActions from './redux-store/actions/manageSystemGroupsActions';
+import * as manageGroupFromParamsActions from './redux-store/actions/manageGroupFromParamsActions';
 import { signIn } from './redux-store/actions/authenticationActions';
 import { getGroupRouteTheme } from './redux-store/reducers/manageGroupUrlReducer';
 import IdleTimer from 'react-idle-timer';
@@ -38,344 +36,149 @@ import { activeTimeOut } from './redux-store/reducers/manageSystemIdleTimeReduce
 import { onIdle } from './redux-store/actions/manageSystemIdleTimeActions';
 import { CacheMonitor } from './utils/CacheMonitor';
 import { CacheManager } from './utils/CacheInvalidation';
+import { useAppSelector, useAppDispatch } from './redux-store/hooks';
 
-// map redux states to props of this component
-const mapStateToProps = (state) => {
-  return {
-    ManageGroupUrlState: state.ManageGroupUrlState,
+function App() {
+  const dispatch = useAppDispatch();
 
-    /**
-     * Old state --------------------------------------------------------------------------------------------------
-     */
-    // angel network loaded from anid from URL params
-    groupPropertiesLoaded: state.manageGroupFromParams.groupPropertiesLoaded,
-    groupProperties: state.manageGroupFromParams.groupProperties,
-    shouldLoadOtherData: state.manageGroupFromParams.shouldLoadOtherData,
-    //--------------------------------------------------------------------------------------------------------------
+  const ManageGroupUrlState = useAppSelector((state) => state.ManageGroupUrlState);
+  const groupPropertiesLoaded = useAppSelector(
+    (state) => state.manageGroupFromParams.groupPropertiesLoaded
+  );
+  const groupProperties = useAppSelector((state) => state.manageGroupFromParams.groupProperties);
+  const shouldLoadOtherData = useAppSelector(
+    (state) => state.manageGroupFromParams.shouldLoadOtherData
+  );
+  const user = useAppSelector((state) => state.auth.user);
+  const userLoaded = useAppSelector((state) => state.auth.userLoaded);
+  const authStatus = useAppSelector((state) => state.auth.authStatus);
+  const forums = useAppSelector((state) => state.manageForums.forums);
+  const clubAttributes = useAppSelector((state) => state.manageClubAttributes.clubAttributes);
+  const clubAttributesLoaded = useAppSelector(
+    (state) => state.manageClubAttributes.clubAttributesLoaded
+  );
+  const clubAttributesBeingLoaded = useAppSelector(
+    (state) => state.manageClubAttributes.clubAttributesBeingLoaded
+  );
+  const systemGroups = useAppSelector((state) => state.manageSystemGroups.systemGroups);
+  const groupsLoaded = useAppSelector((state) => state.manageSystemGroups.groupsLoaded);
+  const loadingGroups = useAppSelector((state) => state.manageSystemGroups.loadingGroups);
 
-    // user --------------------------------------------------------------------------------------------------------
-    user: state.auth.user,
-    userLoaded: state.auth.userLoaded,
-    authStatus: state.auth.authStatus,
-    //--------------------------------------------------------------------------------------------------------------
+  const authListenerRef = useRef(null);
+  const firebaseAuthRef = useRef(firebase.auth());
 
-    forums: state.manageForums.forums,
+  const cancelAllListeners = useCallback(() => {
+    dispatch(authActions.stopListeningForUserProfileChanges());
+    dispatch(authActions.stopListeningForGroupsUserIsIn());
+    dispatch(manageJoinRequestsActions.stopListeningForJoinRequestsChanged());
+    dispatch(invitedUsersActions.stopListeningForInvitedUsersChanged());
+    dispatch(activitiesTableActions.stopListeningForActivitiesChanged());
+    dispatch(groupAdminsTableActions.stopListeningForGroupAdminsChanged());
+    dispatch(forumsActions.stopListeningForForumsChanged());
+    dispatch(forumsActions.stopListeningForThreadsChanged());
+    dispatch(forumsActions.stopListeningForThreadRepliesChanged());
+    dispatch(editUserActions.stopOriginalUserChangedListener());
+    dispatch(manageSystemGroupsActions.stopListeningForSystemGroupsChanged());
+  }, [dispatch]);
 
-    // club attributes ---------------------------------------------------------------------------------------------
-    clubAttributes: state.manageClubAttributes.clubAttributes,
-    clubAttributesLoaded: state.manageClubAttributes.clubAttributesLoaded,
-    //--------------------------------------------------------------------------------------------------------------
+  const loadClubAttributesIfNotLoaded = useCallback(() => {
+    if (!clubAttributesLoaded && !clubAttributesBeingLoaded) {
+      dispatch(clubAttributesActions.loadClubAttributes());
+    }
+  }, [clubAttributesLoaded, clubAttributesBeingLoaded, dispatch]);
 
-    // system groups -----------------------------------------------------------------------------------------------
-    systemGroups: state.manageSystemGroups.systemGroups,
-    groupsLoaded: state.manageSystemGroups.groupsLoaded,
-    loadingGroups: state.manageSystemGroups.loadingGroups,
-    //--------------------------------------------------------------------------------------------------------------
-  };
-};
+  const loadSystemGroupsIfNeeded = useCallback(() => {
+    if (!groupsLoaded && !loadingGroups) {
+      dispatch(manageSystemGroupsActions.loadGroups());
+    }
+  }, [groupsLoaded, loadingGroups, dispatch]);
 
-// map redux dispatch (actions) to props of this component
-const mapDispatchToProps = (dispatch) => {
-  return {
-    signIn: () => dispatch(signIn()),
-    onIdle: (event) => dispatch(onIdle(event)),
+  const attachListeners = useCallback(() => {
+    dispatch(manageGroupFromParamsActions.startListeningForAngelNetworkChanged());
 
-    /**
-     * Old dispatch ------------------------------------------------------------------------------------------------
-     */
-    startListeningForAngelNetworkChanged: () =>
-      dispatch(manageGroupFromParamsActions.startListeningForAngelNetworkChanged()),
-    stopListeningForAngelNetworkChanged: () =>
-      dispatch(manageGroupFromParamsActions.stopListeningForAngelNetworkChanged()),
+    if (user && userLoaded && authStatus === AUTH_SUCCESS) {
+      dispatch(authActions.startListeningForUserProfileChanges());
+      dispatch(authActions.startListeningForGroupsUserIsIn());
 
-    // auth functions  ---------------------------------------------------------------------------------------------
-    initializeAuthState: () => dispatch(authActions.initializeAuthState()),
-    getUserProfileAndValidateUser: (uid) =>
-      dispatch(authActions.getUserProfileAndValidateUser(uid)),
-    startListeningForUserProfileChanges: () =>
-      dispatch(authActions.startListeningForUserProfileChanges()),
-    stopListeningForUserProfileChanges: () =>
-      dispatch(authActions.stopListeningForUserProfileChanges()),
-    startListeningForGroupsUserIsIn: () => dispatch(authActions.startListeningForGroupsUserIsIn()),
-    stopListeningForGroupsUserIsIn: () => dispatch(authActions.stopListeningForGroupsUserIsIn()),
-    //--------------------------------------------------------------------------------------------------------------
+      if (groupsLoaded) {
+        dispatch(manageSystemGroupsActions.startListeningForSystemGroupsChanged());
+      }
+    }
 
-    // club attributes functions  ----------------------------------------------------------------------------------
-    loadClubAttributes: () => dispatch(clubAttributesActions.loadClubAttributes()),
-    startListeningForClubAttributesChanged: () =>
-      dispatch(clubAttributesActions.startListeningForClubAttributesChanged()),
-    stopListeningForClubAttributesChanged: () =>
-      dispatch(clubAttributesActions.stopListeningForClubAttributesChanged()),
-    //--------------------------------------------------------------------------------------------------------------
+    if (clubAttributesLoaded) {
+      dispatch(clubAttributesActions.startListeningForClubAttributesChanged());
+    }
 
-    // media query functions  --------------------------------------------------------------------------------------
-    addMediaQueryListeners: () => dispatch(mediaQueryActions.addMediaQueryListeners()),
-    removeMediaQueryListeners: () => dispatch(mediaQueryActions.removeMediaQueryListeners()),
-    //--------------------------------------------------------------------------------------------------------------
+    if (!authListenerRef.current) {
+      authListenerRef.current = firebaseAuthRef.current.onAuthStateChanged((firebaseUser) => {
+        dispatch(authActions.initializeAuthState());
+        if (firebaseUser) {
+          dispatch(authActions.getUserProfileAndValidateUser(firebaseUser.uid));
+          loadSystemGroupsIfNeeded();
+        } else {
+          dispatch(authActions.getUserProfileAndValidateUser(null));
+          cancelAllListeners();
+        }
+      });
+    }
+  }, [
+    user,
+    userLoaded,
+    authStatus,
+    clubAttributesLoaded,
+    groupsLoaded,
+    dispatch,
+    cancelAllListeners,
+    loadSystemGroupsIfNeeded,
+  ]);
 
-    adminDashboard_stopListeningForInvitedUsersChanged: () =>
-      dispatch(invitedUsersActions.stopListeningForInvitedUsersChanged()),
-
-    joinRequestsTable_stopListeningForJoinRequestsChanged: () =>
-      dispatch(manageJoinRequestsActions.stopListeningForJoinRequestsChanged()),
-
-    activitiesTable_stopListeningForActivitiesChanged: () =>
-      dispatch(activitiesTableActions.stopListeningForActivitiesChanged()),
-
-    groupAdminsTable_stopListeningForGroupAdminsChanged: () =>
-      dispatch(groupAdminsTableActions.stopListeningForGroupAdminsChanged()),
-
-    stopListeningForForumsChanged: () => dispatch(forumsActions.stopListeningForForumsChanged()),
-    stopListeningForThreadsChanged: () => dispatch(forumsActions.stopListeningForThreadsChanged()),
-    stopListeningForThreadRepliesChanged: () =>
-      dispatch(forumsActions.stopListeningForThreadRepliesChanged()),
-
-    editUserProfile_stopOriginalUserChangedListener: () =>
-      dispatch(editUserActions.stopOriginalUserChangedListener()),
-
-    loadSystemGroups: () => dispatch(manageSystemGroupsActions.loadGroups()),
-    startListeningForSystemGroupsChanged: () =>
-      dispatch(manageSystemGroupsActions.startListeningForSystemGroupsChanged()),
-    stopListeningForSystemGroupsChanged: () =>
-      dispatch(manageSystemGroupsActions.stopListeningForSystemGroupsChanged()),
-  };
-};
-
-class App extends Component {
-  constructor(props) {
-    super(props);
-
-    this.firebaseAuth = firebase.auth();
-    this.authListener = null;
-  }
-
-  componentDidMount() {
-    const {
-      groupPropertiesLoaded,
-      shouldLoadOtherData,
-
-      addMediaQueryListeners,
-    } = this.props;
-
+  // componentDidMount
+  useEffect(() => {
     // Initialize cache monitoring
     if (process.env.NODE_ENV === 'development') {
-      CacheMonitor.getInstance().startPeriodicReporting(5); // Log every 5 minutes in dev
+      CacheMonitor.getInstance().startPeriodicReporting(5);
     }
 
     // Preload common data
     CacheManager.preload();
 
-    // add media query listeners
-    addMediaQueryListeners();
+    // Add media query listeners
+    dispatch(mediaQueryActions.addMediaQueryListeners());
 
     if (groupPropertiesLoaded && shouldLoadOtherData) {
-      this.loadClubAttributesIfNotLoaded();
-      this.attachListeners();
+      loadClubAttributesIfNotLoaded();
+      attachListeners();
     }
-  }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  componentDidUpdate(prevProps, prevState, snapshot) {
-    const { groupPropertiesLoaded, shouldLoadOtherData } = this.props;
-
+  // componentDidUpdate: re-attach listeners when group properties load
+  useEffect(() => {
     if (groupPropertiesLoaded && shouldLoadOtherData) {
-      this.loadClubAttributesIfNotLoaded();
-      this.attachListeners();
+      loadClubAttributesIfNotLoaded();
+      attachListeners();
     }
-  }
+  }, [groupPropertiesLoaded, shouldLoadOtherData, loadClubAttributesIfNotLoaded, attachListeners]);
 
-  componentWillUnmount() {
-    const {
-      removeMediaQueryListeners,
-      stopListeningForAngelNetworkChanged,
-      stopListeningForClubAttributesChanged,
-    } = this.props;
-
-    /**
-     * These listeners are global for whole system.
-     * Therefore, they should only be cancelled when the page is destroyed.
-     */
-    // cancel listening for auth state changed
-    this.authListener();
-    this.authListener = null;
-    // remove media query listeners
-    removeMediaQueryListeners();
-    // stop listening for angel network's changes
-    stopListeningForAngelNetworkChanged();
-    // stop listening for club attributes' changes
-    stopListeningForClubAttributesChanged();
-    /**
-     * ////---------------------------------------------------------------------------------------------------------
-     */
-
-    // cancel all other listeners when the page is destroyed
-    this.cancelAllListeners();
-  }
-
-  /**
-   * Cancel all listeners used in the components within the system
-   */
-  cancelAllListeners = () => {
-    const {
-      stopListeningForUserProfileChanges,
-
-      stopListeningForGroupsUserIsIn,
-
-      joinRequestsTable_stopListeningForJoinRequestsChanged,
-
-      adminDashboard_stopListeningForInvitedUsersChanged,
-
-      activitiesTable_stopListeningForActivitiesChanged,
-
-      groupAdminsTable_stopListeningForGroupAdminsChanged,
-
-      stopListeningForForumsChanged,
-      stopListeningForThreadsChanged,
-      stopListeningForThreadRepliesChanged,
-
-      editUserProfile_stopOriginalUserChangedListener,
-
-      stopListeningForSystemGroupsChanged,
-    } = this.props;
-    // stop listening for user's profile changes
-    stopListeningForUserProfileChanges();
-    // stop listening for groups user is in changes
-    stopListeningForGroupsUserIsIn();
-
-    // stop listening for join requests changes in the JoinRequests table component
-    joinRequestsTable_stopListeningForJoinRequestsChanged();
-
-    // stop listening for invited users changes in the InvitedUsers component
-    adminDashboard_stopListeningForInvitedUsersChanged();
-
-    // stop listening for activities changes in the ActivitiesTable component
-    activitiesTable_stopListeningForActivitiesChanged();
-
-    // stop listening for group admins changes in the GroupAdminsTable component
-    groupAdminsTable_stopListeningForGroupAdminsChanged();
-
-    // stop listening for forums changes
-    stopListeningForForumsChanged();
-    // stop listening for threads changes
-    stopListeningForThreadsChanged();
-    // stop listening for thread replies changes
-    stopListeningForThreadRepliesChanged();
-
-    // stop listening for edited user's changes
-    // this should get called if the current user and the user being edited are different
-    editUserProfile_stopOriginalUserChangedListener();
-
-    // stop listening for system groups changes
-    stopListeningForSystemGroupsChanged();
-  };
-
-  /**
-   * Load club attributes
-   */
-  loadClubAttributesIfNotLoaded = () => {
-    const {
-      clubAttributesLoaded,
-      clubAttributesBeingLoaded,
-
-      loadClubAttributes,
-    } = this.props;
-
-    if (!clubAttributesLoaded && !clubAttributesBeingLoaded) {
-      // load club attributes
-      loadClubAttributes();
-    }
-  };
-
-  /**
-   * Load all the groups in the system
-   * --> This should be done as soon as the user is logged in
-   */
-  loadSystemGroups = () => {
-    const {
-      groupsLoaded,
-      loadingGroups,
-
-      loadSystemGroups,
-    } = this.props;
-
-    if (!groupsLoaded && !loadingGroups) {
-      // load system groups
-      loadSystemGroups();
-    }
-  };
-
-  /**
-   * Attach listeners
-   */
-
-  attachListeners = () => {
-    const {
-      authStatus,
-
-      user,
-      userLoaded,
-      clubAttributesLoaded,
-      groupsLoaded,
-
-      initializeAuthState,
-      getUserProfileAndValidateUser,
-      startListeningForClubAttributesChanged,
-      startListeningForUserProfileChanges,
-      startListeningForAngelNetworkChanged,
-      startListeningForGroupsUserIsIn,
-      startListeningForSystemGroupsChanged,
-    } = this.props;
-
-    startListeningForAngelNetworkChanged();
-
-    if (user && userLoaded && authStatus === AUTH_SUCCESS) {
-      // start listening for user's profile changes
-      startListeningForUserProfileChanges();
-      // start listening for groups user is in changes
-      startListeningForGroupsUserIsIn();
-
-      if (groupsLoaded) {
-        // start listening for system groups changed
-        startListeningForSystemGroupsChanged();
+  // componentWillUnmount
+  useEffect(() => {
+    return () => {
+      // Cancel auth listener
+      if (authListenerRef.current) {
+        authListenerRef.current();
+        authListenerRef.current = null;
       }
-    }
+      // Remove media query listeners
+      dispatch(mediaQueryActions.removeMediaQueryListeners());
+      // Stop listening for angel network's changes
+      dispatch(manageGroupFromParamsActions.stopListeningForAngelNetworkChanged());
+      // Stop listening for club attributes' changes
+      dispatch(clubAttributesActions.stopListeningForClubAttributesChanged());
+      // Cancel all other listeners
+      cancelAllListeners();
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    if (clubAttributesLoaded) {
-      // start listening for club attributes' changes
-      startListeningForClubAttributesChanged();
-    }
-
-    if (!this.authListener) {
-      // listen for auth state changed
-      this.authListener = this.firebaseAuth.onAuthStateChanged((firebaseUser) => {
-        // call this function to always set userLoaded to false when user is signed out
-        initializeAuthState();
-        // if user is authenticated
-        if (firebaseUser) {
-          getUserProfileAndValidateUser(firebaseUser.uid);
-
-          // load system groups
-          this.loadSystemGroups();
-        }
-        // user is not authenticated
-        else {
-          getUserProfileAndValidateUser(null);
-          // the listeners used in components within the system must be cancelled
-          // when the logged in user logs out
-          this.cancelAllListeners();
-        }
-      });
-    }
-  };
-
-  getTheme = () => {
-    const {
-      ManageGroupUrlState,
-
-      groupPropertiesLoaded,
-      groupProperties,
-      shouldLoadOtherData,
-    } = this.props;
-
+  const getTheme = () => {
     if (ManageGroupUrlState.group) {
       return getGroupRouteTheme(ManageGroupUrlState);
     }
@@ -391,11 +194,9 @@ class App extends Component {
             primary: {
               main: groupProperties.settings.primaryColor,
             },
-
             secondary: {
               main: groupProperties.settings.secondaryColor,
             },
-
             text: {
               secondary: colors.blue_gray_700,
             },
@@ -408,24 +209,21 @@ class App extends Component {
     );
   };
 
-  render() {
-    return (
-      <div>
-        <IdleTimer timeout={activeTimeOut} onIdle={this.props.onIdle} />
-        <StyledEngineProvider injectFirst>
-          <ThemeProvider theme={this.getTheme()}>
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <AppRouter />
+  return (
+    <div>
+      <IdleTimer timeout={activeTimeOut} onIdle={(event) => dispatch(onIdle(event))} />
+      <StyledEngineProvider injectFirst>
+        <ThemeProvider theme={getTheme()}>
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <AppRouter />
 
-              {/** Feedback snackbar */}
-              <FeedbackSnackbar />
-            </LocalizationProvider>
-          </ThemeProvider>
-        </StyledEngineProvider>
-      </div>
-    );
-  }
+            {/** Feedback snackbar */}
+            <FeedbackSnackbar />
+          </LocalizationProvider>
+        </ThemeProvider>
+      </StyledEngineProvider>
+    </div>
+  );
 }
 
-// export the App component using redux connect to hook up states and actions
-export default connect(mapStateToProps, mapDispatchToProps)(App);
+export default App;

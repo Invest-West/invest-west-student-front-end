@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import {
   Typography,
@@ -23,7 +23,7 @@ import { NavLink } from 'react-router-dom';
 import { css } from 'aphrodite';
 import { HashLoader } from 'react-spinners';
 
-import { connect } from 'react-redux';
+import { useAppSelector, useAppDispatch } from '../../../redux-store/hooks';
 import * as manageJoinRequestsActions from '../../../redux-store/actions/manageJoinRequestsActions';
 
 import sharedStyles, { StyledTableCell } from '../../../shared-js-css-styles/SharedStyles';
@@ -31,293 +31,92 @@ import * as colors from '../../../values/colors';
 import * as ROUTES from '../../../router/routes';
 import * as myUtils from '../../../utils/utils';
 
-const mapStateToProps = (state) => {
-  return {
-    groupUserName: state.manageGroupFromParams.groupUserName,
-    groupProperties: state.manageGroupFromParams.groupProperties,
-    groupPropertiesLoaded: state.manageGroupFromParams.groupPropertiesLoaded,
-    shouldLoadOtherData: state.manageGroupFromParams.shouldLoadOtherData,
+const JoinRequests = () => {
+  const dispatch = useAppDispatch();
+  const groupUserName = useAppSelector((state) => state.manageGroupFromParams.groupUserName);
+  const groupProperties = useAppSelector((state) => state.manageGroupFromParams.groupProperties);
+  const groupPropertiesLoaded = useAppSelector(
+    (state) => state.manageGroupFromParams.groupPropertiesLoaded
+  );
+  const shouldLoadOtherData = useAppSelector(
+    (state) => state.manageGroupFromParams.shouldLoadOtherData
+  );
+  const user = useAppSelector((state) => state.auth.user);
+  const joinRequests = useAppSelector((state) => state.manageJoinRequests.joinRequests);
+  const loadingJoinRequests = useAppSelector(
+    (state) => state.manageJoinRequests.loadingJoinRequests
+  );
+  const joinRequestsLoaded = useAppSelector((state) => state.manageJoinRequests.joinRequestsLoaded);
+  const searchText = useAppSelector((state) => state.manageJoinRequests.searchText);
+  const inSearchMode = useAppSelector((state) => state.manageJoinRequests.inSearchMode);
+  const matchedJoinRequests = useAppSelector(
+    (state) => state.manageJoinRequests.matchedJoinRequests
+  );
+  const page = useAppSelector((state) => state.manageJoinRequests.page);
+  const rowsPerPage = useAppSelector((state) => state.manageJoinRequests.rowsPerPage);
 
-    user: state.auth.user,
+  const prevShouldLoadRef = useRef(shouldLoadOtherData);
+  const prevUserRef = useRef(user);
 
-    joinRequests: state.manageJoinRequests.joinRequests,
-    loadingJoinRequests: state.manageJoinRequests.loadingJoinRequests,
-    joinRequestsLoaded: state.manageJoinRequests.joinRequestsLoaded,
+  // Initial load
+  useEffect(() => {
+    if (shouldLoadOtherData && user && !loadingJoinRequests && !joinRequestsLoaded) {
+      dispatch(manageJoinRequestsActions.loadJoinRequests());
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-    searchText: state.manageJoinRequests.searchText,
-    inSearchMode: state.manageJoinRequests.inSearchMode,
-    matchedJoinRequests: state.manageJoinRequests.matchedJoinRequests,
+  // Attach listener when join requests are loaded
+  useEffect(() => {
+    if (shouldLoadOtherData && joinRequests && joinRequestsLoaded) {
+      dispatch(manageJoinRequestsActions.startListeningForJoinRequestsChanged());
+    }
+  }, [joinRequestsLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    page: state.manageJoinRequests.page,
-    rowsPerPage: state.manageJoinRequests.rowsPerPage,
-  };
-};
-
-const mapDispatchToProps = (dispatch) => {
-  return {
-    loadJoinRequests: () => dispatch(manageJoinRequestsActions.loadJoinRequests()),
-    toggleSearchMode: () => dispatch(manageJoinRequestsActions.toggleSearchMode()),
-    changePage: (event, newPage) => dispatch(manageJoinRequestsActions.changePage(event, newPage)),
-    changeRowsPerPage: (event) => dispatch(manageJoinRequestsActions.changeRowsPerPage(event)),
-    handleJoinRequestsTableInputChanged: (event) =>
-      dispatch(manageJoinRequestsActions.handleJoinRequestsTableInputChanged(event)),
-    acceptJoinRequest: (request) => dispatch(manageJoinRequestsActions.acceptJoinRequest(request)),
-    rejectJoinRequest: (request) => dispatch(manageJoinRequestsActions.rejectJoinRequest(request)),
-    startListeningForJoinRequestsChanged: () =>
-      dispatch(manageJoinRequestsActions.startListeningForJoinRequestsChanged()),
-    stopListeningForJoinRequestsChanged: () =>
-      dispatch(manageJoinRequestsActions.stopListeningForJoinRequestsChanged()),
-  };
-};
-
-class JoinRequests extends Component {
-  componentDidMount() {
-    this.loadData();
-    this.attachListener();
-  }
-
-  componentDidUpdate(prevProps, prevState, snapshot) {
-    const { shouldLoadOtherData, user, stopListeningForJoinRequestsChanged } = this.props;
-
-    // cancel all listeners if user is set to null
+  // Handle prop changes (componentDidUpdate logic)
+  useEffect(() => {
     if (!user || !shouldLoadOtherData) {
-      stopListeningForJoinRequestsChanged();
+      dispatch(manageJoinRequestsActions.stopListeningForJoinRequestsChanged());
+      prevShouldLoadRef.current = shouldLoadOtherData;
+      prevUserRef.current = user;
       return;
     }
 
-    this.loadData();
-    this.attachListener();
-  }
-
-  /**
-   * Load data
-   */
-  loadData = () => {
-    const {
-      shouldLoadOtherData,
-
-      user,
-
-      loadingJoinRequests,
-      joinRequestsLoaded,
-
-      loadJoinRequests,
-    } = this.props;
-
-    if (shouldLoadOtherData) {
-      if (user) {
-        if (!loadingJoinRequests && !joinRequestsLoaded) {
-          loadJoinRequests();
-        }
+    // Only re-load if shouldLoadOtherData or user changed
+    if (prevShouldLoadRef.current !== shouldLoadOtherData || prevUserRef.current !== user) {
+      if (!loadingJoinRequests && !joinRequestsLoaded) {
+        dispatch(manageJoinRequestsActions.loadJoinRequests());
       }
-    }
-  };
-
-  /**
-   * Attach listener
-   */
-  attachListener = () => {
-    const {
-      shouldLoadOtherData,
-
-      joinRequests,
-      joinRequestsLoaded,
-
-      startListeningForJoinRequestsChanged,
-    } = this.props;
-
-    if (shouldLoadOtherData) {
       if (joinRequests && joinRequestsLoaded) {
-        startListeningForJoinRequestsChanged();
+        dispatch(manageJoinRequestsActions.startListeningForJoinRequestsChanged());
       }
     }
-  };
 
-  render() {
-    const {
-      groupProperties,
-      groupPropertiesLoaded,
-      user,
-      joinRequests,
-      searchText,
-      inSearchMode,
-      page,
-      rowsPerPage,
-      loadJoinRequests,
-      toggleSearchMode,
-      changePage,
-      changeRowsPerPage,
-      handleJoinRequestsTableInputChanged,
-    } = this.props;
+    prevShouldLoadRef.current = shouldLoadOtherData;
+    prevUserRef.current = user;
+  }, [shouldLoadOtherData, user]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    if (!groupPropertiesLoaded || !user) {
-      return null;
-    }
+  const handleLoadJoinRequests = () => dispatch(manageJoinRequestsActions.loadJoinRequests());
+  const handleToggleSearchMode = () => dispatch(manageJoinRequestsActions.toggleSearchMode());
+  const handleChangePage = (event, newPage) =>
+    dispatch(manageJoinRequestsActions.changePage(event, newPage));
+  const handleChangeRowsPerPage = (event) =>
+    dispatch(manageJoinRequestsActions.changeRowsPerPage(event));
+  const handleInputChanged = (event) =>
+    dispatch(manageJoinRequestsActions.handleJoinRequestsTableInputChanged(event));
+  const handleAcceptJoinRequest = (request) =>
+    dispatch(manageJoinRequestsActions.acceptJoinRequest(request));
+  const handleRejectJoinRequest = (request) =>
+    dispatch(manageJoinRequestsActions.rejectJoinRequest(request));
 
-    // sort join requests by request date (recent requests come first)
-    joinRequests.sort((joinRequest1, joinRequest2) => {
-      return joinRequest2.requestedDate - joinRequest1.requestedDate;
-    });
-
-    return (
-      <Paper elevation={1} style={{ width: '100%', overflowX: 'auto', marginTop: 20 }}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <StyledTableCell
-                colSpan={3}
-                cellColor={colors.blue_gray_50}
-                component={
-                  <InputBase
-                    name="searchText"
-                    value={searchText}
-                    onChange={handleJoinRequestsTableInputChanged}
-                    fullWidth
-                    placeholder="Search access request by email"
-                    type="text"
-                    startAdornment={
-                      <InputAdornment position="start">
-                        <OverlayTrigger
-                          trigger={['hover', 'focus']}
-                          flip
-                          placement="bottom"
-                          overlay={
-                            <Tooltip id={`tooltip-bottom`}>
-                              {inSearchMode ? 'Exit search mode' : 'Enter search mode'}
-                            </Tooltip>
-                          }
-                        >
-                          <IconButton onClick={toggleSearchMode} size="large">
-                            {inSearchMode ? <CloseIcon /> : <SearchIcon />}
-                          </IconButton>
-                        </OverlayTrigger>
-                      </InputAdornment>
-                    }
-                  />
-                }
-              />
-              <StyledTableCell
-                colSpan={2}
-                cellColor={colors.blue_gray_50}
-                component={
-                  <FlexView hAlignContent="right" vAlignContent="center">
-                    <OverlayTrigger
-                      trigger={['hover', 'focus']}
-                      flip
-                      placement="bottom"
-                      overlay={<Tooltip id={`tooltip-bottom`}>Refresh</Tooltip>}
-                    >
-                      <IconButton
-                        onClick={loadJoinRequests}
-                        style={{ marginLeft: 10 }}
-                        size="large"
-                      >
-                        <RefreshIcon />
-                      </IconButton>
-                    </OverlayTrigger>
-                  </FlexView>
-                }
-              />
-            </TableRow>
-            <TableRow>
-              <StyledTableCell
-                colSpan={2}
-                cellColor={
-                  !groupProperties ? colors.primaryColor : groupProperties.settings.primaryColor
-                }
-                textColor={colors.white}
-                component={
-                  <Typography variant="body2" align="left" className={css(sharedStyles.white_text)}>
-                    User&apos;s name
-                  </Typography>
-                }
-              />
-              <StyledTableCell
-                colSpan={1}
-                cellColor={
-                  !groupProperties ? colors.primaryColor : groupProperties.settings.primaryColor
-                }
-                textColor={colors.white}
-                component={
-                  <Typography variant="body2" align="left" className={css(sharedStyles.white_text)}>
-                    Email
-                  </Typography>
-                }
-              />
-              <StyledTableCell
-                colSpan={1}
-                cellColor={
-                  !groupProperties ? colors.primaryColor : groupProperties.settings.primaryColor
-                }
-                textColor={colors.white}
-                component={
-                  <Typography variant="body2" align="left" className={css(sharedStyles.white_text)}>
-                    Requested date
-                  </Typography>
-                }
-              />
-              <StyledTableCell
-                colSpan={1}
-                cellColor={
-                  !groupProperties ? colors.primaryColor : groupProperties.settings.primaryColor
-                }
-                textColor={colors.white}
-                component={
-                  <Typography variant="body2" align="left" className={css(sharedStyles.white_text)}>
-                    Action
-                  </Typography>
-                }
-              />
-            </TableRow>
-          </TableHead>
-          <TableBody>{this.renderJoinRequestsRows()}</TableBody>
-          <TableFooter>
-            <TableRow>
-              <TablePagination
-                rowsPerPageOptions={[5, 10, 25]}
-                colSpan={5}
-                count={joinRequests.length}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                backIconButtonProps={{ 'aria-label': 'Previous Page' }}
-                nextIconButtonProps={{ 'aria-label': 'Next Page' }}
-                SelectProps={{ native: true }}
-                onPageChange={changePage}
-                onRowsPerPageChange={changeRowsPerPage}
-              />
-            </TableRow>
-          </TableFooter>
-        </Table>
-      </Paper>
-    );
+  if (!groupPropertiesLoaded || !user) {
+    return null;
   }
 
-  /**
-   * Render join requests table rows
-   *
-   * @returns {*}
-   */
-  renderJoinRequestsRows = () => {
-    const {
-      groupUserName,
-      groupProperties,
-      joinRequests,
-      joinRequestsLoaded,
-      matchedJoinRequests,
-      inSearchMode,
-      page,
-      rowsPerPage,
-      acceptJoinRequest,
-      rejectJoinRequest,
-    } = this.props;
+  // sort join requests by request date (recent requests come first)
+  const sortedJoinRequests = [...joinRequests].sort((a, b) => b.requestedDate - a.requestedDate);
 
-    let renderedJoinRequests = [];
-
-    if (inSearchMode) {
-      renderedJoinRequests = matchedJoinRequests;
-    } else {
-      renderedJoinRequests = joinRequests;
-    }
+  const renderJoinRequestsRows = () => {
+    const renderedJoinRequests = inSearchMode ? matchedJoinRequests : sortedJoinRequests;
 
     if (renderedJoinRequests.length === 0) {
       return (
@@ -379,7 +178,7 @@ class JoinRequests extends Component {
                 variant="outlined"
                 className={css(sharedStyles.no_text_transform)}
                 color="secondary"
-                onClick={() => rejectJoinRequest(joinRequest)}
+                onClick={() => handleRejectJoinRequest(joinRequest)}
                 style={{ marginRight: 6 }}
               >
                 Reject
@@ -388,7 +187,7 @@ class JoinRequests extends Component {
                 variant="outlined"
                 className={css(sharedStyles.no_text_transform)}
                 color="primary"
-                onClick={() => acceptJoinRequest(joinRequest)}
+                onClick={() => handleAcceptJoinRequest(joinRequest)}
                 style={{ marginLeft: 6 }}
               >
                 Accept
@@ -398,6 +197,138 @@ class JoinRequests extends Component {
         </TableRow>
       ));
   };
-}
 
-export default connect(mapStateToProps, mapDispatchToProps)(JoinRequests);
+  return (
+    <Paper elevation={1} style={{ width: '100%', overflowX: 'auto', marginTop: 20 }}>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <StyledTableCell
+              colSpan={3}
+              cellColor={colors.blue_gray_50}
+              component={
+                <InputBase
+                  name="searchText"
+                  value={searchText}
+                  onChange={handleInputChanged}
+                  fullWidth
+                  placeholder="Search access request by email"
+                  type="text"
+                  startAdornment={
+                    <InputAdornment position="start">
+                      <OverlayTrigger
+                        trigger={['hover', 'focus']}
+                        flip
+                        placement="bottom"
+                        overlay={
+                          <Tooltip id={`tooltip-bottom`}>
+                            {inSearchMode ? 'Exit search mode' : 'Enter search mode'}
+                          </Tooltip>
+                        }
+                      >
+                        <IconButton onClick={handleToggleSearchMode} size="large">
+                          {inSearchMode ? <CloseIcon /> : <SearchIcon />}
+                        </IconButton>
+                      </OverlayTrigger>
+                    </InputAdornment>
+                  }
+                />
+              }
+            />
+            <StyledTableCell
+              colSpan={2}
+              cellColor={colors.blue_gray_50}
+              component={
+                <FlexView hAlignContent="right" vAlignContent="center">
+                  <OverlayTrigger
+                    trigger={['hover', 'focus']}
+                    flip
+                    placement="bottom"
+                    overlay={<Tooltip id={`tooltip-bottom`}>Refresh</Tooltip>}
+                  >
+                    <IconButton
+                      onClick={handleLoadJoinRequests}
+                      style={{ marginLeft: 10 }}
+                      size="large"
+                    >
+                      <RefreshIcon />
+                    </IconButton>
+                  </OverlayTrigger>
+                </FlexView>
+              }
+            />
+          </TableRow>
+          <TableRow>
+            <StyledTableCell
+              colSpan={2}
+              cellColor={
+                !groupProperties ? colors.primaryColor : groupProperties.settings.primaryColor
+              }
+              textColor={colors.white}
+              component={
+                <Typography variant="body2" align="left" className={css(sharedStyles.white_text)}>
+                  User&apos;s name
+                </Typography>
+              }
+            />
+            <StyledTableCell
+              colSpan={1}
+              cellColor={
+                !groupProperties ? colors.primaryColor : groupProperties.settings.primaryColor
+              }
+              textColor={colors.white}
+              component={
+                <Typography variant="body2" align="left" className={css(sharedStyles.white_text)}>
+                  Email
+                </Typography>
+              }
+            />
+            <StyledTableCell
+              colSpan={1}
+              cellColor={
+                !groupProperties ? colors.primaryColor : groupProperties.settings.primaryColor
+              }
+              textColor={colors.white}
+              component={
+                <Typography variant="body2" align="left" className={css(sharedStyles.white_text)}>
+                  Requested date
+                </Typography>
+              }
+            />
+            <StyledTableCell
+              colSpan={1}
+              cellColor={
+                !groupProperties ? colors.primaryColor : groupProperties.settings.primaryColor
+              }
+              textColor={colors.white}
+              component={
+                <Typography variant="body2" align="left" className={css(sharedStyles.white_text)}>
+                  Action
+                </Typography>
+              }
+            />
+          </TableRow>
+        </TableHead>
+        <TableBody>{renderJoinRequestsRows()}</TableBody>
+        <TableFooter>
+          <TableRow>
+            <TablePagination
+              rowsPerPageOptions={[5, 10, 25]}
+              colSpan={5}
+              count={sortedJoinRequests.length}
+              rowsPerPage={rowsPerPage}
+              page={page}
+              backIconButtonProps={{ 'aria-label': 'Previous Page' }}
+              nextIconButtonProps={{ 'aria-label': 'Next Page' }}
+              SelectProps={{ native: true }}
+              onPageChange={handleChangePage}
+              onRowsPerPageChange={handleChangeRowsPerPage}
+            />
+          </TableRow>
+        </TableFooter>
+      </Table>
+    </Paper>
+  );
+};
+
+export default JoinRequests;

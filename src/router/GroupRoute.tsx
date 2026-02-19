@@ -1,19 +1,13 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
-import { AppState } from '../redux-store/reducers';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import {
   getGroupRouteTheme,
   isValidatingGroupUrl,
-  ManageGroupUrlState,
   successfullyValidatedGroupUrl,
 } from '../redux-store/reducers/manageGroupUrlReducer';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import Routes from './routes';
-import { ThunkDispatch } from 'redux-thunk';
-import { AnyAction } from 'redux';
 import { validateGroupUrl } from '../redux-store/actions/manageGroupUrlActions';
 import {
-  AuthenticationState,
   authIsNotInitialized,
   isAuthenticating,
   successfullyAuthenticated,
@@ -23,148 +17,80 @@ import Header from '../shared-components/header/Header';
 import { signIn, signOut } from '../redux-store/actions/authenticationActions';
 import firebase from '../firebase/firebaseApp';
 import { Box } from '@mui/material';
-import {
-  isLoadingSystemAttributes,
-  ManageSystemAttributesState,
-} from '../redux-store/reducers/manageSystemAttributesReducer';
+import { isLoadingSystemAttributes } from '../redux-store/reducers/manageSystemAttributesReducer';
 import { loadSystemAttributes } from '../redux-store/actions/manageSystemAttributesActions';
 import User, { isInvestor, isIssuer } from '../models/user';
 import Admin, { isAdmin } from '../models/admin';
 import { isCourse, isUniversity } from '../models/group_properties';
 import { BarLoader } from 'react-spinners';
 import { safeSetItem, safeGetItem, safeRemoveItem } from '../utils/browser';
+import { useAppSelector, useAppDispatch } from '../redux-store/hooks';
 
-interface GroupRouteReduxProps {
-  ManageSystemAttributesState: ManageSystemAttributesState;
-  ManageGroupUrlState: ManageGroupUrlState;
-  AuthenticationState: AuthenticationState;
-  loadSystemAttributes: () => any;
-  validateGroupUrl: (
-    path: string,
-    groupUserName: string | null,
-    courseUserName?: string | null
-  ) => any;
-  signIn: () => any;
-  signOut: () => any;
-}
-
-interface GroupRouteLocalProps {
+interface GroupRouteProps {
   showHeader: boolean;
   backgroundColor?: string;
   component: React.ReactNode;
 }
 
-/** Props injected by the functional wrapper (replacing RouteComponentProps) */
-interface GroupRouteRouterProps {
-  params: Record<string, string | undefined>;
-  navigate: (to: string, options?: { replace?: boolean }) => void;
-  location: { pathname: string; search: string; hash: string };
-  matchedPattern: string | null;
+const LAST_AUTH_TIMESTAMP_KEY = 'lastSuccessfulAuthTimestamp';
+
+function getLastAuthTimestamp(): number {
+  try {
+    const stored = sessionStorage.getItem(LAST_AUTH_TIMESTAMP_KEY);
+    return stored ? parseInt(stored, 10) : 0;
+  } catch {
+    return 0;
+  }
 }
 
-type GroupRouteClassProps = GroupRouteReduxProps & GroupRouteLocalProps & GroupRouteRouterProps;
-
-interface GroupRouteState {
-  navigatingFromSignInOrSignUpToDashboard: boolean;
-  navigatingToSignIn: boolean;
-  navigatingToError: boolean;
+function setLastAuthTimestamp(timestamp: number): void {
+  try {
+    sessionStorage.setItem(LAST_AUTH_TIMESTAMP_KEY, timestamp.toString());
+  } catch {
+    // Ignore storage errors
+  }
 }
 
-const initialState: GroupRouteState = {
-  navigatingFromSignInOrSignUpToDashboard: false,
-  navigatingToSignIn: false,
-  navigatingToError: false,
-};
+function GroupRoute({ showHeader, backgroundColor, component }: GroupRouteProps) {
+  const dispatch = useAppDispatch();
+  const params = useParams();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-const mapStateToProps = (state: AppState) => {
-  return {
-    ManageSystemAttributesState: state.ManageSystemAttributesState,
-    ManageGroupUrlState: state.ManageGroupUrlState,
-    AuthenticationState: state.AuthenticationState,
-  };
-};
+  const ManageSystemAttributesState = useAppSelector((state) => state.ManageSystemAttributesState);
+  const ManageGroupUrlState = useAppSelector((state) => state.ManageGroupUrlState);
+  const AuthenticationState = useAppSelector((state) => state.AuthenticationState);
 
-const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
-  return {
-    loadSystemAttributes: () => dispatch(loadSystemAttributes()),
-    validateGroupUrl: (
-      path: string,
-      groupUserName: string | null,
-      courseUserName?: string | null
-    ) => dispatch(validateGroupUrl(path, groupUserName, courseUserName)),
-    signIn: () => dispatch(signIn()),
-    signOut: () => dispatch(signOut()),
-  };
-};
+  const matchedPattern = useMatchedRoutePattern(location.pathname);
 
-class GroupRouteClass extends Component<GroupRouteClassProps, GroupRouteState> {
-  private authListener: firebase.default.Unsubscribe | null;
-  private routePath: string;
-  private routeParams: any;
-  private static readonly LAST_AUTH_TIMESTAMP_KEY = 'lastSuccessfulAuthTimestamp';
-  private hasCompletedInitialAuthCheck: boolean;
+  // Navigation state (replaces this.state)
+  const [navigatingFromSignInOrSignUpToDashboard, setNavigatingFromSignInOrSignUpToDashboard] =
+    useState(false);
+  const [navigatingToSignIn, setNavigatingToSignIn] = useState(false);
+  const [navigatingToError, setNavigatingToError] = useState(false);
 
-  constructor(props: GroupRouteClassProps) {
-    super(props);
-    this.authListener = null;
-    this.routePath = this.props.matchedPattern || '';
-    this.routeParams = this.props.params;
-    this.hasCompletedInitialAuthCheck = false;
-    this.state = {
-      ...initialState,
-    };
-  }
+  // Instance refs (replaces class instance variables)
+  const authListenerRef = useRef<firebase.default.Unsubscribe | null>(null);
+  const hasCompletedInitialAuthCheckRef = useRef(false);
 
-  private getLastAuthTimestamp(): number {
-    try {
-      const stored = sessionStorage.getItem(GroupRouteClass.LAST_AUTH_TIMESTAMP_KEY);
-      return stored ? parseInt(stored, 10) : 0;
-    } catch {
-      return 0;
-    }
-  }
+  // Track previous values for componentDidUpdate logic
+  const prevAuthStateRef = useRef(AuthenticationState);
+  const prevSystemAttrsRef = useRef(ManageSystemAttributesState);
+  const prevGroupUrlRef = useRef(ManageGroupUrlState);
+  const prevPathnameRef = useRef(location.pathname);
 
-  private setLastAuthTimestamp(timestamp: number): void {
-    try {
-      sessionStorage.setItem(GroupRouteClass.LAST_AUTH_TIMESTAMP_KEY, timestamp.toString());
-    } catch {
-      // Ignore storage errors
-    }
-  }
+  // Current route info (replaces this.routePath / this.routeParams, updated on each render)
+  const routePath = matchedPattern;
+  const routeParams = params;
 
-  /**
-   * Clear stale authentication timestamps
-   */
-  private clearStaleAuthTimestamp(): void {
-    const lastAuthTimestamp = this.getLastAuthTimestamp();
-    if (lastAuthTimestamp > 0) {
-      const now = Date.now();
-      const timeSinceLastAuth = now - lastAuthTimestamp;
-      const staleThreshold = 30000; // 30 seconds
+  // --- Helper functions ---
 
-      if (timeSinceLastAuth > staleThreshold) {
-        console.log(
-          `[COURSE ADMIN AUTH] Clearing stale auth timestamp (${timeSinceLastAuth}ms old)`
-        );
-        this.setLastAuthTimestamp(0);
-      }
-    }
-  }
-
-  /**
-   * Construct a simple post-login redirect route that directly matches user types to their dashboards
-   */
-  constructPostLoginRoute = (): string => {
-    const { AuthenticationState } = this.props;
+  const constructPostLoginRoute = useCallback((): string => {
     const currentUser = AuthenticationState.currentUser;
     const groupsOfMembership = AuthenticationState.groupsOfMembership || [];
 
     if (!currentUser) {
-      return Routes.constructHomeRoute(
-        this.routeParams,
-        this.props.ManageGroupUrlState,
-        this.props.AuthenticationState
-      );
+      return Routes.constructHomeRoute(routeParams, ManageGroupUrlState, AuthenticationState);
     }
 
     const getUniversityAndCourseForUser = (): {
@@ -172,12 +98,10 @@ class GroupRouteClass extends Component<GroupRouteClassProps, GroupRouteState> {
       courseUserName: string;
     } => {
       const currentAdmin: Admin | null = isAdmin(currentUser);
-
       const userCourseField = !currentAdmin ? (currentUser as User).course : undefined;
 
       if (!currentAdmin && userCourseField && userCourseField !== '-1') {
         const userCourse = userCourseField;
-
         const courseMembership = groupsOfMembership.find(
           (m) =>
             isCourse(m.group) &&
@@ -188,7 +112,6 @@ class GroupRouteClass extends Component<GroupRouteClassProps, GroupRouteState> {
           const parentUniversity = groupsOfMembership.find(
             (m) => m.group.anid === courseMembership.group.parentGroupId
           );
-
           return {
             universityUserName: parentUniversity
               ? parentUniversity.group.groupUserName
@@ -208,7 +131,6 @@ class GroupRouteClass extends Component<GroupRouteClassProps, GroupRouteState> {
 
       if (courseMemberships.length > 0) {
         const firstCourse = courseMemberships[0].group;
-
         const parentUniversity = groupsOfMembership.find(
           (m) => m.group.anid === firstCourse.parentGroupId
         );
@@ -251,149 +173,224 @@ class GroupRouteClass extends Component<GroupRouteClassProps, GroupRouteState> {
     };
 
     const { universityUserName, courseUserName } = getUniversityAndCourseForUser();
-
     const currentAdmin: Admin | null = isAdmin(currentUser);
 
     if (currentAdmin) {
       if (currentAdmin.superAdmin) {
         return Routes.nonGroupAdminDashboard;
       }
-
-      const adminRoute =
+      return (
         Routes.courseAdminDashboard
           .replace(':groupUserName', universityUserName)
-          .replace(':courseUserName', courseUserName) + '?tab=Home';
-      return adminRoute;
+          .replace(':courseUserName', courseUserName) + '?tab=Home'
+      );
     }
 
     if (isInvestor(currentUser as User)) {
-      const investorRoute =
+      return (
         Routes.courseInvestorDashboard
           .replace(':groupUserName', universityUserName)
-          .replace(':courseUserName', courseUserName) + '?tab=Home';
-      return investorRoute;
+          .replace(':courseUserName', courseUserName) + '?tab=Home'
+      );
     } else {
-      const issuerRoute =
+      return (
         Routes.courseIssuerDashboard
           .replace(':groupUserName', universityUserName)
-          .replace(':courseUserName', courseUserName) + '?tab=Home';
-      return issuerRoute;
+          .replace(':courseUserName', courseUserName) + '?tab=Home'
+      );
     }
-  };
+  }, [AuthenticationState, ManageGroupUrlState, routeParams]);
 
-  componentDidMount() {
-    this.clearStaleAuthTimestamp();
-    this.validateRouteAndAuthentication();
-  }
+  const attachAuthListener = useCallback(() => {
+    const isProjectViewRoute =
+      routePath === Routes.groupViewOffer ||
+      routePath === Routes.nonGroupViewOffer ||
+      routePath === Routes.courseViewOffer;
 
-  componentDidUpdate(
-    prevProps: Readonly<GroupRouteClassProps>,
-    prevState: Readonly<GroupRouteState>,
-    snapshot?: any
-  ) {
+    const isAdminRoute = Routes.isGroupAdminRoute(routePath);
+
+    if (
+      (successfullyValidatedGroupUrl(ManageGroupUrlState) || isProjectViewRoute || isAdminRoute) &&
+      !authListenerRef.current
+    ) {
+      authListenerRef.current = firebase.auth().onAuthStateChanged((firebaseUser) => {
+        const now = Date.now();
+        const isCurrentlyAuthenticating = isAuthenticating(AuthenticationState);
+        const isAlreadyAuthenticated = successfullyAuthenticated(AuthenticationState);
+
+        const isInitialCheck = !hasCompletedInitialAuthCheckRef.current;
+        if (isInitialCheck) {
+          hasCompletedInitialAuthCheckRef.current = true;
+        }
+
+        const lastAuthTimestamp = getLastAuthTimestamp();
+        const timeSinceLastAuth = now - lastAuthTimestamp;
+        const isWithinGracePeriod = timeSinceLastAuth < 10000;
+
+        if (firebaseUser) {
+          dispatch(signIn());
+        } else {
+          const willSignOut =
+            !isCurrentlyAuthenticating &&
+            !isAlreadyAuthenticated &&
+            !isWithinGracePeriod &&
+            !isInitialCheck;
+
+          if (willSignOut) {
+            setLastAuthTimestamp(0);
+            dispatch(signOut());
+          }
+        }
+      });
+    }
+  }, [routePath, ManageGroupUrlState, AuthenticationState, dispatch]);
+
+  const detachAuthListener = useCallback(() => {
+    if (authListenerRef.current) {
+      authListenerRef.current();
+      authListenerRef.current = null;
+      hasCompletedInitialAuthCheckRef.current = false;
+    }
+  }, []);
+
+  const validateRouteAndAuthentication = useCallback(() => {
+    dispatch(loadSystemAttributes());
+
+    const groupUserNameParam = routeParams.hasOwnProperty('groupUserName')
+      ? routeParams.groupUserName!
+      : routePath === Routes.nonGroupSignIn || routePath === Routes.nonGroupSignUp
+        ? 'invest-west'
+        : routePath === Routes.superAdminSignIn
+          ? null
+          : 'invest-west';
+
+    const courseUserNameParam = routeParams.hasOwnProperty('courseUserName')
+      ? routeParams.courseUserName!
+      : null;
+
+    dispatch(validateGroupUrl(routePath, groupUserNameParam, courseUserNameParam));
+
+    attachAuthListener();
+  }, [dispatch, routePath, routeParams, attachAuthListener]);
+
+  // componentDidMount: clear stale auth and validate
+  useEffect(() => {
+    // Clear stale auth timestamp
+    const lastAuthTimestamp = getLastAuthTimestamp();
+    if (lastAuthTimestamp > 0) {
+      const timeSinceLastAuth = Date.now() - lastAuthTimestamp;
+      if (timeSinceLastAuth > 30000) {
+        setLastAuthTimestamp(0);
+      }
+    }
+
+    validateRouteAndAuthentication();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // componentWillUnmount: detach auth listener
+  useEffect(() => {
+    return () => {
+      detachAuthListener();
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // componentDidUpdate: handle auth/routing state changes
+  useEffect(() => {
+    const prevAuthState = prevAuthStateRef.current;
+
     const justAuthenticated =
-      !successfullyAuthenticated(prevProps.AuthenticationState) &&
-      successfullyAuthenticated(this.props.AuthenticationState);
+      !successfullyAuthenticated(prevAuthState) && successfullyAuthenticated(AuthenticationState);
 
     if (justAuthenticated) {
-      const now = Date.now();
-      this.setLastAuthTimestamp(now);
+      setLastAuthTimestamp(Date.now());
     }
 
     const hasSignificantPropsChanged =
-      prevProps.AuthenticationState.currentUser !== this.props.AuthenticationState.currentUser ||
-      prevProps.ManageSystemAttributesState !== this.props.ManageSystemAttributesState ||
-      prevProps.ManageGroupUrlState !== this.props.ManageGroupUrlState ||
-      prevProps.location.pathname !== this.props.location.pathname;
+      prevAuthState.currentUser !== AuthenticationState.currentUser ||
+      prevSystemAttrsRef.current !== ManageSystemAttributesState ||
+      prevGroupUrlRef.current !== ManageGroupUrlState ||
+      prevPathnameRef.current !== location.pathname;
+
+    // Update prev refs
+    prevAuthStateRef.current = AuthenticationState;
+    prevSystemAttrsRef.current = ManageSystemAttributesState;
+    prevGroupUrlRef.current = ManageGroupUrlState;
+    prevPathnameRef.current = location.pathname;
 
     if (!hasSignificantPropsChanged) {
       return;
     }
 
-    if (
-      prevProps.AuthenticationState.currentUser !== null &&
-      this.props.AuthenticationState.currentUser === null
-    ) {
-      this.setState({
-        navigatingFromSignInOrSignUpToDashboard: false,
-        navigatingToSignIn: false,
-        navigatingToError: false,
-      });
+    if (prevAuthState.currentUser !== null && AuthenticationState.currentUser === null) {
+      setNavigatingFromSignInOrSignUpToDashboard(false);
+      setNavigatingToSignIn(false);
+      setNavigatingToError(false);
     }
 
-    this.validateRouteAndAuthentication();
+    validateRouteAndAuthentication();
 
-    if (isLoadingSystemAttributes(this.props.ManageSystemAttributesState)) {
+    if (isLoadingSystemAttributes(ManageSystemAttributesState)) {
       return;
     }
 
-    if (isValidatingGroupUrl(this.props.ManageGroupUrlState)) {
+    if (isValidatingGroupUrl(ManageGroupUrlState)) {
       return;
     }
 
-    const isInvestWestRoute = this.routeParams.groupUserName === 'invest-west';
-
-    const isAdminRoute = Routes.isGroupAdminRoute(this.routePath);
-    const isProtectedAdminRoute = Routes.isProtectedRoute(this.routePath) && isAdminRoute;
-
-    const isCreateOfferRoute = Routes.isCreateOfferRoute(this.routePath);
-
+    const isInvestWestRoute = routeParams.groupUserName === 'invest-west';
+    const isAdminRoute = Routes.isGroupAdminRoute(routePath);
+    const isProtectedAdminRoute = Routes.isProtectedRoute(routePath) && isAdminRoute;
+    const isCreateOfferRoute = Routes.isCreateOfferRoute(routePath);
     const isCourseDashboardRoute =
-      Routes.isIssuerDashboardRoute(this.routePath) ||
-      Routes.isInvestorDashboardRoute(this.routePath) ||
-      Routes.isGroupAdminRoute(this.routePath);
+      Routes.isIssuerDashboardRoute(routePath) ||
+      Routes.isInvestorDashboardRoute(routePath) ||
+      Routes.isGroupAdminRoute(routePath);
 
     if (
-      !successfullyValidatedGroupUrl(this.props.ManageGroupUrlState) &&
-      !this.state.navigatingToError &&
-      !this.state.navigatingFromSignInOrSignUpToDashboard &&
-      !isAuthenticating(this.props.AuthenticationState) &&
-      !Routes.isSignInRoute(this.routePath) &&
-      !Routes.isSignUpRoute(this.routePath) &&
-      this.routePath !== Routes.groupViewOffer &&
-      this.routePath !== Routes.courseViewOffer &&
-      this.routePath !== Routes.nonGroupViewOffer &&
+      !successfullyValidatedGroupUrl(ManageGroupUrlState) &&
+      !navigatingToError &&
+      !navigatingFromSignInOrSignUpToDashboard &&
+      !isAuthenticating(AuthenticationState) &&
+      !Routes.isSignInRoute(routePath) &&
+      !Routes.isSignUpRoute(routePath) &&
+      routePath !== Routes.groupViewOffer &&
+      routePath !== Routes.courseViewOffer &&
+      routePath !== Routes.nonGroupViewOffer &&
       !isCreateOfferRoute &&
       !isCourseDashboardRoute &&
       !isInvestWestRoute &&
       !isProtectedAdminRoute
     ) {
-      this.setState({
-        navigatingToError: true,
-      });
-      this.props.navigate(Routes.error404);
+      setNavigatingToError(true);
+      navigate(Routes.error404);
       return;
     }
 
     if (
-      Routes.isProtectedRoute(this.routePath) &&
-      !authIsNotInitialized(this.props.AuthenticationState) &&
-      !isAuthenticating(this.props.AuthenticationState) &&
-      !successfullyAuthenticated(this.props.AuthenticationState) &&
-      !this.state.navigatingToSignIn
+      Routes.isProtectedRoute(routePath) &&
+      !authIsNotInitialized(AuthenticationState) &&
+      !isAuthenticating(AuthenticationState) &&
+      !successfullyAuthenticated(AuthenticationState) &&
+      !navigatingToSignIn
     ) {
-      const { location } = this.props;
       const redirectUrl = `${location.pathname}${location?.search}`;
-
       const isLoggingOut = safeGetItem('isLoggingOut') === 'true';
       if (!isLoggingOut) {
         safeSetItem('redirectToAfterAuth', redirectUrl);
       }
 
-      this.setState({
-        navigatingToSignIn: true,
-      });
-      this.props.navigate(Routes.constructSignInRoute(this.routeParams));
+      setNavigatingToSignIn(true);
+      navigate(Routes.constructSignInRoute(routeParams));
     }
 
-    const currentUserForRedirect = this.props.AuthenticationState.currentUser;
+    const currentUserForRedirect = AuthenticationState.currentUser;
     const isSuperAdmin = currentUserForRedirect && isAdmin(currentUserForRedirect)?.superAdmin;
 
     if (
-      (Routes.isSignInRoute(this.routePath) || Routes.isSignUpRoute(this.routePath)) &&
-      successfullyAuthenticated(this.props.AuthenticationState) &&
-      !this.state.navigatingFromSignInOrSignUpToDashboard &&
-      (this.props.AuthenticationState.groupsOfMembership.length > 0 || isSuperAdmin)
+      (Routes.isSignInRoute(routePath) || Routes.isSignUpRoute(routePath)) &&
+      successfullyAuthenticated(AuthenticationState) &&
+      !navigatingFromSignInOrSignUpToDashboard &&
+      (AuthenticationState.groupsOfMembership.length > 0 || isSuperAdmin)
     ) {
       const storedRedirectUrl = safeGetItem('redirectToAfterAuth');
       let redirectRoute: string;
@@ -402,7 +399,7 @@ class GroupRouteClass extends Component<GroupRouteClassProps, GroupRouteState> {
         redirectRoute = storedRedirectUrl;
         safeRemoveItem('redirectToAfterAuth');
       } else {
-        redirectRoute = this.constructPostLoginRoute();
+        redirectRoute = constructPostLoginRoute();
       }
 
       const urlParts = redirectRoute.split('/');
@@ -419,357 +416,217 @@ class GroupRouteClass extends Component<GroupRouteClassProps, GroupRouteState> {
         redirectRoute = '/' + redirectRoute;
       }
 
-      this.setState({
-        navigatingFromSignInOrSignUpToDashboard: true,
-      });
-
-      this.props.navigate(redirectRoute);
+      setNavigatingFromSignInOrSignUpToDashboard(true);
+      navigate(redirectRoute);
       return;
     }
 
     if (
-      successfullyAuthenticated(this.props.AuthenticationState) &&
-      !this.state.navigatingFromSignInOrSignUpToDashboard
+      successfullyAuthenticated(AuthenticationState) &&
+      !navigatingFromSignInOrSignUpToDashboard
     ) {
-      const currentUser: User | Admin | null = this.props.AuthenticationState.currentUser;
+      const currentUser: User | Admin | null = AuthenticationState.currentUser;
 
       if (currentUser) {
         const currentAdmin: Admin | null = isAdmin(currentUser);
         let shouldRedirectToError: boolean = false;
 
-        if (Routes.isRouteReservedForSuperAdmin(this.routePath)) {
+        if (Routes.isRouteReservedForSuperAdmin(routePath)) {
           if (!currentAdmin || (currentAdmin && !currentAdmin.superAdmin)) {
             shouldRedirectToError = true;
           }
-        } else if (Routes.isGroupAdminRoute(this.routePath)) {
+        } else if (Routes.isGroupAdminRoute(routePath)) {
           if (!currentAdmin) {
             shouldRedirectToError = true;
           } else {
-            const membershipChecks = this.props.AuthenticationState.groupsOfMembership.map(
-              (membership) => {
-                const matchesUniversity =
-                  membership.group.groupUserName === this.routeParams.groupUserName;
-                const matchesCourse =
-                  this.routeParams.courseUserName &&
-                  membership.group.groupUserName === this.routeParams.courseUserName;
-
-                return matchesUniversity || matchesCourse;
-              }
-            );
+            const membershipChecks = AuthenticationState.groupsOfMembership.map((membership) => {
+              const matchesUniversity =
+                membership.group.groupUserName === routeParams.groupUserName;
+              const matchesCourse =
+                routeParams.courseUserName &&
+                membership.group.groupUserName === routeParams.courseUserName;
+              return matchesUniversity || matchesCourse;
+            });
 
             const hasMatchingMembership = membershipChecks.some((match) => match);
-
             if (!hasMatchingMembership) {
               shouldRedirectToError = true;
             }
           }
-        } else if (Routes.isIssuerDashboardRoute(this.routePath)) {
+        } else if (Routes.isIssuerDashboardRoute(routePath)) {
           if (!isIssuer(currentUser)) {
             shouldRedirectToError = true;
-          } else if (this.routeParams.courseUserName) {
-            if (this.routeParams.groupUserName !== 'invest-west') {
+          } else if (routeParams.courseUserName) {
+            if (routeParams.groupUserName !== 'invest-west') {
               if (
-                this.props.AuthenticationState.groupsOfMembership.filter(
+                AuthenticationState.groupsOfMembership.filter(
                   (groupOfMembership) =>
-                    groupOfMembership.group.groupUserName === this.routeParams.groupUserName
+                    groupOfMembership.group.groupUserName === routeParams.groupUserName
                 ).length === 0
               ) {
                 shouldRedirectToError = true;
               }
             }
           } else if (
-            this.props.AuthenticationState.groupsOfMembership.filter(
+            AuthenticationState.groupsOfMembership.filter(
               (groupOfMembership) =>
-                groupOfMembership.group.groupUserName === this.routeParams.groupUserName
+                groupOfMembership.group.groupUserName === routeParams.groupUserName
             ).length === 0
           ) {
             shouldRedirectToError = true;
           }
-        } else if (Routes.isInvestorDashboardRoute(this.routePath)) {
+        } else if (Routes.isInvestorDashboardRoute(routePath)) {
           if (!isInvestor(currentUser)) {
             shouldRedirectToError = true;
-          } else if (this.routeParams.courseUserName) {
-            if (this.routeParams.groupUserName === 'invest-west') {
+          } else if (routeParams.courseUserName) {
+            if (routeParams.groupUserName === 'invest-west') {
               shouldRedirectToError = false;
             } else {
-              const membershipCount = this.props.AuthenticationState.groupsOfMembership.filter(
+              const membershipCount = AuthenticationState.groupsOfMembership.filter(
                 (groupOfMembership) =>
-                  groupOfMembership.group.groupUserName === this.routeParams.groupUserName
+                  groupOfMembership.group.groupUserName === routeParams.groupUserName
               ).length;
-
               if (membershipCount === 0) {
                 shouldRedirectToError = true;
               }
             }
           } else {
-            const membershipCount = this.props.AuthenticationState.groupsOfMembership.filter(
+            const membershipCount = AuthenticationState.groupsOfMembership.filter(
               (groupOfMembership) =>
-                groupOfMembership.group.groupUserName === this.routeParams.groupUserName
+                groupOfMembership.group.groupUserName === routeParams.groupUserName
             ).length;
-
             if (membershipCount === 0) {
               shouldRedirectToError = true;
             }
           }
-        } else if (Routes.isCreateOfferRoute(this.routePath)) {
-          const currentAdmin = isAdmin(currentUser);
-          if (!isIssuer(currentUser) && !isInvestor(currentUser) && !currentAdmin) {
+        } else if (Routes.isCreateOfferRoute(routePath)) {
+          const currentAdminCheck = isAdmin(currentUser);
+          if (!isIssuer(currentUser) && !isInvestor(currentUser) && !currentAdminCheck) {
             shouldRedirectToError = true;
-          } else if (this.routeParams.courseUserName) {
-            if (this.routeParams.groupUserName !== 'invest-west') {
+          } else if (routeParams.courseUserName) {
+            if (routeParams.groupUserName !== 'invest-west') {
               if (
-                this.props.AuthenticationState.groupsOfMembership.filter(
+                AuthenticationState.groupsOfMembership.filter(
                   (groupOfMembership) =>
-                    groupOfMembership.group.groupUserName === this.routeParams.groupUserName
+                    groupOfMembership.group.groupUserName === routeParams.groupUserName
                 ).length === 0
               ) {
                 shouldRedirectToError = true;
               }
             }
           } else if (
-            this.props.AuthenticationState.groupsOfMembership.filter(
+            AuthenticationState.groupsOfMembership.filter(
               (groupOfMembership) =>
-                groupOfMembership.group.groupUserName === this.routeParams.groupUserName
+                groupOfMembership.group.groupUserName === routeParams.groupUserName
             ).length === 0
           ) {
             shouldRedirectToError = true;
           }
         }
 
-        if (shouldRedirectToError && !this.state.navigatingToError) {
-          this.setState({
-            navigatingToError: true,
-          });
-          this.props.navigate(Routes.error404);
+        if (shouldRedirectToError && !navigatingToError) {
+          setNavigatingToError(true);
+          navigate(Routes.error404);
           return;
         }
       }
     }
 
     if (
-      !Routes.isSignInRoute(this.routePath) &&
-      !Routes.isSignUpRoute(this.routePath) &&
-      this.state.navigatingFromSignInOrSignUpToDashboard
+      !Routes.isSignInRoute(routePath) &&
+      !Routes.isSignUpRoute(routePath) &&
+      navigatingFromSignInOrSignUpToDashboard
     ) {
-      this.setState({
-        navigatingFromSignInOrSignUpToDashboard: false,
-      });
+      setNavigatingFromSignInOrSignUpToDashboard(false);
     }
 
-    if (Routes.isSignInRoute(this.routePath) && this.state.navigatingToSignIn) {
-      this.setState({
-        navigatingToSignIn: false,
-      });
+    if (Routes.isSignInRoute(routePath) && navigatingToSignIn) {
+      setNavigatingToSignIn(false);
     }
 
-    if (Routes.isErrorRoute(this.routePath) && this.state.navigatingToError) {
-      this.setState({
-        navigatingToError: false,
-      });
+    if (Routes.isErrorRoute(routePath) && navigatingToError) {
+      setNavigatingToError(false);
     }
+  }); // Runs on every render, matching componentDidUpdate behavior
+
+  // --- Render ---
+
+  const loadingSystemAttrs = isLoadingSystemAttributes(ManageSystemAttributesState);
+  const validatingGroupUrl = isValidatingGroupUrl(ManageGroupUrlState);
+  const groupUrlValidated = successfullyValidatedGroupUrl(ManageGroupUrlState);
+  const authNotInitialized = authIsNotInitialized(AuthenticationState);
+  const isAuthenticatingUser = isAuthenticating(AuthenticationState);
+  const isPublicRoute = !Routes.isProtectedRoute(routePath);
+
+  if (
+    loadingSystemAttrs ||
+    validatingGroupUrl ||
+    (groupUrlValidated && authNotInitialized && !isPublicRoute) ||
+    (!Routes.isSignInRoute(routePath) &&
+      !Routes.isSignUpRoute(routePath) &&
+      isAuthenticatingUser &&
+      !isPublicRoute)
+  ) {
+    return (
+      <Box>
+        <BarLoader
+          color={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main}
+          width="100%"
+          height={4}
+        />
+      </Box>
+    );
   }
 
-  componentWillUnmount() {
-    this.detachAuthListener();
-  }
-
-  render() {
-    const {
-      ManageSystemAttributesState,
-      ManageGroupUrlState,
-      AuthenticationState,
-      showHeader,
-      backgroundColor,
-    } = this.props;
-
-    this.updateRouteAndParams();
-
-    const loadingSystemAttrs = isLoadingSystemAttributes(ManageSystemAttributesState);
-    const validatingGroupUrl = isValidatingGroupUrl(ManageGroupUrlState);
-    const groupUrlValidated = successfullyValidatedGroupUrl(ManageGroupUrlState);
-    const authNotInitialized = authIsNotInitialized(AuthenticationState);
-    const isAuthenticatingUser = isAuthenticating(AuthenticationState);
-
-    const isPublicRoute = !Routes.isProtectedRoute(this.routePath);
-
-    if (
-      loadingSystemAttrs ||
-      validatingGroupUrl ||
-      (groupUrlValidated && authNotInitialized && !isPublicRoute) ||
-      (!Routes.isSignInRoute(this.routePath) &&
-        !Routes.isSignUpRoute(this.routePath) &&
-        isAuthenticatingUser &&
-        !isPublicRoute)
-    ) {
-      return (
-        <Box>
-          <BarLoader
-            color={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main}
-            width="100%"
-            height={4}
-          />
-        </Box>
-      );
-    }
-
-    if (successfullyValidatedGroupUrl(ManageGroupUrlState)) {
-      return (
-        <Container
-          fluid
-          style={{
-            padding: 0,
-            height: backgroundColor !== undefined ? '100%' : 'none',
-            minHeight: backgroundColor !== undefined ? '100vh' : 'none',
-            backgroundColor: backgroundColor ?? 'none',
-          }}
-        >
-          {!showHeader ? null : (
-            <Row noGutters>
-              <Col xs={12} sm={12} md={12} lg={12}>
-                <Header
-                  routePath={this.routePath}
-                  homUrl={Routes.constructHomeRoute(
-                    this.routeParams,
-                    ManageGroupUrlState,
-                    AuthenticationState
-                  )}
-                  dashboardUrl={Routes.constructDashboardRoute(
-                    this.routeParams,
-                    ManageGroupUrlState,
-                    AuthenticationState
-                  )}
-                  signInUrl={Routes.constructSignInRoute(this.routeParams)}
-                />
-              </Col>
-            </Row>
-          )}
-
+  if (successfullyValidatedGroupUrl(ManageGroupUrlState)) {
+    return (
+      <Container
+        fluid
+        style={{
+          padding: 0,
+          height: backgroundColor !== undefined ? '100%' : 'none',
+          minHeight: backgroundColor !== undefined ? '100vh' : 'none',
+          backgroundColor: backgroundColor ?? 'none',
+        }}
+      >
+        {!showHeader ? null : (
           <Row noGutters>
-            <Box width="100%" height="100%">
-              {this.props.component}
-            </Box>
+            <Col xs={12} sm={12} md={12} lg={12}>
+              <Header
+                routePath={routePath}
+                homUrl={Routes.constructHomeRoute(
+                  routeParams,
+                  ManageGroupUrlState,
+                  AuthenticationState
+                )}
+                dashboardUrl={Routes.constructDashboardRoute(
+                  routeParams,
+                  ManageGroupUrlState,
+                  AuthenticationState
+                )}
+                signInUrl={Routes.constructSignInRoute(routeParams)}
+              />
+            </Col>
           </Row>
-        </Container>
-      );
-    }
+        )}
 
-    return null;
+        <Row noGutters>
+          <Box width="100%" height="100%">
+            {component}
+          </Box>
+        </Row>
+      </Container>
+    );
   }
 
-  validateRouteAndAuthentication = () => {
-    this.updateRouteAndParams();
-
-    this.props.loadSystemAttributes();
-
-    const groupUserNameParam = this.routeParams.hasOwnProperty('groupUserName')
-      ? this.routeParams.groupUserName
-      : this.routePath === Routes.nonGroupSignIn || this.routePath === Routes.nonGroupSignUp
-        ? 'invest-west'
-        : this.routePath === Routes.superAdminSignIn
-          ? null
-          : 'invest-west';
-
-    const courseUserNameParam = this.routeParams.hasOwnProperty('courseUserName')
-      ? this.routeParams.courseUserName
-      : null;
-
-    this.props.validateGroupUrl(this.routePath, groupUserNameParam, courseUserNameParam);
-
-    this.attachAuthListener();
-  };
-
-  updateRouteAndParams = () => {
-    this.routePath = this.props.matchedPattern || '';
-    this.routeParams = this.props.params;
-  };
-
-  attachAuthListener = () => {
-    const { ManageGroupUrlState } = this.props;
-
-    const isProjectViewRoute =
-      this.routePath === Routes.groupViewOffer ||
-      this.routePath === Routes.nonGroupViewOffer ||
-      this.routePath === Routes.courseViewOffer;
-
-    const isAdminRoute = Routes.isGroupAdminRoute(this.routePath);
-
-    if (
-      (successfullyValidatedGroupUrl(ManageGroupUrlState) || isProjectViewRoute || isAdminRoute) &&
-      !this.authListener
-    ) {
-      this.authListener = firebase.auth().onAuthStateChanged((firebaseUser) => {
-        const now = Date.now();
-        const isCurrentlyAuthenticating = isAuthenticating(this.props.AuthenticationState);
-        const isAlreadyAuthenticated = successfullyAuthenticated(this.props.AuthenticationState);
-
-        const isInitialCheck = !this.hasCompletedInitialAuthCheck;
-        if (isInitialCheck) {
-          this.hasCompletedInitialAuthCheck = true;
-        }
-
-        const lastAuthTimestamp = this.getLastAuthTimestamp();
-        const timeSinceLastAuth = now - lastAuthTimestamp;
-        const isWithinGracePeriod = timeSinceLastAuth < 10000;
-
-        if (firebaseUser) {
-          this.props.signIn();
-        } else {
-          const willSignOut =
-            !isCurrentlyAuthenticating &&
-            !isAlreadyAuthenticated &&
-            !isWithinGracePeriod &&
-            !isInitialCheck;
-
-          if (willSignOut) {
-            this.setLastAuthTimestamp(0);
-            this.props.signOut();
-          }
-        }
-      });
-    }
-  };
-
-  detachAuthListener = () => {
-    if (this.authListener) {
-      this.authListener();
-      this.authListener = null;
-      this.hasCompletedInitialAuthCheck = false;
-    }
-  };
-}
-
-const ConnectedGroupRouteClass = connect(mapStateToProps, mapDispatchToProps)(GroupRouteClass);
-
-/**
- * Functional wrapper that injects React Router v6 hooks into the class component.
- * This replaces the v5 RouteComponentProps pattern.
- */
-function GroupRoute(props: GroupRouteLocalProps) {
-  const params = useParams();
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  // Determine the matched route pattern by checking against known routes
-  // In v6, we use location.pathname and match against route definitions
-  const matchedPattern = useMatchedRoutePattern(location.pathname);
-
-  return (
-    <ConnectedGroupRouteClass
-      {...props}
-      params={params}
-      navigate={navigate}
-      location={location}
-      matchedPattern={matchedPattern}
-    />
-  );
+  return null;
 }
 
 /**
  * Custom hook to determine which route pattern matched the current pathname.
- * This replaces the v5 match.path which gave us the route pattern (e.g., "/groups/:groupUserName/:courseUserName/admin")
+ * This replaces the v5 match.path which gave us the route pattern.
  */
 function useMatchedRoutePattern(pathname: string): string {
-  // Try all known route patterns and return the one that matches
   const allRoutePatterns = [
     Routes.courseSignUp,
     Routes.groupSignUp,
@@ -835,7 +692,6 @@ function useMatchedRoutePattern(pathname: string): string {
     '/admin-upgrade/:requestId',
   ];
 
-  // Convert route pattern to regex and test against pathname
   for (const pattern of allRoutePatterns) {
     if (matchesPattern(pathname, pattern)) {
       return pattern;
@@ -849,16 +705,10 @@ function useMatchedRoutePattern(pathname: string): string {
  * Tests if a pathname matches a route pattern (e.g., "/groups/:groupUserName/admin")
  */
 function matchesPattern(pathname: string, pattern: string): boolean {
-  // Remove query string from pathname
   const pathOnly = pathname.split('?')[0];
-
-  // Convert route pattern to regex
-  // Replace :paramName with a regex group that matches any non-slash characters
-  // Handle optional params like :id?
   const regexStr = pattern
     .replace(/:[a-zA-Z]+\?/g, '([^/]*)?') // optional params
     .replace(/:[a-zA-Z]+/g, '([^/]+)'); // required params
-
   const regex = new RegExp(`^${regexStr}$`);
   return regex.test(pathOnly);
 }

@@ -1,8 +1,4 @@
-import React, { Component, FormEvent } from 'react';
-import { connect } from 'react-redux';
-import { AppState } from '../../redux-store/reducers';
-import { AnyAction } from 'redux';
-import { ThunkDispatch } from 'redux-thunk';
+import React, { FormEvent } from 'react';
 import {
   Box,
   Button,
@@ -18,22 +14,16 @@ import {
   Typography,
 } from '@mui/material';
 import { useParams } from 'react-router-dom';
-import { RouteParams } from '../../router/router';
-import {
-  getGroupRouteTheme,
-  ManageGroupUrlState,
-} from '../../redux-store/reducers/manageGroupUrlReducer';
+import { getGroupRouteTheme } from '../../redux-store/reducers/manageGroupUrlReducer';
 import { Col, Row } from 'react-bootstrap';
 import { css } from 'aphrodite';
 import sharedStyles from '../../shared-js-css-styles/SharedStyles';
 import VisibilityOff from '@mui/icons-material/VisibilityOff';
 import Visibility from '@mui/icons-material/Visibility';
 import Routes from '../../router/routes';
-import ExploreOffers from '../../shared-components/explore-offers/ExploreOffers';
 import {
   errorSendingResetPassword,
   isProcessingResetPasswordRequest,
-  SignInState,
   successfullySentResetPassword,
 } from './SignInReducer';
 import {
@@ -44,384 +34,332 @@ import {
   toggleResetPasswordDialog,
 } from './SignInActions';
 import {
-  AuthenticationState,
   hasAuthenticationError,
   isAuthenticating,
 } from '../../redux-store/reducers/authenticationReducer';
 import HashLoader from 'react-spinners/HashLoader';
 import * as appColors from '../../values/colors';
-import { MediaQueryState } from '../../redux-store/reducers/mediaQueryReducer';
 import { Close } from '@mui/icons-material';
 import CustomLink from '../../shared-js-css-styles/CustomLink';
 import Footer from '../../shared-components/footer/Footer';
 import '../../shared-js-css-styles/sharedStyles.scss';
+import { useAppSelector, useAppDispatch } from '../../redux-store/hooks';
 
-interface SignInRouterProps {
-  params: Record<string, string | undefined>;
-}
+const SignInNew: React.FC = () => {
+  const dispatch = useAppDispatch();
+  const params = useParams();
+  const ManageGroupUrlState = useAppSelector((state) => state.ManageGroupUrlState);
+  const AuthenticationState = useAppSelector((state) => state.AuthenticationState);
+  const MediaQueryState = useAppSelector((state) => state.MediaQueryState);
+  const SignInLocalState = useAppSelector((state) => state.SignInLocalState);
 
-interface SignInProps {
-  ManageGroupUrlState: ManageGroupUrlState;
-  AuthenticationState: AuthenticationState;
-  MediaQueryState: MediaQueryState;
-  SignInLocalState: SignInState;
-  onTextChanged: (event: React.ChangeEvent<HTMLInputElement>) => any;
-  togglePasswordVisibility: () => any;
-  onSignInClick: (event: FormEvent) => any;
-  toggleResetPasswordDialog: () => any;
-  onSendResetPasswordClick: (email: string) => () => Promise<void>;
-}
+  const handleTextChanged = (event: React.ChangeEvent<HTMLInputElement>) =>
+    dispatch(onTextChanged(event));
+  const handleTogglePasswordVisibility = () => dispatch(togglePasswordVisibility());
+  const handleSignInClick = (event: FormEvent) => dispatch(onSignInClick(event));
+  const handleToggleResetPasswordDialog = () => dispatch(toggleResetPasswordDialog());
 
-const mapStateToProps = (state: AppState) => {
-  return {
-    ManageGroupUrlState: state.ManageGroupUrlState,
-    AuthenticationState: state.AuthenticationState,
-    MediaQueryState: state.MediaQueryState,
-    SignInLocalState: state.SignInLocalState,
-  };
-};
-
-const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
-  return {
-    onTextChanged: (event: React.ChangeEvent<HTMLInputElement>) => dispatch(onTextChanged(event)),
-    togglePasswordVisibility: () => dispatch(togglePasswordVisibility()),
-    onSignInClick: (event: FormEvent) => dispatch(onSignInClick(event)),
-    toggleResetPasswordDialog: () => dispatch(toggleResetPasswordDialog()),
-    onSendResetPasswordClick: (email: string) => dispatch(onSendResetPasswordClick(email)),
-  };
-};
-
-class SignInNewClass extends Component<SignInProps & SignInRouterProps, {}> {
-  render() {
-    const {
-      ManageGroupUrlState,
-      AuthenticationState,
-      MediaQueryState,
-      SignInLocalState,
-      onTextChanged,
-      onSignInClick,
-      togglePasswordVisibility,
-      toggleResetPasswordDialog,
-    } = this.props;
-
-    return (
-      <Box>
-        <Row noGutters>
-          <Col xs={{ span: 12, offset: 0 }} md={{ span: 6, offset: 3 }} lg={{ span: 6, offset: 3 }}>
-            <Box
-              display="flex"
-              width="100%"
-              justifyContent="center"
-              paddingX={MediaQueryState.isMobile ? '10px' : '0px'}
-              paddingY={MediaQueryState.isMobile ? '20px' : '60px'}
+  return (
+    <Box>
+      <Row noGutters>
+        <Col xs={{ span: 12, offset: 0 }} md={{ span: 6, offset: 3 }} lg={{ span: 6, offset: 3 }}>
+          <Box
+            display="flex"
+            width="100%"
+            justifyContent="center"
+            paddingX={MediaQueryState.isMobile ? '10px' : '0px'}
+            paddingY={MediaQueryState.isMobile ? '20px' : '60px'}
+          >
+            {/** Sign in card container */}
+            <Paper
+              elevation={0}
+              square
+              className={css(sharedStyles.kick_starter_border_box)}
+              style={{ width: 650, padding: MediaQueryState.isMobile ? 20 : 30 }}
             >
-              {/** Sign in card container */}
-              <Paper
-                elevation={0}
-                square
-                className={css(sharedStyles.kick_starter_border_box)}
-                style={{ width: 650, padding: MediaQueryState.isMobile ? 20 : 30 }}
-              >
-                {/** Sign in card header */}
-                <Box display="flex" flexDirection="column" marginBottom="35px">
-                  <Typography variant="h4" align="center" paragraph color="primary">
-                    Sign in to your account
-                  </Typography>
-                  <Typography variant="body1" align="center">
-                    Connecting businesses and investors across the South West of England
+              {/** Sign in card header */}
+              <Box display="flex" flexDirection="column" marginBottom="35px">
+                <Typography variant="h4" align="center" paragraph color="primary">
+                  Sign in to your account
+                </Typography>
+                <Typography variant="body1" align="center">
+                  Connecting businesses and investors across the South West of England
+                </Typography>
+              </Box>
+
+              {/** Display message to inform the user that the reset password email
+                             has been successfully sent */}
+              {!successfullySentResetPassword(SignInLocalState) ? null : (
+                <Box
+                  marginBottom="35px"
+                  color="white"
+                  bgcolor={appColors.dark_green}
+                  padding="15px"
+                >
+                  <Typography variant="body1" align="left">
+                    An email with password reset instructions has been sent to your email address.
                   </Typography>
                 </Box>
+              )}
 
-                {/** Display message to inform the user that the reset password email
-                             has been successfully sent */}
-                {!successfullySentResetPassword(SignInLocalState) ? null : (
-                  <Box
-                    marginBottom="35px"
-                    color="white"
-                    bgcolor={appColors.dark_green}
-                    padding="15px"
-                  >
-                    <Typography variant="body1" align="left">
-                      An email with password reset instructions has been sent to your email address.
+              {/** Signin error */}
+              {!hasAuthenticationError(AuthenticationState) ? null : (
+                <Box marginBottom="35px" padding="15px" color="white" bgcolor="error.main">
+                  <Typography variant="body1" align="left">
+                    Error: Username or password not recognised
+                  </Typography>
+                </Box>
+              )}
+
+              {/** Sign in form */}
+              <form onSubmit={handleSignInClick}>
+                <Box display="flex" flexDirection="column">
+                  {/** Email field */}
+                  <FormControl variant="standard">
+                    <TextField
+                      label="Email address"
+                      name="signInEmail"
+                      value={SignInLocalState.signInEmail}
+                      margin="normal"
+                      variant="outlined"
+                      error={SignInLocalState.errorSignInEmail}
+                      onChange={handleTextChanged}
+                    />
+                  </FormControl>
+
+                  {/** Password field */}
+                  <FormControl variant="standard">
+                    <TextField
+                      label="Password"
+                      name="signInPassword"
+                      type={SignInLocalState.showPassword ? 'text' : 'password'}
+                      margin="normal"
+                      variant="outlined"
+                      error={SignInLocalState.errorSignInPassword}
+                      onChange={handleTextChanged}
+                      InputProps={{
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              edge="end"
+                              aria-label="Toggle password visibility"
+                              onClick={handleTogglePasswordVisibility}
+                              size="large"
+                            >
+                              {SignInLocalState.showPassword ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                  </FormControl>
+                  <Box marginTop="35px" marginBottom="45px">
+                    <Typography variant="body1" align="center">
+                      By clicking Sign In, you agree to our&nbsp;
+                      <CustomLink
+                        url={Routes.nonGroupTermsOfUse}
+                        target="_blank"
+                        color={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main}
+                        activeColor="none"
+                        activeUnderline
+                        component="nav-link"
+                        childComponent={'Terms of use'}
+                      />
+                      &nbsp;and&nbsp;
+                      <CustomLink
+                        url={Routes.nonGroupPrivacyPolicy}
+                        target="_blank"
+                        color={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main}
+                        activeColor="none"
+                        activeUnderline
+                        component="nav-link"
+                        childComponent={'Privacy policy'}
+                      />
+                      .
                     </Typography>
                   </Box>
-                )}
 
-                {/** Signin error */}
-                {!hasAuthenticationError(AuthenticationState) ? null : (
-                  <Box marginBottom="35px" padding="15px" color="white" bgcolor="error.main">
-                    <Typography variant="body1" align="left">
-                      {/** {AuthenticationState.error?.detail} */}
-                      Error: Username or password not recognised
-                    </Typography>
-                  </Box>
-                )}
-
-                {/** Sign in form */}
-                <form onSubmit={onSignInClick}>
-                  <Box display="flex" flexDirection="column">
-                    {/** Email field */}
-                    <FormControl variant="standard">
-                      <TextField
-                        label="Email address"
-                        name="signInEmail"
-                        value={SignInLocalState.signInEmail}
-                        margin="normal"
-                        variant="outlined"
-                        error={SignInLocalState.errorSignInEmail}
-                        onChange={onTextChanged}
+                  {!isAuthenticating(AuthenticationState) ? null : (
+                    <Box display="flex" marginBottom="45px" justifyContent="center">
+                      <HashLoader
+                        color={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main}
                       />
-                    </FormControl>
-
-                    {/** Password field */}
-                    <FormControl variant="standard">
-                      <TextField
-                        label="Password"
-                        name="signInPassword"
-                        type={SignInLocalState.showPassword ? 'text' : 'password'}
-                        margin="normal"
-                        variant="outlined"
-                        error={SignInLocalState.errorSignInPassword}
-                        onChange={onTextChanged}
-                        InputProps={{
-                          endAdornment: (
-                            <InputAdornment position="end">
-                              <IconButton
-                                edge="end"
-                                aria-label="Toggle password visibility"
-                                onClick={togglePasswordVisibility}
-                                size="large"
-                              >
-                                {SignInLocalState.showPassword ? <VisibilityOff /> : <Visibility />}
-                              </IconButton>
-                            </InputAdornment>
-                          ),
-                        }}
-                      />
-                    </FormControl>
-                    <Box marginTop="35px" marginBottom="45px">
-                      <Typography variant="body1" align="center">
-                        By clicking Sign In, you agree to our&nbsp;
-                        <CustomLink
-                          url={Routes.nonGroupTermsOfUse}
-                          target="_blank"
-                          color={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main}
-                          activeColor="none"
-                          activeUnderline
-                          component="nav-link"
-                          childComponent={'Terms of use'}
-                        />
-                        &nbsp;and&nbsp;
-                        <CustomLink
-                          url={Routes.nonGroupPrivacyPolicy}
-                          target="_blank"
-                          color={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main}
-                          activeColor="none"
-                          activeUnderline
-                          component="nav-link"
-                          childComponent={'Privacy policy'}
-                        />
-                        .
-                      </Typography>
                     </Box>
+                  )}
 
-                    {!isAuthenticating(AuthenticationState) ? null : (
-                      <Box display="flex" marginBottom="45px" justifyContent="center">
-                        <HashLoader
-                          color={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main}
-                        />
-                      </Box>
-                    )}
-
-                    <FormControl variant="standard">
-                      <Button
-                        type="submit"
-                        variant="contained"
-                        color="primary"
-                        size="large"
-                        className={css(sharedStyles.no_text_transform)}
-                      >
-                        Sign in
-                      </Button>
-                    </FormControl>
-
-                    {/** Sign up */}
-                    <Box display="flex" marginTop="25px" justifyContent="center">
-                      <Typography variant="body1">
-                        Don't have an Student account? &nbsp;
-                        <CustomLink
-                          url={Routes.constructSignUpRoute(
-                            ManageGroupUrlState.groupNameFromUrl ?? '',
-                            undefined,
-                            this.props.params.courseUserName ?? 'student-showcase'
-                          )}
-                          color={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main}
-                          activeColor="none"
-                          activeUnderline
-                          component="nav-link"
-                          childComponent={'Sign up'}
-                        />
-                      </Typography>
-                    </Box>
-
-                    {/** Forgot password */}
-                    <Box
-                      display="flex"
-                      marginTop="16px"
-                      justifyContent="center"
-                      onClick={toggleResetPasswordDialog}
+                  <FormControl variant="standard">
+                    <Button
+                      type="submit"
+                      variant="contained"
+                      color="primary"
+                      size="large"
+                      className={css(sharedStyles.no_text_transform)}
                     >
-                      <Typography
-                        variant="body1"
-                        color="primary"
-                        className={css(sharedStyles.nav_link_hover)}
-                      >
-                        Forgot your password?
-                      </Typography>
-                    </Box>
+                      Sign in
+                    </Button>
+                  </FormControl>
+
+                  {/** Sign up */}
+                  <Box display="flex" marginTop="25px" justifyContent="center">
+                    <Typography variant="body1">
+                      Don't have an Student account? &nbsp;
+                      <CustomLink
+                        url={Routes.constructSignUpRoute(
+                          ManageGroupUrlState.groupNameFromUrl ?? '',
+                          undefined,
+                          params.courseUserName ?? 'student-showcase'
+                        )}
+                        color={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main}
+                        activeColor="none"
+                        activeUnderline
+                        component="nav-link"
+                        childComponent={'Sign up'}
+                      />
+                    </Typography>
                   </Box>
-                </form>
-              </Paper>
-            </Box>
-          </Col>
-        </Row>
-        {/** Footer */}
-        <Row noGutters>
-          <Col xs={12} sm={12} md={12} lg={12}>
-            <Footer />
-          </Col>
-        </Row>
-        {/** Reset password dialog */}
-        <ResetPasswordDialogComponent />
-      </Box>
-    );
-  }
-}
 
-const ConnectedSignInNew = connect(mapStateToProps, mapDispatchToProps)(SignInNewClass);
-
-function SignInNew() {
-  const params = useParams();
-  return <ConnectedSignInNew params={params} />;
-}
+                  {/** Forgot password */}
+                  <Box
+                    display="flex"
+                    marginTop="16px"
+                    justifyContent="center"
+                    onClick={handleToggleResetPasswordDialog}
+                  >
+                    <Typography
+                      variant="body1"
+                      color="primary"
+                      className={css(sharedStyles.nav_link_hover)}
+                    >
+                      Forgot your password?
+                    </Typography>
+                  </Box>
+                </Box>
+              </form>
+            </Paper>
+          </Box>
+        </Col>
+      </Row>
+      {/** Footer */}
+      <Row noGutters>
+        <Col xs={12} sm={12} md={12} lg={12}>
+          <Footer />
+        </Col>
+      </Row>
+      {/** Reset password dialog */}
+      <ResetPasswordDialogComponent />
+    </Box>
+  );
+};
 
 export default SignInNew;
 
-class ResetPasswordDialog extends Component<SignInProps, {}> {
-  render() {
-    const {
-      ManageGroupUrlState,
-      SignInLocalState,
-      onTextChanged,
-      toggleResetPasswordDialog,
-      onSendResetPasswordClick,
-    } = this.props;
+const ResetPasswordDialogComponent: React.FC = () => {
+  const dispatch = useAppDispatch();
+  const ManageGroupUrlState = useAppSelector((state) => state.ManageGroupUrlState);
+  const MediaQueryState = useAppSelector((state) => state.MediaQueryState);
+  const SignInLocalState = useAppSelector((state) => state.SignInLocalState);
 
-    return (
-      <Dialog
-        fullWidth
-        maxWidth="sm"
-        fullScreen={this.props.MediaQueryState.isMobile}
-        open={SignInLocalState.showResetPasswordDialog}
-        onClose={toggleResetPasswordDialog}
-      >
-        <DialogTitle>
-          <Box display="flex" alignItems="center">
-            <Box display="flex" justifyContent="flex-start" flexGrow={2}>
-              <Typography variant="h5" align="left">
-                Reset Your Password
-              </Typography>
-            </Box>
-            <Box display="flex" justifyContent="flex-end" flexGrow={1}>
-              <IconButton onClick={toggleResetPasswordDialog} size="large">
-                <Close />
-              </IconButton>
-            </Box>
+  const handleTextChanged = (event: React.ChangeEvent<HTMLInputElement>) =>
+    dispatch(onTextChanged(event));
+  const handleToggleResetPasswordDialog = () => dispatch(toggleResetPasswordDialog());
+  const handleSendResetPasswordClick = (email: string) => dispatch(onSendResetPasswordClick(email));
+
+  return (
+    <Dialog
+      fullWidth
+      maxWidth="sm"
+      fullScreen={MediaQueryState.isMobile}
+      open={SignInLocalState.showResetPasswordDialog}
+      onClose={handleToggleResetPasswordDialog}
+    >
+      <DialogTitle>
+        <Box display="flex" alignItems="center">
+          <Box display="flex" justifyContent="flex-start" flexGrow={2}>
+            <Typography variant="h5" align="left">
+              Reset Your Password
+            </Typography>
           </Box>
-        </DialogTitle>
-        <DialogContent style={{ padding: 0 }}>
-          <Box
-            display="flex"
-            flexDirection="column"
-            justifyContent="center"
-            marginTop="15px"
-            paddingX="24px"
-          >
-            <Box display="flex" flexDirection="column">
-              <Typography variant="body1" align="left">
-                Please provide the email address you used when you signed up for your Student
-                account.
-              </Typography>
-              <Box height="25px" />
-              <Typography variant="body1" align="left">
-                We will send you an email with a link to reset your password.{' '}
-                <b>Please note that this link will only be valid for up to 3 hours.</b>
-              </Typography>
-            </Box>
-
-            <Box height="42px" />
-
-            <Box display="flex" flexDirection="column">
-              {/** Display error */}
-              {!errorSendingResetPassword(SignInLocalState) ? null : (
-                <Box
-                  width="100%"
-                  bgcolor="error.main"
-                  padding="15px"
-                  marginBottom="42px"
-                  color="white"
-                >
-                  <Typography variant="body1" align="left">
-                    Unable to send request password email.
-                  </Typography>
-                </Box>
-              )}
-
-              {/** Processing indicator */}
-              {!isProcessingResetPasswordRequest(SignInLocalState) ? null : (
-                <Box display="flex" justifyContent="center" marginBottom="42px">
-                  <HashLoader
-                    color={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main}
-                  />
-                </Box>
-              )}
-
-              {/** Email input */}
-              <TextField
-                name="resetPasswordDialogEmail"
-                value={SignInLocalState.resetPasswordDialogEmail}
-                label="Email address"
-                variant="outlined"
-                fullWidth
-                onChange={onTextChanged}
-              />
-            </Box>
-
+          <Box display="flex" justifyContent="flex-end" flexGrow={1}>
+            <IconButton onClick={handleToggleResetPasswordDialog} size="large">
+              <Close />
+            </IconButton>
+          </Box>
+        </Box>
+      </DialogTitle>
+      <DialogContent style={{ padding: 0 }}>
+        <Box
+          display="flex"
+          flexDirection="column"
+          justifyContent="center"
+          marginTop="15px"
+          paddingX="24px"
+        >
+          <Box display="flex" flexDirection="column">
+            <Typography variant="body1" align="left">
+              Please provide the email address you used when you signed up for your Student account.
+            </Typography>
             <Box height="25px" />
+            <Typography variant="body1" align="left">
+              We will send you an email with a link to reset your password.{' '}
+              <b>Please note that this link will only be valid for up to 3 hours.</b>
+            </Typography>
           </Box>
-        </DialogContent>
-        <DialogActions>
-          <Box display="flex" justifyContent="flex-end" padding="8px">
-            <Button
-              color="primary"
-              variant="contained"
-              size="medium"
-              onClick={() =>
-                onSendResetPasswordClick(SignInLocalState.resetPasswordDialogEmail.trim())
-              }
-              className={css(sharedStyles.no_text_transform)}
-              disabled={SignInLocalState.resetPasswordDialogEmail.trim().length === 0}
-            >
-              Send
-            </Button>
-          </Box>
-        </DialogActions>
-      </Dialog>
-    );
-  }
-}
 
-const ResetPasswordDialogComponent = connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(ResetPasswordDialog);
+          <Box height="42px" />
+
+          <Box display="flex" flexDirection="column">
+            {/** Display error */}
+            {!errorSendingResetPassword(SignInLocalState) ? null : (
+              <Box
+                width="100%"
+                bgcolor="error.main"
+                padding="15px"
+                marginBottom="42px"
+                color="white"
+              >
+                <Typography variant="body1" align="left">
+                  Unable to send request password email.
+                </Typography>
+              </Box>
+            )}
+
+            {/** Processing indicator */}
+            {!isProcessingResetPasswordRequest(SignInLocalState) ? null : (
+              <Box display="flex" justifyContent="center" marginBottom="42px">
+                <HashLoader color={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main} />
+              </Box>
+            )}
+
+            {/** Email input */}
+            <TextField
+              name="resetPasswordDialogEmail"
+              value={SignInLocalState.resetPasswordDialogEmail}
+              label="Email address"
+              variant="outlined"
+              fullWidth
+              onChange={handleTextChanged}
+            />
+          </Box>
+
+          <Box height="25px" />
+        </Box>
+      </DialogContent>
+      <DialogActions>
+        <Box display="flex" justifyContent="flex-end" padding="8px">
+          <Button
+            color="primary"
+            variant="contained"
+            size="medium"
+            onClick={() =>
+              handleSendResetPasswordClick(SignInLocalState.resetPasswordDialogEmail.trim())
+            }
+            className={css(sharedStyles.no_text_transform)}
+            disabled={SignInLocalState.resetPasswordDialogEmail.trim().length === 0}
+          >
+            Send
+          </Button>
+        </Box>
+      </DialogActions>
+    </Dialog>
+  );
+};

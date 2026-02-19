@@ -1,57 +1,37 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
-import { AppState } from '../../redux-store/reducers';
-import { ThunkDispatch } from 'redux-thunk';
-import { AnyAction } from 'redux';
+import React from 'react';
 import { Alert, Slide, SlideProps, Snackbar } from '@mui/material';
-import { FeedbackSnackbarState } from './FeedbackSnackbarReducer';
+import { useAppSelector, useAppDispatch } from '../../redux-store/hooks';
 import { closeFeedbackSnackbar } from './FeedbackSnackbarActions';
 
-interface FeedbackSnackbarProps {
-  FeedbackSnackbarLocalState: FeedbackSnackbarState;
-  close: () => any;
-}
+const FeedbackSnackbarNew: React.FC = () => {
+  const dispatch = useAppDispatch();
+  const { open, type, message } = useAppSelector((state) => state.FeedbackSnackbarLocalState);
 
-const mapStateToProps = (state: AppState) => {
-  return {
-    FeedbackSnackbarLocalState: state.FeedbackSnackbarLocalState,
-  };
+  const handleClose = () => dispatch(closeFeedbackSnackbar());
+
+  return (
+    <Snackbar
+      open={open}
+      anchorOrigin={{
+        vertical: 'bottom',
+        horizontal: 'center',
+      }}
+      autoHideDuration={2500}
+      onClose={handleClose}
+      TransitionComponent={SlideTransitionUp}
+      transitionDuration={{
+        enter: 130,
+        exit: 130,
+      }}
+    >
+      <Alert variant="filled" severity={type} onClose={handleClose}>
+        {message}
+      </Alert>
+    </Snackbar>
+  );
 };
 
-const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
-  return {
-    close: () => dispatch(closeFeedbackSnackbar()),
-  };
-};
-
-class FeedbackSnackbarNew extends Component<FeedbackSnackbarProps, any> {
-  render() {
-    const { FeedbackSnackbarLocalState, close } = this.props;
-
-    return (
-      <Snackbar
-        open={FeedbackSnackbarLocalState.open}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'center',
-        }}
-        autoHideDuration={2500}
-        onClose={close}
-        TransitionComponent={SlideTransitionUp}
-        transitionDuration={{
-          enter: 130,
-          exit: 130,
-        }}
-      >
-        <Alert variant="filled" severity={FeedbackSnackbarLocalState.type} onClose={close}>
-          {FeedbackSnackbarLocalState.message}
-        </Alert>
-      </Snackbar>
-    );
-  }
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(FeedbackSnackbarNew);
+export default FeedbackSnackbarNew;
 
 /**
  * Slide transition - direction up

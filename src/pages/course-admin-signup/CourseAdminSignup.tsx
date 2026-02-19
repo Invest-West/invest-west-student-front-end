@@ -1,8 +1,4 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
-import { AppState } from '../../redux-store/reducers';
-import { ThunkDispatch } from 'redux-thunk';
-import { AnyAction } from 'redux';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Button,
@@ -28,257 +24,147 @@ import {
   clearCourseAdminInviteState,
 } from '../../redux-store/actions/courseAdminInviteActions';
 import {
-  CourseAdminInviteState,
   isValidatingInvite,
   isCompletingSignup,
 } from '../../redux-store/reducers/courseAdminInviteReducer';
-import { MediaQueryState } from '../../redux-store/reducers/mediaQueryReducer';
 import Footer from '../../shared-components/footer/Footer';
+import { useAppSelector, useAppDispatch } from '../../redux-store/hooks';
 
 /**
  * Valid titles for course admin
  */
 const VALID_TITLES = ['Mr', 'Miss', 'Mrs', 'Ms', 'Dr', 'Prof', 'Other'];
 
-/**
- * Router props injected by wrapper
- */
-interface CourseAdminSignupRouterProps {
-  params: Record<string, string | undefined>;
-  navigate: (to: string, options?: { replace?: boolean }) => void;
-}
+const CourseAdminSignup: React.FC = () => {
+  const dispatch = useAppDispatch();
+  const params = useParams();
+  const navigate = useNavigate();
 
-/**
- * Props interface
- */
-interface CourseAdminSignupProps {
-  MediaQueryState: MediaQueryState;
-  CourseAdminInviteLocalState: CourseAdminInviteState;
-  validateCourseAdminInvite: (token: string) => any;
-  completeCourseAdminSignup: (data: any) => any;
-  clearCourseAdminInviteState: () => any;
-}
+  const MediaQueryState = useAppSelector((state) => state.MediaQueryState);
+  const CourseAdminInviteLocalState = useAppSelector((state) => state.CourseAdminInviteLocalState);
 
-/**
- * Local component state for form fields
- */
-interface LocalState {
-  token: string;
-  title: string;
-  firstName: string;
-  lastName: string;
-  password: string;
-  confirmedPassword: string;
-  isPasswordFocused: boolean;
-}
+  const [token] = useState(params.token || '');
+  const [title, setTitle] = useState('-1');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmedPassword, setConfirmedPassword] = useState('');
+  const [isPasswordFocused, setIsPasswordFocused] = useState(false);
 
-/**
- * Map state to props
- */
-const mapStateToProps = (state: AppState) => {
-  return {
-    MediaQueryState: state.MediaQueryState,
-    CourseAdminInviteLocalState: state.CourseAdminInviteLocalState,
-  };
-};
+  const prevSignupResultRef = useRef(CourseAdminInviteLocalState.signupResult);
 
-/**
- * Map dispatch to props
- */
-const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
-  return {
-    validateCourseAdminInvite: (token: string) => dispatch(validateCourseAdminInvite(token)),
-    completeCourseAdminSignup: (data: any) => dispatch(completeCourseAdminSignup(data)),
-    clearCourseAdminInviteState: () => dispatch(clearCourseAdminInviteState()),
-  };
-};
-
-/**
- * Course Admin Signup Page
- *
- * This page allows invited course admins to complete their registration.
- * The signup flow is simplified:
- * - Title
- * - First Name
- * - Last Name
- * - Password (email is pre-filled from invite)
- */
-class CourseAdminSignupClass extends Component<
-  CourseAdminSignupProps & CourseAdminSignupRouterProps,
-  LocalState
-> {
-  constructor(props: CourseAdminSignupProps & CourseAdminSignupRouterProps) {
-    super(props);
-    this.state = {
-      token: props.params.token || '',
-      title: '-1',
-      firstName: '',
-      lastName: '',
-      password: '',
-      confirmedPassword: '',
-      isPasswordFocused: false,
-    };
-  }
-
-  componentDidMount() {
-    const { validateCourseAdminInvite } = this.props;
-    const { token } = this.state;
-
-    // Validate the token
+  // Validate token on mount
+  useEffect(() => {
     if (token) {
-      validateCourseAdminInvite(token);
+      dispatch(validateCourseAdminInvite(token));
     }
-  }
+    return () => {
+      dispatch(clearCourseAdminInviteState());
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  componentWillUnmount() {
-    this.props.clearCourseAdminInviteState();
-  }
+  // Handle redirect after successful signup
+  useEffect(() => {
+    const prevResult = prevSignupResultRef.current;
+    const currentResult = CourseAdminInviteLocalState.signupResult;
+    prevSignupResultRef.current = currentResult;
 
-  componentDidUpdate(prevProps: CourseAdminSignupProps & CourseAdminSignupRouterProps) {
-    const { CourseAdminInviteLocalState: currentState } = this.props;
-    const { CourseAdminInviteLocalState: prevState } = prevProps;
-
-    // Redirect after successful account creation
-    if (!prevState.signupResult && currentState.signupResult?.success) {
-      // Sign in with custom token
-      if (currentState.signupResult.customToken) {
+    if (!prevResult && currentResult?.success) {
+      if (currentResult.customToken) {
         firebase
           .auth()
-          .signInWithCustomToken(currentState.signupResult.customToken)
+          .signInWithCustomToken(currentResult.customToken)
           .then(() => {
-            if (currentState.signupResult?.redirectTo) {
-              this.props.navigate(currentState.signupResult.redirectTo);
+            if (currentResult.redirectTo) {
+              navigate(currentResult.redirectTo);
             }
           })
-          .catch((error) => {
-            // If auto-sign-in fails, still redirect
-            if (currentState.signupResult?.redirectTo) {
-              this.props.navigate(currentState.signupResult.redirectTo);
+          .catch(() => {
+            if (currentResult.redirectTo) {
+              navigate(currentResult.redirectTo);
             }
           });
-      } else if (currentState.signupResult.redirectTo) {
-        this.props.navigate(currentState.signupResult.redirectTo);
+      } else if (currentResult.redirectTo) {
+        navigate(currentResult.redirectTo);
       }
     }
-  }
+  }, [CourseAdminInviteLocalState.signupResult, navigate]);
 
-  handleInputChange = (
+  const handleInputChange = (
     event: React.ChangeEvent<HTMLInputElement | { name?: string; value: unknown }>
   ) => {
     const name = event.target.name;
     const value = event.target.value as string;
-    if (name) {
-      this.setState((prevState) => ({
-        ...prevState,
-        [name]: value,
-      }));
+    if (!name) return;
+
+    switch (name) {
+      case 'title':
+        setTitle(value);
+        break;
+      case 'firstName':
+        setFirstName(value);
+        break;
+      case 'lastName':
+        setLastName(value);
+        break;
+      case 'password':
+        setPassword(value);
+        break;
+      case 'confirmedPassword':
+        setConfirmedPassword(value);
+        break;
     }
   };
 
-  handleCreateAccount = async () => {
-    const { completeCourseAdminSignup } = this.props;
-    const { token, title, firstName, lastName, password } = this.state;
-
-    await completeCourseAdminSignup({
-      token,
-      title,
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      password,
-    });
+  const handleCreateAccount = async () => {
+    await dispatch(
+      completeCourseAdminSignup({
+        token,
+        title,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        password,
+      })
+    );
   };
 
-  render() {
-    const { CourseAdminInviteLocalState } = this.props;
-    const { token } = this.state;
+  // No token provided
+  if (!token) {
+    return renderError(
+      'No invitation token provided',
+      'Please use the link from your invitation email.'
+    );
+  }
 
-    // No token provided
-    if (!token) {
-      return this.renderError(
-        'No invitation token provided',
-        'Please use the link from your invitation email.'
-      );
-    }
-
-    // Validating token
-    if (isValidatingInvite(CourseAdminInviteLocalState)) {
-      return (
-        <Box>
-          <BarLoader color="#1976d2" width="100%" height={4} />
-          <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
-            <Typography variant="h6" color="textSecondary">
-              Validating your invitation...
-            </Typography>
-          </Box>
+  // Validating token
+  if (isValidatingInvite(CourseAdminInviteLocalState)) {
+    return (
+      <Box>
+        <BarLoader color="#1976d2" width="100%" height={4} />
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
+          <Typography variant="h6" color="textSecondary">
+            Validating your invitation...
+          </Typography>
         </Box>
-      );
-    }
-
-    // Invalid token
-    if (
-      !CourseAdminInviteLocalState.validatingInvite &&
-      !CourseAdminInviteLocalState.inviteValid &&
-      CourseAdminInviteLocalState.inviteError
-    ) {
-      return this.renderError(
-        'Invalid Invitation',
-        CourseAdminInviteLocalState.inviteError ||
-          'This invitation link is invalid or has expired. Please contact the administrator for a new invitation.'
-      );
-    }
-
-    // Valid token - show signup form
-    if (CourseAdminInviteLocalState.inviteValid && CourseAdminInviteLocalState.inviteData) {
-      return this.renderSignupForm();
-    }
-
-    // Fallback loading state
-    return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
-        <HashLoader color="#1976d2" />
       </Box>
     );
   }
 
-  /**
-   * Renders an error message with a retry button
-   */
-  renderError(title: string, message: string) {
-    return (
-      <Box
-        marginTop="60px"
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        paddingX="20px"
-      >
-        <Typography variant="h5" color="error" align="center">
-          {title}
-        </Typography>
-        <Box height="20px" />
-        <Typography variant="body1" color="textSecondary" align="center">
-          {message}
-        </Typography>
-        <Box height="30px" />
-        <Button
-          className={css(sharedStyles.no_text_transform)}
-          variant="contained"
-          color="primary"
-          onClick={() => window.location.reload()}
-        >
-          Retry
-        </Button>
-      </Box>
+  // Invalid token
+  if (
+    !CourseAdminInviteLocalState.validatingInvite &&
+    !CourseAdminInviteLocalState.inviteValid &&
+    CourseAdminInviteLocalState.inviteError
+  ) {
+    return renderError(
+      'Invalid Invitation',
+      CourseAdminInviteLocalState.inviteError ||
+        'This invitation link is invalid or has expired. Please contact the administrator for a new invitation.'
     );
   }
 
-  /**
-   * Renders the signup form
-   */
-  renderSignupForm() {
-    const { MediaQueryState, CourseAdminInviteLocalState } = this.props;
-    const { title, firstName, lastName, password, confirmedPassword } = this.state;
-
+  // Valid token - show signup form
+  if (CourseAdminInviteLocalState.inviteValid && CourseAdminInviteLocalState.inviteData) {
     const inviteData = CourseAdminInviteLocalState.inviteData;
     const isFormDisabled = isCompletingSignup(CourseAdminInviteLocalState);
     const isFormComplete =
@@ -380,7 +266,7 @@ class CourseAdminSignupClass extends Component<
                     name="title"
                     value={title}
                     // @ts-ignore
-                    onChange={this.handleInputChange}
+                    onChange={handleInputChange}
                     margin="dense"
                     style={{ marginTop: 25 }}
                   >
@@ -408,7 +294,7 @@ class CourseAdminSignupClass extends Component<
                     variant="outlined"
                     margin="dense"
                     disabled={isFormDisabled}
-                    onChange={this.handleInputChange}
+                    onChange={handleInputChange}
                   />
                 </FormControl>
 
@@ -423,7 +309,7 @@ class CourseAdminSignupClass extends Component<
                     variant="outlined"
                     margin="dense"
                     disabled={isFormDisabled}
-                    onChange={this.handleInputChange}
+                    onChange={handleInputChange}
                   />
                 </FormControl>
 
@@ -441,9 +327,9 @@ class CourseAdminSignupClass extends Component<
                     margin="dense"
                     type="password"
                     disabled={isFormDisabled}
-                    onChange={this.handleInputChange}
-                    onFocus={() => this.setState({ isPasswordFocused: true })}
-                    onBlur={() => this.setState({ isPasswordFocused: false })}
+                    onChange={handleInputChange}
+                    onFocus={() => setIsPasswordFocused(true)}
+                    onBlur={() => setIsPasswordFocused(false)}
                   />
                 </FormControl>
 
@@ -459,12 +345,12 @@ class CourseAdminSignupClass extends Component<
                     margin="dense"
                     type="password"
                     disabled={isFormDisabled}
-                    onChange={this.handleInputChange}
+                    onChange={handleInputChange}
                   />
                 </FormControl>
 
                 {/* Password validation feedback */}
-                {(this.state.isPasswordFocused || password.length > 0) && (
+                {(isPasswordFocused || password.length > 0) && (
                   <Box marginTop="8px">
                     <Typography
                       variant="body2"
@@ -500,7 +386,7 @@ class CourseAdminSignupClass extends Component<
                     color="primary"
                     variant="contained"
                     disabled={!isFormComplete || isFormDisabled}
-                    onClick={this.handleCreateAccount}
+                    onClick={handleCreateAccount}
                   >
                     Create Account
                   </Button>
@@ -518,17 +404,36 @@ class CourseAdminSignupClass extends Component<
       </Box>
     );
   }
-}
 
-const ConnectedCourseAdminSignup = connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(CourseAdminSignupClass);
+  // Fallback loading state
+  return (
+    <Box display="flex" justifyContent="center" alignItems="center" minHeight="50vh">
+      <HashLoader color="#1976d2" />
+    </Box>
+  );
+};
 
-function CourseAdminSignup() {
-  const params = useParams();
-  const navigate = useNavigate();
-  return <ConnectedCourseAdminSignup params={params} navigate={navigate} />;
+function renderError(title: string, message: string) {
+  return (
+    <Box marginTop="60px" display="flex" flexDirection="column" alignItems="center" paddingX="20px">
+      <Typography variant="h5" color="error" align="center">
+        {title}
+      </Typography>
+      <Box height="20px" />
+      <Typography variant="body1" color="textSecondary" align="center">
+        {message}
+      </Typography>
+      <Box height="30px" />
+      <Button
+        className={css(sharedStyles.no_text_transform)}
+        variant="contained"
+        color="primary"
+        onClick={() => window.location.reload()}
+      >
+        Retry
+      </Button>
+    </Box>
+  );
 }
 
 export default CourseAdminSignup;
