@@ -60,18 +60,40 @@ apiClient.interceptors.request.use(async (config) => {
   return config;
 });
 
-// Response interceptor: normalize errors to match existing Api.parseError() format
+// Response interceptor: unwrap envelope format and normalize errors
 apiClient.interceptors.response.use(
-  (response) => response,
-  (error: AxiosError<{ code?: number; detail?: string; message?: string }>) => {
+  (response) => {
+    // Detect new envelope format: { success: true, data: ... }
+    // Unwrap so consumers see response.data as the inner payload
+    if (response.data && typeof response.data === 'object' && response.data.success !== undefined) {
+      return { ...response, data: response.data.data ?? response.data };
+    }
+    return response;
+  },
+  (
+    error: AxiosError<{
+      success?: boolean;
+      error?: { code?: number; message?: string; detail?: string };
+      code?: number;
+      detail?: string;
+      message?: string;
+    }>
+  ) => {
     let statusCode = -1;
     let message = '';
 
     if (error.response) {
-      // Server responded with an error (4xx, 5xx)
-      if (error.response.data) {
-        statusCode = error.response.data.code ?? error.response.status;
-        message = error.response.data.detail ?? error.response.data.message ?? '';
+      const data = error.response.data;
+      if (data) {
+        // New envelope format: { success: false, error: { code, message, detail } }
+        if (data.success === false && data.error) {
+          statusCode = data.error.code ?? error.response.status;
+          message = data.error.detail ?? data.error.message ?? '';
+        } else {
+          // Legacy format: { code, detail, message }
+          statusCode = data.code ?? error.response.status;
+          message = data.detail ?? data.message ?? '';
+        }
       }
     } else if (error.request) {
       // No response received

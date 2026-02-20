@@ -301,6 +301,9 @@ export default class Api {
   /**
    * Parse response
    *
+   * Handles both new envelope format { success, data } and legacy raw responses.
+   * Unwraps envelope so consumers see response.data as the inner payload.
+   *
    * @param response
    * @private
    */
@@ -310,6 +313,14 @@ export default class Api {
     }
 
     if (this.isRequestSuccessful(response)) {
+      // Detect new envelope format and unwrap
+      if (
+        response.data &&
+        typeof response.data === 'object' &&
+        response.data.success !== undefined
+      ) {
+        return { ...response, data: response.data.data ?? response.data };
+      }
       return response;
     }
 
@@ -318,6 +329,9 @@ export default class Api {
 
   /**
    * Parse error
+   *
+   * Handles both new envelope format { success: false, error: { code, message, detail } }
+   * and legacy format { code, detail, message }.
    *
    * @param error
    * @private
@@ -328,13 +342,23 @@ export default class Api {
       message: '',
     };
 
-    // client received an error response (5xx, 4xx) form the server
+    // client received an error response (5xx, 4xx) from the server
     if (error.response) {
       if (error.response.data) {
-        httpError = {
-          statusCode: error.response.data.code,
-          message: error.response.data.detail ?? error.response.data.message,
-        };
+        const data = error.response.data;
+        // New envelope format: { success: false, error: { code, message, detail } }
+        if (data.success === false && data.error) {
+          httpError = {
+            statusCode: data.error.code ?? error.response.status,
+            message: data.error.detail ?? data.error.message,
+          };
+        } else {
+          // Legacy format: { code, detail, message }
+          httpError = {
+            statusCode: data.code,
+            message: data.detail ?? data.message,
+          };
+        }
       }
     }
     // client never received a response, or request never left
