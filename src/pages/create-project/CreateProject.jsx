@@ -44,7 +44,7 @@ import "react-quill/dist/quill.snow.css";
 import UploadDocuments from "../../shared-components/upload-documents/DocumentsUpload";
 import PageNotFoundWhole from "../../shared-components/page-not-found/PageNotFoundWhole";
 import DocumentsDownload from "../../shared-components/download-documents/DocumentsDownload";
-import SelectPitchVisibility from "../../shared-components/select-pitch-visibility/SelectPitchVisibility";
+
 import InfoOverlay from "../../shared-components/info_overlay/InfoOverlay";
 
 import {connect} from "react-redux";
@@ -109,7 +109,7 @@ const mapStateToProps = state => {
         isMobile: state.MediaQueryState.isMobile,
         uploadFilesState: state.uploadFiles,
 
-        projectVisibilitySetting: state.manageSelectProjectVisibility.projectVisibilitySetting
+        // projectVisibilitySetting removed - all projects are public
     }
 };
 
@@ -1186,9 +1186,7 @@ class CreatePitchPageMain extends Component {
 
         const {
             ManageGroupUrlState,
-            AuthenticationState,
-
-            projectVisibilitySetting
+            AuthenticationState
         } = this.props;
 
         const {
@@ -1358,13 +1356,7 @@ class CreatePitchPageMain extends Component {
                                                 :
                                                 pitchProjectDescription
                                         ,
-                                        visibility:
-                                            projectVisibilitySetting === -1
-                                                ?
-                                                projectEdited.visibility
-                                                :
-                                                projectVisibilitySetting
-                                        ,
+                                        visibility: DB_CONST.PROJECT_VISIBILITY_PUBLIC,
                                         status:
                                             saveProgress
                                                 ?
@@ -1790,13 +1782,7 @@ class CreatePitchPageMain extends Component {
                                     const projectObj = {
                                         id: projectID,
                                         anid: groupIssuerCreateOfferFor === "undefined" ? ManageGroupUrlState.group.anid : groupIssuerCreateOfferFor,
-                                        visibility:
-                                            projectVisibilitySetting === -1
-                                                ?
-                                                ManageGroupUrlState.group.settings.projectVisibility
-                                                :
-                                                projectVisibilitySetting
-                                        ,
+                                        visibility: DB_CONST.PROJECT_VISIBILITY_PUBLIC,
                                         issuerID:
                                         // a group admin is creating an offer on behalf of a known issuer
                                             params.admin && params.issuer
@@ -2986,15 +2972,7 @@ class CreateProject extends Component {
                                         <Typography color="primary" variant="h6" align="left">Step 1: General information</Typography>
                                     </FlexView>
 
-                                    {
-                                        currentUser.type === DB_CONST.TYPE_ADMIN || currentUser.type === DB_CONST.TYPE_INVESTOR
-                                            ?
-                                            <FlexView marginTop={30}>
-                                                <SelectPitchVisibility/>
-                                            </FlexView>
-                                            :
-                                            null
-                                    }
+                                    {/* Project visibility is always public - selector removed */}
 
                                     {/** Let the issuer select the group they want to create an offer for */}
                                     {

@@ -418,6 +418,7 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
         // Allow admin routes to bypass group validation issues more gracefully
         const isAdminRoute = Routes.isGroupAdminRoute(this.routePath);
         const isProtectedAdminRoute = Routes.isProtectedRoute(this.routePath) && isAdminRoute;
+        const isSuperAdminRoute = Routes.isRouteReservedForSuperAdmin(this.routePath);
 
         console.log('[ROUTING DEBUG] Route validation check:', {
             isInvestWestRoute,
@@ -464,7 +465,8 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             && !isCreateOfferRoute  // Add exclusion for create-offer routes
             && !isCourseDashboardRoute  // Add exclusion for course-based dashboard routes
             && !isInvestWestRoute
-            && !isProtectedAdminRoute) {  // Don't redirect admin routes to 404 - let auth handle it
+            && !isProtectedAdminRoute
+            && !isSuperAdminRoute) {  // Don't redirect super admin routes to 404 - let auth handle it
             console.log('[ROUTING DEBUG] ❌ TRIGGERING 404 REDIRECT - Validation check failed', {
                 successfullyValidatedGroupUrl: successfullyValidatedGroupUrl(this.props.ManageGroupUrlState),
                 navigatingToError: this.state.navigatingToError,
@@ -486,8 +488,8 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
             });
             this.props.history.push(Routes.error404);
             return;
-        } else if ((isInvestWestRoute || isProtectedAdminRoute) && !successfullyValidatedGroupUrl(this.props.ManageGroupUrlState)) {
-            console.log('[ROUTING DEBUG] invest-west or admin route detected but validation pending, allowing through');
+        } else if ((isInvestWestRoute || isProtectedAdminRoute || isSuperAdminRoute) && !successfullyValidatedGroupUrl(this.props.ManageGroupUrlState)) {
+            console.log('[ROUTING DEBUG] invest-west, admin, or super admin route detected but validation pending, allowing through');
         }
 
         // redirect an unauthenticated user to the sign in route if they try to access protected routes
@@ -866,7 +868,7 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
         const isProjectViewRoute = this.routePath === Routes.groupViewOffer || this.routePath === Routes.nonGroupViewOffer || this.routePath === Routes.courseViewOffer;
         
         // Check if current route is an admin route that should be handled more gracefully during auth loading
-        const isAdminRoute = Routes.isGroupAdminRoute(this.routePath);
+        const isAdminRoute = Routes.isGroupAdminRoute(this.routePath) || Routes.isRouteReservedForSuperAdmin(this.routePath);
         
         const loadingSystemAttrs = isLoadingSystemAttributes(ManageSystemAttributesState);
         const validatingGroupUrl = isValidatingGroupUrl(ManageGroupUrlState);
@@ -974,11 +976,11 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
         this.props.loadSystemAttributes();
 
         const groupUserNameParam = this.routeParams.hasOwnProperty("groupUserName")
-            ? this.routeParams.groupUserName 
+            ? this.routeParams.groupUserName
             : this.routePath === Routes.nonGroupSignIn || this.routePath === Routes.nonGroupSignUp
                 ? "invest-west"
-                : this.routePath === Routes.superAdminSignIn
-                    ? null  // Super admin sign-in doesn't need group validation
+                : this.routePath === Routes.superAdminSignIn || Routes.isRouteReservedForSuperAdmin(this.routePath)
+                    ? null  // Super admin routes don't need group validation
                     : "invest-west";  // Default to invest-west for course-based routes
 
         const courseUserNameParam = this.routeParams.hasOwnProperty("courseUserName")
@@ -1045,10 +1047,11 @@ class GroupRoute extends Component<GroupRouteProps & Readonly<RouteComponentProp
 
         // Check if current route is an admin route that should attach auth listener immediately
         const isAdminRoute = Routes.isGroupAdminRoute(this.routePath);
+        const isSuperAdminRoute = Routes.isRouteReservedForSuperAdmin(this.routePath);
 
-        // For project viewing routes and admin routes, attach auth listener immediately to avoid blocking
+        // For project viewing routes, admin routes, and super admin routes, attach auth listener immediately
         // For other routes, wait for group URL validation to complete
-        if ((successfullyValidatedGroupUrl(ManageGroupUrlState) || isProjectViewRoute || isAdminRoute) && !this.authListener) {
+        if ((successfullyValidatedGroupUrl(ManageGroupUrlState) || isProjectViewRoute || isAdminRoute || isSuperAdminRoute) && !this.authListener) {
             console.log('[COURSE ADMIN AUTH] 🔥 Attaching auth listener');
 
             this.authListener = firebase.auth().onAuthStateChanged(firebaseUser => {

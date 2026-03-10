@@ -1,6 +1,7 @@
 import {Action, ActionCreator, Dispatch} from "redux";
 import {PitchDocument} from "../../models/project";
 import {AppState} from "../../redux-store/reducers";
+import {getDocumentType} from "../document-viewer/documentViewerUtils";
 
 export enum DocumentsDownloadEvents {
     OpenRiskWarningDialog = "DocumentsDownloadEvents.OpenRiskWarningDialog",
@@ -19,19 +20,18 @@ export interface DocumentClickAction extends DocumentsDownloadAction {
 
 export const onDocumentClick: ActionCreator<any> = (document: PitchDocument, shouldShowRiskWarning: boolean) => {
     return (dispatch: Dispatch, getState: () => AppState) => {
-        // Check if it's a PDF file
-        const isPdf = document.fileName.toLowerCase().endsWith('.pdf');
-        
+        const docType = getDocumentType(document.fileName);
+
         if (!shouldShowRiskWarning) {
-            if (isPdf) {
-                // Open PDF viewer for PDF files
+            if (docType.canPreview) {
+                // Open document viewer for all previewable file types (PDF, Word, PPT, Excel)
                 const action: DocumentClickAction = {
                     type: DocumentsDownloadEvents.OpenPdfViewer,
                     selectedDocument: document
                 };
                 return dispatch(action);
             } else {
-                // For non-PDF files, do nothing (prevent automatic download)
+                // For non-previewable files, do nothing (prevent automatic download)
                 return;
             }
         }
@@ -54,11 +54,10 @@ export const onAcceptRiskWarningClick: ActionCreator<any> = () => {
             return;
         }
         
-        // Check if it's a PDF file
-        const isPdf = selectedDocument.fileName.toLowerCase().endsWith('.pdf');
-        
-        if (isPdf) {
-            // Open PDF viewer for PDF files
+        const docType = getDocumentType(selectedDocument.fileName);
+
+        if (docType.canPreview) {
+            // Open document viewer for all previewable file types
             dispatch({
                 type: DocumentsDownloadEvents.CloseRiskWarningDialog
             });
@@ -67,7 +66,7 @@ export const onAcceptRiskWarningClick: ActionCreator<any> = () => {
                 selectedDocument: selectedDocument
             });
         } else {
-            // For non-PDF files, do nothing (prevent automatic download)
+            // For non-previewable files, just close the risk warning
             return dispatch({
                 type: DocumentsDownloadEvents.CloseRiskWarningDialog
             });

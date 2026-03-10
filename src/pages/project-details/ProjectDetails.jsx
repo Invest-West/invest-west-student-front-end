@@ -34,7 +34,7 @@ import * as utils from "../../utils/utils";
 import PageNotFound from "../../shared-components/page-not-found/PageNotFound";
 import PageNotFoundWhole from "../../shared-components/page-not-found/PageNotFoundWhole";
 import CreatePledgeDialog from "../../shared-components/create-pledge-dialog/CreatePledgeDialog";
-import SelectPitchVisibility from "../../shared-components/select-pitch-visibility/SelectPitchVisibility";
+
 import InfoOverlay from "../../shared-components/info_overlay/InfoOverlay";
 import {connect} from "react-redux";
 import * as manageGroupFromParamsActions from "../../redux-store/actions/manageGroupFromParamsActions";
@@ -2940,18 +2940,10 @@ class ProjectDetails extends Component {
                                                                         Please check this offer
                                                                         carefully
                                                                         before publishing as this action cannot be
-                                                                        reversed. You
-                                                                        can control who can see this investment
-                                                                        opportunity
-                                                                        using the options below.
+                                                                        reversed.
                                                                     </Typography>
 
                                                                     <Divider style={{marginTop: 25, marginBottom: 20}}/>
-
-                                                                    {/** Select project visibility before publishing project */}
-                                                                    <SelectPitchVisibility/>
-
-                                                                    <Divider style={{marginTop: 35, marginBottom: 25}}/>
 
                                                                     {
                                                                         !addingRejectFeedback

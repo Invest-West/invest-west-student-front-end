@@ -140,14 +140,18 @@ class Front extends Component<FrontProps & Readonly<RouteComponentProps<RoutePar
                 </div>
                 {ExploreOffersLocalState.offerInstances.length > 0 && (
                     <Box
-                        paddingX={this.props.MediaQueryState.isMobile ? "20px" : "56px"}
-                        paddingY={this.props.MediaQueryState.isMobile ? "15px" : "40px"}
-                        marginTop="2rem"
+                        className="hero-carousel-wrapper"
+                        paddingX={this.props.MediaQueryState.isMobile ? "10px" : "16px"}
+                        paddingY={this.props.MediaQueryState.isMobile ? "10px" : "16px"}
                         style={{
                             borderRadius: '10px',
                             backdropFilter: 'blur(10px)',
                             position: 'relative',
-                            zIndex: 10
+                            zIndex: 10,
+                            flex: '1 1 auto',
+                            minWidth: '0',
+                            overflow: 'hidden',
+                            marginTop: 0
                         }}
                     >
                         <OffersCarousel offers={ExploreOffersLocalState.offerInstances.slice(0, 3)} />
