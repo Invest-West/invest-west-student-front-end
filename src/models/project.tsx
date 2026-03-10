@@ -362,55 +362,8 @@ export const isProjectPrivate = (project: Project) => {
  * @param project
  */
 export const shouldHideProjectInformationFromUser = (user: User | Admin, groupsOfMembership: GroupOfMembership[], project: Project) => {
-    const admin: Admin | null = isAdmin(user);
-    // user is an admin
-    if (admin) {
-        // user is a super admin
-        if (admin.superAdmin) {
-            return false;
-        }
-
-        // user is a group admin and is the group that owns the project
-        if (admin.anid === project.anid) {
-            return false;
-        }
-
-        // other group admins must go through the checks of project's visibility
-        switch (project.visibility) {
-            case PROJECT_VISIBILITY_PUBLIC:
-                return false;
-            case PROJECT_VISIBILITY_RESTRICTED:
-                return true;
-            case PROJECT_VISIBILITY_PRIVATE:
-                return true;
-            default:
-                return true;
-        }
-    }
-    // user is not an admin
-    else {
-        // should not hide any information if the user is an issuer that created this offer
-        if (isIssuer(user) && user.id === project.issuerID) {
-            return false;
-        }
-
-        // user is a member of the group that owns this offer
-        if (groupsOfMembership.findIndex(groupOfMembership => groupOfMembership.group.anid === project.anid) !== -1) {
-            return false;
-        }
-
-        // other group admins must go through the checks of project's visibility
-        switch (project.visibility) {
-            case PROJECT_VISIBILITY_PUBLIC:
-                return false;
-            case PROJECT_VISIBILITY_RESTRICTED:
-                return true;
-            case PROJECT_VISIBILITY_PRIVATE:
-                return true;
-            default:
-                return true;
-        }
-    }
+    // All projects are public - never hide project information
+    return false;
 }
 
 /**

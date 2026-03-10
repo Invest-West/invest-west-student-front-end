@@ -16,7 +16,7 @@ import CloseIcon from '@material-ui/icons/Close';
 import {KeyboardDatePicker} from '@material-ui/pickers';
 import {Col, Container, Row} from 'react-bootstrap';
 
-import SelectPledgeVisibility from '../select-pledge-visibility/SelectPledgeVisibility';
+
 
 import * as utils from '../../utils/utils';
 import * as DB_CONST from '../../firebase/databaseConsts';
@@ -182,13 +182,7 @@ class CreatePledgeDialog extends Component {
                             </Col>
 
                             {
-                                currentUser?.type !== DB_CONST.TYPE_ADMIN
-                                    ?
-                                    null
-                                    :
-                                    <Col xs={12} sm={12} md={{span: 8, offset: 2}} lg={{span: 6, offset: 3}} style={{ marginTop: 10 }} >
-                                        <SelectPledgeVisibility/>
-                                    </Col>
+                                {/* Project visibility is always public - selector removed */}
                             }
 
                             <Col xs={12} sm={12} md={{span: 8, offset: 2}} lg={{span: 6, offset: 3}} style={{ marginTop: 40, marginBottom: 50 }} >
