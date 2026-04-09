@@ -2992,21 +2992,14 @@ class ProjectDetails extends Component {
                                                                             :
                                                                             <FlexView>
                                                                                 <FlexView grow marginRight={10}>
-                                                                                    <Button fullWidth color="primary" variant="contained" className={css(sharedStyles.no_text_transform)} disabled={user?.superAdmin} onClick={() => this.onMakeProjectGoLiveDecision({decision: true, projectVisibilitySetting})}>Publish project</Button>
+                                                                                    <Button fullWidth color="primary" variant="contained" className={css(sharedStyles.no_text_transform)} onClick={() => this.onMakeProjectGoLiveDecision({decision: true, projectVisibilitySetting})}>Publish project</Button>
                                                                                 </FlexView>
                                                                                 <FlexView grow marginLeft={10}>
-                                                                                    <Button fullWidth color="secondary" variant="outlined" className={css(sharedStyles.no_text_transform)} disabled={user?.superAdmin} onClick={() => this.toggleRejectFeedback()}>Send back to issuer</Button>
+                                                                                    <Button fullWidth color="secondary" variant="outlined" className={css(sharedStyles.no_text_transform)} onClick={() => this.toggleRejectFeedback()}>Send back to issuer</Button>
                                                                                 </FlexView>
                                                                             </FlexView>
                                                                     }
 
-                                                                    {
-                                                                        !user?.superAdmin
-                                                                            ?
-                                                                            null
-                                                                            :
-                                                                            <Typography variant="body1" color="error" align="left" style={{marginTop: 20}}>Only course admin can do this.</Typography>
-                                                                    }
                                                                 </FlexView>
                                                                 :
                                                                 <FlexView column width="100%" marginTop={20}>
@@ -3102,7 +3095,7 @@ class ProjectDetails extends Component {
                                                                                     style={{marginTop: 25}} onClick={this.bringPitchBackToLive}>Make project live again</Button>
 
                                                                                 <FlexView column marginTop={100}>
-                                                                                    <Button fullWidth color="secondary" className={css(sharedStyles.no_text_transform)} variant="contained" disabled={user?.superAdmin} onClick={() => this.onMakeProjectGoToPledgePhaseDecision(false)}>Close project</Button>
+                                                                                    <Button fullWidth color="secondary" className={css(sharedStyles.no_text_transform)} variant="contained" onClick={() => this.onMakeProjectGoToPledgePhaseDecision(false)}>Close project</Button>
 
                                                                                     <Typography align="center" variant="body2" style={{marginTop: 12}}>
                                                                                         <b>
@@ -3436,6 +3429,7 @@ class ProjectDetails extends Component {
                                                                 user?.type !== DB_CONST.TYPE_ADMIN
                                                                 || (
                                                                     user?.type === DB_CONST.TYPE_ADMIN
+                                                                    && !user?.superAdmin
                                                                     && user?.anid !== project.anid
                                                                 )
                                                             }
@@ -3448,13 +3442,6 @@ class ProjectDetails extends Component {
                                                                     "Close temporarily"
                                                             }
                                                         </Button>
-                                                        {
-                                                            !user?.superAdmin
-                                                                ?
-                                                                null
-                                                                :
-                                                                <Typography variant="body2" align="left" color="error" style={{marginTop: 12}}>Only group admins can do this.</Typography>
-                                                        }
                                                         <Typography variant="body2" align="left" style={{marginTop: 15}}>
                                                             {
                                                                 isProjectTemporarilyClosed(project)
@@ -3860,11 +3847,11 @@ class ProjectDetails extends Component {
                                                                                                             // and issuer that created this project and owns this reply
                                                                                                             // to edit/delete this reply
                                                                                                             (
-                                                                                                                user?.type === DB_CONST.TYPE_ISSUER
-                                                                                                                || (user?.type === DB_CONST.TYPE_ADMIN && !user?.superAdmin)
+                                                                                                                user?.superAdmin
+                                                                                                                || user?.type === DB_CONST.TYPE_ISSUER
+                                                                                                                || user?.type === DB_CONST.TYPE_ADMIN
                                                                                                             )
-                                                                                                            && user?.id === projectIssuer.id
-                                                                                                            && user?.id === reply.repliedBy
+                                                                                                            && (user?.superAdmin || (user?.id === projectIssuer.id && user?.id === reply.repliedBy))
                                                                                                                 ?
                                                                                                                 <FlexView marginTop={16}>
                                                                                                                     <Button variant="outlined" className={css(sharedStyles.no_text_transform)} size="small" color="secondary" onClick={() => this.onDeleteCommentReply(reply)} style={{marginRight: 10}}>Delete<DeleteIcon fontSize="small" style={{marginLeft: 6}}/>
@@ -4066,19 +4053,18 @@ class ProjectDetails extends Component {
 
                                     {/** Course - prioritize BusinessProfile.course, fallback to project.course, then user.course */}
                                     {
-                                        (projectIssuer && projectIssuer.BusinessProfile && projectIssuer.BusinessProfile.course)
-                                        || project.course
-                                        || (projectIssuer && projectIssuer.course)
-                                            ?
-                                            <FlexView className={css(styles.border_box)} style={{backgroundColor: colors.kick_starter_background_color}} column marginTop={30} vAlignContent="center">
-                                                <Typography variant="body1" align="left">Course: <b>{
-                                                    (projectIssuer && projectIssuer.BusinessProfile && projectIssuer.BusinessProfile.course)
-                                                    || project.course
-                                                    || (projectIssuer && projectIssuer.course)
-                                                }</b></Typography>
-                                            </FlexView>
-                                            :
-                                            null
+                                        (() => {
+                                            const courseValue = (projectIssuer && projectIssuer.BusinessProfile && projectIssuer.BusinessProfile.course)
+                                                || project.course
+                                                || (projectIssuer && projectIssuer.course);
+                                            return courseValue && courseValue !== "-1"
+                                                ? (
+                                                    <FlexView className={css(styles.border_box)} style={{backgroundColor: colors.kick_starter_background_color}} column marginTop={30} vAlignContent="center">
+                                                        <Typography variant="body1" align="left">Course: <b>{courseValue}</b></Typography>
+                                                    </FlexView>
+                                                )
+                                                : null;
+                                        })()
                                     }
 
                                     {/** Financial round */}
@@ -4108,39 +4094,6 @@ class ProjectDetails extends Component {
                                             </FlexView>
                                     }
 
-                                    {/** QIB - special news */}
-                                    {
-                                        project.Pitch.hasOwnProperty('qibSpecialNews')
-                                        && (
-                                            (
-                                                (
-                                                    groupProperties
-                                                    && groupProperties.groupUserName === "qib"
-                                                )
-                                                && (
-                                                    (user?.type === DB_CONST.TYPE_ADMIN
-                                                        && user?.anid === groupProperties.anid)
-                                                    || (user?.type === DB_CONST.TYPE_ISSUER
-                                                        && user?.id === project.issuerID)
-                                                )
-                                            )
-                                            ||
-                                            (
-                                                !groupProperties
-                                                && user?.type === DB_CONST.TYPE_ADMIN
-                                                && user?.superAdmin
-                                            )
-                                        )
-                                            ?
-                                            <FlexView className={css(styles.border_box)} style={{backgroundColor: colors.kick_starter_background_color}} column marginTop={30} vAlignContent="center">
-                                                <Typography variant="body1" align="left">Special news that Briony should talk about:
-                                                    <br/><br/>
-                                                    {project.Pitch.qibSpecialNews}
-                                                </Typography>
-                                            </FlexView>
-                                            :
-                                            null
-                                    }
                                 </Col>
                     }
                 </Row>

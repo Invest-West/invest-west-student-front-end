@@ -212,6 +212,9 @@ export const startListeningForJoinRequestsChanged = () => {
                                             type: MANAGE_JOIN_REQUESTS_CHANGED,
                                             joinRequests: [...joinRequests, joinRequest]
                                         });
+                                    })
+                                    .catch(error => {
+                                        console.warn("Could not load group for join request:", joinRequest.groupToJoin, error);
                                     });
                             })
                     }

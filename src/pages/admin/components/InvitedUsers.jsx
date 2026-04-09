@@ -550,17 +550,11 @@ class InvitedUsers extends Component {
 
                 {/** Invite/Upgrade users section */}
                 <Row style={{marginBottom: 30}}>
-                    {/** For regular admins: Show Copy URL button */}
-                    {
-                        !(admin.superAdmin || admin.superGroupAdmin)
-                            ?
-                            <Col xs={12} md={6} lg={6} style={{marginBottom: 20}}>
-                                <Button color="primary" variant="outlined" className={css(sharedStyles.no_text_transform)} onClick={this.copySignupUrl}>
-                                    <FileCopyIcon style={{ marginRight: 10, width: 20, height: "auto"}}/>Copy signup URL</Button>
-                            </Col>
-                            :
-                            null
-                    }
+                    {/** Copy URL button */}
+                    <Col xs={12} md={6} lg={6} style={{marginBottom: 20}}>
+                        <Button color="primary" variant="outlined" className={css(sharedStyles.no_text_transform)} onClick={this.copySignupUrl}>
+                            <FileCopyIcon style={{ marginRight: 10, width: 20, height: "auto"}}/>Copy signup URL</Button>
+                    </Col>
                     {/** Invite Multiple Users - available to all admins */}
                     <Col xs={12} sm={12} md={12} lg={12}>
                         <InviteMultipleUsers/>

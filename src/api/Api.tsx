@@ -80,6 +80,7 @@ export class ApiRoutes {
     static exportProjectsToCsvRoute = ApiRoutes.projectsBaseRoute + "/export";
     static notifyAdminsOfResubmissionRoute = ApiRoutes.projectsBaseRoute + "/notify-resubmission";
     static clearProjectRejectFeedbacksRoute = ApiRoutes.projectsBaseRoute + "/clear-reject-feedbacks";
+    static notifyAdminsOfSubmissionRoute = ApiRoutes.projectsBaseRoute + "/notify-submission";
 
     static groupAdminsBaseRoute = "/group-admins";
     static addGroupAdminRoute = ApiRoutes.groupAdminsBaseRoute + "/add";

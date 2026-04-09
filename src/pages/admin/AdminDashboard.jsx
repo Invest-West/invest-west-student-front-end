@@ -341,7 +341,7 @@ class AdminDashboard extends Component {
 
                     {/* Manage access requests */}
                     {
-                        currentAdmin && (currentAdmin.superAdmin || currentAdmin.superGroupAdmin)
+                        currentAdmin && currentAdmin.superGroupAdmin && !currentAdmin.superAdmin
                             ?
                             null
                             :
@@ -433,7 +433,7 @@ class AdminDashboard extends Component {
 
                     {/* Manage courses */}
                     {
-                        currentAdmin && (currentAdmin.superAdmin || currentAdmin.superGroupAdmin)
+                        currentAdmin && currentAdmin.superGroupAdmin && !currentAdmin.superAdmin
                             ?
                             null
                             :
@@ -442,7 +442,15 @@ class AdminDashboard extends Component {
                                     <AccordionSummary expandIcon={<ExpandMoreIcon/>}>
                                         <FlexView column>
                                             <Typography paragraph variant="h6" color="primary" align="left">Manage courses</Typography>
-                                            <Typography paragraph variant="body1" align="left">View your university and request new courses to be added by the super admin.</Typography>
+                                            <Typography paragraph variant="body1" align="left">
+                                                {
+                                                    currentAdmin && currentAdmin.superAdmin
+                                                        ?
+                                                        "Manage all courses across all universities."
+                                                        :
+                                                        "View your university and request new courses to be added by the super admin."
+                                                }
+                                            </Typography>
                                         </FlexView>
                                     </AccordionSummary>
                                     <AccordionDetails>
@@ -686,7 +694,7 @@ class AdminDashboard extends Component {
                                     <FlexView vAlignContent="center" hAlignContent="right" width="100%" >
                                         <div ref={this.notificationBell}>
                                         <IconButton onMouseDown={ (e) => {toggleNotifications(e)} } id="notification-button">
-                                            <Badge badgeContent={notifications.length} color="secondary" invisible={notifications.length === 0}>
+                                            <Badge badgeContent={notifications.filter(n => !n.read).length} color="secondary" invisible={notifications.filter(n => !n.read).length === 0}>
                                                 <NotificationsIcon className={css(sharedStyles.white_text)}/>
                                             </Badge>
                                         </IconButton>

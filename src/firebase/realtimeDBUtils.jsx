@@ -531,7 +531,8 @@ export const loadAngelNetworkBasedOnANID = async (anid) => {
                             });
 
                             if (!courseSnapshot || !courseSnapshot.exists()) {
-                                return reject("Angel network not found");
+                                console.warn('[REALTIME-DB] Group not found in groups or courses for anid:', anid);
+                                return resolve(null);
                             }
 
                             const courseData = courseSnapshot.val();
@@ -545,8 +546,8 @@ export const loadAngelNetworkBasedOnANID = async (anid) => {
                                     .child(courseData.parentGroupId)
                                     .once('value', parentSnapshot => {
                                         if (!parentSnapshot || !parentSnapshot.exists()) {
-                                            console.warn('[REALTIME-DB DEBUG] Parent university not found for course:', courseData.parentGroupId);
-                                            return reject("Parent university not found");
+                                            console.warn('[REALTIME-DB] Parent university not found for course:', courseData.parentGroupId);
+                                            return resolve(null);
                                         }
 
                                         console.log('[REALTIME-DB DEBUG] Returning parent university for course ANID');
@@ -1423,11 +1424,13 @@ export const loadInvitedUsers = async (anid) => {
                     return new Promise((resolve, reject) => {
                         loadAngelNetworkBasedOnANID(invitedUser.invitedBy)
                             .then(angelNetwork => {
-                                invitedUser.Invitor = {
-                                    anid: angelNetwork.anid,
-                                    displayName: angelNetwork.displayName,
-                                    logo: angelNetwork.logo
-                                };
+                                if (angelNetwork) {
+                                    invitedUser.Invitor = {
+                                        anid: angelNetwork.anid,
+                                        displayName: angelNetwork.displayName,
+                                        logo: angelNetwork.logo
+                                    };
+                                }
 
                                 if (invitedUser.hasOwnProperty('officialUserID')) {
                                     getUserBasedOnID(invitedUser.officialUserID)
@@ -1745,7 +1748,7 @@ export const fetchProjectsBy = async (
                         return new Promise((resolve, reject) => {
                             loadAngelNetworkBasedOnANID(project.anid)
                                 .then(group => {
-                                    project.group = group;
+                                    project.group = group || {};
                                     getUserBasedOnID(project.issuerID)
                                         .then(user => {
                                             project.issuer = user;
@@ -1898,7 +1901,7 @@ export const loadAParticularProject = async (projectID) => {
                     // Try the original ANID-based lookup
                     loadAngelNetworkBasedOnANID(project.anid)
                     .then(group => {
-                        project.group = group;
+                        project.group = group || {};
 
                         getUserBasedOnID(project.issuerID)
                             .then(issuer => {

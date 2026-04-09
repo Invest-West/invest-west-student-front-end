@@ -369,7 +369,7 @@ class IssuerDashboard extends Component {
                                         <FlexView vAlignContent="center" hAlignContent="right" width="100%">
                                             <div ref={this.notificationBell}>
                                             <IconButton onClick={toggleNotifications}>
-                                                <Badge badgeContent={notifications.length} color="secondary" invisible={notifications.length === 0}>
+                                                <Badge badgeContent={notifications.filter(n => !n.read).length} color="secondary" invisible={notifications.filter(n => !n.read).length === 0}>
                                                     <NotificationsIcon className={css(sharedStyles.white_text)}/>
                                                 </Badge>
                                             </IconButton>

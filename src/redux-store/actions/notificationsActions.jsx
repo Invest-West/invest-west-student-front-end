@@ -28,6 +28,8 @@ export const toggleNotifications = (event) => {
             openPanel();
         }
         else {
+            // Mark all notifications as read when closing the panel
+            dispatch(markAllNotificationsAsRead());
             closePanel();
         }
     }
@@ -113,6 +115,30 @@ export const deleteAllNotifications = () => {
     }
 };
 
+export const markAllNotificationsAsRead = () => {
+    return (dispatch, getState) => {
+        const notifications = getState().manageNotifications.notifications;
+        const unreadNotifications = notifications.filter(n => !n.read);
+
+        if (unreadNotifications.length === 0) {
+            return;
+        }
+
+        const updates = {};
+        unreadNotifications.forEach(notification => {
+            updates[`${DB_CONST.NOTIFICATIONS_CHILD}/${notification.id}/read`] = true;
+        });
+
+        firebase
+            .database()
+            .ref()
+            .update(updates)
+            .catch(error => {
+                console.error("Error marking notifications as read:", error);
+            });
+    }
+};
+
 // Listener ------------------------------------------------------------------------------------------------------------
 
 let notificationsListener = null;
@@ -152,6 +178,22 @@ export const startListeningForNotificationsChanged = () => {
                 });
 
             notificationsListener
+                .on('child_changed', snapshot => {
+                    let updatedNotification = snapshot.val();
+
+                    let notifications = [...getState().manageNotifications.notifications];
+                    let notificationIndex = notifications.findIndex(existingNotification => existingNotification.id === updatedNotification.id);
+
+                    if (notificationIndex !== -1) {
+                        notifications[notificationIndex] = updatedNotification;
+                        dispatch({
+                            type: NOTIFICATIONS_LIST_CHANGED,
+                            notifications
+                        });
+                    }
+                });
+
+            notificationsListener
                 .on('child_removed', snapshot => {
                     let notification = snapshot.val();
 
@@ -174,6 +216,7 @@ export const stopListeningForNotificationsChanged = () => {
     return (dispatch, getState) => {
         if (notificationsListener) {
             notificationsListener.off('child_added');
+            notificationsListener.off('child_changed');
             notificationsListener.off('child_removed');
             notificationsListener = null;
         }

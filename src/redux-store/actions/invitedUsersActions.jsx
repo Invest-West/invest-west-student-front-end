@@ -584,7 +584,9 @@ export const startListeningForInvitedUsersChanged = () => {
 
                             const currentGroupProperties = getState().manageGroupFromParams.groupProperties;
 
-                            const group = await realtimeDBUtils.loadAngelNetworkBasedOnANID(invitedUser.invitedBy)
+                            const group = await realtimeDBUtils.loadAngelNetworkBasedOnANID(invitedUser.invitedBy);
+
+                            if (!group) return;
 
                             invitedUser.Invitor = {
                                 anid: group.anid,

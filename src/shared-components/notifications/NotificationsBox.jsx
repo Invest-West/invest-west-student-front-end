@@ -264,8 +264,13 @@ class NotificationsBox extends Component {
                                                                                     }
                                                                                     className={css(sharedStyles.nav_link_hover_without_changing_text_color)}
                                                                                     onClick={() => {
-                                                                                        deleteANotification(notification);
+                                                                                        // Close panel first, then delete after a short delay
+                                                                                        // to ensure navigation completes before the notification
+                                                                                        // is removed from the list (which would unmount the NavLink)
                                                                                         toggleNotifications();
+                                                                                        setTimeout(() => {
+                                                                                            deleteANotification(notification);
+                                                                                        }, 100);
                                                                                     }}
                                                                                 >
                                                                                     <FlexView vAlignContent="center" >
@@ -273,6 +278,15 @@ class NotificationsBox extends Component {
                                                                                         <FlexView column marginLeft={14} >
                                                                                             <Typography variant="body1" className={css(styles.black_text)}>{notification.title}</Typography>
                                                                                             <Typography variant="body2" color="textSecondary" style={{ marginTop: 4 }}>{notification.message}</Typography>
+                                                                                            {
+                                                                                                notification.action && notification.action.includes('/projects/')
+                                                                                                    ?
+                                                                                                    <Typography variant="body2" color="primary" style={{ marginTop: 6, fontWeight: 500 }}>
+                                                                                                        View project &rarr;
+                                                                                                    </Typography>
+                                                                                                    :
+                                                                                                    null
+                                                                                            }
                                                                                             <Typography variant="body2" color="textSecondary" style={{marginTop: 10}}><u>Sent:{utils.dateTimeInReadableFormat(notification.date)}</u> </Typography>
                                                                                         </FlexView>
                                                                                     </FlexView>

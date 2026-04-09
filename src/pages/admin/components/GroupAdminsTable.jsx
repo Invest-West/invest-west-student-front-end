@@ -91,12 +91,20 @@ class GroupAdminsTable extends Component {
 
         const {
             shouldLoadOtherData,
+            currentUser,
             tableGroup,
             stopListeningForGroupAdminsChanged
         } = this.props;
 
-        // cancel all listeners if tableGroup is set to null
-        if (!tableGroup || !shouldLoadOtherData) {
+        if (!shouldLoadOtherData) {
+            stopListeningForGroupAdminsChanged();
+            return;
+        }
+
+        // Super admins need tableGroup set to know which group to show;
+        // non-super admins use their own anid, so tableGroup is not required
+        const isSuperAdmin = currentUser && currentUser.superAdmin;
+        if (isSuperAdmin && !tableGroup) {
             stopListeningForGroupAdminsChanged();
             return;
         }
@@ -111,25 +119,13 @@ class GroupAdminsTable extends Component {
     loadData = () => {
         const {
             shouldLoadOtherData,
-            groupPropertiesLoaded,
-            tableGroup,
-            currentUser,
             loadingGroupAdmins,
             groupAdminsLoaded,
             loadGroupAdmins
         } = this.props;
 
         if (shouldLoadOtherData && !loadingGroupAdmins && !groupAdminsLoaded) {
-            // Super admins can load all admins without a specific tableGroup
-            // Other admins need tableGroup to be set (their university)
-            const isSuperAdmin = currentUser && currentUser.superAdmin;
-            if (isSuperAdmin || tableGroup) {
-                loadGroupAdmins();
-            } else if (groupPropertiesLoaded && !tableGroup) {
-                // If group properties are loaded but tableGroup is still null,
-                // this is a super group admin viewing their university - load anyway
-                loadGroupAdmins();
-            }
+            loadGroupAdmins();
         }
     };
 

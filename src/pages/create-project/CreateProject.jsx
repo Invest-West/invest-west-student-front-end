@@ -1619,6 +1619,20 @@ class CreatePitchPageMain extends Component {
                                                         console.error("Error notifying admins of resubmission:", error);
                                                     });
 
+                                                    // Notify admins via notification bell of new project submission
+                                                    new Api().request(
+                                                        "post",
+                                                        ApiRoutes.notifyAdminsOfSubmissionRoute,
+                                                        {
+                                                            queryParameters: null,
+                                                            requestBody: {
+                                                                projectID: projectEdited.id
+                                                            }
+                                                        }
+                                                    ).catch(error => {
+                                                        console.error("Error notifying admins of submission:", error);
+                                                    });
+
                                                     // don't need to check for prior TCs acceptance because this is create new mode
                                                     const acceptedTCsObj = {
                                                         issuerID: AuthenticationState.currentUser.id,
@@ -1954,6 +1968,37 @@ class CreatePitchPageMain extends Component {
                                             }
                                             // publish button is clicked
                                             else {
+                                                // Notify admins via notification bell of new project submission
+                                                new Api().request(
+                                                    "post",
+                                                    ApiRoutes.notifyAdminsOfSubmissionRoute,
+                                                    {
+                                                        queryParameters: null,
+                                                        requestBody: {
+                                                            projectID: projectID
+                                                        }
+                                                    }
+                                                ).catch(error => {
+                                                    console.error("Error notifying admins of submission:", error);
+                                                });
+
+                                                // Send email to admins about new project submission
+                                                new Api().request(
+                                                    "post",
+                                                    ApiRoutes.sendEmailRoute,
+                                                    {
+                                                        queryParameters: null,
+                                                        requestBody: {
+                                                            emailType: 3,
+                                                            emailInfo: {
+                                                                projectID: projectID
+                                                            }
+                                                        }
+                                                    }
+                                                ).catch(error => {
+                                                    console.error("Failed to send pitch submitted email:", error);
+                                                });
+
                                                 // track activity for creating a new project
                                                 realtimeDBUtils
                                                     .trackActivity({
