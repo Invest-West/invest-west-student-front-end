@@ -1068,7 +1068,13 @@ class GroupRoute extends Component<GroupRouteProps & RouteCompat, GroupRouteStat
 
           <Row noGutters>
             <Box width="100%" height="100%">
-              {this.props.component}
+              {React.isValidElement(this.props.component)
+                ? React.cloneElement(this.props.component as React.ReactElement<any>, {
+                    match: this.props.match,
+                    location: this.props.location,
+                    history: this.props.history,
+                  })
+                : this.props.component}
             </Box>
           </Row>
         </Container>
