@@ -69,19 +69,11 @@ export const loadAngelNetwork = () => {
               .getUserBasedOnID(firebaseUser.uid)
               .then((user) => {
                 if (user.type === DB_CONST.TYPE_ADMIN) {
-                  if (user.superAdmin) {
-                    dispatch({
-                      type: ANGEL_NETWORK_LOADED,
-                      angelNetwork: null,
-                      shouldLoadOtherData: true,
-                    });
-                  } else {
-                    dispatch({
-                      type: ANGEL_NETWORK_LOADED,
-                      angelNetwork: null,
-                      shouldLoadOtherData: false,
-                    });
-                  }
+                  dispatch({
+                    type: ANGEL_NETWORK_LOADED,
+                    angelNetwork: null,
+                    shouldLoadOtherData: true,
+                  });
                 } else {
                   dispatch({
                     type: ANGEL_NETWORK_LOADED,

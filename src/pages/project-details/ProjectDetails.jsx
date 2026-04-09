@@ -20,20 +20,20 @@ import {
   Tabs,
   TextField,
   Typography,
-} from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import CreateIcon from '@mui/icons-material/CreateOutlined';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+} from '@material-ui/core';
+import DeleteIcon from '@material-ui/icons/Delete';
+import EditIcon from '@material-ui/icons/CreateOutlined';
+import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import { Col, Container, Image, Row } from 'react-bootstrap';
 import HashLoader from 'react-spinners/HashLoader';
-import { NavLink, useParams, useLocation } from 'react-router-dom';
+import { NavLink, withRouter } from 'react-router-dom';
 import ReactPlayer from 'react-player';
 import * as colors from '../../values/colors';
 import * as utils from '../../utils/utils';
 import PageNotFound from '../../shared-components/page-not-found/PageNotFound';
 import PageNotFoundWhole from '../../shared-components/page-not-found/PageNotFoundWhole';
 import CreatePledgeDialog from '../../shared-components/create-pledge-dialog/CreatePledgeDialog';
-import SelectPitchVisibility from '../../shared-components/select-pitch-visibility/SelectPitchVisibility';
+
 import InfoOverlay from '../../shared-components/info_overlay/InfoOverlay';
 import { connect } from 'react-redux';
 import * as manageGroupFromParamsActions from '../../redux-store/actions/manageGroupFromParamsActions';
@@ -49,7 +49,7 @@ import * as realtimeDBUtils from '../../firebase/realtimeDBUtils';
 import sharedStyles from '../../shared-js-css-styles/SharedStyles';
 import Routes, * as ROUTES from '../../router/routes';
 import { AUTH_SUCCESS } from '../signin/Signin';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { KeyboardDatePicker } from '@material-ui/pickers';
 import Api, { ApiRoutes } from '../../api/Api';
 import {
   isDraftProject,
@@ -80,6 +80,7 @@ import {
 } from '../../redux-store/reducers/authenticationReducer';
 import { apiCache, CacheKeys } from '../../utils/CacheManager';
 import RejectFeedbacksList from '../../shared-components/reject-feedbacks-list/RejectFeedbacksList';
+const CreateIcon = EditIcon;
 
 const ADMIN_OFFER_STATES_PUBLISH_PITCH = 0;
 const ADMIN_OFFER_STATES_MOVE_TO_PLEDGE = 1;
@@ -2285,7 +2286,7 @@ class ProjectDetails extends Component {
                     <FlexView width="100%" hAlignContent="center" style={{ padding: 10 }}>
                       {!utils.isProjectInLivePledgePhase(project) ? (
                         <Typography align="left" variant="body2" color="secondary">
-                          Offer has ended. You can&apos;t change your pledge anymore.
+                          Offer has ended. You can't change your pledge anymore.
                         </Typography>
                       ) : (
                         <NavLink
@@ -2344,6 +2345,7 @@ class ProjectDetails extends Component {
                   >
                     {!utils.shouldAProjectBeEdited(user, project) ? (
                       <Button
+                        color="default"
                         variant="outlined"
                         size="medium"
                         className={css(sharedStyles.no_text_transform)}
@@ -2394,6 +2396,7 @@ class ProjectDetails extends Component {
                             className={css(sharedStyles.nav_link_hover_without_changing_text_color)}
                           >
                             <Button
+                              color="default"
                               variant="outlined"
                               size="medium"
                               className={css(sharedStyles.no_text_transform)}
@@ -2746,6 +2749,7 @@ class ProjectDetails extends Component {
             </Row>
           </Col>
         </Row>
+
         {/** Sections bar */}
         <Row noGutters className={css(styles.sticky_body_sections_bar)}>
           <Col xs={12} sm={12} md={12} lg={12}>
@@ -2766,8 +2770,7 @@ class ProjectDetails extends Component {
                 indicatorColor="primary"
                 textColor="primary"
                 variant="scrollable"
-                scrollButtons
-                allowScrollButtonsMobile
+                scrollButtons="on"
               >
                 {
                   // user is a super admin
@@ -2842,6 +2845,7 @@ class ProjectDetails extends Component {
             <Divider />
           </Col>
         </Row>
+
         {/** Main body */}
         <Row noGutters className={css(styles.main_body_section)}>
           {/** Offer states (only visible to Admin) */}
@@ -2885,16 +2889,10 @@ class ProjectDetails extends Component {
                             >
                               <Typography variant="body1" align="left" paragraph>
                                 Please check this offer carefully before publishing as this action
-                                cannot be reversed. You can control who can see this investment
-                                opportunity using the options below.
+                                cannot be reversed.
                               </Typography>
 
                               <Divider style={{ marginTop: 25, marginBottom: 20 }} />
-
-                              {/** Select project visibility before publishing project */}
-                              <SelectPitchVisibility />
-
-                              <Divider style={{ marginTop: 35, marginBottom: 25 }} />
 
                               {!addingRejectFeedback ? null : (
                                 <FlexView column>
@@ -2909,7 +2907,7 @@ class ProjectDetails extends Component {
                                     required
                                     multiline
                                     rows={5}
-                                    maxRows={5}
+                                    rowsMax={5}
                                     onChange={this.onTextChanged}
                                   />
 
@@ -2949,7 +2947,6 @@ class ProjectDetails extends Component {
                                       color="primary"
                                       variant="contained"
                                       className={css(sharedStyles.no_text_transform)}
-                                      disabled={user?.superAdmin}
                                       onClick={() =>
                                         this.onMakeProjectGoLiveDecision({
                                           decision: true,
@@ -2966,24 +2963,12 @@ class ProjectDetails extends Component {
                                       color="secondary"
                                       variant="outlined"
                                       className={css(sharedStyles.no_text_transform)}
-                                      disabled={user?.superAdmin}
                                       onClick={() => this.toggleRejectFeedback()}
                                     >
                                       Send back to issuer
                                     </Button>
                                   </FlexView>
                                 </FlexView>
-                              )}
-
-                              {!user?.superAdmin ? null : (
-                                <Typography
-                                  variant="body1"
-                                  color="error"
-                                  align="left"
-                                  style={{ marginTop: 20 }}
-                                >
-                                  Only course admin can do this.
-                                </Typography>
                               )}
                             </FlexView>
                           ) : (
@@ -3055,19 +3040,17 @@ class ProjectDetails extends Component {
                                     updating the expiry date or close it.
                                   </Typography>
 
-                                  <DatePicker
+                                  <KeyboardDatePicker
+                                    autoOk
+                                    fullWidth
+                                    variant="dialog"
+                                    inputVariant="outlined"
                                     label="Update expiry date for this project"
                                     format="dd/MM/yyyy"
                                     minDate={utils.getDateWithDaysFurtherThanToday(1)}
                                     value={changedPitchExpiryDate}
+                                    InputAdornmentProps={{ position: 'start' }}
                                     onChange={this.onDateChanged}
-                                    slotProps={{
-                                      textField: {
-                                        fullWidth: true,
-                                        variant: 'outlined',
-                                      },
-                                      inputAdornment: { position: 'start' },
-                                    }}
                                   />
 
                                   <Button
@@ -3092,7 +3075,6 @@ class ProjectDetails extends Component {
                                       color="secondary"
                                       className={css(sharedStyles.no_text_transform)}
                                       variant="contained"
-                                      disabled={user?.superAdmin}
                                       onClick={() =>
                                         this.onMakeProjectGoToPledgePhaseDecision(false)
                                       }
@@ -3430,21 +3412,13 @@ class ProjectDetails extends Component {
                           }
                           disabled={
                             user?.type !== DB_CONST.TYPE_ADMIN ||
-                            (user?.type === DB_CONST.TYPE_ADMIN && user?.anid !== project.anid)
+                            (user?.type === DB_CONST.TYPE_ADMIN &&
+                              !user?.superAdmin &&
+                              user?.anid !== project.anid)
                           }
                         >
                           {isProjectTemporarilyClosed(project) ? 'Open again' : 'Close temporarily'}
                         </Button>
-                        {!user?.superAdmin ? null : (
-                          <Typography
-                            variant="body2"
-                            align="left"
-                            color="error"
-                            style={{ marginTop: 12 }}
-                          >
-                            Only group admins can do this.
-                          </Typography>
-                        )}
                         <Typography variant="body2" align="left" style={{ marginTop: 15 }}>
                           {isProjectTemporarilyClosed(project)
                             ? 'This offer will be opened again.'
@@ -3672,6 +3646,7 @@ class ProjectDetails extends Component {
                             <FlexView marginTop={25} width="100%" hAlignContent="right">
                               <Button
                                 size="small"
+                                color="default"
                                 variant="text"
                                 onClick={this.onCancelUpdateCurrentComment}
                               >
@@ -3923,10 +3898,12 @@ class ProjectDetails extends Component {
                                     // allow group admins that created this project,
                                     // and issuer that created this project and owns this reply
                                     // to edit/delete this reply
-                                    (user?.type === DB_CONST.TYPE_ISSUER ||
-                                      (user?.type === DB_CONST.TYPE_ADMIN && !user?.superAdmin)) &&
-                                    user?.id === projectIssuer.id &&
-                                    user?.id === reply.repliedBy ? (
+                                    (user?.superAdmin ||
+                                      user?.type === DB_CONST.TYPE_ISSUER ||
+                                      user?.type === DB_CONST.TYPE_ADMIN) &&
+                                    (user?.superAdmin ||
+                                      (user?.id === projectIssuer.id &&
+                                        user?.id === reply.repliedBy)) ? (
                                       <FlexView marginTop={16}>
                                         <Button
                                           variant="outlined"
@@ -3949,7 +3926,7 @@ class ProjectDetails extends Component {
                                           }
                                         >
                                           Edit
-                                          <CreateIcon fontSize="small" style={{ marginLeft: 6 }} />
+                                          <EditIcon fontSize="small" style={{ marginLeft: 6 }} />
                                         </Button>
                                       </FlexView>
                                     ) : null
@@ -4189,30 +4166,27 @@ class ProjectDetails extends Component {
               ) : null}
 
               {/** Course - prioritize BusinessProfile.course, fallback to project.course, then user.course */}
-              {(projectIssuer &&
-                projectIssuer.BusinessProfile &&
-                projectIssuer.BusinessProfile.course) ||
-              project.course ||
-              (projectIssuer && projectIssuer.course) ? (
-                <FlexView
-                  className={css(styles.border_box)}
-                  style={{ backgroundColor: colors.kick_starter_background_color }}
-                  column
-                  marginTop={30}
-                  vAlignContent="center"
-                >
-                  <Typography variant="body1" align="left">
-                    Course:{' '}
-                    <b>
-                      {(projectIssuer &&
-                        projectIssuer.BusinessProfile &&
-                        projectIssuer.BusinessProfile.course) ||
-                        project.course ||
-                        (projectIssuer && projectIssuer.course)}
-                    </b>
-                  </Typography>
-                </FlexView>
-              ) : null}
+              {(() => {
+                const courseValue =
+                  (projectIssuer &&
+                    projectIssuer.BusinessProfile &&
+                    projectIssuer.BusinessProfile.course) ||
+                  project.course ||
+                  (projectIssuer && projectIssuer.course);
+                return courseValue && courseValue !== '-1' ? (
+                  <FlexView
+                    className={css(styles.border_box)}
+                    style={{ backgroundColor: colors.kick_starter_background_color }}
+                    column
+                    marginTop={30}
+                    vAlignContent="center"
+                  >
+                    <Typography variant="body1" align="left">
+                      Course: <b>{courseValue}</b>
+                    </Typography>
+                  </FlexView>
+                ) : null;
+              })()}
 
               {/** Financial round */}
               {/**!project.Pitch.hasOwnProperty('financialRound')
@@ -4243,29 +4217,6 @@ class ProjectDetails extends Component {
                   </Typography>
                 </FlexView>
               )}
-
-              {/** QIB - special news */}
-              {project.Pitch.hasOwnProperty('qibSpecialNews') &&
-              ((groupProperties &&
-                groupProperties.groupUserName === 'qib' &&
-                ((user?.type === DB_CONST.TYPE_ADMIN && user?.anid === groupProperties.anid) ||
-                  (user?.type === DB_CONST.TYPE_ISSUER && user?.id === project.issuerID))) ||
-                (!groupProperties && user?.type === DB_CONST.TYPE_ADMIN && user?.superAdmin)) ? (
-                <FlexView
-                  className={css(styles.border_box)}
-                  style={{ backgroundColor: colors.kick_starter_background_color }}
-                  column
-                  marginTop={30}
-                  vAlignContent="center"
-                >
-                  <Typography variant="body1" align="left">
-                    Special news that Briony should talk about:
-                    <br />
-                    <br />
-                    {project.Pitch.qibSpecialNews}
-                  </Typography>
-                </FlexView>
-              ) : null}
             </Col>
           )}
         </Row>
@@ -4659,7 +4610,7 @@ class CommentDialog extends Component {
           />
         </DialogContent>
         <DialogActions style={{ paddingTop: 20, paddingBottom: 20, paddingRight: 24 }}>
-          <Button size="small" variant="text" onClick={this.onClose}>
+          <Button size="small" color="default" variant="text" onClick={this.onClose}>
             Cancel
           </Button>
           <Button
@@ -4711,6 +4662,7 @@ class CommentReplyInputArea extends Component {
         <FlexView marginTop={18} width="100%" hAlignContent="right">
           <Button
             size="small"
+            color="default"
             variant="text"
             className={css(sharedStyles.no_text_transform)}
             onClick={() => this.onToggleReplyToComment(null, null)}
@@ -4734,23 +4686,7 @@ class CommentReplyInputArea extends Component {
   }
 }
 
-const ConnectedProjectDetailsMain = connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(ProjectDetailsMain);
-
-function ProjectDetailsWrapper(props) {
-  const params = useParams();
-  const location = useLocation();
-  // Create a match-like object for legacy compatibility
-  const match = {
-    params: params,
-    path: location.pathname,
-  };
-  return <ConnectedProjectDetailsMain {...props} match={match} location={location} />;
-}
-
-export default ProjectDetailsWrapper;
+export default withRouter(connect(mapStateToProps, mapDispatchToProps)(ProjectDetailsMain));
 
 const styles = StyleSheet.create({
   gray_text: {

@@ -18,11 +18,11 @@ import {
   FormControl,
   InputLabel,
   OutlinedInput,
-} from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import SearchIcon from '@mui/icons-material/Search';
-import RefreshIcon from '@mui/icons-material/Refresh';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
+} from '@material-ui/core';
+import CloseIcon from '@material-ui/icons/Close';
+import SearchIcon from '@material-ui/icons/Search';
+import RefreshIcon from '@material-ui/icons/Refresh';
+import PersonAddIcon from '@material-ui/icons/PersonAdd';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { HashLoader } from 'react-spinners';
 import { css } from 'aphrodite';
@@ -84,10 +84,18 @@ class GroupAdminsTable extends Component {
   }
 
   componentDidUpdate(prevProps, prevState, snapshot) {
-    const { shouldLoadOtherData, tableGroup, stopListeningForGroupAdminsChanged } = this.props;
+    const { shouldLoadOtherData, currentUser, tableGroup, stopListeningForGroupAdminsChanged } =
+      this.props;
 
-    // cancel all listeners if tableGroup is set to null
-    if (!tableGroup || !shouldLoadOtherData) {
+    if (!shouldLoadOtherData) {
+      stopListeningForGroupAdminsChanged();
+      return;
+    }
+
+    // Super admins need tableGroup set to know which group to show;
+    // non-super admins use their own anid, so tableGroup is not required
+    const isSuperAdmin = currentUser && currentUser.superAdmin;
+    if (isSuperAdmin && !tableGroup) {
       stopListeningForGroupAdminsChanged();
       return;
     }
@@ -100,27 +108,11 @@ class GroupAdminsTable extends Component {
    * Load data
    */
   loadData = () => {
-    const {
-      shouldLoadOtherData,
-      groupPropertiesLoaded,
-      tableGroup,
-      currentUser,
-      loadingGroupAdmins,
-      groupAdminsLoaded,
-      loadGroupAdmins,
-    } = this.props;
+    const { shouldLoadOtherData, loadingGroupAdmins, groupAdminsLoaded, loadGroupAdmins } =
+      this.props;
 
     if (shouldLoadOtherData && !loadingGroupAdmins && !groupAdminsLoaded) {
-      // Super admins can load all admins without a specific tableGroup
-      // Other admins need tableGroup to be set (their university)
-      const isSuperAdmin = currentUser && currentUser.superAdmin;
-      if (isSuperAdmin || tableGroup) {
-        loadGroupAdmins();
-      } else if (groupPropertiesLoaded && !tableGroup) {
-        // If group properties are loaded but tableGroup is still null,
-        // this is a super group admin viewing their university - load anyway
-        loadGroupAdmins();
-      }
+      loadGroupAdmins();
     }
   };
 
@@ -201,7 +193,7 @@ class GroupAdminsTable extends Component {
                               </Tooltip>
                             }
                           >
-                            <IconButton onClick={toggleSearchMode} size="large">
+                            <IconButton onClick={toggleSearchMode}>
                               {inSearchMode ? <CloseIcon /> : <SearchIcon />}
                             </IconButton>
                           </OverlayTrigger>
@@ -247,11 +239,7 @@ class GroupAdminsTable extends Component {
                         flip
                         overlay={<Tooltip id={`tooltip-bottom`}>Refresh</Tooltip>}
                       >
-                        <IconButton
-                          onClick={loadGroupAdmins}
-                          style={{ marginLeft: 10 }}
-                          size="large"
-                        >
+                        <IconButton onClick={loadGroupAdmins} style={{ marginLeft: 10 }}>
                           <RefreshIcon />
                         </IconButton>
                       </OverlayTrigger>
@@ -265,14 +253,13 @@ class GroupAdminsTable extends Component {
                   cellColor={colors.blue_gray_50}
                   component={
                     <FlexView marginTop={10} marginBottom={10}>
-                      <FormControl variant="standard" style={{ minWidth: 200 }}>
+                      <FormControl style={{ minWidth: 200 }}>
                         <InputLabel>
                           <Typography variant="body1" color="primary">
                             Course
                           </Typography>
                         </InputLabel>
                         <Select
-                          variant="standard"
                           margin="dense"
                           input={<OutlinedInput labelWidth={0} name="filterCourse" />}
                           name="filterCourse"
@@ -390,13 +377,14 @@ class GroupAdminsTable extends Component {
                   SelectProps={{
                     native: true,
                   }}
-                  onPageChange={changePage}
-                  onRowsPerPageChange={changeRowsPerPage}
+                  onChangePage={changePage}
+                  onChangeRowsPerPage={changeRowsPerPage}
                 />
               </TableRow>
             </TableFooter>
           </Table>
         </Paper>
+
         {/* Admin Access Request Dialog for admins */}
         {tableGroup && (
           <RequestAdminAccessDialog

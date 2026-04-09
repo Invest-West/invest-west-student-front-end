@@ -11,12 +11,10 @@ import {
   TextField,
   Toolbar,
   Typography,
-} from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+} from '@material-ui/core';
+import CloseIcon from '@material-ui/icons/Close';
+import { KeyboardDatePicker } from '@material-ui/pickers';
 import { Col, Container, Row } from 'react-bootstrap';
-
-import SelectPledgeVisibility from '../select-pledge-visibility/SelectPledgeVisibility';
 
 import * as utils from '../../utils/utils';
 import * as DB_CONST from '../../firebase/databaseConsts';
@@ -86,12 +84,7 @@ class CreatePledgeDialog extends Component {
         <DialogTitle>
           <AppBar elevation={0}>
             <Toolbar>
-              <IconButton
-                color="inherit"
-                onClick={toggleCreatePledgeDialog}
-                aria-label="Close"
-                size="large"
-              >
+              <IconButton color="inherit" onClick={toggleCreatePledgeDialog} aria-label="Close">
                 <CloseIcon />
               </IconButton>
               <FlexView marginLeft={10}>
@@ -164,18 +157,16 @@ class CreatePledgeDialog extends Component {
                 />
 
                 <FlexView marginTop={15} width="100%">
-                  <DatePicker
+                  <KeyboardDatePicker
+                    autoOk
+                    variant="dialog"
+                    inputVariant="outlined"
                     label="Choose expired date"
                     format="dd/MM/yyyy"
                     minDate={utils.getDateWithDaysFurtherThanToday(1)}
                     value={expiredDate}
+                    InputAdornmentProps={{ position: 'start' }}
                     onChange={handleDateChanged}
-                    slotProps={{
-                      textField: {
-                        variant: 'outlined',
-                      },
-                      inputAdornment: { position: 'start' },
-                    }}
                   />
                 </FlexView>
 
@@ -191,17 +182,11 @@ class CreatePledgeDialog extends Component {
                 />
               </Col>
 
-              {currentUser?.type !== DB_CONST.TYPE_ADMIN ? null : (
-                <Col
-                  xs={12}
-                  sm={12}
-                  md={{ span: 8, offset: 2 }}
-                  lg={{ span: 6, offset: 3 }}
-                  style={{ marginTop: 10 }}
-                >
-                  <SelectPledgeVisibility />
-                </Col>
-              )}
+              {
+                {
+                  /* Project visibility is always public - selector removed */
+                }
+              }
 
               <Col
                 xs={12}

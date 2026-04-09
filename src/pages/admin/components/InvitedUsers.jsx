@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { Component } from 'react';
 import {
   Button,
   Divider,
@@ -18,31 +18,31 @@ import {
   TableRow,
   TextField,
   Typography,
-} from '@mui/material';
-import Add from '@mui/icons-material/Add';
-import SearchIcon from '@mui/icons-material/Search';
-import CloseIcon from '@mui/icons-material/Close';
-import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
-import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
-import FileCopyIcon from '@mui/icons-material/FileCopy';
+} from '@material-ui/core';
+import Add from '@material-ui/icons/Add';
+import SearchIcon from '@material-ui/icons/Search';
+import CloseIcon from '@material-ui/icons/Close';
+import ArrowUpwardIcon from '@material-ui/icons/ArrowUpward';
+import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
+import FileCopyIcon from '@material-ui/icons/FileCopy';
 import { Col, Row } from 'react-bootstrap';
 import FlexView from 'react-flexview';
 import { HashLoader } from 'react-spinners';
 import { NavLink } from 'react-router-dom';
 import { css } from 'aphrodite';
 import InfoOverlay from '../../../shared-components/info_overlay/InfoOverlay';
-import { useSelector, useDispatch } from 'react-redux';
+import { connect } from 'react-redux';
 import * as invitedUsersActions from '../../../redux-store/actions/invitedUsersActions';
 import sharedStyles from '../../../shared-js-css-styles/SharedStyles';
 import * as DB_CONST from '../../../firebase/databaseConsts';
 import * as ROUTES from '../../../router/routes';
 import * as myUtils from '../../../utils/utils';
 import * as colors from '../../../values/colors';
-import offerRepository, {
+import OfferRepository, {
   FetchProjectsOrderByOptions,
 } from '../../../api/repositories/OfferRepository';
 import firebase from '../../../firebase/firebaseApp';
-import userRepository from '../../../api/repositories/UserRepository';
+import UserRepository from '../../../api/repositories/UserRepository';
 import UpgradeUserToAdmin from './UpgradeUserToAdmin';
 import InviteMultipleUsers from './InviteMultipleUsers';
 
@@ -52,232 +52,316 @@ export const FILTER_GROUP_MEMBERS_ALL = 0;
 export const FILTER_HOME_MEMBERS = 1;
 export const FILTER_PLATFORM_MEMBERS = 2;
 
-function InvitedUsers() {
-  const dispatch = useDispatch();
+const mapStateToProps = (state) => {
+  return {
+    groupUserName: state.manageGroupFromParams.groupUserName,
+    groupProperties: state.manageGroupFromParams.groupProperties,
 
-  // Redux state
-  const groupUserName = useSelector((state) => state.manageGroupFromParams.groupUserName);
-  const groupProperties = useSelector((state) => state.manageGroupFromParams.groupProperties);
-  const groupNameFromUrl = useSelector((state) => state.ManageGroupUrlState.groupNameFromUrl);
-  const courseNameFromUrl = useSelector((state) => state.ManageGroupUrlState.courseNameFromUrl);
-  const systemGroups = useSelector((state) => state.manageSystemGroups.systemGroups);
-  const groupsLoaded = useSelector((state) => state.manageSystemGroups.groupsLoaded);
-  const admin = useSelector((state) => state.auth.user);
-  const invitedUsers = useSelector((state) => state.invitedUsers.invitedUsers);
-  const invitedUsersLoaded = useSelector((state) => state.invitedUsers.invitedUsersLoaded);
-  const invitedUsersBeingLoaded = useSelector(
-    (state) => state.invitedUsers.invitedUsersBeingLoaded
-  );
-  const invitedUsersPage = useSelector((state) => state.invitedUsers.invitedUsersPage);
-  const invitedUsersRowsPerPage = useSelector(
-    (state) => state.invitedUsers.invitedUsersRowsPerPage
-  );
-  const filterRegistrationStatus = useSelector(
-    (state) => state.invitedUsers.filterRegistrationStatus
-  );
-  const filterUserType = useSelector((state) => state.invitedUsers.filterUserType);
-  const filterMembers = useSelector((state) => state.invitedUsers.filterMembers);
-  const filterGroup = useSelector((state) => state.invitedUsers.filterGroup);
-  const invitedUserSearchText = useSelector((state) => state.invitedUsers.invitedUserSearchText);
-  const invitedUsersInSearchMode = useSelector(
-    (state) => state.invitedUsers.invitedUsersInSearchMode
-  );
-  const requestingCsv = useSelector((state) => state.invitedUsers.requestingCsv);
-  const addingMembersFromOneGroupToAnotherGroup = useSelector(
-    (state) => state.invitedUsers.addingMembersFromOneGroupToAnotherGroup
-  );
-  const matchedInvitedUsers = useSelector((state) => state.invitedUsers.matchedInvitedUsers);
+    // Add group and course URL parameters for signup URL generation
+    groupNameFromUrl: state.ManageGroupUrlState.groupNameFromUrl,
+    courseNameFromUrl: state.ManageGroupUrlState.courseNameFromUrl,
 
-  // Dispatch wrappers
-  const loadInvitedUsers = useCallback(
-    () => dispatch(invitedUsersActions.loadInvitedUsers()),
-    [dispatch]
-  );
-  const toggleSearchMode = useCallback(
-    () => dispatch(invitedUsersActions.toggleInvitedUsersSearchMode()),
-    [dispatch]
-  );
-  const handleInputChanged = useCallback(
-    (event) => dispatch(invitedUsersActions.handleInputChanged(event)),
-    [dispatch]
-  );
-  const handleChangeTablePage = useCallback(
-    (event, newPage) => dispatch(invitedUsersActions.handleChangeTablePage(event, newPage)),
-    [dispatch]
-  );
-  const handleChangeTableRowsPerPage = useCallback(
-    (event) => dispatch(invitedUsersActions.handleChangeTableRowsPerPage(event)),
-    [dispatch]
-  );
-  const startListeningForInvitedUsersChanged = useCallback(
-    () => dispatch(invitedUsersActions.startListeningForInvitedUsersChanged()),
-    [dispatch]
-  );
-  const resendInvite = useCallback(
-    (invitedUser) => dispatch(invitedUsersActions.resendInvite(invitedUser)),
-    [dispatch]
-  );
-  const exportToCsv = useCallback(() => dispatch(invitedUsersActions.exportToCsv()), [dispatch]);
-  const dispatchAddMembersFromOneGroupToAnotherGroup = useCallback(
-    (fromGroup, toGroup) =>
-      dispatch(
-        invitedUsersActions.dispatchAddMembersFromOneGroupToAnotherGroup(fromGroup, toGroup)
-      ),
-    [dispatch]
-  );
+    systemGroups: state.manageSystemGroups.systemGroups,
+    groupsLoaded: state.manageSystemGroups.groupsLoaded,
 
-  // Local state
-  const [userProjectCounts, setUserProjectCounts] = useState({});
-  const [loadingProjectCounts, setLoadingProjectCounts] = useState(false);
-  const [userLastLoginDates, setUserLastLoginDates] = useState({});
-  const [loadingLastLoginDates, setLoadingLastLoginDates] = useState(false);
-  const [sortColumn, setSortColumn] = useState('lastLogin');
-  const [sortDirection, setSortDirection] = useState('desc');
+    admin: state.auth.user,
 
-  // Refs for repositories
-  // Track previous values for componentDidUpdate logic
-  const prevInvitedUsersLoadedRef = useRef(false);
-  const prevMatchedInvitedUsersRef = useRef(null);
+    invitedUsers: state.invitedUsers.invitedUsers,
+    invitedUsersLoaded: state.invitedUsers.invitedUsersLoaded,
+    invitedUsersBeingLoaded: state.invitedUsers.invitedUsersBeingLoaded,
 
-  // Load invited users on mount and when needed
-  useEffect(() => {
+    invitedUsersPage: state.invitedUsers.invitedUsersPage,
+    invitedUsersRowsPerPage: state.invitedUsers.invitedUsersRowsPerPage,
+
+    filterRegistrationStatus: state.invitedUsers.filterRegistrationStatus,
+    filterUserType: state.invitedUsers.filterUserType,
+    filterMembers: state.invitedUsers.filterMembers,
+    filterGroup: state.invitedUsers.filterGroup,
+
+    invitedUserSearchText: state.invitedUsers.invitedUserSearchText,
+    invitedUsersInSearchMode: state.invitedUsers.invitedUsersInSearchMode,
+
+    requestingCsv: state.invitedUsers.requestingCsv,
+    addingMembersFromOneGroupToAnotherGroup:
+      state.invitedUsers.addingMembersFromOneGroupToAnotherGroup,
+
+    matchedInvitedUsers: state.invitedUsers.matchedInvitedUsers,
+  };
+};
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    loadInvitedUsers: () => dispatch(invitedUsersActions.loadInvitedUsers()),
+    toggleSearchMode: () => dispatch(invitedUsersActions.toggleInvitedUsersSearchMode()),
+    handleInputChanged: (event) => dispatch(invitedUsersActions.handleInputChanged(event)),
+    handleChangeTablePage: (event, newPage) =>
+      dispatch(invitedUsersActions.handleChangeTablePage(event, newPage)),
+    handleChangeTableRowsPerPage: (event) =>
+      dispatch(invitedUsersActions.handleChangeTableRowsPerPage(event)),
+    startListeningForInvitedUsersChanged: () =>
+      dispatch(invitedUsersActions.startListeningForInvitedUsersChanged()),
+    resendInvite: (invitedUser) => dispatch(invitedUsersActions.resendInvite(invitedUser)),
+    exportToCsv: () => dispatch(invitedUsersActions.exportToCsv()),
+    addMembersFromOneGroupToAnotherGroup: (fromGroup, toGroup) =>
+      dispatch(invitedUsersActions.addMembersFromOneGroupToAnotherGroup(fromGroup, toGroup)),
+  };
+};
+
+class InvitedUsers extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      userProjectCounts: {}, // Map of userID -> project count
+      loadingProjectCounts: false,
+      userLastLoginDates: {}, // Map of userID -> last login date
+      loadingLastLoginDates: false,
+      // Sorting state
+      sortColumn: 'lastLogin', // default to sorting by last logged in
+      sortDirection: 'desc', // 'desc' to show most recent logins first
+    };
+    this.offerRepository = new OfferRepository();
+    this.userRepository = new UserRepository();
+  }
+
+  componentDidMount() {
+    const {
+      invitedUsers,
+      invitedUsersLoaded,
+      invitedUsersBeingLoaded,
+
+      loadInvitedUsers,
+    } = this.props;
+
     if (invitedUsers && !invitedUsersBeingLoaded && !invitedUsersLoaded) {
       loadInvitedUsers();
     }
-  }, [invitedUsers, invitedUsersBeingLoaded, invitedUsersLoaded, loadInvitedUsers]);
 
-  // Add listener when users are loaded
-  useEffect(() => {
-    if (invitedUsers && invitedUsersLoaded) {
-      startListeningForInvitedUsersChanged();
+    this.addListener();
+  }
+
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    const {
+      invitedUsers,
+      invitedUsersLoaded,
+      invitedUsersBeingLoaded,
+      matchedInvitedUsers,
+
+      loadInvitedUsers,
+    } = this.props;
+
+    if (invitedUsers && !invitedUsersBeingLoaded && !invitedUsersLoaded) {
+      loadInvitedUsers();
     }
-  }, [invitedUsers, invitedUsersLoaded, startListeningForInvitedUsersChanged]);
 
-  // Load project counts when users first become loaded
-  useEffect(() => {
+    this.addListener();
+
+    // Load project counts when users are loaded and we haven't loaded them yet
     if (
       invitedUsersLoaded &&
-      !prevInvitedUsersLoadedRef.current &&
-      !loadingProjectCounts &&
-      Object.keys(userProjectCounts).length === 0
+      !prevProps.invitedUsersLoaded &&
+      !this.state.loadingProjectCounts &&
+      Object.keys(this.state.userProjectCounts).length === 0
     ) {
-      loadProjectCountsFn();
+      this.loadProjectCounts();
     }
-    prevInvitedUsersLoadedRef.current = invitedUsersLoaded;
-  }, [invitedUsersLoaded]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Load last login dates when users become loaded or matched users change
-  useEffect(() => {
+    // Load last login dates when users are loaded
     if (
       invitedUsersLoaded &&
-      (!prevInvitedUsersLoadedRef.current ||
-        prevMatchedInvitedUsersRef.current !== matchedInvitedUsers) &&
-      !loadingLastLoginDates
+      (!prevProps.invitedUsersLoaded || prevProps.matchedInvitedUsers !== matchedInvitedUsers) &&
+      !this.state.loadingLastLoginDates
     ) {
-      loadLastLoginDatesFn();
+      this.loadLastLoginDates();
     }
-    prevMatchedInvitedUsersRef.current = matchedInvitedUsers;
-  }, [invitedUsersLoaded, matchedInvitedUsers]); // eslint-disable-line react-hooks/exhaustive-deps
+  }
 
-  async function loadProjectCountsFn() {
+  /**
+   * Load project counts for all users
+   */
+  loadProjectCounts = async () => {
+    const { invitedUsers, matchedInvitedUsers } = this.props;
+
     if (!invitedUsers || invitedUsers.length === 0) {
       return;
     }
 
-    setLoadingProjectCounts(true);
+    this.setState({ loadingProjectCounts: true });
 
     try {
       const projectCounts = {};
+
+      // Get unique user IDs from matched users (displayed users)
       const usersToCount = matchedInvitedUsers || invitedUsers;
 
+      // Process each user individually to handle both invited user ID and official user ID
       for (const user of usersToCount) {
         try {
+          // Use officialUserID for registered users, fall back to id for unregistered users
           const userIdToQuery = user.officialUserID || user.id;
 
-          const response = await offerRepository.fetchOffers({
+          const response = await this.offerRepository.fetchOffers({
             issuer: userIdToQuery,
-            phase: 'all',
+            phase: 'all', // Include all phases (approved, expired, etc.)
             orderBy: FetchProjectsOrderByOptions.Issuer,
           });
 
-          projectCounts[user.id] = response.data ? response.data.length : 0;
+          const projectCount = response.data ? response.data.length : 0;
+
+          // Store the count using the invited user's ID (for display purposes)
+          projectCounts[user.id] = projectCount;
         } catch (error) {
           projectCounts[user.id] = 0;
         }
       }
 
-      setUserProjectCounts(projectCounts);
-      setLoadingProjectCounts(false);
+      this.setState({
+        userProjectCounts: projectCounts,
+        loadingProjectCounts: false,
+      });
     } catch (error) {
       console.error('Error loading project counts:', error);
-      setLoadingProjectCounts(false);
+      this.setState({ loadingProjectCounts: false });
     }
-  }
+  };
 
-  async function loadLastLoginDatesFn() {
+  /**
+   * Load last login dates for all users
+   */
+  loadLastLoginDates = async () => {
+    const { invitedUsers, matchedInvitedUsers } = this.props;
+
     if (!invitedUsers || invitedUsers.length === 0) {
       return;
     }
 
-    setLoadingLastLoginDates(true);
+    this.setState({ loadingLastLoginDates: true });
 
     try {
       const lastLoginDates = {};
+
+      // Get users to process
       const usersToProcess = matchedInvitedUsers || invitedUsers;
 
+      // Fetch last login dates for registered users
       for (const user of usersToProcess) {
         try {
+          // Only fetch for users who have registered (have officialUserID)
           if (user.officialUserID) {
-            const response = await userRepository.retrieveUser(user.officialUserID);
+            const response = await this.userRepository.retrieveUser(user.officialUserID);
+
             const userProfile = response.data;
+
             if (userProfile && userProfile.lastLoginDate) {
               lastLoginDates[user.id] = userProfile.lastLoginDate;
             }
           }
         } catch (error) {
+          // Silently ignore 404 errors - user may not exist yet or was deleted
           if (!error.toString().includes('404')) {
             console.warn(`Failed to fetch last login date for user ${user.email}:`, error);
           }
         }
       }
 
-      setUserLastLoginDates(lastLoginDates);
-      setLoadingLastLoginDates(false);
+      this.setState({
+        userLastLoginDates: lastLoginDates,
+        loadingLastLoginDates: false,
+      });
     } catch (error) {
       console.error('Error loading last login dates:', error);
-      setLoadingLastLoginDates(false);
+      this.setState({ loadingLastLoginDates: false });
     }
-  }
+  };
 
-  function refreshLoginDates() {
-    setUserLastLoginDates({});
-    setLoadingLastLoginDates(false);
-    // Use setTimeout to ensure state update before calling load
-    setTimeout(() => loadLastLoginDatesFn(), 0);
-  }
+  /**
+   * Refresh login dates manually
+   */
+  refreshLoginDates = () => {
+    this.setState(
+      {
+        userLastLoginDates: {}, // Clear existing data
+        loadingLastLoginDates: false,
+      },
+      () => {
+        this.loadLastLoginDates();
+      }
+    );
+  };
 
-  function getCourseDisplayName(invitedUser) {
+  /**
+   * Get course display name for a user
+   * Returns the course name if user has courseId, otherwise returns "Home member"
+   */
+  getCourseDisplayName = (invitedUser) => {
+    const { systemGroups } = this.props;
+
+    // NOTE: We IGNORE courseName field - it's from the old manual entry system
+    // We only use courseId to look up the real course from the system
+
+    if (systemGroups && systemGroups.length > 0) {
+      console.log(
+        '[GET COURSE DISPLAY] Available groups:',
+        systemGroups.map((g) => ({
+          anid: g.anid,
+          name: g.displayName || g.groupUserName,
+          groupUserName: g.groupUserName,
+        }))
+      );
+    }
+
+    // Check if user has a courseId
     if (invitedUser.courseId && systemGroups && systemGroups.length > 0) {
       let course = null;
 
+      // First try: match by anid (for real course IDs)
       course = systemGroups.find((group) => group.anid === invitedUser.courseId);
       if (course) {
         return course.displayName || course.groupUserName || 'Unknown course';
       }
 
+      // Second try: handle virtual course IDs like "virtual-course--M2I40dBdzdI89yDCaAn-student-showcase"
       if (invitedUser.courseId.startsWith('virtual-course-')) {
+        // Extract the course username from the virtual ID
+        // Format: "virtual-course-{parentId}-{courseUserName}"
+        // Split: ["virtual", "course", "", "M2I40dBdzdI89yDCaAn", "student", "showcase"]
         const parts = invitedUser.courseId.split('-');
+
         if (parts.length >= 5) {
+          // Skip "virtual", "course", empty string (from --), and parentId
+          // Start from index 4 onwards to get the actual course name
           const courseUserName = parts.slice(4).join('-');
+          // Try to find course by groupUserName
           course = systemGroups.find(
             (group) =>
               group.groupUserName &&
               group.groupUserName.toLowerCase() === courseUserName.toLowerCase()
           );
+
           if (course) {
             return course.displayName || course.groupUserName || 'Unknown course';
+          } else {
+            console.log(
+              '[GET COURSE DISPLAY] Available groupUserNames:',
+              systemGroups.map((g) => g.groupUserName)
+            );
           }
         }
+      }
+    } else {
+      console.log('[GET COURSE DISPLAY] ❌ No courseId on user or no systemGroups');
+    }
+
+    // Fallback: check if user has profile.BusinessProfile.course
+    if (invitedUser.officialUser) {
+      console.log(
+        '[GET COURSE DISPLAY] Has BusinessProfile:',
+        !!invitedUser.officialUser.BusinessProfile
+      );
+      if (invitedUser.officialUser.BusinessProfile) {
+        console.log(
+          '[GET COURSE DISPLAY] BusinessProfile.course:',
+          invitedUser.officialUser.BusinessProfile.course
+        );
       }
     }
 
@@ -289,24 +373,43 @@ function InvitedUsers() {
       return invitedUser.officialUser.BusinessProfile.course;
     }
 
+    // Default fallback
     return 'Home member';
-  }
+  };
 
-  async function testUpdateLoginDate(userId) {
+  /**
+   * Test login date update for a specific user (for debugging)
+   */
+  testUpdateLoginDate = async (userId) => {
     try {
-      const retrieveResponse = await userRepository.retrieveUser(userId);
+      // First, retrieve the current user profile
+      const retrieveResponse = await this.userRepository.retrieveUser(userId);
+
+      // Update with current timestamp
       const currentTimestamp = Date.now();
       const updatedUser = { ...retrieveResponse.data, lastLoginDate: currentTimestamp };
-      await userRepository.updateUser({ updatedUser });
-      const verifyResponse = await userRepository.retrieveUser(userId);
+
+      const updateResponse = await this.userRepository.updateUser({
+        updatedUser: updatedUser,
+      });
+
+      // Verify the update by retrieving the user again
+      const verifyResponse = await this.userRepository.retrieveUser(userId);
+
       return verifyResponse.data;
     } catch (error) {
       console.error(`TEST UPDATE: Error during test:`, error);
       return null;
     }
-  }
+  };
 
-  function copySignupUrl() {
+  /**
+   * Generate and copy signup URL to clipboard
+   */
+  copySignupUrl = () => {
+    const { groupNameFromUrl, courseNameFromUrl } = this.props;
+
+    // Build the signup URL based on current group and course
     let signupUrl = `${window.location.origin}/groups`;
 
     if (groupNameFromUrl) {
@@ -339,19 +442,47 @@ function InvitedUsers() {
         document.execCommand('copy');
         document.body.removeChild(textArea);
       });
-  }
+  };
 
-  function handleSort(column) {
+  /**
+   * Add listener
+   */
+  addListener = () => {
+    const {
+      invitedUsers,
+      invitedUsersLoaded,
+
+      startListeningForInvitedUsersChanged,
+    } = this.props;
+
+    if (invitedUsers && invitedUsersLoaded) {
+      startListeningForInvitedUsersChanged();
+    }
+  };
+
+  /**
+   * Handle column header click for sorting
+   */
+  handleSort = (column) => {
+    const { sortColumn, sortDirection } = this.state;
+
     let newDirection = 'asc';
     if (sortColumn === column && sortDirection === 'asc') {
       newDirection = 'desc';
     }
 
-    setSortColumn(column);
-    setSortDirection(newDirection);
-  }
+    this.setState({
+      sortColumn: column,
+      sortDirection: newDirection,
+    });
+  };
 
-  function sortUsers(users) {
+  /**
+   * Sort users based on current sort column and direction
+   */
+  sortUsers = (users) => {
+    const { sortColumn, sortDirection } = this.state;
+
     if (!sortColumn) {
       return users;
     }
@@ -377,26 +508,28 @@ function InvitedUsers() {
           bValue = b.type === DB_CONST.TYPE_ISSUER ? 'student' : 'project viewer';
           break;
         case 'projectsCreated':
-          aValue = userProjectCounts[a.id] || 0;
-          bValue = userProjectCounts[b.id] || 0;
+          aValue = this.state.userProjectCounts[a.id] || 0;
+          bValue = this.state.userProjectCounts[b.id] || 0;
           break;
         case 'registrationStatus':
           aValue = a.status;
           bValue = b.status;
           break;
         case 'lastLogin':
-          aValue = userLastLoginDates[a.id] || 0;
-          bValue = userLastLoginDates[b.id] || 0;
+          aValue = this.state.userLastLoginDates[a.id] || 0;
+          bValue = this.state.userLastLoginDates[b.id] || 0;
           break;
         default:
           return 0;
       }
 
+      // Handle string comparison
       if (typeof aValue === 'string' && typeof bValue === 'string') {
         const comparison = aValue.localeCompare(bValue);
         return sortDirection === 'asc' ? comparison : -comparison;
       }
 
+      // Handle numeric comparison
       if (aValue < bValue) {
         return sortDirection === 'asc' ? -1 : 1;
       }
@@ -407,9 +540,14 @@ function InvitedUsers() {
     });
 
     return sortedUsers;
-  }
+  };
 
-  function renderSortIcon(column) {
+  /**
+   * Render sort icon for table headers
+   */
+  renderSortIcon = (column) => {
+    const { sortColumn, sortDirection } = this.state;
+
     if (sortColumn !== column) {
       return null;
     }
@@ -419,272 +557,316 @@ function InvitedUsers() {
     ) : (
       <ArrowDownwardIcon fontSize="small" style={{ marginLeft: 4 }} />
     );
-  }
+  };
 
-  return (
-    <FlexView column width="100%">
-      <Divider style={{ marginBottom: 30 }} />
-      {/** Invite/Upgrade users section */}
-      <Row style={{ marginBottom: 30 }}>
-        {/** For regular admins: Show Copy URL button */}
-        {!(admin.superAdmin || admin.superGroupAdmin) ? (
+  render() {
+    const {
+      admin,
+
+      filterRegistrationStatus,
+      filterUserType,
+      filterMembers,
+      filterGroup,
+      invitedUserSearchText,
+      invitedUsersInSearchMode,
+
+      systemGroups,
+      groupsLoaded,
+      requestingCsv,
+      addingMembersFromOneGroupToAnotherGroup,
+
+      toggleSearchMode,
+      handleInputChanged,
+      exportToCsv,
+      addMembersFromOneGroupToAnotherGroup,
+    } = this.props;
+
+    return (
+      <FlexView column width="100%">
+        <Divider style={{ marginBottom: 30 }} />
+
+        {/** Invite/Upgrade users section */}
+        <Row style={{ marginBottom: 30 }}>
+          {/** Copy URL button */}
           <Col xs={12} md={6} lg={6} style={{ marginBottom: 20 }}>
             <Button
               color="primary"
               variant="outlined"
               className={css(sharedStyles.no_text_transform)}
-              onClick={copySignupUrl}
+              onClick={this.copySignupUrl}
             >
               <FileCopyIcon style={{ marginRight: 10, width: 20, height: 'auto' }} />
               Copy signup URL
             </Button>
           </Col>
-        ) : null}
-        {/** Invite Multiple Users - available to all admins */}
-        <Col xs={12} sm={12} md={12} lg={12}>
-          <InviteMultipleUsers />
-        </Col>
-        {/** For super admins and super group admins: Also show Upgrade User to Admin */}
-        {admin.superAdmin || admin.superGroupAdmin ? (
-          <Col xs={12} sm={12} md={12} lg={12} style={{ marginTop: 20 }}>
-            <UpgradeUserToAdmin />
+          {/** Invite Multiple Users - available to all admins */}
+          <Col xs={12} sm={12} md={12} lg={12}>
+            <InviteMultipleUsers />
           </Col>
-        ) : null}
-      </Row>
-      {/** Filters */}
-      <Row>
-        {/** Registration status */}
-        <Col xs={12} sm={12} md={4} lg={3}>
-          <FormControl variant="standard" fullWidth>
-            <InputLabel>
-              <Typography variant="body1" color="primary" align="left">
-                Registration status
-              </Typography>
-            </InputLabel>
-            <Select
-              variant="standard"
-              margin="dense"
-              input={<OutlinedInput labelWidth={0} name="filterRegistrationStatus" />}
-              style={{ marginTop: 25, width: '100%' }}
-              name="filterRegistrationStatus"
-              value={filterRegistrationStatus}
-              onChange={handleInputChanged}
-            >
-              <MenuItem value={FILTER_REGISTRATION_STATUS_ALL}> All</MenuItem>
-              <MenuItem value={DB_CONST.INVITED_USER_NOT_REGISTERED}>Not registered</MenuItem>
-              <MenuItem value={DB_CONST.INVITED_USER_STATUS_ACTIVE}>Active</MenuItem>
-            </Select>
-          </FormControl>
-        </Col>
+          {/** For super admins and super group admins: Also show Upgrade User to Admin */}
+          {admin.superAdmin || admin.superGroupAdmin ? (
+            <Col xs={12} sm={12} md={12} lg={12} style={{ marginTop: 20 }}>
+              <UpgradeUserToAdmin />
+            </Col>
+          ) : null}
+        </Row>
 
-        {/** User type */}
-        <Col xs={12} sm={12} md={4} lg={3}>
-          <FormControl variant="standard" fullWidth>
-            <InputLabel>
-              <Typography variant="body1" color="primary" align="left">
-                User type
-              </Typography>
-            </InputLabel>
-            <Select
-              variant="standard"
-              margin="dense"
-              input={<OutlinedInput labelWidth={0} name="filterUserType" />}
-              style={{ marginTop: 25, width: '100%' }}
-              name="filterUserType"
-              value={filterUserType}
-              onChange={handleInputChanged}
-            >
-              <MenuItem value={0}>All</MenuItem>
-              <MenuItem value={DB_CONST.TYPE_INVESTOR}>Project viewer</MenuItem>
-              <MenuItem value={DB_CONST.TYPE_ISSUER}>Student</MenuItem>
-            </Select>
-          </FormControl>
-        </Col>
-
-        {/** Group members - shown to regular admins and superGroupAdmins */}
-        {!admin.superAdmin ? (
+        {/** Filters */}
+        <Row>
+          {/** Registration status */}
           <Col xs={12} sm={12} md={4} lg={3}>
-            <FlexView vAlignContent="center">
-              <FormControl variant="standard" fullWidth>
-                <InputLabel>
-                  <Typography variant="body1" color="primary" align="left">
-                    Members
-                  </Typography>
-                </InputLabel>
-                <Select
-                  variant="standard"
-                  margin="dense"
-                  input={<OutlinedInput labelWidth={0} name="filterMembers" />}
-                  style={{ marginTop: 25, width: '100%' }}
-                  name="filterMembers"
-                  value={filterMembers}
-                  onChange={handleInputChanged}
-                >
-                  <MenuItem value={FILTER_GROUP_MEMBERS_ALL} key={FILTER_GROUP_MEMBERS_ALL}>
-                    All
-                  </MenuItem>
-                  <MenuItem value={FILTER_HOME_MEMBERS} key={FILTER_HOME_MEMBERS}>
-                    Course students
-                  </MenuItem>
-                  <MenuItem value={FILTER_PLATFORM_MEMBERS} key={FILTER_PLATFORM_MEMBERS}>
-                    Platform members
-                  </MenuItem>
-                </Select>
-              </FormControl>
-
-              <FlexView marginLeft={15}>
-                <InfoOverlay
-                  placement="right"
-                  message={
-                    'Students are listed with their enrolled course name. Platform members are existing users of Student Showcase who requested access to this university.'
-                  }
-                />
-              </FlexView>
-            </FlexView>
-          </Col>
-        ) : null}
-
-        {/** University filter - only shown to super admins */}
-        {admin.superAdmin ? (
-          <Col xs={12} sm={12} md={4} lg={3}>
-            <FormControl variant="standard" fullWidth>
+            <FormControl fullWidth>
               <InputLabel>
                 <Typography variant="body1" color="primary" align="left">
-                  University
+                  Registration status
                 </Typography>
               </InputLabel>
               <Select
-                variant="standard"
                 margin="dense"
-                input={<OutlinedInput labelWidth={0} name="filterGroup" disabled={!groupsLoaded} />}
+                input={<OutlinedInput labelWidth={0} name="filterRegistrationStatus" />}
                 style={{ marginTop: 25, width: '100%' }}
-                name="filterGroup"
-                value={filterGroup}
+                name="filterRegistrationStatus"
+                value={filterRegistrationStatus}
                 onChange={handleInputChanged}
               >
-                <MenuItem value="null" key="null">
-                  {!groupsLoaded ? 'Loading universities ...' : 'All'}
-                </MenuItem>
-                {!groupsLoaded
-                  ? null
-                  : systemGroups
-                      .filter((group) => !group.parentGroupId)
-                      .map((group) => (
-                        <MenuItem value={group.anid} key={group.anid}>
-                          {group.displayName}
-                        </MenuItem>
-                      ))}
+                <MenuItem value={FILTER_REGISTRATION_STATUS_ALL}> All</MenuItem>
+                <MenuItem value={DB_CONST.INVITED_USER_NOT_REGISTERED}>Not registered</MenuItem>
+                <MenuItem value={DB_CONST.INVITED_USER_STATUS_ACTIVE}>Active</MenuItem>
               </Select>
             </FormControl>
           </Col>
-        ) : null}
-      </Row>
-      {/** Search email */}
-      <Row style={{ marginTop: 30, marginBottom: 30 }}>
-        <Col xs={12} sm={12} md={12} lg={8}>
-          <FlexView>
-            <FlexView basis="90%" vAlignContent="center" hAlignContent="center">
-              <TextField
-                value={invitedUserSearchText}
-                label="Search by email"
-                name="invitedUserSearchText"
-                fullWidth
-                variant="outlined"
+
+          {/** User type */}
+          <Col xs={12} sm={12} md={4} lg={3}>
+            <FormControl fullWidth>
+              <InputLabel>
+                <Typography variant="body1" color="primary" align="left">
+                  User type
+                </Typography>
+              </InputLabel>
+              <Select
                 margin="dense"
+                input={<OutlinedInput labelWidth={0} name="filterUserType" />}
+                style={{ marginTop: 25, width: '100%' }}
+                name="filterUserType"
+                value={filterUserType}
                 onChange={handleInputChanged}
-              />
+              >
+                <MenuItem value={0}>All</MenuItem>
+                <MenuItem value={DB_CONST.TYPE_INVESTOR}>Project viewer</MenuItem>
+                <MenuItem value={DB_CONST.TYPE_ISSUER}>Student</MenuItem>
+              </Select>
+            </FormControl>
+          </Col>
+
+          {/** Group members - shown to regular admins and superGroupAdmins */}
+          {!admin.superAdmin ? (
+            <Col xs={12} sm={12} md={4} lg={3}>
+              <FlexView vAlignContent="center">
+                <FormControl fullWidth>
+                  <InputLabel>
+                    <Typography variant="body1" color="primary" align="left">
+                      Members
+                    </Typography>
+                  </InputLabel>
+                  <Select
+                    margin="dense"
+                    input={<OutlinedInput labelWidth={0} name="filterMembers" />}
+                    style={{ marginTop: 25, width: '100%' }}
+                    name="filterMembers"
+                    value={filterMembers}
+                    onChange={handleInputChanged}
+                  >
+                    <MenuItem value={FILTER_GROUP_MEMBERS_ALL} key={FILTER_GROUP_MEMBERS_ALL}>
+                      All
+                    </MenuItem>
+                    <MenuItem value={FILTER_HOME_MEMBERS} key={FILTER_HOME_MEMBERS}>
+                      Course students
+                    </MenuItem>
+                    <MenuItem value={FILTER_PLATFORM_MEMBERS} key={FILTER_PLATFORM_MEMBERS}>
+                      Platform members
+                    </MenuItem>
+                  </Select>
+                </FormControl>
+
+                <FlexView marginLeft={15}>
+                  <InfoOverlay
+                    placement="right"
+                    message={
+                      'Students are listed with their enrolled course name. Platform members are existing users of Student Showcase who requested access to this university.'
+                    }
+                  />
+                </FlexView>
+              </FlexView>
+            </Col>
+          ) : null}
+
+          {/** University filter - only shown to super admins */}
+          {admin.superAdmin ? (
+            <Col xs={12} sm={12} md={4} lg={3}>
+              <FormControl fullWidth>
+                <InputLabel>
+                  <Typography variant="body1" color="primary" align="left">
+                    University
+                  </Typography>
+                </InputLabel>
+                <Select
+                  margin="dense"
+                  input={
+                    <OutlinedInput labelWidth={0} name="filterGroup" disabled={!groupsLoaded} />
+                  }
+                  style={{ marginTop: 25, width: '100%' }}
+                  name="filterGroup"
+                  value={filterGroup}
+                  onChange={handleInputChanged}
+                >
+                  <MenuItem value="null" key="null">
+                    {!groupsLoaded ? 'Loading universities ...' : 'All'}
+                  </MenuItem>
+                  {!groupsLoaded
+                    ? null
+                    : systemGroups
+                        .filter((group) => !group.parentGroupId)
+                        .map((group) => (
+                          <MenuItem value={group.anid} key={group.anid}>
+                            {group.displayName}
+                          </MenuItem>
+                        ))}
+                </Select>
+              </FormControl>
+            </Col>
+          ) : null}
+        </Row>
+
+        {/** Search email */}
+        <Row style={{ marginTop: 30, marginBottom: 30 }}>
+          <Col xs={12} sm={12} md={12} lg={8}>
+            <FlexView>
+              <FlexView basis="90%" vAlignContent="center" hAlignContent="center">
+                <TextField
+                  value={invitedUserSearchText}
+                  label="Search by email"
+                  name="invitedUserSearchText"
+                  fullWidth
+                  variant="outlined"
+                  margin="dense"
+                  onChange={handleInputChanged}
+                />
+              </FlexView>
+              <FlexView hAlignContent="center" vAlignContent="center" basis="10%" marginLeft={10}>
+                <IconButton style={{ width: 50, height: 50 }} onClick={toggleSearchMode}>
+                  {!invitedUsersInSearchMode ? <SearchIcon /> : <CloseIcon />}
+                </IconButton>
+              </FlexView>
             </FlexView>
-            <FlexView hAlignContent="center" vAlignContent="center" basis="10%" marginLeft={10}>
-              <IconButton style={{ width: 50, height: 50 }} onClick={toggleSearchMode} size="large">
-                {!invitedUsersInSearchMode ? <SearchIcon /> : <CloseIcon />}
-              </IconButton>
-            </FlexView>
+          </Col>
+        </Row>
+
+        {/** Add members (only investors) from QIB to Silicon Gorge and vice versa */}
+        {!admin.superAdmin ? null : systemGroups.findIndex(
+            (group) => group.anid === filterGroup
+          ) !== -1 &&
+          (systemGroups[systemGroups.findIndex((group) => group.anid === filterGroup)]
+            .groupUserName === 'qib' ||
+            systemGroups[systemGroups.findIndex((group) => group.anid === filterGroup)]
+              .groupUserName === 'iap-silicon-gorge') ? (
+          <FlexView vAlignContent="center" marginTop={30} marginBottom={20}>
+            <Button
+              variant="outlined"
+              className={css(sharedStyles.no_text_transform)}
+              onClick={
+                systemGroups[systemGroups.findIndex((group) => group.anid === filterGroup)]
+                  .groupUserName === 'qib'
+                  ? () =>
+                      addMembersFromOneGroupToAnotherGroup(
+                        // from qib
+                        systemGroups[systemGroups.findIndex((group) => group.anid === filterGroup)]
+                          .anid,
+                        // to sg
+                        systemGroups[
+                          systemGroups.findIndex(
+                            (group) => group.groupUserName === 'iap-silicon-gorge'
+                          )
+                        ].anid
+                      )
+                  : () =>
+                      addMembersFromOneGroupToAnotherGroup(
+                        // from sg
+                        systemGroups[systemGroups.findIndex((group) => group.anid === filterGroup)]
+                          .anid,
+                        // to qib
+                        systemGroups[
+                          systemGroups.findIndex((group) => group.groupUserName === 'qib')
+                        ].anid
+                      )
+              }
+              style={{ marginRight: 10 }}
+            >
+              {addingMembersFromOneGroupToAnotherGroup
+                ? 'Adding ...'
+                : systemGroups[systemGroups.findIndex((group) => group.anid === filterGroup)]
+                      .groupUserName === 'qib'
+                  ? 'Add members from QIB to Silicon Gorge'
+                  : 'Add members from Silicon Gorge to QIB'}
+            </Button>
           </FlexView>
-        </Col>
-      </Row>
-      {/** Add members (only investors) from QIB to Silicon Gorge and vice versa */}
-      {!admin.superAdmin ? null : systemGroups.findIndex((group) => group.anid === filterGroup) !==
-          -1 &&
-        (systemGroups[systemGroups.findIndex((group) => group.anid === filterGroup)]
-          .groupUserName === 'qib' ||
-          systemGroups[systemGroups.findIndex((group) => group.anid === filterGroup)]
-            .groupUserName === 'iap-silicon-gorge') ? (
-        <FlexView vAlignContent="center" marginTop={30} marginBottom={20}>
-          <Button
-            variant="outlined"
-            className={css(sharedStyles.no_text_transform)}
-            onClick={
-              systemGroups[systemGroups.findIndex((group) => group.anid === filterGroup)]
-                .groupUserName === 'qib'
-                ? () =>
-                    dispatchAddMembersFromOneGroupToAnotherGroup(
-                      // from qib
-                      systemGroups[systemGroups.findIndex((group) => group.anid === filterGroup)]
-                        .anid,
-                      // to sg
-                      systemGroups[
-                        systemGroups.findIndex(
-                          (group) => group.groupUserName === 'iap-silicon-gorge'
-                        )
-                      ].anid
-                    )
-                : () =>
-                    dispatchAddMembersFromOneGroupToAnotherGroup(
-                      // from sg
-                      systemGroups[systemGroups.findIndex((group) => group.anid === filterGroup)]
-                        .anid,
-                      // to qib
-                      systemGroups[systemGroups.findIndex((group) => group.groupUserName === 'qib')]
-                        .anid
-                    )
-            }
-            style={{ marginRight: 10 }}
-          >
-            {addingMembersFromOneGroupToAnotherGroup
-              ? 'Adding ...'
-              : systemGroups[systemGroups.findIndex((group) => group.anid === filterGroup)]
-                    .groupUserName === 'qib'
-                ? 'Add members from QIB to Silicon Gorge'
-                : 'Add members from Silicon Gorge to QIB'}
-          </Button>
-        </FlexView>
-      ) : null}
-      {/** Export button - only available for admins */}
-      {admin.type !== DB_CONST.TYPE_ADMIN ? null : (
-        <FlexView vAlignContent="center" marginTop={30} marginBottom={20}>
-          <Button
-            variant="outlined"
-            className={css(sharedStyles.no_text_transform)}
-            onClick={exportToCsv}
-            style={{ marginRight: 10 }}
-          >
-            {requestingCsv ? 'Exporting ...' : 'Export to csv'}
-          </Button>
+        ) : null}
 
-          <Button
-            variant="outlined"
-            className={css(sharedStyles.no_text_transform)}
-            onClick={refreshLoginDates}
-            style={{ marginRight: 10 }}
-          >
-            {loadingLastLoginDates ? 'Refreshing ...' : 'Refresh Login Dates'}
-          </Button>
+        {/** Export button - only available for admins */}
+        {admin.type !== DB_CONST.TYPE_ADMIN ? null : (
+          <FlexView vAlignContent="center" marginTop={30} marginBottom={20}>
+            <Button
+              variant="outlined"
+              className={css(sharedStyles.no_text_transform)}
+              onClick={exportToCsv}
+              style={{ marginRight: 10 }}
+            >
+              {requestingCsv ? 'Exporting ...' : 'Export to csv'}
+            </Button>
 
-          <InfoOverlay
-            placement="right"
-            message={
-              admin.superAdmin
-                ? 'Export all the users in the system to a .csv file.'
-                : 'Export all the members in your university to a .csv file.'
-            }
-          />
-        </FlexView>
-      )}
-      {renderInvitedUsersTable()}
-    </FlexView>
-  );
+            <Button
+              variant="outlined"
+              className={css(sharedStyles.no_text_transform)}
+              onClick={this.refreshLoginDates}
+              style={{ marginRight: 10 }}
+            >
+              {this.state.loadingLastLoginDates ? 'Refreshing ...' : 'Refresh Login Dates'}
+            </Button>
 
-  function renderInvitedUsersTable() {
+            <InfoOverlay
+              placement="right"
+              message={
+                admin.superAdmin
+                  ? 'Export all the users in the system to a .csv file.'
+                  : 'Export all the members in your university to a .csv file.'
+              }
+            />
+          </FlexView>
+        )}
+
+        {this.renderInvitedUsersTable()}
+      </FlexView>
+    );
+  }
+
+  /**
+   * Render invited users table
+   *
+   * @returns {null|*}
+   */
+  renderInvitedUsersTable() {
+    const {
+      admin,
+
+      matchedInvitedUsers,
+
+      invitedUsersPage,
+      invitedUsersRowsPerPage,
+
+      handleChangeTablePage,
+      handleChangeTableRowsPerPage,
+    } = this.props;
+
     return (
       <Paper elevation={0} style={{ width: '100%', overflowX: 'auto', marginTop: 20 }}>
         <Table>
@@ -693,25 +875,25 @@ function InvitedUsers() {
               <TableCell
                 colSpan={2}
                 style={{ cursor: 'pointer' }}
-                onClick={() => handleSort('name')}
+                onClick={() => this.handleSort('name')}
               >
                 <FlexView vAlignContent="center">
                   <Typography align="left" variant="body2">
                     <b>Name</b>
                   </Typography>
-                  {renderSortIcon('name')}
+                  {this.renderSortIcon('name')}
                 </FlexView>
               </TableCell>
               <TableCell
                 colSpan={2}
                 style={{ cursor: 'pointer' }}
-                onClick={() => handleSort('email')}
+                onClick={() => this.handleSort('email')}
               >
                 <FlexView vAlignContent="center">
                   <Typography align="left" variant="body2">
                     <b>Email</b>
                   </Typography>
-                  {renderSortIcon('email')}
+                  {this.renderSortIcon('email')}
                 </FlexView>
               </TableCell>
               {!admin.superAdmin ? null : (
@@ -724,54 +906,54 @@ function InvitedUsers() {
               <TableCell
                 colSpan={1}
                 style={{ cursor: 'pointer' }}
-                onClick={() => handleSort('userType')}
+                onClick={() => this.handleSort('userType')}
               >
                 <FlexView vAlignContent="center">
                   <Typography align="left" variant="body2">
                     <b>User type</b>
                   </Typography>
-                  {renderSortIcon('userType')}
+                  {this.renderSortIcon('userType')}
                 </FlexView>
               </TableCell>
               <TableCell
                 colSpan={2}
                 style={{ cursor: 'pointer' }}
-                onClick={() => handleSort('projectsCreated')}
+                onClick={() => this.handleSort('projectsCreated')}
               >
                 <FlexView vAlignContent="center">
                   <Typography align="left" variant="body2">
                     <b>Projects Created</b>
                   </Typography>
-                  {renderSortIcon('projectsCreated')}
+                  {this.renderSortIcon('projectsCreated')}
                 </FlexView>
               </TableCell>
               <TableCell
                 colSpan={1}
                 style={{ cursor: 'pointer' }}
-                onClick={() => handleSort('registrationStatus')}
+                onClick={() => this.handleSort('registrationStatus')}
               >
                 <FlexView vAlignContent="center">
                   <Typography align="left" variant="body2">
                     <b>Registration status</b>
                   </Typography>
-                  {renderSortIcon('registrationStatus')}
+                  {this.renderSortIcon('registrationStatus')}
                 </FlexView>
               </TableCell>
               <TableCell
                 colSpan={2}
                 style={{ cursor: 'pointer' }}
-                onClick={() => handleSort('lastLogin')}
+                onClick={() => this.handleSort('lastLogin')}
               >
                 <FlexView vAlignContent="center">
                   <Typography align="left" variant="body2">
                     <b>Last logged in</b>
                   </Typography>
-                  {renderSortIcon('lastLogin')}
+                  {this.renderSortIcon('lastLogin')}
                 </FlexView>
               </TableCell>
             </TableRow>
           </TableHead>
-          <TableBody>{renderInvitedUsersRows()}</TableBody>
+          <TableBody>{this.renderInvitedUsersRows()}</TableBody>
           <TableFooter>
             <TableRow>
               <TablePagination
@@ -788,8 +970,8 @@ function InvitedUsers() {
                 SelectProps={{
                   native: true,
                 }}
-                onPageChange={handleChangeTablePage}
-                onRowsPerPageChange={handleChangeTableRowsPerPage}
+                onChangePage={handleChangeTablePage}
+                onChangeRowsPerPage={handleChangeTableRowsPerPage}
               />
             </TableRow>
           </TableFooter>
@@ -797,8 +979,33 @@ function InvitedUsers() {
       </Paper>
     );
   }
+  catch(error) {
+    console.error('Error in renderInvitedUsersTable:', error);
+    return null;
+  }
 
-  function renderInvitedUsersRows() {
+  /**
+   * Render invited users rows
+   *
+   * @returns {*}
+   */
+  renderInvitedUsersRows = () => {
+    const {
+      groupUserName,
+      groupProperties,
+      admin,
+      invitedUsersLoaded,
+      matchedInvitedUsers,
+      invitedUsersPage,
+      invitedUsersRowsPerPage,
+      invitedUsersInSearchMode,
+      filterRegistrationStatus,
+      filterUserType,
+      filterGroup,
+      filterMembers,
+      resendInvite,
+    } = this.props;
+
     let renderedInvitedUsers = [];
 
     if (matchedInvitedUsers.length === 0) {
@@ -848,7 +1055,7 @@ function InvitedUsers() {
     }
 
     // Apply sorting if a sort column is selected
-    renderedInvitedUsers = sortUsers(renderedInvitedUsers);
+    renderedInvitedUsers = this.sortUsers(renderedInvitedUsers);
 
     return !renderedInvitedUsers
       ? null
@@ -900,7 +1107,9 @@ function InvitedUsers() {
 
                   {/** Resend invite button */}
                   {invitedUser.status ===
-                  DB_CONST.INVITED_USER_STATUS_ACTIVE ? null : admin.superAdmin || // user can resend the invitation // this check to ensure only the group admin that initally invited this
+                  DB_CONST.INVITED_USER_STATUS_ACTIVE ? null : // this check to ensure only the group admin that initally invited this
+                  // user can resend the invitation
+                  admin.superAdmin ||
                     admin.superGroupAdmin ||
                     (!(admin.superAdmin || admin.superGroupAdmin) &&
                       groupProperties &&
@@ -928,7 +1137,7 @@ function InvitedUsers() {
                     >
                       {invitedUser.hasOwnProperty('invitedDate') &&
                       invitedUser.invitedDate !== 'none'
-                        ? getCourseDisplayName(invitedUser)
+                        ? this.getCourseDisplayName(invitedUser)
                         : 'Platform member'}
                     </Typography>
                   )}
@@ -955,7 +1164,7 @@ function InvitedUsers() {
                     <Typography align="left" variant="body2" color="textSecondary">
                       {invitedUser.hasOwnProperty('invitedDate') &&
                       invitedUser.invitedDate !== 'none'
-                        ? getCourseDisplayName(invitedUser)
+                        ? this.getCourseDisplayName(invitedUser)
                         : 'Platform member'}
                     </Typography>
                   </FlexView>
@@ -972,24 +1181,26 @@ function InvitedUsers() {
               {/** Projects Created */}
               <TableCell colSpan={2}>
                 <Typography align="left" variant="body2">
-                  {loadingProjectCounts
+                  {this.state.loadingProjectCounts
                     ? 'Loading...'
-                    : userProjectCounts.hasOwnProperty(invitedUser.id)
-                      ? userProjectCounts[invitedUser.id]
+                    : this.state.userProjectCounts.hasOwnProperty(invitedUser.id)
+                      ? this.state.userProjectCounts[invitedUser.id]
                       : '0'}
                 </Typography>
               </TableCell>
 
               {/** Registration status */}
-              <TableCell colSpan={1}>{renderInvitedUserRegistrationStatus(invitedUser)}</TableCell>
+              <TableCell colSpan={1}>
+                {this.renderInvitedUserRegistrationStatus(invitedUser)}
+              </TableCell>
 
               {/** Last logged in */}
               <TableCell colSpan={2}>
                 <Typography align="left" variant="body2">
-                  {loadingLastLoginDates
+                  {this.state.loadingLastLoginDates
                     ? 'Loading...'
-                    : userLastLoginDates.hasOwnProperty(invitedUser.id)
-                      ? myUtils.dateInReadableFormat(userLastLoginDates[invitedUser.id])
+                    : this.state.userLastLoginDates.hasOwnProperty(invitedUser.id)
+                      ? myUtils.dateInReadableFormat(this.state.userLastLoginDates[invitedUser.id])
                       : invitedUser.status === DB_CONST.INVITED_USER_STATUS_ACTIVE
                         ? 'Never logged in'
                         : 'Not registered'}
@@ -997,9 +1208,15 @@ function InvitedUsers() {
               </TableCell>
             </TableRow>
           ));
-  }
+  };
 
-  function renderInvitedUserRegistrationStatus(invitedUser) {
+  /**
+   * This function is used to render invited users' registration status
+   *
+   * @param invitedUser
+   * @returns {null|*}
+   */
+  renderInvitedUserRegistrationStatus = (invitedUser) => {
     const msgObj = {
       msg: '',
       color: '',
@@ -1035,7 +1252,7 @@ function InvitedUsers() {
         {msgObj.msg}
       </Typography>
     );
-  }
+  };
 }
 
-export default InvitedUsers;
+export default connect(mapStateToProps, mapDispatchToProps)(InvitedUsers);

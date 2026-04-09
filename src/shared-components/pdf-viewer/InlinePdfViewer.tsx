@@ -1,12 +1,22 @@
 import React, { useState } from 'react';
-import { Box, Button, Typography, CircularProgress, Paper } from '@mui/material';
-import { GetApp, OpenInNew } from '@mui/icons-material';
-import DescriptionIcon from '@mui/icons-material/Description';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import ImageIcon from '@mui/icons-material/Image';
-import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
-import TableChartIcon from '@mui/icons-material/TableChart';
+import {
+  Box,
+  Button,
+  Typography,
+  CircularProgress,
+  Paper,
+  List,
+  ListItem,
+} from '@material-ui/core';
+import { GetApp, OpenInNew } from '@material-ui/icons';
+import DescriptionIcon from '@material-ui/icons/Description';
+import PictureAsPdfIcon from '@material-ui/icons/PictureAsPdf';
+import ImageIcon from '@material-ui/icons/Image';
+import VideoLibraryIcon from '@material-ui/icons/VideoLibrary';
+import TableChartIcon from '@material-ui/icons/TableChart';
 import { PitchDocument } from '../../models/project';
+import { getDocumentType } from '../document-viewer/documentViewerUtils';
+import OfficeDocumentViewer from '../document-viewer/OfficeDocumentViewer';
 
 interface InlinePdfViewerProps {
   documents: PitchDocument[];
@@ -171,7 +181,7 @@ const InlinePdfViewer: React.FC<InlinePdfViewerProps> = ({
               </Box>
             </Paper>
 
-            {/* PDF Content */}
+            {/* Document Content */}
             {error ? (
               <Box display="flex" flexDirection="column" alignItems="center" padding="20px">
                 <Typography variant="body1" color="error" style={{ marginBottom: '16px' }}>
@@ -228,6 +238,12 @@ const InlinePdfViewer: React.FC<InlinePdfViewerProps> = ({
                   />
                 </Box>
               </>
+            ) : getDocumentType(document.fileName).canPreview ? (
+              <OfficeDocumentViewer
+                fileUrl={document.downloadURL}
+                fileName={document.fileName}
+                onDownload={() => downloadFile(document.downloadURL, document.fileName)}
+              />
             ) : (
               <Box display="flex" flexDirection="column" alignItems="center" padding="40px">
                 <IconComponent

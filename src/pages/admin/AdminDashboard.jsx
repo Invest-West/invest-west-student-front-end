@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { css, StyleSheet } from 'aphrodite';
 import Sidebar from 'react-sidebar';
 import FlexView from 'react-flexview';
@@ -12,11 +11,11 @@ import {
   Divider,
   IconButton,
   Typography,
-} from '@mui/material';
-import Menu from '@mui/icons-material/Menu';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import NotificationsIcon from '@mui/icons-material/Notifications';
-import PageSkeleton from '../../shared-components/skeletons/PageSkeleton';
+} from '@material-ui/core';
+import Menu from '@material-ui/icons/Menu';
+import ExpandMoreIcon from '@material-ui/icons/ExpandMore';
+import NotificationsIcon from '@material-ui/icons/Notifications';
+import HashLoader from 'react-spinners/HashLoader';
 import queryString from 'query-string';
 
 import firebase from '../../firebase/firebaseApp';
@@ -347,7 +346,7 @@ class AdminDashboard extends Component {
           </Col>
 
           {/* Manage access requests */}
-          {currentAdmin && (currentAdmin.superAdmin || currentAdmin.superGroupAdmin) ? null : (
+          {currentAdmin && currentAdmin.superGroupAdmin && !currentAdmin.superAdmin ? null : (
             <Col xs={12} md={12} lg={12}>
               <Accordion className={css(styles.card_style)}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -376,8 +375,8 @@ class AdminDashboard extends Component {
                       </FlexView>
                     </FlexView>
                     <Typography paragraph variant="body1" align="left">
-                      Manage access requests from other universities&apos; students who would like
-                      to join this university.
+                      Manage access requests from other universities' students who would like to
+                      join this university.
                     </Typography>
                   </FlexView>
                 </AccordionSummary>
@@ -436,7 +435,7 @@ class AdminDashboard extends Component {
           </Col>
 
           {/* Manage courses */}
-          {currentAdmin && (currentAdmin.superAdmin || currentAdmin.superGroupAdmin) ? null : (
+          {currentAdmin && currentAdmin.superGroupAdmin && !currentAdmin.superAdmin ? null : (
             <Col xs={12} md={12} lg={12}>
               <Accordion className={css(styles.card_style)}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
@@ -445,7 +444,9 @@ class AdminDashboard extends Component {
                       Manage courses
                     </Typography>
                     <Typography paragraph variant="body1" align="left">
-                      View your university and request new courses to be added by the super admin.
+                      {currentAdmin && currentAdmin.superAdmin
+                        ? 'Manage all courses across all universities.'
+                        : 'View your university and request new courses to be added by the super admin.'}
                     </Typography>
                   </FlexView>
                 </AccordionSummary>
@@ -602,7 +603,11 @@ class AdminDashboard extends Component {
     const currentAdmin = isAdmin(currentUser);
 
     if (!groupPropertiesLoaded) {
-      return <PageSkeleton rows={8} />;
+      return (
+        <FlexView marginTop={30} hAlignContent="center">
+          <HashLoader color={colors.primaryColor} />
+        </FlexView>
+      );
     }
 
     if (!shouldLoadOtherData) {
@@ -610,7 +615,13 @@ class AdminDashboard extends Component {
     }
 
     if (authenticating || !currentUserLoaded) {
-      return <PageSkeleton rows={8} />;
+      return (
+        <FlexView marginTop={30} hAlignContent="center">
+          <HashLoader
+            color={!groupProperties ? colors.primaryColor : groupProperties.settings.primaryColor}
+          />
+        </FlexView>
+      );
     }
 
     if (
@@ -656,7 +667,6 @@ class AdminDashboard extends Component {
                         <IconButton
                           className={css(sharedStyles.hamburger_button)}
                           onClick={() => toggleSidebar(true)}
-                          size="large"
                         >
                           <Menu />
                         </IconButton>
@@ -674,12 +684,11 @@ class AdminDashboard extends Component {
                             toggleNotifications(e);
                           }}
                           id="notification-button"
-                          size="large"
                         >
                           <Badge
-                            badgeContent={notifications.length}
+                            badgeContent={notifications.filter((n) => !n.read).length}
                             color="secondary"
-                            invisible={notifications.length === 0}
+                            invisible={notifications.filter((n) => !n.read).length === 0}
                           >
                             <NotificationsIcon className={css(sharedStyles.white_text)} />
                           </Badge>
@@ -713,10 +722,13 @@ class AdminDashboard extends Component {
 
           {this.renderPageContent()}
         </Container>
+
         {/** Notifications box */}
         {notificationsAnchorEl !== null && <NotificationsBox />}
+
         {/** User invitation dialog */}
         <InvitationDialog />
+
         {/** Add angel network dialog */}
         <AddAngelNetWorkDialog />
       </Sidebar>
@@ -773,29 +785,7 @@ class AdminDashboard extends Component {
   };
 }
 
-const ConnectedAdminDashboard = connect(mapStateToProps, mapDispatchToProps)(AdminDashboard);
-
-function AdminDashboardWrapper(props) {
-  const params = useParams();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const match = {
-    params: params,
-    path: location.pathname,
-    pathname: location.pathname,
-    url: location.pathname,
-  };
-  return (
-    <ConnectedAdminDashboard
-      {...props}
-      match={match}
-      history={{ push: navigate }}
-      location={location}
-    />
-  );
-}
-
-export default AdminDashboardWrapper;
+export default connect(mapStateToProps, mapDispatchToProps)(AdminDashboard);
 
 const styles = StyleSheet.create({
   page_title: {

@@ -82,6 +82,7 @@ export class ApiRoutes {
   static exportProjectsToCsvRoute = ApiRoutes.projectsBaseRoute + '/export';
   static notifyAdminsOfResubmissionRoute = ApiRoutes.projectsBaseRoute + '/notify-resubmission';
   static clearProjectRejectFeedbacksRoute = ApiRoutes.projectsBaseRoute + '/clear-reject-feedbacks';
+  static notifyAdminsOfSubmissionRoute = ApiRoutes.projectsBaseRoute + '/notify-submission';
 
   static groupAdminsBaseRoute = '/group-admins';
   static addGroupAdminRoute = ApiRoutes.groupAdminsBaseRoute + '/add';
@@ -141,6 +142,16 @@ export default class Api {
   private buildUrl(endPoint: string, queryParameters: any): string {
     const queryString = Api.buildQueryParameters(queryParameters);
     const fullUrl = this.baseUrl + endPoint + queryString;
+
+    if (endPoint.includes('projects')) {
+      console.log('[API] Building URL for projects endpoint:', {
+        endPoint,
+        queryParameters,
+        queryString,
+        fullUrl,
+      });
+    }
+
     return encodeURI(fullUrl);
   }
 
@@ -239,10 +250,12 @@ export default class Api {
           // Get ID token - Firebase will auto-refresh if expired
           idToken = await currentUser.getIdToken();
         } catch (tokenError) {
+          console.error('Failed to get ID token:', tokenError);
           // If token retrieval fails, try to force refresh once
           try {
             idToken = await currentUser.getIdToken(true);
           } catch (refreshError) {
+            console.error('Failed to refresh ID token:', refreshError);
             throw new Error(
               'Authentication token could not be retrieved. Please try logging in again.'
             );
@@ -294,15 +307,13 @@ export default class Api {
       return this.parseResponse(response);
     } catch (exception) {
       const error = Api.parseError(exception);
+      console.log(`Failed to request. Status code: ${error.statusCode}. Cause: ${error.message}`);
       throw new Error(error.statusCode + ' ' + error.message);
     }
   }
 
   /**
    * Parse response
-   *
-   * Handles both new envelope format { success, data } and legacy raw responses.
-   * Unwraps envelope so consumers see response.data as the inner payload.
    *
    * @param response
    * @private
@@ -313,14 +324,6 @@ export default class Api {
     }
 
     if (this.isRequestSuccessful(response)) {
-      // Detect new envelope format and unwrap
-      if (
-        response.data &&
-        typeof response.data === 'object' &&
-        response.data.success !== undefined
-      ) {
-        return { ...response, data: response.data.data ?? response.data };
-      }
       return response;
     }
 
@@ -329,9 +332,6 @@ export default class Api {
 
   /**
    * Parse error
-   *
-   * Handles both new envelope format { success: false, error: { code, message, detail } }
-   * and legacy format { code, detail, message }.
    *
    * @param error
    * @private
@@ -342,23 +342,13 @@ export default class Api {
       message: '',
     };
 
-    // client received an error response (5xx, 4xx) from the server
+    // client received an error response (5xx, 4xx) form the server
     if (error.response) {
       if (error.response.data) {
-        const data = error.response.data;
-        // New envelope format: { success: false, error: { code, message, detail } }
-        if (data.success === false && data.error) {
-          httpError = {
-            statusCode: data.error.code ?? error.response.status,
-            message: data.error.detail ?? data.error.message,
-          };
-        } else {
-          // Legacy format: { code, detail, message }
-          httpError = {
-            statusCode: data.code,
-            message: data.detail ?? data.message,
-          };
-        }
+        httpError = {
+          statusCode: error.response.data.code,
+          message: error.response.data.detail ?? error.response.data.message,
+        };
       }
     }
     // client never received a response, or request never left

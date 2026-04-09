@@ -1,13 +1,12 @@
 import React, { Component } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import FlexView from 'react-flexview';
-import PageSkeleton from '../../shared-components/skeletons/PageSkeleton';
+import HashLoader from 'react-spinners/HashLoader';
 import { Col, Container, Row } from 'react-bootstrap';
 import Sidebar from 'react-sidebar';
 import { css, StyleSheet } from 'aphrodite';
-import { Badge, IconButton, Typography } from '@mui/material';
-import Menu from '@mui/icons-material/Menu';
-import NotificationsIcon from '@mui/icons-material/Notifications';
+import { Badge, IconButton, Typography } from '@material-ui/core';
+import Menu from '@material-ui/icons/Menu';
+import NotificationsIcon from '@material-ui/icons/Notifications';
 
 import PageNotFoundWhole from '../../shared-components/page-not-found/PageNotFoundWhole';
 import SidebarContent, {
@@ -274,7 +273,11 @@ class InvestorDashboard extends Component {
     } = this.props;
 
     if (!groupPropertiesLoaded) {
-      return <PageSkeleton rows={8} />;
+      return (
+        <FlexView marginTop={30} hAlignContent="center">
+          <HashLoader color={colors.primaryColor} />
+        </FlexView>
+      );
     }
 
     if (!shouldLoadOtherData) {
@@ -282,7 +285,13 @@ class InvestorDashboard extends Component {
     }
 
     if (authenticating || !userLoaded) {
-      return <PageSkeleton rows={8} />;
+      return (
+        <FlexView marginTop={30} hAlignContent="center">
+          <HashLoader
+            color={!groupProperties ? colors.primaryColor : groupProperties.settings.primaryColor}
+          />
+        </FlexView>
+      );
     }
 
     if (authStatus !== AUTH_SUCCESS || !user || (user && user.type !== DB_CONST.TYPE_INVESTOR)) {
@@ -324,7 +333,6 @@ class InvestorDashboard extends Component {
                         <IconButton
                           className={css(sharedStyles.hamburger_button)}
                           onClick={() => toggleSidebar(true)}
-                          size="large"
                         >
                           <Menu />
                         </IconButton>
@@ -337,11 +345,11 @@ class InvestorDashboard extends Component {
                   <Col xs={2} sm={2} md={1} lg={1} style={{ paddingRight: 13 }}>
                     <FlexView vAlignContent="center" hAlignContent="right" width="100%">
                       <div ref={this.notificationBell}>
-                        <IconButton onClick={toggleNotifications} size="large">
+                        <IconButton onClick={toggleNotifications}>
                           <Badge
-                            badgeContent={notifications.length}
+                            badgeContent={notifications.filter((n) => !n.read).length}
                             color="secondary"
-                            invisible={notifications.length === 0}
+                            invisible={notifications.filter((n) => !n.read).length === 0}
                           >
                             <NotificationsIcon className={css(sharedStyles.white_text)} />
                           </Badge>
@@ -419,29 +427,7 @@ class InvestorDashboard extends Component {
   };
 }
 
-const ConnectedInvestorDashboard = connect(mapStateToProps, mapDispatchToProps)(InvestorDashboard);
-
-function InvestorDashboardWrapper(props) {
-  const params = useParams();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const match = {
-    params: params,
-    path: location.pathname,
-    pathname: location.pathname,
-    url: location.pathname,
-  };
-  return (
-    <ConnectedInvestorDashboard
-      {...props}
-      match={match}
-      history={{ push: navigate }}
-      location={location}
-    />
-  );
-}
-
-export default InvestorDashboardWrapper;
+export default connect(mapStateToProps, mapDispatchToProps)(InvestorDashboard);
 
 const styles = StyleSheet.create({
   page_title: {

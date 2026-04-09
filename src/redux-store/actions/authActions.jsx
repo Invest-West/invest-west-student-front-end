@@ -404,15 +404,21 @@ export const startListeningForGroupsUserIsIn = () => {
           (group) => group.invitedUser.id === groupUserIsIn.invitedUser.id
         );
         if (index === -1) {
-          realtimeDBUtils.loadAngelNetworkBasedOnANID(groupUserIsIn.anid).then((angelNetwork) => {
-            groupUserIsIn.isInvestWest = angelNetwork.isInvestWest;
-            groupUserIsIn.groupDetails = angelNetwork;
+          realtimeDBUtils
+            .loadAngelNetworkBasedOnANID(groupUserIsIn.anid)
+            .then((angelNetwork) => {
+              if (!angelNetwork) return;
+              groupUserIsIn.isInvestWest = angelNetwork.isInvestWest;
+              groupUserIsIn.groupDetails = angelNetwork;
 
-            dispatch({
-              type: GROUPS_USER_IS_IN_HAVE_CHANGED,
-              groups: [...groupsUserIsIn, groupUserIsIn],
+              dispatch({
+                type: GROUPS_USER_IS_IN_HAVE_CHANGED,
+                groups: [...groupsUserIsIn, groupUserIsIn],
+              });
+            })
+            .catch((error) => {
+              console.warn('Could not load group for user membership:', groupUserIsIn.anid, error);
             });
-          });
         }
       });
 
@@ -434,17 +440,23 @@ export const startListeningForGroupsUserIsIn = () => {
           (group) => group.invitedUser.id === groupUserIsIn.invitedUser.id
         );
         if (index !== -1) {
-          realtimeDBUtils.loadAngelNetworkBasedOnANID(groupsUserIsIn.anid).then((angelNetwork) => {
-            groupUserIsIn.isInvestWest = angelNetwork.isInvestWest;
-            groupUserIsIn.groupDetails = angelNetwork;
+          realtimeDBUtils
+            .loadAngelNetworkBasedOnANID(groupUserIsIn.anid)
+            .then((angelNetwork) => {
+              if (!angelNetwork) return;
+              groupUserIsIn.isInvestWest = angelNetwork.isInvestWest;
+              groupUserIsIn.groupDetails = angelNetwork;
 
-            groupsUserIsIn[index] = groupsUserIsIn;
+              groupsUserIsIn[index] = groupUserIsIn;
 
-            dispatch({
-              type: GROUPS_USER_IS_IN_HAVE_CHANGED,
-              groups: [...groupsUserIsIn],
+              dispatch({
+                type: GROUPS_USER_IS_IN_HAVE_CHANGED,
+                groups: [...groupsUserIsIn],
+              });
+            })
+            .catch((error) => {
+              console.warn('Could not load group for user membership:', groupUserIsIn.anid, error);
             });
-          });
         }
       });
     }

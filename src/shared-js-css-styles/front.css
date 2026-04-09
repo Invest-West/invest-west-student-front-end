@@ -193,6 +193,10 @@ h4 {
   align-items: center;
   justify-content: center;
   text-align: left;
+  overflow: hidden;
+  gap: 2rem;
+  padding: 2rem;
+  box-sizing: border-box;
 }
 
 /* Optional: A semi-transparent overlay to darken the background image */
@@ -211,9 +215,11 @@ h4 {
 .hero-content {
   position: relative;
   z-index: 2;
-  max-width: 600px;
+  max-width: 500px;
+  min-width: 300px;
   padding: 2rem;
   color: #fff;
+  flex: 0 0 auto;
 }
 
 .hero h1 {
@@ -233,6 +239,8 @@ h4 {
   font-size: 1rem;
   margin-bottom: 1.5rem;
   line-height: 1.5;
+  text-align: left;
+  word-spacing: normal;
 }
 
 /* EU CO-FUNDING CONTAINER */
@@ -260,6 +268,177 @@ h4 {
 
 .cta-button:hover {
   background-color: #3c5c69;
+}
+
+/* HERO CAROUSEL WRAPPER — scoped styles for offer cards in the hero section */
+.hero-carousel-wrapper {
+  max-width: 60%;
+}
+
+.hero-carousel-wrapper .offers-carousel {
+  padding: 0 !important;
+}
+
+.hero-carousel-wrapper .offers-carousel .row {
+  padding: 0 !important;
+}
+
+/* Tighten card margins */
+.hero-carousel-wrapper .offers-carousel .col-lg-4 > .MuiBox-root,
+.hero-carousel-wrapper .offers-carousel .col-md-6 > .MuiBox-root,
+.hero-carousel-wrapper .offers-carousel .col-sm-12 > .MuiBox-root {
+  margin: 6px !important;
+}
+
+/* Constrain card height — target only the card wrapper (direct child of column) */
+.hero-carousel-wrapper .offers-carousel .col-lg-4 > .MuiBox-root,
+.hero-carousel-wrapper .offers-carousel .col-md-6 > .MuiBox-root,
+.hero-carousel-wrapper .offers-carousel .col-sm-12 > .MuiBox-root,
+.hero-carousel-wrapper .offers-carousel .col-xs-12 > .MuiBox-root {
+  max-height: 400px !important;
+  overflow: hidden !important;
+  border-radius: 12px !important;
+  margin-bottom: 0 !important;
+}
+
+/* Constrain columns to match card max-height so indicators don't overlap */
+.hero-carousel-wrapper .offers-carousel .col-lg-4,
+.hero-carousel-wrapper .offers-carousel .col-md-6,
+.hero-carousel-wrapper .offers-carousel .col-sm-12,
+.hero-carousel-wrapper .offers-carousel .col-xs-12 {
+  max-height: 420px !important;
+}
+
+/* Keep carousel arrows absolutely positioned at edges of the carousel */
+.hero-carousel-wrapper .offers-carousel .carousel-button {
+  position: absolute !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  z-index: 20 !important;
+}
+
+.hero-carousel-wrapper .offers-carousel .carousel-button-prev {
+  left: 4px !important;
+}
+
+.hero-carousel-wrapper .offers-carousel .carousel-button-next {
+  right: 4px !important;
+}
+
+/* Carousel indicators — push below cards with enough clearance */
+.hero-carousel-wrapper .offers-carousel .carousel-indicators {
+  margin-top: 1rem !important;
+  position: relative !important;
+  z-index: 20 !important;
+}
+
+/* Force cover image to 120px — height !important overrides MUI Box prop */
+.hero-carousel-wrapper .offers-carousel .offer-image {
+  height: 120px !important;
+  max-height: 120px !important;
+  min-height: 120px !important;
+  overflow: hidden !important;
+}
+
+.hero-carousel-wrapper .offers-carousel .offer-image img,
+.hero-carousel-wrapper .offers-carousel .offer-image iframe,
+.hero-carousel-wrapper .offers-carousel .offer-image video,
+.hero-carousel-wrapper .offers-carousel .offer-image > div {
+  height: 120px !important;
+  max-height: 120px !important;
+}
+
+/* Remove inner border-radius from content areas — outer wrapper handles card rounding */
+.hero-carousel-wrapper .offers-carousel .project-title,
+.hero-carousel-wrapper .offers-carousel .project-title .MuiBox-root,
+.hero-carousel-wrapper .offers-carousel .issuer-offer,
+.hero-carousel-wrapper .offers-carousel .phase-offer,
+.hero-carousel-wrapper .offers-carousel .badges {
+  border-radius: 0 !important;
+}
+
+/* Ensure the cover image rounds its top corners to match the card */
+.hero-carousel-wrapper .offers-carousel .offer-image {
+  border-radius: 12px 12px 0 0 !important;
+}
+
+/* Fix <title> tag rendering — ensure it displays as a normal block element */
+.hero-carousel-wrapper .offers-carousel .projectInfo {
+  display: block !important;
+  font-size: 0.8rem !important;
+  line-height: 1.4 !important;
+}
+
+.hero-carousel-wrapper .offers-carousel .project-title > div:first-child > div:nth-child(2) {
+  max-height: 56px !important;
+  overflow: hidden !important;
+}
+
+/* Compact spacing */
+.hero-carousel-wrapper .offers-carousel .project-title {
+  padding: 8px 10px !important;
+}
+
+.hero-carousel-wrapper .offers-carousel .MuiTypography-h6 {
+  font-size: 0.9rem !important;
+  margin-bottom: 4px !important;
+}
+
+.hero-carousel-wrapper .offers-carousel .issuer-offer {
+  margin-top: 4px !important;
+}
+
+.hero-carousel-wrapper .offers-carousel .issuer-offer .MuiTypography-body2 {
+  font-size: 0.8rem !important;
+}
+
+.hero-carousel-wrapper .offers-carousel .phase-offer {
+  margin-top: 4px !important;
+}
+
+.hero-carousel-wrapper .offers-carousel .phase-offer .MuiTypography-body2 {
+  font-size: 0.75rem !important;
+}
+
+.hero-carousel-wrapper .offers-carousel .phase-offer > .MuiBox-root {
+  margin-top: 2px !important;
+}
+
+/* Hide visibility badges in hero to save space */
+.hero-carousel-wrapper .offers-carousel .badges {
+  display: none !important;
+}
+
+@media (max-width: 1200px) {
+  .hero-carousel-wrapper {
+    max-width: 55%;
+  }
+}
+
+@media (max-width: 992px) {
+  .hero {
+    flex-direction: column;
+    padding: 1.5rem;
+    min-height: auto;
+    padding-top: 100px;
+  }
+
+  .hero-content {
+    max-width: 100%;
+    min-width: unset;
+    flex-shrink: 1;
+  }
+
+  .hero-carousel-wrapper {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .hero-carousel-wrapper .offers-carousel .carousel-container .row {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden !important;
+  }
 }
 
 /* ACCREDITATION LOGOS SECTION */
@@ -382,6 +561,11 @@ h4 {
   .navbar {
     padding: 0.5rem;
     position: fixed;
+  }
+
+  .hero {
+    padding: 1rem;
+    padding-top: 80px;
   }
 
   .burger-menu {

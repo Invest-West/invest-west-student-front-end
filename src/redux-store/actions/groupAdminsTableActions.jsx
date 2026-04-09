@@ -16,15 +16,13 @@ export const setGroup = (newGroup) => {
   return (dispatch, getState) => {
     const prevTableGroup = getState().manageGroupAdminsTable.tableGroup;
 
-    if (!newGroup || !prevTableGroup) {
-      dispatch({
-        type: GROUP_ADMINS_TABLE_SET_GROUP,
-        group: newGroup,
-      });
+    // Both null — no change needed
+    if (!newGroup && !prevTableGroup) {
       return;
     }
 
-    if (prevTableGroup.anid === newGroup.anid) {
+    // Same group — no change needed
+    if (newGroup && prevTableGroup && prevTableGroup.anid === newGroup.anid) {
       return;
     }
 
