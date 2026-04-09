@@ -119,8 +119,8 @@ class InvitedUsers extends Component {
       sortColumn: 'lastLogin', // default to sorting by last logged in
       sortDirection: 'desc', // 'desc' to show most recent logins first
     };
-    this.offerRepository = new OfferRepository();
-    this.userRepository = new UserRepository();
+    this.offerRepository = OfferRepository;
+    this.userRepository = UserRepository;
   }
 
   componentDidMount() {
@@ -1107,8 +1107,7 @@ class InvitedUsers extends Component {
 
                   {/** Resend invite button */}
                   {invitedUser.status ===
-                  DB_CONST.INVITED_USER_STATUS_ACTIVE ? null : // this check to ensure only the group admin that initally invited this
-                  // user can resend the invitation
+                  DB_CONST.INVITED_USER_STATUS_ACTIVE ? null : // user can resend the invitation // this check to ensure only the group admin that initally invited this
                   admin.superAdmin ||
                     admin.superGroupAdmin ||
                     (!(admin.superAdmin || admin.superGroupAdmin) &&
