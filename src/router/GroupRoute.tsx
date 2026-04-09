@@ -7,7 +7,7 @@ import {
   ManageGroupUrlState,
   successfullyValidatedGroupUrl,
 } from '../redux-store/reducers/manageGroupUrlReducer';
-import { RouteComponentProps } from 'react-router-dom';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import Routes from './routes';
 import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
@@ -89,17 +89,26 @@ const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
   };
 };
 
-class GroupRoute extends Component<
-  GroupRouteProps & Readonly<RouteComponentProps<RouteParams>>,
-  GroupRouteState
-> {
+/** V5-compat route props injected by the withRouterCompat wrapper below */
+interface RouteCompat {
+  match: { path: string; params: any; url: string; isExact: boolean };
+  location: { pathname: string; search: string; hash: string; state: any };
+  history: {
+    push: (path: string) => void;
+    replace: (path: string) => void;
+    go: (n: number) => void;
+    goBack: () => void;
+  };
+}
+
+class GroupRoute extends Component<GroupRouteProps & RouteCompat, GroupRouteState> {
   private authListener: firebase.default.Unsubscribe | null;
   private routePath: string;
   private routeParams: any;
   private static readonly LAST_AUTH_TIMESTAMP_KEY = 'lastSuccessfulAuthTimestamp';
   private hasCompletedInitialAuthCheck: boolean; // ⚡ FIX: Track if Firebase has completed initial auth restoration
 
-  constructor(props: GroupRouteProps & Readonly<RouteComponentProps<RouteParams>>) {
+  constructor(props: GroupRouteProps & RouteCompat) {
     super(props);
     this.authListener = null;
     this.routePath = this.props.match.path;
@@ -1286,4 +1295,47 @@ class GroupRoute extends Component<
   };
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(GroupRoute);
+const ConnectedGroupRoute = connect(mapStateToProps, mapDispatchToProps)(GroupRoute);
+
+/**
+ * Wrapper that provides react-router v5-compatible match/location/history props
+ * to the class component using v6 hooks.
+ */
+function GroupRouteWithRouter(props: GroupRouteLocalProps) {
+  const params = useParams<RouteParams>();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Reconstruct match.path by replacing param values with :paramName patterns
+  let path = location.pathname;
+  if (params.courseUserName) {
+    path = path.replace(params.courseUserName, ':courseUserName');
+  }
+  if (params.groupUserName) {
+    path = path.replace(params.groupUserName, ':groupUserName');
+  }
+  // Replace other dynamic segments
+  Object.entries(params).forEach(([key, value]) => {
+    if (value && key !== 'groupUserName' && key !== 'courseUserName') {
+      path = path.replace(value, `:${key}`);
+    }
+  });
+
+  const match = {
+    path,
+    params,
+    url: location.pathname,
+    isExact: true,
+  };
+
+  const history = {
+    push: (to: string) => navigate(to),
+    replace: (to: string) => navigate(to, { replace: true }),
+    go: (n: number) => navigate(n),
+    goBack: () => navigate(-1),
+  };
+
+  return <ConnectedGroupRoute {...props} match={match} location={location} history={history} />;
+}
+
+export default GroupRouteWithRouter;
