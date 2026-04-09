@@ -26,7 +26,7 @@ import EditIcon from '@material-ui/icons/CreateOutlined';
 import CheckCircleIcon from '@material-ui/icons/CheckCircle';
 import { Col, Container, Image, Row } from 'react-bootstrap';
 import HashLoader from 'react-spinners/HashLoader';
-import { NavLink, withRouter } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import ReactPlayer from 'react-player';
 import * as colors from '../../values/colors';
 import * as utils from '../../utils/utils';
@@ -4686,7 +4686,7 @@ class CommentReplyInputArea extends Component {
   }
 }
 
-export default withRouter(connect(mapStateToProps, mapDispatchToProps)(ProjectDetailsMain));
+export default connect(mapStateToProps, mapDispatchToProps)(ProjectDetailsMain);
 
 const styles = StyleSheet.create({
   gray_text: {

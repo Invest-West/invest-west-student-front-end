@@ -15,7 +15,7 @@ import {
 import { css } from 'aphrodite';
 import { Col, Container, Row } from 'react-bootstrap';
 import { HashLoader } from 'react-spinners';
-import { NavLink, useParams, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink, useParams, useLocation, useNavigate } from 'react-router-dom';
 
 import { connect } from 'react-redux';
 import * as manageGroupFromParamsActions from '../../redux-store/actions/manageGroupFromParamsActions';

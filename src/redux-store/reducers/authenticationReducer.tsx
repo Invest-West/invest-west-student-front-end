@@ -5,9 +5,9 @@
 export {
   default,
   AuthenticationStatus,
-  AuthenticationState,
   authIsNotInitialized,
   isAuthenticating,
   successfullyAuthenticated,
   hasAuthenticationError,
 } from '../slices/authSlice';
+export type { AuthenticationState } from '../slices/authSlice';

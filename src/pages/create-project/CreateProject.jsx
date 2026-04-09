@@ -31,7 +31,7 @@ import SaveIcon from '@material-ui/icons/Save';
 import CloseIcon from '@material-ui/icons/Close';
 import DeleteIcon from '@material-ui/icons/Delete';
 import Files from 'react-files';
-import { NavLink, Redirect } from 'react-router-dom';
+import { NavLink, Navigate } from 'react-router-dom';
 import {
   Col,
   Container,
@@ -2510,7 +2510,7 @@ class CreatePitchPageMain extends Component {
         AuthenticationState.currentUser.type === DB_CONST.TYPE_ADMIN &&
         AuthenticationState.currentUser.superAdmin)
     ) {
-      return <Redirect to={Routes.error404} />;
+      return <Navigate to={Routes.error404} replace />;
     }
 
     // in edit mode

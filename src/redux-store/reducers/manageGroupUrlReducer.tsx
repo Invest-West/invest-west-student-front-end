@@ -4,10 +4,10 @@
  */
 export {
   default,
-  ManageGroupUrlState,
   isValidatingGroupUrl,
   routeContainsGroupName,
   successfullyValidatedGroupUrl,
   hasGroupValidationError,
   getGroupRouteTheme,
 } from '../slices/groupUrlSlice';
+export type { ManageGroupUrlState } from '../slices/groupUrlSlice';

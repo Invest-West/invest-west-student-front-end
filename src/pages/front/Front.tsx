@@ -18,6 +18,8 @@ import { FetchProjectsOrderByOptions } from '../../api/repositories/OfferReposit
 import OffersCarousel from '../../shared-components/offers-carousel/OffersCarousel';
 import { Box } from '@material-ui/core';
 
+import '../../shared-js-css-styles/front.css';
+
 // Import images
 import studentLogo from '../../img/student_logo.png';
 

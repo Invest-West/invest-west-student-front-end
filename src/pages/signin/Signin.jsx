@@ -18,7 +18,7 @@ import HashLoader from 'react-spinners/HashLoader';
 import Container from 'react-bootstrap/Container';
 import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
-import { NavLink, useParams, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink, useParams, useLocation, useNavigate } from 'react-router-dom';
 
 import firebase from '../../firebase/firebaseApp';
 

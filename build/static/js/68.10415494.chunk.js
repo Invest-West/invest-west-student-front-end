@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunkinvest_west_student=self.webpackChunkinvest_west_student||[]).push([[68],{88068:(e,s,t)=>{t.r(s),t.d(s,{default:()=>c});t(9950);var n=t(84904),r=t(28429),u=t(35265),a=t(44414);const c=()=>{const{resourceName:e}=(0,r.g)(),s=n.E.find((s=>s.name===e));return s?s.page:(0,a.jsx)(r.C5,{to:u.Ay.error404,replace:!0})}}}]);

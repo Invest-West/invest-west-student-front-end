@@ -4,8 +4,8 @@
  */
 export {
   default,
-  ManageSystemAttributesState,
   isLoadingSystemAttributes,
   successfullyLoadedSystemAttributes,
   hasErrorLoadingSystemAttributes,
 } from '../slices/systemAttributesSlice';
+export type { ManageSystemAttributesState } from '../slices/systemAttributesSlice';
