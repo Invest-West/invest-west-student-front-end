@@ -1,12 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Box,
-  CircularProgress,
-  Typography,
-  Button,
-  Tab,
-  Tabs,
-} from '@material-ui/core';
+import { Box, CircularProgress, Typography, Button, Tab, Tabs } from '@material-ui/core';
 import { GetApp, OpenInNew } from '@material-ui/icons';
 import { getProxiedFileUrl } from './documentViewerUtils';
 
@@ -16,11 +9,7 @@ interface ExcelViewerProps {
   onDownload?: () => void;
 }
 
-const ExcelViewer: React.FC<ExcelViewerProps> = ({
-  fileUrl,
-  fileName,
-  onDownload,
-}) => {
+const ExcelViewer: React.FC<ExcelViewerProps> = ({ fileUrl, fileName, onDownload }) => {
   const [sheetNames, setSheetNames] = useState<string[]>([]);
   const [sheetHtmlMap, setSheetHtmlMap] = useState<Record<string, string>>({});
   const [activeSheet, setActiveSheet] = useState(0);
@@ -38,9 +27,7 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({
         const XLSX = await import('xlsx');
         const response = await fetch(getProxiedFileUrl(fileUrl));
         if (!response.ok) {
-          throw new Error(
-            `Failed to fetch spreadsheet: ${response.statusText}`
-          );
+          throw new Error(`Failed to fetch spreadsheet: ${response.statusText}`);
         }
         const arrayBuffer = await response.arrayBuffer();
         const workbook = XLSX.read(arrayBuffer, { type: 'array' });
@@ -58,11 +45,7 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({
         }
       } catch (err) {
         if (!cancelled) {
-          setError(
-            err instanceof Error
-              ? err.message
-              : 'Failed to load spreadsheet'
-          );
+          setError(err instanceof Error ? err.message : 'Failed to load spreadsheet');
           setLoading(false);
         }
       }
@@ -76,12 +59,7 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({
 
   if (loading) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="400px"
-      >
+      <Box display="flex" justifyContent="center" alignItems="center" height="400px">
         <CircularProgress />
         <Typography variant="body1" style={{ marginLeft: '16px' }}>
           Loading spreadsheet...
@@ -92,17 +70,8 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({
 
   if (error) {
     return (
-      <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        padding="20px"
-      >
-        <Typography
-          variant="body1"
-          color="error"
-          style={{ marginBottom: '16px' }}
-        >
+      <Box display="flex" flexDirection="column" alignItems="center" padding="20px">
+        <Typography variant="body1" color="error" style={{ marginBottom: '16px' }}>
           {error}
         </Typography>
         <Box display="flex" style={{ gap: '16px' }}>
@@ -115,11 +84,7 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({
             Open in New Tab
           </Button>
           {onDownload && (
-            <Button
-              variant="outlined"
-              startIcon={<GetApp />}
-              onClick={onDownload}
-            >
+            <Button variant="outlined" startIcon={<GetApp />} onClick={onDownload}>
               Download
             </Button>
           )}
@@ -167,10 +132,7 @@ const ExcelViewer: React.FC<ExcelViewerProps> = ({
           .excel-content tr:nth-child(even) { background-color: #fafafa; }
           .excel-content tr:hover { background-color: #f0f0f0; }
         `}</style>
-        <div
-          className="excel-content"
-          dangerouslySetInnerHTML={{ __html: currentHtml }}
-        />
+        <div className="excel-content" dangerouslySetInnerHTML={{ __html: currentHtml }} />
       </Box>
     </Box>
   );

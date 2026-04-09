@@ -1,9 +1,5 @@
-import {Action} from "redux";
+import { Action } from 'redux';
 
-export enum AddressFinderEvents {
+export enum AddressFinderEvents {}
 
-}
-
-export interface AddressFinderAction extends Action {
-
-}
+export interface AddressFinderAction extends Action {}

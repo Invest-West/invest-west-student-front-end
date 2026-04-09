@@ -1,85 +1,50 @@
-import React, {Component} from "react";
-import {connect} from "react-redux";
-import {AppState} from "../../redux-store/reducers";
-import {ThunkDispatch} from "redux-thunk";
-import {AnyAction} from "redux";
-import {Box} from "@material-ui/core";
-import PersonalDetails from "./components/personal-details/PersonalDetails";
-import EditImageDialog from "./components/edit-image-dialog/EditImageDialog";
-import FeedbackSnackbarNew from "../feedback-snackbar/FeedbackSnackbarNew";
-import BusinessProfile from "./components/business-profile/BusinessProfile";
-import {hasInitiallySetCopiedUser, ProfileState} from "./ProfileReducer";
-import {AuthenticationState, successfullyAuthenticated} from "../../redux-store/reducers/authenticationReducer";
-import User from "../../models/user";
-import {setCopiedUser} from "./ProfileActions";
+import React, { useEffect } from 'react';
+import { Box } from '@mui/material';
+import PersonalDetails from './components/personal-details/PersonalDetails';
+import EditImageDialog from './components/edit-image-dialog/EditImageDialog';
+import FeedbackSnackbarNew from '../feedback-snackbar/FeedbackSnackbarNew';
+import BusinessProfile from './components/business-profile/BusinessProfile';
+import { hasInitiallySetCopiedUser } from './ProfileReducer';
+import { successfullyAuthenticated } from '../../redux-store/reducers/authenticationReducer';
+import User from '../../models/user';
+import { setCopiedUser } from './ProfileActions';
+import { useAppSelector, useAppDispatch } from '../../redux-store/hooks';
 
 interface ProfileProps {
-    // this must be set when an admin is viewing a user's profile
-    thirdViewUser?: User;
-    AuthenticationState: AuthenticationState;
-    ProfileLocalState: ProfileState;
-    setCopiedUser: (user: User | null, firstTimeSetCopiedUser?: true) => any;
+  // this must be set when an admin is viewing a user's profile
+  thirdViewUser?: User;
 }
 
-const mapStateToProps = (state: AppState) => {
-    return {
-        AuthenticationState: state.AuthenticationState,
-        ProfileLocalState: state.ProfileLocalState
+const ProfileNew: React.FC<ProfileProps> = ({ thirdViewUser }) => {
+  const dispatch = useAppDispatch();
+  const AuthenticationState = useAppSelector((state) => state.AuthenticationState);
+  const ProfileLocalState = useAppSelector((state) => state.ProfileLocalState);
+
+  useEffect(() => {
+    if (!hasInitiallySetCopiedUser(ProfileLocalState)) {
+      if (thirdViewUser) {
+        dispatch(setCopiedUser(thirdViewUser, true));
+      } else if (successfullyAuthenticated(AuthenticationState)) {
+        const currentUser: User = AuthenticationState.currentUser as User;
+        dispatch(setCopiedUser(currentUser, true));
+      }
     }
-}
+  }, [thirdViewUser, AuthenticationState, ProfileLocalState, dispatch]);
 
-const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
-    return {
-        setCopiedUser: (user: User | null, firstTimeSetCopiedUser?: true) => dispatch(setCopiedUser(user, firstTimeSetCopiedUser)),
-    }
-}
+  const copiedUser: User | undefined = ProfileLocalState.copiedUser;
 
-class ProfileNew extends Component<ProfileProps, any> {
+  if (!copiedUser) {
+    return null;
+  }
 
-    componentDidMount() {
-        this.setCopiedUserForTheFirstTime();
-    }
+  return (
+    <Box>
+      <FeedbackSnackbarNew />
+      <PersonalDetails />
+      <BusinessProfile />
+      <EditImageDialog />
+    </Box>
+  );
+};
 
-    componentDidUpdate(prevProps: Readonly<ProfileProps>, prevState: Readonly<any>, snapshot?: any) {
-        this.setCopiedUserForTheFirstTime();
-    }
-
-    setCopiedUserForTheFirstTime = () => {
-        const {
-            thirdViewUser,
-            AuthenticationState,
-            ProfileLocalState,
-            setCopiedUser
-        } = this.props;
-
-        if (!hasInitiallySetCopiedUser(ProfileLocalState)) {
-            if (thirdViewUser) {
-                setCopiedUser(thirdViewUser, true);
-            } else if (successfullyAuthenticated(AuthenticationState)) {
-                const currentUser: User = AuthenticationState.currentUser as User;
-                setCopiedUser(currentUser, true);
-            }
-        }
-    }
-
-    render() {
-        const {
-            ProfileLocalState
-        } = this.props;
-
-        const copiedUser: User | undefined = ProfileLocalState.copiedUser;
-
-        if (!copiedUser) {
-            return null;
-        }
-
-        return <Box>
-            <FeedbackSnackbarNew/>
-            <PersonalDetails/>
-            <BusinessProfile/>
-            <EditImageDialog/>
-        </Box>;
-    }
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(ProfileNew);
+export default ProfileNew;

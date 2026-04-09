@@ -9,11 +9,7 @@ interface WordViewerProps {
   onDownload?: () => void;
 }
 
-const WordViewer: React.FC<WordViewerProps> = ({
-  fileUrl,
-  fileName,
-  onDownload,
-}) => {
+const WordViewer: React.FC<WordViewerProps> = ({ fileUrl, fileName, onDownload }) => {
   const [htmlContent, setHtmlContent] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -40,9 +36,7 @@ const WordViewer: React.FC<WordViewerProps> = ({
         }
       } catch (err) {
         if (!cancelled) {
-          setError(
-            err instanceof Error ? err.message : 'Failed to load document'
-          );
+          setError(err instanceof Error ? err.message : 'Failed to load document');
           setLoading(false);
         }
       }
@@ -56,12 +50,7 @@ const WordViewer: React.FC<WordViewerProps> = ({
 
   if (loading) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        height="400px"
-      >
+      <Box display="flex" justifyContent="center" alignItems="center" height="400px">
         <CircularProgress />
         <Typography variant="body1" style={{ marginLeft: '16px' }}>
           Loading Word document...
@@ -72,17 +61,8 @@ const WordViewer: React.FC<WordViewerProps> = ({
 
   if (error) {
     return (
-      <Box
-        display="flex"
-        flexDirection="column"
-        alignItems="center"
-        padding="20px"
-      >
-        <Typography
-          variant="body1"
-          color="error"
-          style={{ marginBottom: '16px' }}
-        >
+      <Box display="flex" flexDirection="column" alignItems="center" padding="20px">
+        <Typography variant="body1" color="error" style={{ marginBottom: '16px' }}>
           {error}
         </Typography>
         <Box display="flex" style={{ gap: '16px' }}>
@@ -95,11 +75,7 @@ const WordViewer: React.FC<WordViewerProps> = ({
             Open in New Tab
           </Button>
           {onDownload && (
-            <Button
-              variant="outlined"
-              startIcon={<GetApp />}
-              onClick={onDownload}
-            >
+            <Button variant="outlined" startIcon={<GetApp />} onClick={onDownload}>
               Download
             </Button>
           )}
@@ -129,10 +105,7 @@ const WordViewer: React.FC<WordViewerProps> = ({
         .mammoth-content img { max-width: 100%; height: auto; }
         .mammoth-content ul, .mammoth-content ol { margin: 8px 0; padding-left: 24px; }
       `}</style>
-      <div
-        className="mammoth-content"
-        dangerouslySetInnerHTML={{ __html: htmlContent }}
-      />
+      <div className="mammoth-content" dangerouslySetInnerHTML={{ __html: htmlContent }} />
     </Box>
   );
 };

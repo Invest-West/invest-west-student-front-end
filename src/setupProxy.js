@@ -1,6 +1,6 @@
 const https = require('https');
 
-module.exports = function(app) {
+module.exports = function (app) {
   // Proxy Firebase Storage file downloads to avoid CORS issues in development.
   // Fetches the file server-side and streams the binary response back.
   app.get('/firebase-storage-proxy', (req, res) => {
@@ -9,17 +9,19 @@ module.exports = function(app) {
       return res.status(400).send('Missing or invalid url parameter');
     }
 
-    https.get(fileUrl, (upstream) => {
-      if (upstream.statusCode !== 200) {
-        return res.status(upstream.statusCode).send('Firebase Storage error');
-      }
-      // Forward content-type so the browser gets the right binary data
-      const ct = upstream.headers['content-type'];
-      if (ct) res.setHeader('Content-Type', ct);
-      upstream.pipe(res);
-    }).on('error', (err) => {
-      res.status(502).send('Proxy fetch failed: ' + err.message);
-    });
+    https
+      .get(fileUrl, (upstream) => {
+        if (upstream.statusCode !== 200) {
+          return res.status(upstream.statusCode).send('Firebase Storage error');
+        }
+        // Forward content-type so the browser gets the right binary data
+        const ct = upstream.headers['content-type'];
+        if (ct) res.setHeader('Content-Type', ct);
+        upstream.pipe(res);
+      })
+      .on('error', (err) => {
+        res.status(502).send('Proxy fetch failed: ' + err.message);
+      });
   });
 
   // This ensures that all non-API routes fallback to React Router

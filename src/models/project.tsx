@@ -1,158 +1,158 @@
-import * as DB_CONST from "../firebase/databaseConsts";
+import * as DB_CONST from '../firebase/databaseConsts';
 import {
-    FILE_TYPE_IMAGE,
-    FILE_TYPE_VIDEO,
-    PROJECT_VISIBILITY_PRIVATE,
-    PROJECT_VISIBILITY_PUBLIC,
-    PROJECT_VISIBILITY_RESTRICTED
-} from "../firebase/databaseConsts";
-import CreatePitchAgreement from "./create_pitch_agreement";
-import GroupProperties from "./group_properties";
-import User, {isIssuer} from "./user";
-import Pledge from "./pledge";
-import Admin, {isAdmin} from "./admin";
-import GroupOfMembership from "./group_of_membership";
+  FILE_TYPE_IMAGE,
+  FILE_TYPE_VIDEO,
+  PROJECT_VISIBILITY_PRIVATE,
+  PROJECT_VISIBILITY_PUBLIC,
+  PROJECT_VISIBILITY_RESTRICTED,
+} from '../firebase/databaseConsts';
+import CreatePitchAgreement from './create_pitch_agreement';
+import GroupProperties from './group_properties';
+import User, { isIssuer } from './user';
+import Pledge from './pledge';
+import Admin, { isAdmin } from './admin';
+import GroupOfMembership from './group_of_membership';
 
 /**
  * Project interface
  */
 export default interface Project {
-    id: string;
-    anid: string;
-    issuerID: string;
-    visibility: number;
-    status: number;
-    projectName?: string; // optional for draft projects only
-    description?: string; // optional for draft projects only
-    sector?: string; // optional for draft projects only
-    course?: string; // optional for draft projects only
-    edited?: number;
-    temporarilyClosed?: boolean;
+  id: string;
+  anid: string;
+  issuerID: string;
+  visibility: number;
+  status: number;
+  projectName?: string; // optional for draft projects only
+  description?: string; // optional for draft projects only
+  sector?: string; // optional for draft projects only
+  course?: string; // optional for draft projects only
+  edited?: number;
+  temporarilyClosed?: boolean;
 
-    /**
-     * This field contains the user id of the group admin who
-     * - created the project on their own
-     *      --> [issuerID] = user id of the group admin as well
-     *
-     * - created the project on behalf of an issuer
-     *      --> [issuerID] = user id of the issuer whom the group admin created the project for
-     */
-    createdByGroupAdmin?: string;
+  /**
+   * This field contains the user id of the group admin who
+   * - created the project on their own
+   *      --> [issuerID] = user id of the group admin as well
+   *
+   * - created the project on behalf of an issuer
+   *      --> [issuerID] = user id of the issuer whom the group admin created the project for
+   */
+  createdByGroupAdmin?: string;
 
-    Pitch: ProjectPitch;
-    PrimaryOffer?: ProjectPledge;
+  Pitch: ProjectPitch;
+  PrimaryOffer?: ProjectPledge;
 
-    createPitchAgreement?: CreatePitchAgreement | null
+  createPitchAgreement?: CreatePitchAgreement | null;
 }
 
 /**
  * Instance of project at load time that contains extra information from other collections
  */
 export interface ProjectInstance {
-    projectDetail: Project;
-    group: GroupProperties;
-    issuer: User | Admin;
-    pledges: Pledge[];
-    rejectFeedbacks: ProjectRejectFeedback[];
+  projectDetail: Project;
+  group: GroupProperties;
+  issuer: User | Admin;
+  pledges: Pledge[];
+  rejectFeedbacks: ProjectRejectFeedback[];
 }
 
 /**
  * An interface that specifies the format of a project in csv
  */
 export interface ProjectCsv {
-    visibility: "public" | "restricted" | "private";
-    projectName: string | undefined;
-    description: string | undefined;
-    sector: string | undefined;
-    course: string | undefined;
-    postedDate: number | undefined; // = pitch postedDate
-    //financialRound: string | undefined; // = pitch financialRound
+  visibility: 'public' | 'restricted' | 'private';
+  projectName: string | undefined;
+  description: string | undefined;
+  sector: string | undefined;
+  course: string | undefined;
+  postedDate: number | undefined; // = pitch postedDate
+  //financialRound: string | undefined; // = pitch financialRound
 
-    detailsAboutEarlierFundraisingRounds: string | undefined; // = pitch detailsAboutEarlierFundraisingRounds
-    investorsCommitted: string | undefined; // = pitch investorsCommitted
-    fundRequired: number | undefined; // = pitch fundRequired
-    postMoneyValuation: number | undefined;
-    coverURL: string | undefined; // = active pitch cover
-    mainDocument: string | undefined; // = active pitch presentationDocument
-    mainText: string | undefined; // = pitch presentationPlainText
-    supportingDocuments: string | undefined; // = active pitch supportingDocuments
+  detailsAboutEarlierFundraisingRounds: string | undefined; // = pitch detailsAboutEarlierFundraisingRounds
+  investorsCommitted: string | undefined; // = pitch investorsCommitted
+  fundRequired: number | undefined; // = pitch fundRequired
+  postMoneyValuation: number | undefined;
+  coverURL: string | undefined; // = active pitch cover
+  mainDocument: string | undefined; // = active pitch presentationDocument
+  mainText: string | undefined; // = pitch presentationPlainText
+  supportingDocuments: string | undefined; // = active pitch supportingDocuments
 
-    pitchExpiryDate: string | undefined; // = pitch expiredDate
+  pitchExpiryDate: string | undefined; // = pitch expiredDate
 
-    pledgeExpiryDate: string | undefined; // = pledge expiredDate
+  pledgeExpiryDate: string | undefined; // = pledge expiredDate
 
-    // this field is only available for QIB group
-    qibSpecialNews?: string | undefined; // = pitch qibSpecialNews
+  // this field is only available for QIB group
+  qibSpecialNews?: string | undefined; // = pitch qibSpecialNews
 
-    agreedToShareRaisePublicly?: "yes" | "no" | undefined;
+  agreedToShareRaisePublicly?: 'yes' | 'no' | undefined;
 }
 
 /**
  * Project - pitch interface
  */
 export interface ProjectPitch {
-    postedDate: number;
-    status: number;
-    fundRequired?: number;
-    totalRaise?: number;
-    expiredDate?: number;
-    cover?: PitchCover[];
-    postMoneyValuation?: number;
-    detailsAboutEarlierFundraisingRounds?: string;
-    investorsCommitted?: string;
-    //financialRound?: string;
-    presentationDocument?: PitchDocument[];
-    supportingDocuments?: PitchDocument[];
-    presentationText?: any;
-    presentationPlainText?: string; // a text-only version of the presentationText which is a Quill object
+  postedDate: number;
+  status: number;
+  fundRequired?: number;
+  totalRaise?: number;
+  expiredDate?: number;
+  cover?: PitchCover[];
+  postMoneyValuation?: number;
+  detailsAboutEarlierFundraisingRounds?: string;
+  investorsCommitted?: string;
+  //financialRound?: string;
+  presentationDocument?: PitchDocument[];
+  supportingDocuments?: PitchDocument[];
+  presentationText?: any;
+  presentationPlainText?: string; // a text-only version of the presentationText which is a Quill object
 
-    /**
-     * This field is only available for QIB
-     */
-    qibSpecialNews?: string;
+  /**
+   * This field is only available for QIB
+   */
+  qibSpecialNews?: string;
 }
 
 /**
  * Project - pledge interface
  */
 export interface ProjectPledge {
-    expiredDate: number;
-    status: number;
-    extraNotes?: string;
-    postMoneyValuation?: number;
+  expiredDate: number;
+  status: number;
+  extraNotes?: string;
+  postMoneyValuation?: number;
 }
 
 /**
  * Project reject feedback
  */
 export interface ProjectRejectFeedback {
-    projectID: string;
-    sentBy: string;
-    date: number;
-    feedback: string;
+  projectID: string;
+  sentBy: string;
+  date: number;
+  feedback: string;
 }
 
 /**
  * Project - pitch cover interface
  */
 export interface PitchCover {
-    fileExtension: string;
-    fileType: number;
-    storageID: number;
-    url: string;
-    removed?: boolean;
+  fileExtension: string;
+  fileType: number;
+  storageID: number;
+  url: string;
+  removed?: boolean;
 }
 
 /**
  * Project - pitch document interface
  */
 export interface PitchDocument {
-    fileName: string;
-    readableSize: string;
-    storageID: number;
-    downloadURL: string;
-    removed?: boolean;
-    description?: string;
+  fileName: string;
+  readableSize: string;
+  storageID: number;
+  downloadURL: string;
+  removed?: boolean;
+  description?: string;
 }
 
 /**
@@ -162,7 +162,7 @@ export interface PitchDocument {
  * @returns {boolean}
  */
 export const isProjectLive = (project: Project) => {
-    return isProjectInLivePitchPhase(project) || isProjectInLivePledgePhase(project);
+  return isProjectInLivePitchPhase(project) || isProjectInLivePledgePhase(project);
 };
 
 /**
@@ -172,7 +172,7 @@ export const isProjectLive = (project: Project) => {
  * @returns {boolean}
  */
 export const isDraftProject = (project: Project) => {
-    return project.status === DB_CONST.PROJECT_STATUS_DRAFT;
+  return project.status === DB_CONST.PROJECT_STATUS_DRAFT;
 };
 
 /**
@@ -181,8 +181,8 @@ export const isDraftProject = (project: Project) => {
  * @param project
  */
 export const isDraftProjectNotSubmitted = (project: Project) => {
-    return isDraftProject(project) && project.Pitch.status === DB_CONST.PROJECT_STATUS_DRAFT;
-}
+  return isDraftProject(project) && project.Pitch.status === DB_CONST.PROJECT_STATUS_DRAFT;
+};
 
 /**
  * Check if a project is waiting to go live
@@ -191,7 +191,7 @@ export const isDraftProjectNotSubmitted = (project: Project) => {
  * @returns {boolean}
  */
 export const isProjectWaitingToGoLive = (project: Project) => {
-    return project.status === DB_CONST.PROJECT_STATUS_BEING_CHECKED;
+  return project.status === DB_CONST.PROJECT_STATUS_BEING_CHECKED;
 };
 
 /**
@@ -201,7 +201,7 @@ export const isProjectWaitingToGoLive = (project: Project) => {
  * @returns {boolean}
  */
 export const isProjectRejectedToGoLive = (project: Project) => {
-    return project.status === DB_CONST.PROJECT_STATUS_REJECTED;
+  return project.status === DB_CONST.PROJECT_STATUS_REJECTED;
 };
 
 /**
@@ -211,8 +211,10 @@ export const isProjectRejectedToGoLive = (project: Project) => {
  * @returns {boolean}
  */
 export const isProjectInLivePitchPhase = (project: Project) => {
-    return project.status === DB_CONST.PROJECT_STATUS_PITCH_PHASE
-        && project.Pitch.status === DB_CONST.PITCH_STATUS_ON_GOING;
+  return (
+    project.status === DB_CONST.PROJECT_STATUS_PITCH_PHASE &&
+    project.Pitch.status === DB_CONST.PITCH_STATUS_ON_GOING
+  );
 };
 
 /**
@@ -222,8 +224,10 @@ export const isProjectInLivePitchPhase = (project: Project) => {
  * @returns {boolean}
  */
 export const isProjectPitchExpiredWaitingForAdminToCheck = (project: Project) => {
-    return project.status === DB_CONST.PROJECT_STATUS_PITCH_PHASE_EXPIRED_WAITING_TO_BE_CHECKED
-        && project.Pitch.status === DB_CONST.PITCH_STATUS_WAITING_FOR_ADMIN;
+  return (
+    project.status === DB_CONST.PROJECT_STATUS_PITCH_PHASE_EXPIRED_WAITING_TO_BE_CHECKED &&
+    project.Pitch.status === DB_CONST.PITCH_STATUS_WAITING_FOR_ADMIN
+  );
 };
 
 /**
@@ -233,14 +237,13 @@ export const isProjectPitchExpiredWaitingForAdminToCheck = (project: Project) =>
  * @returns {boolean|boolean}
  */
 export const isProjectWaitingForPledgeToBeCreated = (project: Project) => {
-    return (project.status === DB_CONST.PROJECT_STATUS_PITCH_PHASE_EXPIRED_WAITING_TO_BE_CHECKED
-            && project.Pitch.status === DB_CONST.PITCH_STATUS_ACCEPTED_CREATE_PRIMARY_OFFER
-        )
-        || (
-            project.status === DB_CONST.PROJECT_STATUS_PITCH_PHASE
-            && project.Pitch.status === DB_CONST.PITCH_STATUS_ACCEPTED_CREATE_PRIMARY_OFFER
-        );
-}
+  return (
+    (project.status === DB_CONST.PROJECT_STATUS_PITCH_PHASE_EXPIRED_WAITING_TO_BE_CHECKED &&
+      project.Pitch.status === DB_CONST.PITCH_STATUS_ACCEPTED_CREATE_PRIMARY_OFFER) ||
+    (project.status === DB_CONST.PROJECT_STATUS_PITCH_PHASE &&
+      project.Pitch.status === DB_CONST.PITCH_STATUS_ACCEPTED_CREATE_PRIMARY_OFFER)
+  );
+};
 
 /**
  * Check if a project's pledge is waiting to be checked
@@ -249,8 +252,8 @@ export const isProjectWaitingForPledgeToBeCreated = (project: Project) => {
  * @returns {boolean}
  */
 export const isProjectWaitingForPledgeToBeChecked = (project: Project) => {
-    return project.status === DB_CONST.PROJECT_STATUS_PRIMARY_OFFER_CREATED_WAITING_TO_BE_CHECKED;
-}
+  return project.status === DB_CONST.PROJECT_STATUS_PRIMARY_OFFER_CREATED_WAITING_TO_BE_CHECKED;
+};
 
 /**
  * Check if a project is in live pledge phase
@@ -259,7 +262,7 @@ export const isProjectWaitingForPledgeToBeChecked = (project: Project) => {
  * @returns {boolean}
  */
 export const isProjectInLivePledgePhase = (project: Project) => {
-    return project.status === DB_CONST.PROJECT_STATUS_PRIMARY_OFFER_PHASE;
+  return project.status === DB_CONST.PROJECT_STATUS_PRIMARY_OFFER_PHASE;
 };
 
 /**
@@ -269,7 +272,7 @@ export const isProjectInLivePledgePhase = (project: Project) => {
  * @returns {boolean}
  */
 export const isProjectSuccessful = (project: Project) => {
-    return project.status === DB_CONST.PROJECT_STATUS_SUCCESSFUL;
+  return project.status === DB_CONST.PROJECT_STATUS_SUCCESSFUL;
 };
 
 /**
@@ -278,7 +281,7 @@ export const isProjectSuccessful = (project: Project) => {
  * @returns {boolean}
  */
 export const isProjectFailed = (project: Project) => {
-    return project.status === DB_CONST.PROJECT_STATUS_FAILED;
+  return project.status === DB_CONST.PROJECT_STATUS_FAILED;
 };
 
 /**
@@ -288,7 +291,7 @@ export const isProjectFailed = (project: Project) => {
  * @returns {boolean}
  */
 export const isProjectTemporarilyClosed = (project: Project) => {
-    return project.temporarilyClosed !== undefined && project.temporarilyClosed;
+  return project.temporarilyClosed !== undefined && project.temporarilyClosed;
 };
 
 /**
@@ -297,8 +300,8 @@ export const isProjectTemporarilyClosed = (project: Project) => {
  * @param projectInstance
  */
 export const doesProjectHaveRejectFeedbacks = (projectInstance: ProjectInstance) => {
-    return projectInstance.rejectFeedbacks.length > 0;
-}
+  return projectInstance.rejectFeedbacks.length > 0;
+};
 
 /**
  * Check if a project is created by an admin
@@ -306,8 +309,8 @@ export const doesProjectHaveRejectFeedbacks = (projectInstance: ProjectInstance)
  * @param project
  */
 export const isProjectCreatedByGroupAdmin = (project: Project) => {
-    return project.createdByGroupAdmin !== undefined && project.createdByGroupAdmin !== null;
-}
+  return project.createdByGroupAdmin !== undefined && project.createdByGroupAdmin !== null;
+};
 
 /**
  * Set a project to draft
@@ -315,41 +318,43 @@ export const isProjectCreatedByGroupAdmin = (project: Project) => {
  * @param project
  */
 export const setProjectToDraft = (project: Project): Project => {
-    project.Pitch.status = DB_CONST.PITCH_STATUS_ON_GOING;
-    project.status = DB_CONST.PROJECT_STATUS_DRAFT;
-    return project;
-}
+  project.Pitch.status = DB_CONST.PITCH_STATUS_ON_GOING;
+  project.status = DB_CONST.PROJECT_STATUS_DRAFT;
+  return project;
+};
 
 export const getPitchCover = (project: Project) => {
-    if (project.Pitch.cover === undefined) {
-        return null;
-    }
-    const index = project.Pitch.cover.findIndex(cover => cover.removed === undefined || !cover.removed);
-    if (index === -1) {
-        return null;
-    }
-    return project.Pitch.cover[index];
-}
+  if (project.Pitch.cover === undefined) {
+    return null;
+  }
+  const index = project.Pitch.cover.findIndex(
+    (cover) => cover.removed === undefined || !cover.removed
+  );
+  if (index === -1) {
+    return null;
+  }
+  return project.Pitch.cover[index];
+};
 
 export const isImagePitchCover = (pitchCover: PitchCover) => {
-    return pitchCover.fileType === FILE_TYPE_IMAGE;
-}
+  return pitchCover.fileType === FILE_TYPE_IMAGE;
+};
 
 export const isVideoPitchCover = (pitchCover: PitchCover) => {
-    return pitchCover.fileType === FILE_TYPE_VIDEO;
-}
+  return pitchCover.fileType === FILE_TYPE_VIDEO;
+};
 
 export const isProjectPublic = (project: Project) => {
-    return project.visibility === PROJECT_VISIBILITY_PUBLIC;
-}
+  return project.visibility === PROJECT_VISIBILITY_PUBLIC;
+};
 
 export const isProjectRestricted = (project: Project) => {
-    return project.visibility === PROJECT_VISIBILITY_RESTRICTED;
-}
+  return project.visibility === PROJECT_VISIBILITY_RESTRICTED;
+};
 
 export const isProjectPrivate = (project: Project) => {
-    return project.visibility === PROJECT_VISIBILITY_PRIVATE;
-}
+  return project.visibility === PROJECT_VISIBILITY_PRIVATE;
+};
 
 /**
  * Should hide project information from a user
@@ -361,10 +366,14 @@ export const isProjectPrivate = (project: Project) => {
  * @param groupsOfMembership
  * @param project
  */
-export const shouldHideProjectInformationFromUser = (user: User | Admin, groupsOfMembership: GroupOfMembership[], project: Project) => {
-    // All projects are public - never hide project information
-    return false;
-}
+export const shouldHideProjectInformationFromUser = (
+  user: User | Admin,
+  groupsOfMembership: GroupOfMembership[],
+  project: Project
+) => {
+  // All projects are public - never hide project information
+  return false;
+};
 
 /**
  * Check if a user is the owner of a project
@@ -373,15 +382,15 @@ export const shouldHideProjectInformationFromUser = (user: User | Admin, groupsO
  * @param project
  */
 export const isProjectOwner = (user: User | Admin, project: Project) => {
-    const admin: Admin | null = isAdmin(user);
-    // super admin does not own a project
-    if (admin && admin.superAdmin) {
-        return false;
-    }
+  const admin: Admin | null = isAdmin(user);
+  // super admin does not own a project
+  if (admin && admin.superAdmin) {
+    return false;
+  }
 
-    if (admin) {
-        return admin.anid === project.anid;
-    } else {
-        return user?.id === project.issuerID;
-    }
-}
+  if (admin) {
+    return admin.anid === project.anid;
+  } else {
+    return user?.id === project.issuerID;
+  }
+};

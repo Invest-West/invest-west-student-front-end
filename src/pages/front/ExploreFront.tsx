@@ -1,101 +1,57 @@
-import React, {Component} from "react";
-import {connect} from "react-redux";
-import {AppState} from "../../redux-store/reducers";
-import {
-    ManageGroupUrlState
-} from "../../redux-store/reducers/manageGroupUrlReducer";
-import {
-    AuthenticationState
-} from "../../redux-store/reducers/authenticationReducer";
-import {RouteComponentProps, NavLink} from "react-router-dom";
-import {RouteParams} from "../../router/router";
-import {MediaQueryState} from "../../redux-store/reducers/mediaQueryReducer";
-import Routes from "../../router/routes";
-import "../../shared-js-css-styles/front.css";
-import ExploreOffers from "../../shared-components/explore-offers/ExploreOffers";
+import React from 'react';
+import { useAppSelector } from '../../redux-store/hooks';
+import { NavLink, useParams } from 'react-router-dom';
+import Routes from '../../router/routes';
+import '../../shared-js-css-styles/front.css';
+import ExploreOffers from '../../shared-components/explore-offers/ExploreOffers';
 
-import studentLogo from "../../img/student_logo.png";
+import studentLogo from '../../img/student_logo.png';
 
+const ExploreFront: React.FC = () => {
+  const params = useParams();
+  const ManageGroupUrlState = useAppSelector((state) => state.ManageGroupUrlState);
+  const AuthenticationState = useAppSelector((state) => state.AuthenticationState);
 
-interface ExploreFrontProps {
-    ManageGroupUrlState: ManageGroupUrlState;
-    AuthenticationState: AuthenticationState;
-    MediaQueryState: MediaQueryState;
-}
+  const aboutRoute = Routes.constructAboutRoute(params);
+  const hiwRoute = Routes.constructHiwRoute(params);
+  const contactRoute = Routes.constructContactRoute(params);
+  const exploreRoute = Routes.constructExploreRoute(params);
+  const signInRoute = Routes.constructSignInRoute(params);
+  const homeRoute = Routes.constructHomeRoute(params, ManageGroupUrlState, AuthenticationState);
 
-const mapStateToProps = (state: AppState) => {
-    return {
-        ManageGroupUrlState: state.ManageGroupUrlState,
-        AuthenticationState: state.AuthenticationState,
-        MediaQueryState: state.MediaQueryState
-    }
-}
+  return (
+    <main>
+      <header className="navbar transparent">
+        <div className="navbar-left">
+          <NavLink to={homeRoute}>
+            <img className="logo" src={studentLogo} alt="Logo" />
+          </NavLink>
+          <p className="title">Student Showcase</p>
+        </div>
 
-interface ExploreFrontState {
-    activeTab: "academia" | "employer";
-}
+        <div className="burger-menu">
+          <div className="burger-bar"></div>
+          <div className="burger-bar"></div>
+          <div className="burger-bar"></div>
+        </div>
 
-class ExploreFront extends Component<ExploreFrontProps & Readonly<RouteComponentProps<RouteParams>>, ExploreFrontState> {
-    constructor(props: ExploreFrontProps & Readonly<RouteComponentProps<RouteParams>>) {
-        super(props);
-        this.state = {
-            activeTab: "academia"
-        };
-    }
-    
-    handleTabChange = (tab: "academia" | "employer") => {
-        this.setState({ activeTab: tab });
-    }
-      render() {
-        const {
-            ManageGroupUrlState,
-            AuthenticationState
-        } = this.props;
-        
-        const { activeTab } = this.state;
-        const { match } = this.props;
-        const groupParam = match.params.groupUserName ? match.params.groupUserName : null;
-        
-        // Construct proper routes based on whether we have a group or not
-        const aboutRoute = Routes.constructAboutRoute(match.params);
-        const hiwRoute = Routes.constructHiwRoute(match.params);
-        const contactRoute = Routes.constructContactRoute(match.params);
-        const exploreRoute = Routes.constructExploreRoute(match.params);
-        const signInRoute = Routes.constructSignInRoute(match.params);
-        const homeRoute = Routes.constructHomeRoute(match.params, ManageGroupUrlState, AuthenticationState);
-        
-        return (
-        <main>
-            <header className="navbar transparent">
-                <div className="navbar-left">
-                   <NavLink to={homeRoute}><img className="logo" src={studentLogo} alt="Logo"/></NavLink>
-                   <p className="title">Student Showcase</p>
-                </div>
-            
-                <div className="burger-menu">
-                    <div className="burger-bar"></div>
-                    <div className="burger-bar"></div>
-                    <div className="burger-bar"></div>
-                </div>
-                
-                <div className="nav-overlay"></div>
-            
-                <div className="navbar-center">
-                    <NavLink to={aboutRoute}>About</NavLink>
-                    <NavLink to={hiwRoute}>How It Works</NavLink>
-                    <NavLink to={contactRoute}>Contact</NavLink>
-                </div>            
-                <div className="navbar-right">
-                    <NavLink to={exploreRoute}>Explore</NavLink>
-                    <NavLink to={signInRoute}>Login</NavLink>
-                </div>
-            </header>
-            <div>
-                <ExploreOffers/>;
-            </div>
-        </main>
-        )
-    }
-}
+        <div className="nav-overlay"></div>
 
-export default connect(mapStateToProps)(ExploreFront);
+        <div className="navbar-center">
+          <NavLink to={aboutRoute}>About</NavLink>
+          <NavLink to={hiwRoute}>How It Works</NavLink>
+          <NavLink to={contactRoute}>Contact</NavLink>
+        </div>
+        <div className="navbar-right">
+          <NavLink to={exploreRoute}>Explore</NavLink>
+          <NavLink to={signInRoute}>Login</NavLink>
+        </div>
+      </header>
+      <div>
+        <ExploreOffers />;
+      </div>
+    </main>
+  );
+};
+
+export default ExploreFront;

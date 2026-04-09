@@ -1,9 +1,5 @@
-import {ProfileAction} from "../../ProfileActions";
+import { ProfileAction } from '../../ProfileActions';
 
-export enum PersonalDetailsEvents {
+export enum PersonalDetailsEvents {}
 
-}
-
-export interface PersonalDetailsAction extends ProfileAction {
-
-}
+export interface PersonalDetailsAction extends ProfileAction {}

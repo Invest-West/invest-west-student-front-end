@@ -1,31 +1,31 @@
-import axios, {AxiosError, AxiosRequestConfig, AxiosResponse, Method} from "axios";
-import firebase from "../firebase/firebaseApp";
-import HttpResponseError from "./ResponseError";
+import axios, { AxiosError, AxiosRequestConfig, AxiosResponse, Method } from 'axios';
+import firebase from '../firebase/firebaseApp';
+import HttpResponseError from './ResponseError';
 
 /**
  * Wait for Firebase auth to be ready and return the current user
  * This ensures we don't make API calls before Firebase has restored the auth state
  */
 const waitForFirebaseAuth = (): Promise<firebase.default.User | null> => {
-    return new Promise((resolve) => {
-        const currentUser = firebase.auth().currentUser;
-        if (currentUser) {
-            resolve(currentUser);
-            return;
-        }
+  return new Promise((resolve) => {
+    const currentUser = firebase.auth().currentUser;
+    if (currentUser) {
+      resolve(currentUser);
+      return;
+    }
 
-        // If no current user, wait for auth state to change (max 5 seconds)
-        const timeout = setTimeout(() => {
-            unsubscribe();
-            resolve(null);
-        }, 5000);
+    // If no current user, wait for auth state to change (max 5 seconds)
+    const timeout = setTimeout(() => {
+      unsubscribe();
+      resolve(null);
+    }, 5000);
 
-        const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
-            clearTimeout(timeout);
-            unsubscribe();
-            resolve(user);
-        });
+    const unsubscribe = firebase.auth().onAuthStateChanged((user) => {
+      clearTimeout(timeout);
+      unsubscribe();
+      resolve(user);
     });
+  });
 };
 
 /**
@@ -33,366 +33,387 @@ const waitForFirebaseAuth = (): Promise<firebase.default.User | null> => {
  */
 
 export class ApiRoutes {
-    static systemAttributesBaseRoute = "/system-attributes";
-    static retrieveSystemAttributesRoute = ApiRoutes.systemAttributesBaseRoute + "/retrieve";
-    static updateSystemAttributesRoute = ApiRoutes.systemAttributesBaseRoute + "/update";
+  static systemAttributesBaseRoute = '/system-attributes';
+  static retrieveSystemAttributesRoute = ApiRoutes.systemAttributesBaseRoute + '/retrieve';
+  static updateSystemAttributesRoute = ApiRoutes.systemAttributesBaseRoute + '/update';
 
-    static authBaseRoute = "/auth";
-    static requestResetPasswordRoute = ApiRoutes.authBaseRoute + "/request-reset-password";
-    static verifyAuthRoute = ApiRoutes.authBaseRoute + "/verify";
-    
+  static authBaseRoute = '/auth';
+  static requestResetPasswordRoute = ApiRoutes.authBaseRoute + '/request-reset-password';
+  static verifyAuthRoute = ApiRoutes.authBaseRoute + '/verify';
 
-    static emailBaseRoute = "/email";
-    static sendEmailRoute = ApiRoutes.emailBaseRoute + "/send";
+  static emailBaseRoute = '/email';
+  static sendEmailRoute = ApiRoutes.emailBaseRoute + '/send';
 
-    // Email template management routes (super admin only)
-    static emailTemplatesRoute = ApiRoutes.emailBaseRoute + "/templates";
-    static emailSettingsRoute = ApiRoutes.emailBaseRoute + "/settings";
-    static emailTestConnectionRoute = ApiRoutes.emailBaseRoute + "/test-connection";
-    static emailSendTestRoute = ApiRoutes.emailBaseRoute + "/send-test";
-    static emailPreviewRoute = ApiRoutes.emailBaseRoute + "/preview";
-    static emailSeedTemplatesRoute = ApiRoutes.emailBaseRoute + "/seed-templates";
+  // Email template management routes (super admin only)
+  static emailTemplatesRoute = ApiRoutes.emailBaseRoute + '/templates';
+  static emailSettingsRoute = ApiRoutes.emailBaseRoute + '/settings';
+  static emailTestConnectionRoute = ApiRoutes.emailBaseRoute + '/test-connection';
+  static emailSendTestRoute = ApiRoutes.emailBaseRoute + '/send-test';
+  static emailPreviewRoute = ApiRoutes.emailBaseRoute + '/preview';
+  static emailSeedTemplatesRoute = ApiRoutes.emailBaseRoute + '/seed-templates';
 
-    static usersBaseRoute = "/users";
-    static createUser = ApiRoutes.usersBaseRoute + "/create";
-    static retrieveUser = ApiRoutes.usersBaseRoute + "/:uid/retrieve";
-    static retrieveInvitedUser = ApiRoutes.usersBaseRoute + "/:invitedUserID/retrieve-invited";
-    static updateUser = ApiRoutes.usersBaseRoute + "/update";
-    static listGroupsOfMembership = ApiRoutes.usersBaseRoute + "/:uid/groups-of-membership";
-    static inviteStudentRoute = ApiRoutes.usersBaseRoute + "/invite";
-    static exportUsersCsvRoute = ApiRoutes.usersBaseRoute + "/export";
+  static usersBaseRoute = '/users';
+  static createUser = ApiRoutes.usersBaseRoute + '/create';
+  static retrieveUser = ApiRoutes.usersBaseRoute + '/:uid/retrieve';
+  static retrieveInvitedUser = ApiRoutes.usersBaseRoute + '/:invitedUserID/retrieve-invited';
+  static updateUser = ApiRoutes.usersBaseRoute + '/update';
+  static listGroupsOfMembership = ApiRoutes.usersBaseRoute + '/:uid/groups-of-membership';
+  static inviteStudentRoute = ApiRoutes.usersBaseRoute + '/invite';
+  static exportUsersCsvRoute = ApiRoutes.usersBaseRoute + '/export';
 
-    static groupsBaseRoute = "/groups";
-    static listGroups = ApiRoutes.groupsBaseRoute + "/list";
-    static retrieveGroup = ApiRoutes.groupsBaseRoute + "/:groupUserName";
-    static updateGroupLogo = ApiRoutes.groupsBaseRoute + "/:groupUserName/update-logo";
-    static updateUniversityName = ApiRoutes.groupsBaseRoute + "/:groupUserName/update-name";
-    static updateCourseImage = ApiRoutes.groupsBaseRoute + "/:groupUserName/courses/:courseUserName/update-image";
-    static updateCourseName = ApiRoutes.groupsBaseRoute + "/:groupUserName/courses/:courseUserName/update-name";
-    static deleteUniversity = ApiRoutes.groupsBaseRoute + "/:groupUserName/delete";
-    static deleteCourse = ApiRoutes.groupsBaseRoute + "/:groupUserName/courses/:courseUserName/delete";
-    static addMembersToGroup = ApiRoutes.groupsBaseRoute + "/:group/add-members";
-    static listGroupMembers = ApiRoutes.groupsBaseRoute + "/:group/list-members";
+  static groupsBaseRoute = '/groups';
+  static listGroups = ApiRoutes.groupsBaseRoute + '/list';
+  static retrieveGroup = ApiRoutes.groupsBaseRoute + '/:groupUserName';
+  static updateGroupLogo = ApiRoutes.groupsBaseRoute + '/:groupUserName/update-logo';
+  static updateUniversityName = ApiRoutes.groupsBaseRoute + '/:groupUserName/update-name';
+  static updateCourseImage =
+    ApiRoutes.groupsBaseRoute + '/:groupUserName/courses/:courseUserName/update-image';
+  static updateCourseName =
+    ApiRoutes.groupsBaseRoute + '/:groupUserName/courses/:courseUserName/update-name';
+  static deleteUniversity = ApiRoutes.groupsBaseRoute + '/:groupUserName/delete';
+  static deleteCourse =
+    ApiRoutes.groupsBaseRoute + '/:groupUserName/courses/:courseUserName/delete';
+  static addMembersToGroup = ApiRoutes.groupsBaseRoute + '/:group/add-members';
+  static listGroupMembers = ApiRoutes.groupsBaseRoute + '/:group/list-members';
 
-    static projectsBaseRoute = "/projects";
-    static listProjectsRoute = ApiRoutes.projectsBaseRoute + "/list";
-    static sendProjectBackToIssuerRoute = ApiRoutes.projectsBaseRoute + "/send-back-to-issuer";
-    static exportProjectsToCsvRoute = ApiRoutes.projectsBaseRoute + "/export";
-    static notifyAdminsOfResubmissionRoute = ApiRoutes.projectsBaseRoute + "/notify-resubmission";
-    static clearProjectRejectFeedbacksRoute = ApiRoutes.projectsBaseRoute + "/clear-reject-feedbacks";
+  static projectsBaseRoute = '/projects';
+  static listProjectsRoute = ApiRoutes.projectsBaseRoute + '/list';
+  static sendProjectBackToIssuerRoute = ApiRoutes.projectsBaseRoute + '/send-back-to-issuer';
+  static exportProjectsToCsvRoute = ApiRoutes.projectsBaseRoute + '/export';
+  static notifyAdminsOfResubmissionRoute = ApiRoutes.projectsBaseRoute + '/notify-resubmission';
+  static clearProjectRejectFeedbacksRoute = ApiRoutes.projectsBaseRoute + '/clear-reject-feedbacks';
+  static notifyAdminsOfSubmissionRoute = ApiRoutes.projectsBaseRoute + '/notify-submission';
 
-    static groupAdminsBaseRoute = "/group-admins";
-    static addGroupAdminRoute = ApiRoutes.groupAdminsBaseRoute + "/add";
+  static groupAdminsBaseRoute = '/group-admins';
+  static addGroupAdminRoute = ApiRoutes.groupAdminsBaseRoute + '/add';
 
-    static accessRequestsBaseRoute = "/access-requests";
-    static listAccessRequestsRoute = ApiRoutes.accessRequestsBaseRoute + "/list";
-    static createAccessRequestRoute = ApiRoutes.accessRequestsBaseRoute + "/create";
-    static removeAccessRequestRoute = ApiRoutes.createAccessRequestRoute + "/remove";
+  static accessRequestsBaseRoute = '/access-requests';
+  static listAccessRequestsRoute = ApiRoutes.accessRequestsBaseRoute + '/list';
+  static createAccessRequestRoute = ApiRoutes.accessRequestsBaseRoute + '/create';
+  static removeAccessRequestRoute = ApiRoutes.createAccessRequestRoute + '/remove';
 
-    static courseRequestsBaseRoute = "/course-requests";
-    static listCourseRequestsRoute = ApiRoutes.courseRequestsBaseRoute + "/list";
-    static createCourseRequestRoute = ApiRoutes.courseRequestsBaseRoute + "/create";
-    static approveCourseRequestRoute = ApiRoutes.courseRequestsBaseRoute + "/approve";
-    static rejectCourseRequestRoute = ApiRoutes.courseRequestsBaseRoute + "/reject";
+  static courseRequestsBaseRoute = '/course-requests';
+  static listCourseRequestsRoute = ApiRoutes.courseRequestsBaseRoute + '/list';
+  static createCourseRequestRoute = ApiRoutes.courseRequestsBaseRoute + '/create';
+  static approveCourseRequestRoute = ApiRoutes.courseRequestsBaseRoute + '/approve';
+  static rejectCourseRequestRoute = ApiRoutes.courseRequestsBaseRoute + '/reject';
 
-    static adminAccessRequestsBaseRoute = "/admin-access-requests";
-    static listAdminAccessRequestsRoute = ApiRoutes.adminAccessRequestsBaseRoute + "/list";
-    static createAdminAccessRequestRoute = ApiRoutes.adminAccessRequestsBaseRoute + "/create";
-    static approveAdminAccessRequestRoute = ApiRoutes.adminAccessRequestsBaseRoute + "/approve";
-    static rejectAdminAccessRequestRoute = ApiRoutes.adminAccessRequestsBaseRoute + "/reject";
+  static adminAccessRequestsBaseRoute = '/admin-access-requests';
+  static listAdminAccessRequestsRoute = ApiRoutes.adminAccessRequestsBaseRoute + '/list';
+  static createAdminAccessRequestRoute = ApiRoutes.adminAccessRequestsBaseRoute + '/create';
+  static approveAdminAccessRequestRoute = ApiRoutes.adminAccessRequestsBaseRoute + '/approve';
+  static rejectAdminAccessRequestRoute = ApiRoutes.adminAccessRequestsBaseRoute + '/reject';
 
-    static fileBaseRoute = "/file";
-    static uploadSingleFileRoute = ApiRoutes.fileBaseRoute + "/upload-single";
+  static fileBaseRoute = '/file';
+  static uploadSingleFileRoute = ApiRoutes.fileBaseRoute + '/upload-single';
 
-    static testRoute = "/test";
+  static testRoute = '/test';
 
-    // Course admin invite routes
-    static courseAdminInviteBaseRoute = "/course-admin-invite";
-    static requestAdminAccessRoute = ApiRoutes.courseAdminInviteBaseRoute + "/request-access";
-    static validateCourseAdminInviteRoute = ApiRoutes.courseAdminInviteBaseRoute + "/validate/:token";
-    static completeCourseAdminSignupRoute = ApiRoutes.courseAdminInviteBaseRoute + "/complete";
-    static validateUpgradeRequestRoute = ApiRoutes.courseAdminInviteBaseRoute + "/upgrade-request/validate/:requestId";
-    static respondToUpgradeRequestRoute = ApiRoutes.courseAdminInviteBaseRoute + "/upgrade-request/respond";
-    static getMyUpgradeRequestsRoute = ApiRoutes.courseAdminInviteBaseRoute + "/my-upgrade-requests";
+  // Course admin invite routes
+  static courseAdminInviteBaseRoute = '/course-admin-invite';
+  static requestAdminAccessRoute = ApiRoutes.courseAdminInviteBaseRoute + '/request-access';
+  static validateCourseAdminInviteRoute = ApiRoutes.courseAdminInviteBaseRoute + '/validate/:token';
+  static completeCourseAdminSignupRoute = ApiRoutes.courseAdminInviteBaseRoute + '/complete';
+  static validateUpgradeRequestRoute =
+    ApiRoutes.courseAdminInviteBaseRoute + '/upgrade-request/validate/:requestId';
+  static respondToUpgradeRequestRoute =
+    ApiRoutes.courseAdminInviteBaseRoute + '/upgrade-request/respond';
+  static getMyUpgradeRequestsRoute = ApiRoutes.courseAdminInviteBaseRoute + '/my-upgrade-requests';
 }
 
 export interface RequestOptionalParams {
-    requestBody: any | null;
-    queryParameters: any | null;
+  requestBody: any | null;
+  queryParameters: any | null;
 }
 
 /**
  * Api class
  */
 export default class Api {
-    baseUrl: string | undefined = process.env.REACT_APP_BACK_END_BASE_URL;
+  baseUrl: string | undefined = process.env.REACT_APP_BACK_END_BASE_URL;
 
-    /**
-     * Build request URL
-     *
-     * @param endPoint
-     * @param queryParameters
-     * @private
-     */
-    private buildUrl(endPoint: string, queryParameters: any): string {
-        const queryString = Api.buildQueryParameters(queryParameters);
-        let fullUrl = this.baseUrl + endPoint + queryString;
+  /**
+   * Build request URL
+   *
+   * @param endPoint
+   * @param queryParameters
+   * @private
+   */
+  private buildUrl(endPoint: string, queryParameters: any): string {
+    const queryString = Api.buildQueryParameters(queryParameters);
+    const fullUrl = this.baseUrl + endPoint + queryString;
 
-        if (endPoint.includes('projects')) {
-            console.log('[API] Building URL for projects endpoint:', {
-                endPoint,
-                queryParameters,
-                queryString,
-                fullUrl
-            });
-        }
-
-        return encodeURI(fullUrl);
+    if (endPoint.includes('projects')) {
+      console.log('[API] Building URL for projects endpoint:', {
+        endPoint,
+        queryParameters,
+        queryString,
+        fullUrl,
+      });
     }
 
-    /**
-     * Build query parameters
-     *
-     * @param queryParameters
-     * @private
-     */
-    private static buildQueryParameters(queryParameters: any): string {
-        if (queryParameters === null) {
-            return "";
-        }
+    return encodeURI(fullUrl);
+  }
 
-        let result: string = "?";
-
-        for (let key in queryParameters) {
-            if (queryParameters.hasOwnProperty(key)) {
-                let value = queryParameters[key];
-                if (value !== undefined && value !== null) {
-                    if (!result.endsWith("?")) {
-                        result += "&";
-                    }
-                    result += `${key}=${value.toString()}`;
-                }
-            }
-        }
-
-        if (result.endsWith("?")) {
-            result = "";
-        }
-
-        return result;
+  /**
+   * Build query parameters
+   *
+   * @param queryParameters
+   * @private
+   */
+  private static buildQueryParameters(queryParameters: any): string {
+    if (queryParameters === null) {
+      return '';
     }
 
-    /**
-     * Build form data
-     *
-     * @param data
-     * @private
-     */
-    private static buildFormData(data: any): FormData | null {
-        if (data === null) {
-            return null;
+    let result: string = '?';
+
+    for (const key in queryParameters) {
+      if (queryParameters.hasOwnProperty(key)) {
+        const value = queryParameters[key];
+        if (value !== undefined && value !== null) {
+          if (!result.endsWith('?')) {
+            result += '&';
+          }
+          result += `${key}=${value.toString()}`;
         }
-
-        const formData = new FormData();
-
-        for (let key in data) {
-            if (data.hasOwnProperty(key)) {
-                let value = data[key];
-                if (value !== undefined && value !== null) {
-                    formData.append(key, value);
-                }
-            }
-        }
-
-        return formData;
+      }
     }
 
-    /**
-     * Send request
-     *
-     * @param requestType
-     * @param endPoint
-     * @param optionalParams
-     * @param formDataRequest
-     */
-    public async request(requestType: Method,
-                         endPoint: string,
-                         optionalParams?: RequestOptionalParams | null,
-                         formDataRequest?: boolean
-    ): Promise<AxiosResponse> {
-        if (endPoint === null || endPoint.length === 0) {
-            throw new Error("Empty url");
+    if (result.endsWith('?')) {
+      result = '';
+    }
+
+    return result;
+  }
+
+  /**
+   * Build form data
+   *
+   * @param data
+   * @private
+   */
+  private static buildFormData(data: any): FormData | null {
+    if (data === null) {
+      return null;
+    }
+
+    const formData = new FormData();
+
+    for (const key in data) {
+      if (data.hasOwnProperty(key)) {
+        const value = data[key];
+        if (value !== undefined && value !== null) {
+          formData.append(key, value);
         }
+      }
+    }
 
-        const url: string = this.buildUrl(
-            endPoint,
-            optionalParams !== undefined && optionalParams !== null && optionalParams.queryParameters !== null
-                ? optionalParams.queryParameters
-                : null
-        );
+    return formData;
+  }
 
-        // Wait for Firebase auth to be ready before making the request
-        let currentUser: firebase.default.User | null = await waitForFirebaseAuth();
+  /**
+   * Send request
+   *
+   * @param requestType
+   * @param endPoint
+   * @param optionalParams
+   * @param formDataRequest
+   */
+  public async request(
+    requestType: Method,
+    endPoint: string,
+    optionalParams?: RequestOptionalParams | null,
+    formDataRequest?: boolean
+  ): Promise<AxiosResponse> {
+    if (endPoint === null || endPoint.length === 0) {
+      throw new Error('Empty url');
+    }
 
+    const url: string = this.buildUrl(
+      endPoint,
+      optionalParams !== undefined &&
+        optionalParams !== null &&
+        optionalParams.queryParameters !== null
+        ? optionalParams.queryParameters
+        : null
+    );
+
+    // Wait for Firebase auth to be ready before making the request
+    const currentUser: firebase.default.User | null = await waitForFirebaseAuth();
+
+    try {
+      let idToken: string | null = null;
+
+      if (currentUser) {
         try {
-            let idToken: string | null = null;
-
-            if (currentUser) {
-                try {
-                    // Get ID token - Firebase will auto-refresh if expired
-                    idToken = await currentUser.getIdToken();
-                } catch (tokenError) {
-                    console.error('Failed to get ID token:', tokenError);
-                    // If token retrieval fails, try to force refresh once
-                    try {
-                        idToken = await currentUser.getIdToken(true);
-                    } catch (refreshError) {
-                        console.error('Failed to refresh ID token:', refreshError);
-                        throw new Error('Authentication token could not be retrieved. Please try logging in again.');
-                    }
-                }
-            }
-
-            let bodyData: any;
-
-            if (formDataRequest !== undefined && formDataRequest) {
-                bodyData = optionalParams !== undefined && optionalParams !== null
-                && optionalParams.requestBody !== null
-                    ? Api.buildFormData(optionalParams.requestBody)
-                    : null;
-            }
-            else {
-                bodyData = optionalParams !== undefined && optionalParams !== null
-                && optionalParams.requestBody !== null
-                    ? optionalParams.requestBody
-                    : null;
-            }
-
-            const config: AxiosRequestConfig = {
-                method: requestType,
-                url: url,
-                data: bodyData,
-                timeout: 20000 // timeout in 20 seconds
-            };
-
-            if (idToken) {
-                config.headers = {
-                    "Authorization": idToken
-                }
-
-                if (formDataRequest !== undefined && formDataRequest) {
-                    config.headers = {
-                        ...config.headers,
-                        // @ts-ignore
-                        "Content-Type": `multipart/form-data; boundary=${bodyData._boundary}`
-                    }
-                }
-            }
-
-            let response: AxiosResponse = await axios.request(config);
-
-            return this.parseResponse(response);
-        } catch (exception) {
-            const error = Api.parseError(exception);
-            console.log(`Failed to request. Status code: ${error.statusCode}. Cause: ${error.message}`);
-            throw new Error(error.statusCode + " " + error.message);
+          // Get ID token - Firebase will auto-refresh if expired
+          idToken = await currentUser.getIdToken();
+        } catch (tokenError) {
+          console.error('Failed to get ID token:', tokenError);
+          // If token retrieval fails, try to force refresh once
+          try {
+            idToken = await currentUser.getIdToken(true);
+          } catch (refreshError) {
+            console.error('Failed to refresh ID token:', refreshError);
+            throw new Error(
+              'Authentication token could not be retrieved. Please try logging in again.'
+            );
+          }
         }
-    }
+      }
 
-    /**
-     * Parse response
-     *
-     * @param response
-     * @private
-     */
-    private parseResponse(response: AxiosResponse) {
-        if (response === null) {
-            throw new Error("Null response.");
-        }
+      let bodyData: any;
 
-        if (this.isRequestSuccessful(response)) {
-            return response;
-        }
+      if (formDataRequest !== undefined && formDataRequest) {
+        bodyData =
+          optionalParams !== undefined &&
+          optionalParams !== null &&
+          optionalParams.requestBody !== null
+            ? Api.buildFormData(optionalParams.requestBody)
+            : null;
+      } else {
+        bodyData =
+          optionalParams !== undefined &&
+          optionalParams !== null &&
+          optionalParams.requestBody !== null
+            ? optionalParams.requestBody
+            : null;
+      }
 
-        throw new Error("Response error.");
-    }
+      const config: AxiosRequestConfig = {
+        method: requestType,
+        url: url,
+        data: bodyData,
+        timeout: 20000, // timeout in 20 seconds
+      };
 
-    /**
-     * Parse error
-     *
-     * @param error
-     * @private
-     */
-    private static parseError(error: AxiosError) {
-        let httpError: HttpResponseError = {
-            statusCode: -1,
-            message: ""
+      if (idToken) {
+        config.headers = {
+          Authorization: idToken,
         };
 
-        // client received an error response (5xx, 4xx) form the server
-        if (error.response) {
-            if (error.response.data) {
-                httpError = {
-                    statusCode: error.response.data.code,
-                    message: error.response.data.detail ?? error.response.data.message
-                }
-            }
+        if (formDataRequest !== undefined && formDataRequest) {
+          config.headers = {
+            ...config.headers,
+            // @ts-ignore
+            'Content-Type': `multipart/form-data; boundary=${bodyData._boundary}`,
+          };
         }
-        // client never received a response, or request never left
-        else if (error.request) {
-            httpError = {
-                statusCode: -1,
-                message: "Server is not responding."
-            }
-        }
-        // anything else
-        else {
-            httpError = {
-                statusCode: -1,
-                message: "Unexpected error."
-            }
-        }
+      }
 
-        return httpError;
+      const response: AxiosResponse = await axios.request(config);
+
+      return this.parseResponse(response);
+    } catch (exception) {
+      const error = Api.parseError(exception);
+      console.log(`Failed to request. Status code: ${error.statusCode}. Cause: ${error.message}`);
+      throw new Error(error.statusCode + ' ' + error.message);
+    }
+  }
+
+  /**
+   * Parse response
+   *
+   * @param response
+   * @private
+   */
+  private parseResponse(response: AxiosResponse) {
+    if (response === null) {
+      throw new Error('Null response.');
     }
 
-    /**
-     * Check if a request is successful by checking the response code
-     *
-     * @param response
-     */
-    public isRequestSuccessful(response: AxiosResponse): boolean {
-        return response != null && response.status >= 200 && response.status < 300;
+    if (this.isRequestSuccessful(response)) {
+      return response;
     }
 
-    // Static instance for convenience methods
-    private static instance = new Api();
+    throw new Error('Response error.');
+  }
 
-    /**
-     * Convenience method for GET requests
-     */
-    public static async doGet(endpoint: string, queryParameters?: any): Promise<AxiosResponse> {
-        return Api.instance.request('GET', endpoint, { requestBody: null, queryParameters });
+  /**
+   * Parse error
+   *
+   * @param error
+   * @private
+   */
+  private static parseError(error: AxiosError) {
+    let httpError: HttpResponseError = {
+      statusCode: -1,
+      message: '',
+    };
+
+    // client received an error response (5xx, 4xx) form the server
+    if (error.response) {
+      if (error.response.data) {
+        httpError = {
+          statusCode: error.response.data.code,
+          message: error.response.data.detail ?? error.response.data.message,
+        };
+      }
+    }
+    // client never received a response, or request never left
+    else if (error.request) {
+      httpError = {
+        statusCode: -1,
+        message: 'Server is not responding.',
+      };
+    }
+    // anything else
+    else {
+      httpError = {
+        statusCode: -1,
+        message: 'Unexpected error.',
+      };
     }
 
-    /**
-     * Convenience method for POST requests
-     */
-    public static async doPost(endpoint: string, requestBody?: any, queryParameters?: any): Promise<AxiosResponse> {
-        return Api.instance.request('POST', endpoint, { requestBody, queryParameters });
-    }
+    return httpError;
+  }
 
-    /**
-     * Convenience method for PUT requests
-     */
-    public static async doPut(endpoint: string, requestBody?: any, queryParameters?: any): Promise<AxiosResponse> {
-        return Api.instance.request('PUT', endpoint, { requestBody, queryParameters });
-    }
+  /**
+   * Check if a request is successful by checking the response code
+   *
+   * @param response
+   */
+  public isRequestSuccessful(response: AxiosResponse): boolean {
+    return response != null && response.status >= 200 && response.status < 300;
+  }
 
-    /**
-     * Convenience method for DELETE requests
-     */
-    public static async doDelete(endpoint: string, queryParameters?: any): Promise<AxiosResponse> {
-        return Api.instance.request('DELETE', endpoint, { requestBody: null, queryParameters });
-    }
+  // Static instance for convenience methods
+  private static instance = new Api();
+
+  /**
+   * Convenience method for GET requests
+   */
+  public static async doGet(endpoint: string, queryParameters?: any): Promise<AxiosResponse> {
+    return Api.instance.request('GET', endpoint, { requestBody: null, queryParameters });
+  }
+
+  /**
+   * Convenience method for POST requests
+   */
+  public static async doPost(
+    endpoint: string,
+    requestBody?: any,
+    queryParameters?: any
+  ): Promise<AxiosResponse> {
+    return Api.instance.request('POST', endpoint, { requestBody, queryParameters });
+  }
+
+  /**
+   * Convenience method for PUT requests
+   */
+  public static async doPut(
+    endpoint: string,
+    requestBody?: any,
+    queryParameters?: any
+  ): Promise<AxiosResponse> {
+    return Api.instance.request('PUT', endpoint, { requestBody, queryParameters });
+  }
+
+  /**
+   * Convenience method for DELETE requests
+   */
+  public static async doDelete(endpoint: string, queryParameters?: any): Promise<AxiosResponse> {
+    return Api.instance.request('DELETE', endpoint, { requestBody: null, queryParameters });
+  }
 }

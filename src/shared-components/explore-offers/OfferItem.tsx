@@ -1,90 +1,102 @@
-import React, {Component, memo} from "react";
-import {connect} from "react-redux";
-import {AppState} from "../../redux-store/reducers";
-import {getGroupRouteTheme, ManageGroupUrlState} from "../../redux-store/reducers/manageGroupUrlReducer";
-import {AuthenticationState} from "../../redux-store/reducers/authenticationReducer";
+import React, { Component, memo } from 'react';
+import { connect } from 'react-redux';
+import { AppState } from '../../redux-store/reducers';
 import {
-    getPitchCover,
-    isImagePitchCover,
-    isProjectCreatedByGroupAdmin,
-    isProjectLive,
-    isProjectPrivate,
-    isProjectPublic,
-    isProjectRestricted,
-    PitchCover,
-    ProjectInstance
-} from "../../models/project";
-import CustomLink from "../../shared-js-css-styles/CustomLink";
+  getGroupRouteTheme,
+  ManageGroupUrlState,
+} from '../../redux-store/reducers/manageGroupUrlReducer';
+import {
+  getPitchCover,
+  isImagePitchCover,
+  isProjectCreatedByGroupAdmin,
+  isProjectLive,
+  isProjectPrivate,
+  isProjectPublic,
+  isProjectRestricted,
+  PitchCover,
+  ProjectInstance,
+} from '../../models/project';
+import CustomLink from '../../shared-js-css-styles/CustomLink';
 import '../../shared-js-css-styles/sharedStyles.scss';
-import Routes from "../../router/routes";
-import {Box, colors, Divider, Typography} from "@material-ui/core";
-import {Col, Container, Image, OverlayTrigger, Row, Tooltip} from "react-bootstrap";
-import {getGroupLogo} from "../../models/group_properties";
-import ReactPlayer from "react-player";
-import * as appColors from "../../values/colors";
-import User from "../../models/user";
-import * as utils from "../../utils/utils";
-import PublicIcon from "@material-ui/icons/Public";
-import RestrictedIcon from "@material-ui/icons/VpnLock";
-import PrivateIcon from "@material-ui/icons/LockOutlined";
+import Routes from '../../router/routes';
+import { Box, colors, Divider, Typography } from '@mui/material';
+import { Col, Container, Image, OverlayTrigger, Row, Tooltip } from 'react-bootstrap';
+import ReactPlayer from 'react-player';
+import User from '../../models/user';
+import * as utils from '../../utils/utils';
+import PublicIcon from '@mui/icons-material/Public';
+import RestrictedIcon from '@mui/icons-material/VpnLock';
+import PrivateIcon from '@mui/icons-material/LockOutlined';
 
 const CoverMaxHeight = 180;
 
 interface OfferItemProps {
-    ManageGroupUrlState: ManageGroupUrlState;
-    AuthenticationState: AuthenticationState;
-    offerInstance: ProjectInstance;
+  ManageGroupUrlState: ManageGroupUrlState;
+  offerInstance: ProjectInstance;
 }
 
 const mapStateToProps = (state: AppState) => {
-    return {
-        ManageGroupUrlState: state.ManageGroupUrlState,
-        AuthenticationState: state.AuthenticationState
-    }
-}
+  return {
+    ManageGroupUrlState: state.ManageGroupUrlState,
+  };
+};
 
 class OfferItem extends Component<OfferItemProps, any> {
-    render() {
-        const {
-            ManageGroupUrlState,
-            AuthenticationState,
-            offerInstance
-        } = this.props;
+  render() {
+    const { ManageGroupUrlState, offerInstance } = this.props;
 
-        // Removed early return check for currentUser
+    // Removed early return check for currentUser
 
-        const pitchCover: PitchCover | null = getPitchCover(offerInstance.projectDetail);
-        const projectUrl = Routes.constructProjectDetailRoute(ManageGroupUrlState.groupNameFromUrl ?? null, ManageGroupUrlState.courseNameFromUrl ?? null, offerInstance.projectDetail.id);
-        
-        console.log('OfferItem - Project URL:', projectUrl, 'for project:', offerInstance.projectDetail.projectName);
+    const pitchCover: PitchCover | null = getPitchCover(offerInstance.projectDetail);
+    const projectUrl = Routes.constructProjectDetailRoute(
+      ManageGroupUrlState.groupNameFromUrl ?? null,
+      ManageGroupUrlState.courseNameFromUrl ?? null,
+      offerInstance.projectDetail.id
+    );
 
-        return <CustomLink
-            url={projectUrl}
-            color="none"
-            activeColor="none"
-            activeUnderline={false}
-            component="nav-link"
-            childComponent={
-                <Box border={`1px solid ${colors.grey["300"]}`} >
-                    <Container fluid style={{ padding: 0 }} >
-                        <Row noGutters >
-                            <Col xs={12} sm={12} md={12} lg={12} >
-                                <Box
-                                    className="offer-image"
-                                    height={`${CoverMaxHeight}px`}
-                                    width="100%"
-                                >
-                                    {
-                                        // Removed shouldHideProjectInformationFromUser check
-                                        !pitchCover
-                                            ? null
-                                            : isImagePitchCover(pitchCover)
-                                                ? <Image src={pitchCover.url} width="100%" height={CoverMaxHeight} style={{ objectFit: "contain" }} />
-                                                : <ReactPlayer url={pitchCover.url} light={false} width="100%" height={CoverMaxHeight} playing={false} controls={false} />
-                                    }
+    console.log(
+      'OfferItem - Project URL:',
+      projectUrl,
+      'for project:',
+      offerInstance.projectDetail.projectName
+    );
 
-                                    {/** Course logo to be displayed at the top-right corner */}
-                                    {/* <Image
+    return (
+      <CustomLink
+        url={projectUrl}
+        color="none"
+        activeColor="none"
+        activeUnderline={false}
+        component="nav-link"
+        childComponent={
+          <Box border={`1px solid ${colors.grey['300']}`}>
+            <Container fluid style={{ padding: 0 }}>
+              <Row noGutters>
+                <Col xs={12} sm={12} md={12} lg={12}>
+                  <Box className="offer-image" height={`${CoverMaxHeight}px`} width="100%">
+                    {
+                      // Removed shouldHideProjectInformationFromUser check
+                      !pitchCover ? null : isImagePitchCover(pitchCover) ? (
+                        <Image
+                          src={pitchCover.url}
+                          width="100%"
+                          height={CoverMaxHeight}
+                          style={{ objectFit: 'contain' }}
+                        />
+                      ) : (
+                        <ReactPlayer
+                          url={pitchCover.url}
+                          light={false}
+                          width="100%"
+                          height={CoverMaxHeight}
+                          playing={false}
+                          controls={false}
+                        />
+                      )
+                    }
+
+                    {/** Course logo to be displayed at the top-right corner */}
+                    {/* <Image
                                         src={getGroupLogo(offerInstance.group) ?? ""}
                                         roundedCircle
                                         height={46}
@@ -101,118 +113,114 @@ class OfferItem extends Component<OfferItemProps, any> {
                                             objectFit: "contain"
                                         }}
                                     /> */}
-                                </Box>
+                  </Box>
 
-                                <Divider/>
+                  <Divider />
 
-                                <Box padding="14px" className="project-title" >
-                                    {/** Project basic information */}
-                                    <Box>
-                                        {/** Project title */}
-                                        <Box marginY="6px" >
-                                            <Typography noWrap variant="h6" align="left" >
-                                                {
-                                                    // Removed shouldHideProjectInformationFromUser check
-                                                    offerInstance.projectDetail.projectName
-                                                }
-                                            </Typography>
-                                        </Box>
+                  <Box padding="14px" className="project-title">
+                    {/** Project basic information */}
+                    <Box>
+                      {/** Project title */}
+                      <Box marginY="6px">
+                        <Typography noWrap variant="h6" align="left">
+                          {
+                            // Removed shouldHideProjectInformationFromUser check
+                            offerInstance.projectDetail.projectName
+                          }
+                        </Typography>
+                      </Box>
 
+                      {/** Sector / Description */}
+                      <Box color={colors.grey['700']}>
+                        <title className="projectInfo">
+                          {
+                            // Removed shouldHideProjectInformationFromUser check
+                            offerInstance.projectDetail.description
+                          }
+                        </title>
+                      </Box>
 
-                                        {/** Sector / Description */}
-                                        <Box color={colors.grey["700"]}>
-                                            <title className="projectInfo">
-                                                {
-                                                    // Removed shouldHideProjectInformationFromUser check
-                                                    offerInstance.projectDetail.description
-                                                }
-                                            </title>
-                                        </Box>
+                      {/** By issuer */}
+                      <Box color="black" marginTop="8px" className="issuer-offer">
+                        <Typography variant="body2" noWrap>
+                          {
+                            // Removed shouldHideProjectInformationFromUser check
+                            isProjectCreatedByGroupAdmin(offerInstance.projectDetail)
+                              ? `by ${offerInstance.group.displayName}`
+                              : `by ${(offerInstance.issuer as User).firstName} ${(offerInstance.issuer as User).lastName}`
+                          }
+                        </Typography>
+                      </Box>
+                    </Box>
 
-                                        {/** By issuer */}
-                                        <Box color="black" marginTop="8px" className="issuer-offer" >
-                                            <Typography variant="body2" noWrap >
-                                                {
-                                                    // Removed shouldHideProjectInformationFromUser check
-                                                    isProjectCreatedByGroupAdmin(offerInstance.projectDetail)
-                                                        ? `by ${offerInstance.group.displayName}`
-                                                        : `by ${(offerInstance.issuer as User).firstName} ${(offerInstance.issuer as User).lastName}`
-                                                }
-                                            </Typography>
-                                        </Box>
-                                    </Box>
+                    {/** Project phase information */}
+                    <Box className="phase-offer">
+                      <Typography variant="body2" color="primary" align="left">
+                        {offerInstance.projectDetail.Pitch.fundRequired
+                          ? `Â£${Number(offerInstance.projectDetail.Pitch.fundRequired.toFixed(2)).toLocaleString()} goal`
+                          : ''}
+                      </Typography>
 
+                      <Box marginTop="5px">
+                        <Typography variant="body2" align="left" color="textSecondary">
+                          {!isProjectLive(offerInstance.projectDetail)
+                            ? 'Offer expired'
+                            : `${utils.dateDiff(offerInstance.projectDetail.Pitch.expiredDate)} days to go`}
+                        </Typography>
+                      </Box>
+                    </Box>
 
-                                    {/** Project phase information */}
-                                    <Box className="phase-offer">
-                                        <Typography variant="body2" color="primary" align="left" >
-                                            {
-                                                offerInstance.projectDetail.Pitch.fundRequired
-                                                    ? `Â£${Number(offerInstance.projectDetail.Pitch.fundRequired.toFixed(2)).toLocaleString()} goal`
-                                                    : ""
-                                            }
-                                        </Typography>
-
-                                        <Box marginTop="5px" >
-                                            <Typography variant="body2" align="left" color="textSecondary" >
-                                                {
-                                                    !isProjectLive(offerInstance.projectDetail)
-                                                        ? "Offer expired"
-                                                        : `${utils.dateDiff(offerInstance.projectDetail.Pitch.expiredDate)} days to go`
-                                                }
-                                            </Typography>
-                                        </Box>
-                                    </Box>
-
-
-                                    {/** Project visibility information */}
-                                    <Box className="badges" color={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main} >
-                                        <Box className="public-offer">
-                                            <OverlayTrigger
-                                                trigger={["hover", "focus"]}
-                                                placement="bottom"
-                                                flip
-                                                overlay={
-                                                    <Tooltip id="tooltip-bottom" >
-                                                        {
-                                                            isProjectPublic(offerInstance.projectDetail)
-                                                                ? "This is a public project."
-                                                                : isProjectRestricted(offerInstance.projectDetail)
-                                                                ? "This is a restricted project."
-                                                                : isProjectPrivate(offerInstance.projectDetail)
-                                                                    ? "This is a private project."
-                                                                    : null
-                                                        }
-                                                    </Tooltip>
-                                                }
-                                            >
-                                                {
-                                                    isProjectPublic(offerInstance.projectDetail)
-                                                        ? <PublicIcon/>
-                                                        : isProjectRestricted(offerInstance.projectDetail)
-                                                        ? <RestrictedIcon/>
-                                                        : isProjectPrivate(offerInstance.projectDetail)
-                                                            ? <PrivateIcon/>
-                                                            : <Box/>
-                                                }
-                                            </OverlayTrigger>
-                                        </Box>
-                                    </Box>
-                                </Box>
-                            </Col>
-                        </Row>
-                    </Container>
-                </Box>
-            }
-        />;
-    }
+                    {/** Project visibility information */}
+                    <Box
+                      className="badges"
+                      color={getGroupRouteTheme(ManageGroupUrlState).palette.primary.main}
+                    >
+                      <Box className="public-offer">
+                        <OverlayTrigger
+                          trigger={['hover', 'focus']}
+                          placement="bottom"
+                          flip
+                          overlay={
+                            <Tooltip id="tooltip-bottom">
+                              {isProjectPublic(offerInstance.projectDetail)
+                                ? 'This is a public project.'
+                                : isProjectRestricted(offerInstance.projectDetail)
+                                  ? 'This is a restricted project.'
+                                  : isProjectPrivate(offerInstance.projectDetail)
+                                    ? 'This is a private project.'
+                                    : null}
+                            </Tooltip>
+                          }
+                        >
+                          {isProjectPublic(offerInstance.projectDetail) ? (
+                            <PublicIcon />
+                          ) : isProjectRestricted(offerInstance.projectDetail) ? (
+                            <RestrictedIcon />
+                          ) : isProjectPrivate(offerInstance.projectDetail) ? (
+                            <PrivateIcon />
+                          ) : (
+                            <Box />
+                          )}
+                        </OverlayTrigger>
+                      </Box>
+                    </Box>
+                  </Box>
+                </Col>
+              </Row>
+            </Container>
+          </Box>
+        }
+      />
+    );
+  }
 }
 
 const MemoizedOfferItem = memo(OfferItem, (prevProps, nextProps) => {
-    return prevProps.offerInstance.projectDetail.id === nextProps.offerInstance.projectDetail.id && 
-           prevProps.offerInstance.projectDetail.edited === nextProps.offerInstance.projectDetail.edited &&
-           prevProps.ManageGroupUrlState.group?.anid === nextProps.ManageGroupUrlState.group?.anid &&
-           prevProps.AuthenticationState.currentUser?.id === nextProps.AuthenticationState.currentUser?.id;
+  return (
+    prevProps.offerInstance.projectDetail.id === nextProps.offerInstance.projectDetail.id &&
+    prevProps.offerInstance.projectDetail.edited === nextProps.offerInstance.projectDetail.edited &&
+    prevProps.ManageGroupUrlState.group?.anid === nextProps.ManageGroupUrlState.group?.anid
+  );
 });
 
 export default connect(mapStateToProps)(MemoizedOfferItem);

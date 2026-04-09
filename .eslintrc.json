@@ -1,0 +1,33 @@
+{
+  "extends": [
+    "react-app",
+    "plugin:react/recommended",
+    "prettier"
+  ],
+  "plugins": ["react"],
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  },
+  "rules": {
+    "react/react-in-jsx-scope": "off",
+    "react/prop-types": "off",
+    "react/display-name": "off",
+    "react/no-unescaped-entities": "warn",
+    "react/jsx-no-target-blank": "warn",
+
+    "no-var": "warn",
+    "prefer-const": "warn",
+    "eqeqeq": "warn",
+    "no-duplicate-imports": "error",
+    "no-cond-assign": "error",
+    "no-duplicate-case": "error",
+    "no-empty": ["error", { "allowEmptyCatch": true }],
+    "no-unsafe-finally": "error",
+    "no-sequences": "error",
+
+    "@typescript-eslint/no-explicit-any": "off",
+    "no-unused-vars": "off"
+  }
+}

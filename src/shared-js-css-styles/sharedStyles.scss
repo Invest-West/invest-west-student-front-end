@@ -1,38 +1,47 @@
 /* web line clamp can be looked at for further details on this process */
 .projectInfo {
-    display: block;
-    overflow: visible;
-    text-overflow: initial;
-    min-height: 250px;
+  display: block;
+  overflow: visible;
+  text-overflow: initial;
+  min-height: 250px;
 }
 
 .tileHoverEffect:hover {
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 0 6px 6px rgba(0, 0, 0, 0.23);
+  box-shadow:
+    0 10px 20px rgba(0, 0, 0, 0.19),
+    0 6px 6px rgba(0, 0, 0, 0.23);
   transform: translateY(-3px);
-  transition: box-shadow 0.3s ease-in-out 0.2s, transform 0.3s ease-in-out 0.2s; /* Added 0.2s delay */
+  transition:
+    box-shadow 0.3s ease-in-out 0.2s,
+    transform 0.3s ease-in-out 0.2s; /* Added 0.2s delay */
 }
 
 .tileHoverEffect {
-  transition: box-shadow 0.3s ease-in-out, transform 0.3s ease-in-out;
+  transition:
+    box-shadow 0.3s ease-in-out,
+    transform 0.3s ease-in-out;
 }
-
 
 #explore-offers {
   display: flex;
   padding: 15px;
 }
 
- .projectInfo {
+.projectInfo {
   order: 1;
-} .issuer-offer {
-  order:2;
-} .offer-divier {
-  order:3;
+}
+.issuer-offer {
+  order: 2;
+}
+.offer-divier {
+  order: 3;
   height: 3px;
   margin: 30px 0px 15px 0px;
-} .phase-offer{
+}
+.phase-offer {
   order: 4;
-} .badges {
+}
+.badges {
   display: flex;
   margin: 5px -5px;
   flex-direction: row;
@@ -40,13 +49,13 @@
   order: 5;
   flex-shrink: 1;
   gap: 5px;
-  .seis{
+  .seis {
     margin-left: -10px;
   }
-  .eis{
+  .eis {
     margin-left: -10px;
   }
-  .public-offer{
+  .public-offer {
     margin-left: auto;
   }
 }
@@ -54,11 +63,11 @@
 .text-badges {
   border-style: solid;
   border-width: thin;
-  color: #4C8484;
+  color: #4c8484;
   width: 45px;
 }
 
-.captcha{
+.captcha {
   margin-top: 15px;
   margin: auto;
 }
