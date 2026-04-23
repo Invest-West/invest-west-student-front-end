@@ -60,6 +60,7 @@ import {HashLoader} from 'react-spinners';
 import OffersTable from "../offers-table/OffersTable";
 import CustomLink from "../../shared-js-css-styles/CustomLink";
 import Footer from "../footer/Footer";
+import firebase from "../../firebase/firebaseApp";
 
 const mapStateToProps = state => {
     return {
@@ -69,6 +70,7 @@ const mapStateToProps = state => {
         groupPropertiesLoaded: state.manageGroupFromParams.groupPropertiesLoaded,
 
         currentUser: state.auth.user,
+        currentUserGroupsUserIsIn: state.auth.groupsUserIsIn,
 
         clubAttributes: state.manageClubAttributes.clubAttributes,
 
@@ -154,9 +156,17 @@ const mapDispatchToProps = dispatch => {
 };
 
 class Profile extends Component {
+    state = {
+        resolvedUniversityName: '',
+        resolvedUniversityId: null,
+        availableProfileCourses: [],
+        loadingProfileCourses: false,
+        lastMembershipSignature: null
+    };
 
     componentDidMount() {
         this.loadData();
+        this.loadProfileCourses();
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
@@ -167,6 +177,7 @@ class Profile extends Component {
         } = this.props;
 
         this.loadData();
+        this.loadProfileCourses();
 
         if (userLegalDocumentsLoaded) {
             startListeningForLegalDocumentsChanged();
@@ -219,11 +230,146 @@ class Profile extends Component {
 
     };
 
+    getNormalizedMembershipGroups = () => {
+        const {
+            originalUser,
+            currentUserGroupsUserIsIn
+        } = this.props;
+
+        const membershipEntries = originalUser?.groupsUserIsIn || currentUserGroupsUserIsIn || [];
+
+        return membershipEntries
+            .map(entry => entry?.groupDetails || entry?.group || entry)
+            .filter(group => group && group.anid);
+    };
+
+    getProfileUniversityContext = () => {
+        const membershipGroups = this.getNormalizedMembershipGroups();
+
+        const courseGroup = membershipGroups.find(group => group.parentGroupId);
+        const universityGroup = courseGroup
+            ? membershipGroups.find(group => group.anid === courseGroup.parentGroupId)
+            : membershipGroups.find(group => !group.parentGroupId);
+
+        return {
+            membershipGroups,
+            courseGroup,
+            universityGroup
+        };
+    };
+
+    loadProfileCourses = async () => {
+        const {
+            originalUser
+        } = this.props;
+
+        if (!originalUser || originalUser.type !== DB_CONST.TYPE_ISSUER) {
+            return;
+        }
+
+        const {
+            membershipGroups,
+            courseGroup,
+            universityGroup
+        } = this.getProfileUniversityContext();
+
+        const resolvedUniversityId = universityGroup?.anid || courseGroup?.parentGroupId || null;
+        const resolvedUniversityName = universityGroup?.displayName || originalUser.university || '';
+        const membershipSignature = JSON.stringify({
+            userId: originalUser.id,
+            memberships: membershipGroups.map(group => ({
+                anid: group.anid,
+                parentGroupId: group.parentGroupId || null,
+                displayName: group.displayName
+            }))
+        });
+
+        if (this.state.lastMembershipSignature === membershipSignature) {
+            return;
+        }
+
+        if (!resolvedUniversityId) {
+            this.setState({
+                resolvedUniversityName,
+                resolvedUniversityId: null,
+                availableProfileCourses: [],
+                loadingProfileCourses: false,
+                lastMembershipSignature: membershipSignature
+            });
+            return;
+        }
+
+        this.setState({
+            resolvedUniversityName,
+            resolvedUniversityId,
+            loadingProfileCourses: true,
+            lastMembershipSignature: membershipSignature
+        });
+
+        try {
+            const coursesSnapshot = await firebase
+                .database()
+                .ref(DB_CONST.GROUP_PROPERTIES_CHILD)
+                .orderByChild('parentGroupId')
+                .equalTo(resolvedUniversityId)
+                .once('value');
+
+            let availableProfileCourses = [];
+
+            if (coursesSnapshot.exists()) {
+                const coursesObject = coursesSnapshot.val();
+                availableProfileCourses = Object.keys(coursesObject)
+                    .map(key => coursesObject[key])
+                    .filter(course => course.groupType === 'course' && course.status === DB_CONST.GROUP_STATUS_ACTIVE)
+                    .sort((a, b) => a.displayName.localeCompare(b.displayName));
+            }
+
+            if (availableProfileCourses.length === 0 && universityGroup?.settings?.availableCourses) {
+                availableProfileCourses = universityGroup.settings.availableCourses
+                    .filter(courseName => courseName && courseName.trim().length > 0)
+                    .map(courseName => ({
+                        anid: `legacy-${resolvedUniversityId}-${courseName}`,
+                        displayName: courseName
+                    }));
+            }
+
+            this.setState({
+                resolvedUniversityName,
+                resolvedUniversityId,
+                availableProfileCourses,
+                loadingProfileCourses: false
+            });
+        } catch (error) {
+            this.setState({
+                resolvedUniversityName,
+                resolvedUniversityId,
+                availableProfileCourses: [],
+                loadingProfileCourses: false
+            });
+        }
+    };
+
     /**
      * Handle text changed when editing user's profile
      */
     handleEditUser = type => event => {
         this.props.editUserLocally(type, {property: event.target.name, value: event.target.value});
+    };
+
+    handleIssuerCourseChanged = event => {
+        const {
+            resolvedUniversityName
+        } = this.state;
+
+        this.props.editUserLocally(editUserActions.EDIT_PERSONAL_INFORMATION, {
+            property: 'course',
+            value: event.target.value
+        });
+
+        this.props.editUserLocally(editUserActions.EDIT_PERSONAL_INFORMATION, {
+            property: 'university',
+            value: resolvedUniversityName || ''
+        });
     };
 
     /**
@@ -281,6 +427,18 @@ class Profile extends Component {
             allowEditing,
             clubAttributes
         } = this.props;
+
+        const {
+            resolvedUniversityName
+        } = this.state;
+
+        const {
+            courseGroup
+        } = this.getProfileUniversityContext();
+        const resolvedCourseName = courseGroup?.displayName
+            || (userEdited.hasOwnProperty('course') ? userEdited.course : '')
+            || (originalUser.hasOwnProperty('course') ? originalUser.course : '')
+            || '';
 
         if (!groupPropertiesLoaded) {
             return null;
@@ -448,8 +606,51 @@ class Profile extends Component {
                                             <Divider style={{ marginTop: 10, marginBottom: 20 }} />
                                         </Col>
 
+                                        {
+                                            userEdited.type === DB_CONST.TYPE_ISSUER
+                                                ?
+                                                <>
+                                                    {/** University */}
+                                                    <Col xs={12} sm={12} md={6} lg={{span: 6, order: 7}} style={{ marginBottom: 20 }} >
+                                                        <FormControl fullWidth >
+                                                            <FormLabel><b>University</b></FormLabel>
+                                                            <TextField
+                                                                name="university"
+                                                                placeholder="University is derived from membership"
+                                                                value={resolvedUniversityName || (userEdited.hasOwnProperty('university') ? userEdited.university : '')}
+                                                                margin="dense"
+                                                                variant="outlined"
+                                                                disabled={true}
+                                                            />
+                                                        </FormControl>
+                                                    </Col>
+
+                                                    {/** Course */}
+                                                    <Col xs={12} sm={12} md={6} lg={{span: 6, order: 8}} style={{ marginBottom: 20 }} >
+                                                        <FormControl fullWidth >
+                                                            <FormLabel><b>Course</b></FormLabel>
+                                                            <TextField
+                                                                name="course"
+                                                                placeholder="Course is derived from membership"
+                                                                value={resolvedCourseName}
+                                                                margin="dense"
+                                                                variant="outlined"
+                                                                disabled={true}
+                                                            />
+                                                        </FormControl>
+                                                    </Col>
+
+                                                    {/** Divider */}
+                                                    <Col xs={12} sm={12} md={12} lg={{span: 12, order: 9}} >
+                                                        <Divider style={{ marginTop: 10, marginBottom: 20 }} />
+                                                    </Col>
+                                                </>
+                                                :
+                                                null
+                                        }
+
                                         {/** LinkedIn */}
-                                        <Col xs={12} sm={12} md={12} lg={{span: 12, order: 7}} style={{ marginBottom: 20 }} >
+                                        <Col xs={12} sm={12} md={12} lg={{span: 12, order: 10}} style={{ marginBottom: 20 }} >
                                             <FormControl fullWidth >
                                                 <FormLabel><b>LinkedIn</b></FormLabel>
                                                 <TextField
@@ -477,12 +678,12 @@ class Profile extends Component {
                                                 ?
                                                 <>
                                                     {/** Divider */}
-                                                    <Col xs={12} sm={12} md={12} lg={{span: 12, order: 8}} >
+                                                    <Col xs={12} sm={12} md={12} lg={{span: 12, order: 11}} >
                                                         <Divider style={{ marginTop: 10, marginBottom: 20 }} />
                                                     </Col>
 
                                                     {/** Company */}
-                                                    <Col xs={12} sm={12} md={6} lg={{span: 6, order: 9}} style={{ marginBottom: 20 }} >
+                                                    <Col xs={12} sm={12} md={6} lg={{span: 6, order: 12}} style={{ marginBottom: 20 }} >
                                                         <FormControl fullWidth >
                                                             <FormLabel><b>Company</b></FormLabel>
                                                             <TextField
@@ -497,7 +698,7 @@ class Profile extends Component {
                                                     </Col>
 
                                                     {/** Company Name */}
-                                                    <Col xs={12} sm={12} md={6} lg={{span: 6, order: 10}} style={{ marginBottom: 20 }} >
+                                                    <Col xs={12} sm={12} md={6} lg={{span: 6, order: 13}} style={{ marginBottom: 20 }} >
                                                         <FormControl fullWidth >
                                                             <FormLabel><b>Company Name</b></FormLabel>
                                                             <TextField
@@ -512,7 +713,7 @@ class Profile extends Component {
                                                     </Col>
 
                                                     {/** Description */}
-                                                    <Col xs={12} sm={12} md={12} lg={{span: 12, order: 11}} style={{ marginBottom: 20 }} >
+                                                    <Col xs={12} sm={12} md={12} lg={{span: 12, order: 14}} style={{ marginBottom: 20 }} >
                                                         <FormControl fullWidth >
                                                             <FormLabel><b>Description</b></FormLabel>
                                                             <TextField
@@ -556,6 +757,8 @@ class Profile extends Component {
                                                         && userEdited.firstName === originalUser.firstName
                                                         && userEdited.lastName === originalUser.lastName
                                                         && userEdited.email === originalUser.email
+                                                        && (userEdited.university === originalUser.university || (!userEdited.university && !originalUser.university))
+                                                        && (userEdited.course === originalUser.course || (!userEdited.course && !originalUser.course))
                                                         && (
                                                             (originalUser.linkedin && userEdited.linkedin && userEdited.linkedin === originalUser.linkedin)
                                                             ||

@@ -18,6 +18,7 @@ export default interface User {
     lastName: string | "none";
     title: string | "none";
     discover: string | "none";
+    university?: string;
     course?: string;
     company?: string; // investor company
     companyName?: string; // investor company name

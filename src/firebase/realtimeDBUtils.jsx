@@ -1419,27 +1419,33 @@ export const loadInvitedUsers = async (anid) => {
                     invitedUsers.push(user);
                 });
 
-                Promise.all(invitedUsers.map(invitedUser => {
-                    return new Promise((resolve, reject) => {
-                        loadAngelNetworkBasedOnANID(invitedUser.invitedBy)
-                            .then(angelNetwork => {
-                                invitedUser.Invitor = {
-                                    anid: angelNetwork.anid,
-                                    displayName: angelNetwork.displayName,
-                                    logo: angelNetwork.logo
-                                };
+                Promise.all(invitedUsers.map(async (invitedUser) => {
+                    try {
+                        const angelNetwork = await loadAngelNetworkBasedOnANID(invitedUser.invitedBy);
+                        invitedUser.Invitor = {
+                            anid: angelNetwork?.anid || invitedUser.invitedBy,
+                            displayName: angelNetwork?.displayName || "Unknown university",
+                            logo: angelNetwork?.logo || null
+                        };
+                    } catch (error) {
+                        console.warn("Could not load inviter group for invited user:", invitedUser?.id, invitedUser?.invitedBy, error);
+                        invitedUser.Invitor = {
+                            anid: invitedUser.invitedBy,
+                            displayName: "Unknown university",
+                            logo: null
+                        };
+                    }
 
-                                if (invitedUser.hasOwnProperty('officialUserID')) {
-                                    getUserBasedOnID(invitedUser.officialUserID)
-                                        .then(officialUser => {
-                                            invitedUser.officialUser = officialUser;
-                                            return resolve(invitedUsers);
-                                        });
-                                } else {
-                                    return resolve(invitedUsers);
-                                }
-                            });
-                    });
+                    if (Object.prototype.hasOwnProperty.call(invitedUser, 'officialUserID')) {
+                        try {
+                            invitedUser.officialUser = await getUserBasedOnID(invitedUser.officialUserID);
+                        } catch (error) {
+                            console.warn("Could not load official user for invited user:", invitedUser?.id, invitedUser?.officialUserID, error);
+                            invitedUser.officialUser = null;
+                        }
+                    }
+
+                    return invitedUser;
                 }))
                     .then(() => {
                         return resolve(invitedUsers);

@@ -99,6 +99,10 @@ export const createAccount: ActionCreator<any> = () => {
             type: SignUpEvents.CompleteCreatingAccount
         };
 
+        const normalizedCourse = course && course !== "-1"
+            ? course
+            : undefined;
+
         // invalid email address
         if (!isValidEmailAddress(email) || !isValidEmailAddress(confirmedEmail)) {
             completeAction.error = "Please enter a valid email address.";
@@ -140,7 +144,7 @@ export const createAccount: ActionCreator<any> = () => {
                 userProfile: {
                     title,
                     discover,
-                    course, // This contains the selected course display name
+                    course: normalizedCourse,
                     firstName,
                     lastName,
                     email,

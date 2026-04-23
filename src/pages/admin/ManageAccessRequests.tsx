@@ -85,6 +85,39 @@ export default function ManageAccessRequests({currentUser}: ManageAccessRequests
         };
     }, []);
 
+    const normalizeRequestInstances = (rawData: any): AdminAccessRequestInstance[] => {
+        if (Array.isArray(rawData)) {
+            return rawData;
+        }
+
+        if (!rawData || typeof rawData !== 'object') {
+            return [];
+        }
+
+        const candidateLists = [
+            rawData.requests,
+            rawData.adminAccessRequests,
+            rawData.pendingRequests,
+            rawData.approvedRequests,
+            rawData.rejectedRequests,
+            rawData.items,
+            rawData.data
+        ];
+
+        for (const candidate of candidateLists) {
+            if (Array.isArray(candidate)) {
+                return candidate;
+            }
+        }
+
+        const objectValues = Object.values(rawData);
+        if (objectValues.length > 0 && objectValues.every(item => item && typeof item === 'object' && 'request' in (item as any))) {
+            return objectValues as AdminAccessRequestInstance[];
+        }
+
+        return [];
+    };
+
     const loadRequests = async () => {
         if (!isMountedRef.current) return; // ⚡ FIX: Don't start if unmounted
 
@@ -105,14 +138,17 @@ export default function ManageAccessRequests({currentUser}: ManageAccessRequests
             ]);
 
             if (isMountedRef.current) { // ⚡ FIX: Only update state if still mounted
-                setPendingRequests(pending.data || []);
-                setApprovedRequests(approved.data || []);
-                setRejectedRequests(rejected.data || []);
+                setPendingRequests(normalizeRequestInstances(pending?.data));
+                setApprovedRequests(normalizeRequestInstances(approved?.data));
+                setRejectedRequests(normalizeRequestInstances(rejected?.data));
             }
         } catch (err: any) {
             console.error('Error loading admin access requests:', err);
             if (isMountedRef.current) { // ⚡ FIX: Only update state if still mounted
                 setError('Failed to load requests. Please refresh the page.');
+                setPendingRequests([]);
+                setApprovedRequests([]);
+                setRejectedRequests([]);
             }
         } finally {
             if (isMountedRef.current) { // ⚡ FIX: Only update state if still mounted
@@ -288,6 +324,10 @@ export default function ManageAccessRequests({currentUser}: ManageAccessRequests
         );
     }
 
+    const safePendingRequests = Array.isArray(pendingRequests) ? pendingRequests : [];
+    const safeApprovedRequests = Array.isArray(approvedRequests) ? approvedRequests : [];
+    const safeRejectedRequests = Array.isArray(rejectedRequests) ? rejectedRequests : [];
+
     return (
         <Box width="100%">
             {error && (
@@ -303,38 +343,38 @@ export default function ManageAccessRequests({currentUser}: ManageAccessRequests
                     indicatorColor="primary"
                     textColor="primary"
                 >
-                    <Tab label={`Pending (${pendingRequests.length})`}/>
-                    <Tab label={`Approved (${approvedRequests.length})`}/>
-                    <Tab label={`Rejected (${rejectedRequests.length})`}/>
+                    <Tab label={`Pending (${safePendingRequests.length})`}/>
+                    <Tab label={`Approved (${safeApprovedRequests.length})`}/>
+                    <Tab label={`Rejected (${safeRejectedRequests.length})`}/>
                 </Tabs>
 
                 <TabPanel value={activeTab} index={0}>
-                    {pendingRequests.length === 0 ? (
+                    {safePendingRequests.length === 0 ? (
                         <Typography variant="body2" color="textSecondary" align="center">
                             {isSuperAdmin ? 'No pending requests' : 'You have no pending requests'}
                         </Typography>
                     ) : (
-                        pendingRequests.map(request => renderRequestCard(request, isSuperAdmin))
+                        safePendingRequests.map(request => renderRequestCard(request, isSuperAdmin))
                     )}
                 </TabPanel>
 
                 <TabPanel value={activeTab} index={1}>
-                    {approvedRequests.length === 0 ? (
+                    {safeApprovedRequests.length === 0 ? (
                         <Typography variant="body2" color="textSecondary" align="center">
                             {isSuperAdmin ? 'No approved requests' : 'You have no approved requests'}
                         </Typography>
                     ) : (
-                        approvedRequests.map(request => renderRequestCard(request, false))
+                        safeApprovedRequests.map(request => renderRequestCard(request, false))
                     )}
                 </TabPanel>
 
                 <TabPanel value={activeTab} index={2}>
-                    {rejectedRequests.length === 0 ? (
+                    {safeRejectedRequests.length === 0 ? (
                         <Typography variant="body2" color="textSecondary" align="center">
                             {isSuperAdmin ? 'No rejected requests' : 'You have no rejected requests'}
                         </Typography>
                     ) : (
-                        rejectedRequests.map(request => renderRequestCard(request, false))
+                        safeRejectedRequests.map(request => renderRequestCard(request, false))
                     )}
                 </TabPanel>
             </Paper>

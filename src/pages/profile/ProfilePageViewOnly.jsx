@@ -323,6 +323,20 @@ class ProfilePageViewOnly extends Component {
                                         <FlexView column marginTop={18} hAlignContent="center">
                                             <Typography align="center" variant="body1">{`Email: ${userToBeViewed.email}`}</Typography>
                                             {
+                                                userToBeViewed.university
+                                                    ?
+                                                    <Typography align="center" variant="body1">{`University: ${userToBeViewed.university}`}</Typography>
+                                                    :
+                                                    null
+                                            }
+                                            {
+                                                userToBeViewed.course
+                                                    ?
+                                                    <Typography align="center" variant="body1">{`Course: ${userToBeViewed.course}`}</Typography>
+                                                    :
+                                                    null
+                                            }
+                                            {
                                                 userToBeViewed.hasOwnProperty('linkedin') && userToBeViewed.linkedin.trim().length > 0
                                                     ?
                                                     <a href={userToBeViewed.linkedin} target="_blank" rel="noopener noreferrer">

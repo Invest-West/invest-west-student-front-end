@@ -55,7 +55,8 @@ export const successfullyFetchedOffers = (state: ExploreOffersState) => {
 }
 
 export const hasOffersForCurrentFilters = (state: ExploreOffersState) => {
-    return successfullyFetchedOffers(state) && state.offerInstances.length > 0;
+    const offerInstances = Array.isArray(state.offerInstances) ? state.offerInstances : [];
+    return successfullyFetchedOffers(state) && offerInstances.length > 0;
 }
 
 export const isSearchFilterActive = (state: ExploreOffersState) =>  {
@@ -63,21 +64,23 @@ export const isSearchFilterActive = (state: ExploreOffersState) =>  {
 }
 
 export const calculatePaginationPages = (state: ExploreOffersState) => {
-    if (state.offerInstances.length <= maxOffersPerPage) {
+    const offerInstances = Array.isArray(state.offerInstances) ? state.offerInstances : [];
+    if (offerInstances.length <= maxOffersPerPage) {
         return 1;
     }
-    if (state.offerInstances.length % maxOffersPerPage === 0) {
-        return (state.offerInstances.length / maxOffersPerPage) | 0;
+    if (offerInstances.length % maxOffersPerPage === 0) {
+        return (offerInstances.length / maxOffersPerPage) | 0;
     }
-    return ((state.offerInstances.length / maxOffersPerPage) | 0) + 1;
+    return ((offerInstances.length / maxOffersPerPage) | 0) + 1;
 }
 
 export const calculatePaginationIndices = (state: ExploreOffersState) => {
+    const offerInstances = Array.isArray(state.offerInstances) ? state.offerInstances : [];
     let startIndex, endIndex;
     startIndex = (state.currentPage - 1) * maxOffersPerPage;
     endIndex = startIndex + maxOffersPerPage - 1;
-    if (endIndex > state.offerInstances.length - 1) {
-        endIndex = state.offerInstances.length - 1;
+    if (endIndex > offerInstances.length - 1) {
+        endIndex = offerInstances.length - 1;
     }
     return {
         startIndex,
@@ -97,9 +100,12 @@ const exploreOffersReducer = (state: ExploreOffersState = initialState, action: 
             }
         case ExploreOffersEvents.CompleteFetchingOffers:
             const completeFetchingOffersAction: CompleteFetchingOffersAction = action as CompleteFetchingOffersAction;
+            const offerInstances = Array.isArray(completeFetchingOffersAction.offerInstances)
+                ? completeFetchingOffersAction.offerInstances
+                : [];
             return {
                 ...state,
-                offerInstances: [...completeFetchingOffersAction.offerInstances],
+                offerInstances: [...offerInstances],
                 fetchingOffers: false,
                 offersFetched: true,
                 currentPage: 1,

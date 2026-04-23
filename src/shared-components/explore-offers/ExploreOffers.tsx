@@ -109,9 +109,10 @@ interface ExploreOffersComponentState {
       fetchGroups = async () => {
         try {
           const response = await new GroupRepository().fetchGroups();
+          const groups = Array.isArray(response?.data) ? response.data : [];
           // ⚡ Only update state if component is still mounted
           if (this._isMounted) {
-            this.setState({ groups: response.data });
+            this.setState({ groups });
           }
         } catch (error) {
           console.error("Error fetching groups:", error);
@@ -134,6 +135,11 @@ interface ExploreOffersComponentState {
 
         const paginationPages = calculatePaginationPages(ExploreOffersLocalState);
         const paginationIndices = calculatePaginationIndices(ExploreOffersLocalState);
+        const sectors = ManageSystemAttributesState.systemAttributes?.Sectors ?? [];
+        const groups = Array.isArray(this.state.groups) ? this.state.groups : [];
+        const offerInstances = Array.isArray(ExploreOffersLocalState.offerInstances)
+            ? ExploreOffersLocalState.offerInstances
+            : [];
 
         return <Box
             paddingX={MediaQueryState.isMobile ? "20px" : "56px"}
@@ -159,13 +165,9 @@ interface ExploreOffersComponentState {
                             >
                                 <MenuItem key="all" value="all">All sectors</MenuItem>
 
-                                {
-                                    !ManageSystemAttributesState.systemAttributes
-                                        ? null
-                                        : ManageSystemAttributesState.systemAttributes.Sectors.map((sector, index) => (
-                                            <MenuItem key={index} value={sector}>{sector}</MenuItem>
-                                        ))
-                                }
+                                {sectors.map((sector, index) => (
+                                    <MenuItem key={index} value={sector}>{sector}</MenuItem>
+                                ))}
                             </Select>
                         </Paper>
                     </Box>
@@ -211,11 +213,9 @@ interface ExploreOffersComponentState {
                                 input={<OutlinedInput />}
                             >
                                 <MenuItem key="all" value="all">All universities</MenuItem>
-                                {
-                                    this.state.groups.map((group, index) => (
-                                        <MenuItem key={index} value={group.anid}>{group.displayName}</MenuItem>
-                                    ))
-                                }
+                                {groups.map((group, index) => (
+                                    <MenuItem key={index} value={group.anid}>{group.displayName}</MenuItem>
+                                ))}
                             </Select>
                         </Paper>
                     </Box>
@@ -303,7 +303,7 @@ interface ExploreOffersComponentState {
                                             marginBottom="25px"
                                         >
                                             <Typography variant="h6">Explore</Typography>
-                                            <Typography variant="h6" color="primary">&nbsp;<b>{ExploreOffersLocalState.offerInstances.length} projects</b></Typography>
+                                            <Typography variant="h6" color="primary">&nbsp;<b>{offerInstances.length} projects</b></Typography>
                                             <Box marginLeft="8px" >
                                                 <IconButton onClick={() => fetchOffers(FetchProjectsOrderByOptions.Phase)} >
                                                     <RefreshIcon/>
@@ -338,7 +338,7 @@ interface ExploreOffersComponentState {
                                         {/** Offers area */}
                                         <Row>
                                             {
-                                                ExploreOffersLocalState.offerInstances
+                                                offerInstances
                                                     .slice(paginationIndices.startIndex, paginationIndices.endIndex + 1)
                                                     .map(offerInstance => (
                                                         <Col key={offerInstance.projectDetail.id} xs={12} sm={12} md={6} lg={3} >

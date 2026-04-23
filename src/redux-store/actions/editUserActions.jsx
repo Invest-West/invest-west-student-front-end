@@ -127,6 +127,18 @@ export const commitUserProfileChanges = type => {
                     firstName: userEdited.firstName,
                     lastName: userEdited.lastName,
                     email: userEdited.email,
+                    university:
+                        userEdited.university && userEdited.university.trim().length > 0
+                            ?
+                            userEdited.university
+                            :
+                            null,
+                    course:
+                        userEdited.course && userEdited.course.trim().length > 0
+                            ?
+                            userEdited.course
+                            :
+                            null,
                     linkedin:
                         userEdited.linkedin && userEdited.linkedin.trim().length > 0
                             ?

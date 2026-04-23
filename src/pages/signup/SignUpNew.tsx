@@ -23,7 +23,7 @@ import {AuthenticationState, isAuthenticating} from "../../redux-store/reducers/
 import {RouteComponentProps} from "react-router-dom";
 import {RouteParams} from "../../router/router";
 import {createAccount, handleInputFieldChanged, loadInvitedUser} from "./SignUpActions";
-import { findCourseDisplayNameByUrl } from "../../utils/courseUtils";
+import { courseUrlNameToDisplayName, findCourseDisplayNameByUrl } from "../../utils/courseUtils";
 import {
     hasErrorCreatingAccount,
     hasErrorLoadingInvitedUser,
@@ -122,19 +122,20 @@ class SignUpNew extends Component<SignUpProps & Readonly<RouteComponentProps<Rou
         }
 
         const courseFromUrl = this.props.match.params.courseUserName;
-        if (courseFromUrl && ManageGroupUrlState.group?.settings?.availableCourses) {
-            const courseDisplayName = findCourseDisplayNameByUrl(
-                courseFromUrl,
-                ManageGroupUrlState.group.settings.availableCourses
-            );
+        if (courseFromUrl) {
+            const availableCourses = ManageGroupUrlState.group?.settings?.availableCourses;
+            const courseDisplayName = availableCourses
+                ? findCourseDisplayNameByUrl(courseFromUrl, availableCourses)
+                : null;
+            const resolvedCourseName = courseDisplayName || courseUrlNameToDisplayName(courseFromUrl);
 
-            if (courseDisplayName) {
-                console.log('[SIGNUP] Auto-selecting course from URL:', courseFromUrl, '->', courseDisplayName);
+            if (resolvedCourseName) {
+                console.log('[SIGNUP] Auto-selecting course from URL:', courseFromUrl, '->', resolvedCourseName);
                 // Simulate an input field change to set the course
                 const mockEvent = {
                     target: {
                         name: 'course',
-                        value: courseDisplayName,
+                        value: resolvedCourseName,
                         type: 'select',
                         checked: false
                     }

@@ -59,6 +59,8 @@ const editUserReducer = (state = initState, action) => {
                     firstName: state.originalUser.firstName,
                     lastName: state.originalUser.lastName,
                     email: state.originalUser.email,
+                    university: !state.originalUser.university ? '' : state.originalUser.university,
+                    course: !state.originalUser.course ? '' : state.originalUser.course,
                     linkedin: !state.originalUser.linkedin ? '' : state.originalUser.linkedin,
                     company: !state.originalUser.company ? '' : state.originalUser.company,
                     companyName: !state.originalUser.companyName ? '' : state.originalUser.companyName,

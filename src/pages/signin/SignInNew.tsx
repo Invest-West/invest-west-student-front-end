@@ -109,7 +109,7 @@ class SignInNew extends Component<SignInProps & Readonly<RouteComponentProps<Rou
                             {/** Sign in card header */}
                             <Box display="flex" flexDirection="column" marginBottom="35px" >
                                 <Typography variant="h4" align="center" paragraph color="primary">Sign in to your account</Typography>
-                                <Typography variant="body1" align="center">Connecting businesses and investors across the South West of England</Typography>
+                                <Typography variant="body1" align="center">Connecting students and employers across the South West of England</Typography>
                             </Box>
 
                             {/** Display message to inform the user that the reset password email

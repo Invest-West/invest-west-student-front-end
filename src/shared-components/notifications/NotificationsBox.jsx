@@ -33,6 +33,8 @@ import sharedStyles from '../../shared-js-css-styles/SharedStyles';
 import * as utils from '../../utils/utils';
 import * as ROUTES from '../../router/routes';
 
+const LEGACY_CHANGE_PASSWORD_MESSAGE = "Welcome to Invest West. It is important to change your password as soon as possible. Please do it by clicking on the Password tab in your dashboard.";
+const UPDATED_CHANGE_PASSWORD_MESSAGE = "Welcome to Invest West. It is important to change your password as soon as possible. Please use the Change password option in your dashboard menu.";
 
 const mapStateToProps = state => {
     return {
@@ -112,6 +114,18 @@ class NotificationsBox extends Component {
         if (this.wrapperRef && !this.wrapperRef.current.contains(event.target) && !notificationBellRef.contains(event.target) ) {
             toggleNotifications(event);
         }
+    }
+
+    getNotificationMessage = (notification) => {
+        if (!notification || !notification.message) {
+            return "";
+        }
+
+        if (notification.title === "Change your password" && notification.message === LEGACY_CHANGE_PASSWORD_MESSAGE) {
+            return UPDATED_CHANGE_PASSWORD_MESSAGE;
+        }
+
+        return notification.message;
     }
 
     render() {
@@ -272,7 +286,7 @@ class NotificationsBox extends Component {
                                                                                         <NotificationsIcon className={css(styles.notification_item_icon)} />
                                                                                         <FlexView column marginLeft={14} >
                                                                                             <Typography variant="body1" className={css(styles.black_text)}>{notification.title}</Typography>
-                                                                                            <Typography variant="body2" color="textSecondary" style={{ marginTop: 4 }}>{notification.message}</Typography>
+                                                                                            <Typography variant="body2" color="textSecondary" style={{ marginTop: 4 }}>{this.getNotificationMessage(notification)}</Typography>
                                                                                             <Typography variant="body2" color="textSecondary" style={{marginTop: 10}}><u>Sent:{utils.dateTimeInReadableFormat(notification.date)}</u> </Typography>
                                                                                         </FlexView>
                                                                                     </FlexView>

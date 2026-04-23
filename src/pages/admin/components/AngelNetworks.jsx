@@ -410,6 +410,28 @@ class AngelNetworks extends Component {
     /**
      * Load course requests
      */
+    normalizeCourseRequests = (rawCourseRequests) => {
+        if (Array.isArray(rawCourseRequests)) {
+            return rawCourseRequests;
+        }
+
+        if (!rawCourseRequests || typeof rawCourseRequests !== 'object') {
+            return [];
+        }
+
+        if (Array.isArray(rawCourseRequests.courseRequests)) {
+            return rawCourseRequests.courseRequests;
+        }
+        if (Array.isArray(rawCourseRequests.requests)) {
+            return rawCourseRequests.requests;
+        }
+        if (Array.isArray(rawCourseRequests.items)) {
+            return rawCourseRequests.items;
+        }
+
+        return Object.values(rawCourseRequests);
+    };
+
     loadCourseRequests = async () => {
         // ⚡ FIX: Check if component is still mounted
         if (!this._isMounted) {
@@ -432,10 +454,11 @@ class AngelNetworks extends Component {
             const response = await new CourseRequestRepository().fetchCourseRequests({
                 status: "pending" // Only fetch pending requests
             });
+            const normalizedCourseRequests = this.normalizeCourseRequests(response?.data);
 
             if (this._isMounted) {
                 this.setState({
-                    courseRequests: response.data || [],
+                    courseRequests: normalizedCourseRequests,
                     loadingCourseRequests: false
                 });
             }
@@ -1049,8 +1072,9 @@ class AngelNetworks extends Component {
                 }
 
                 // Get pending requests for this university
-                const pendingRequests = this.state.courseRequests.filter(
-                    req => req.request.universityId === angelNetwork.anid
+                const courseRequests = this.normalizeCourseRequests(this.state.courseRequests);
+                const pendingRequests = courseRequests.filter(
+                    req => req?.request?.universityId === angelNetwork.anid
                 );
 
                 const isExpanded = this.state.expandedUniversities[angelNetwork.anid] || false;
@@ -1328,8 +1352,8 @@ class AngelNetworks extends Component {
                                                     )}
 
                                                     {/* Pending Course Requests Section */}
-                                                    {this.state.courseRequests
-                                                        .filter(req => req.request.universityId === angelNetwork.anid)
+                                                    {courseRequests
+                                                        .filter(req => req?.request?.universityId === angelNetwork.anid)
                                                         .map(courseRequestInstance => {
                                                             const request = courseRequestInstance.request;
                                                             const isApproving = this.state.approvingRequest === request.id;
